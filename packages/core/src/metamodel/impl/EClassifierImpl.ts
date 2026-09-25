@@ -9,9 +9,7 @@ import {
 import { BasicEList, EcorePackageImpl, ENamedElementImpl } from "./index.js";
 
 export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
-  private _instanceClassName: string | undefined;
-  private _instanceClass: EJavaClass | undefined;
-  private _defaultValue: EJavaObject | undefined;
+  private _defaultValue: unknown | undefined;
   private _instanceTypeName: string | undefined;
   private _ePackage: EPackage | undefined;
   private readonly _eTypeParameters = new BasicEList<ETypeParameter>(
@@ -23,28 +21,17 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     return EcorePackageImpl.eINSTANCE.getEClassifier();
   }
 
-  getInstanceClassName(): string | undefined {
-    return this._instanceClassName;
-  }
-
   setInstanceClassName(value: string | undefined): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEClassifier_InstanceClassName(),
       value,
     );
   }
-  getInstanceClass(): EJavaClass | undefined {
-    return this._instanceClass;
-  }
-
-  setInstanceClass(value: EJavaClass | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEClassifier_InstanceClass(), value);
-  }
-  getDefaultValue(): EJavaObject | undefined {
+  getDefaultValue(): unknown | undefined {
     return this._defaultValue;
   }
 
-  setDefaultValue(value: EJavaObject | undefined): void {
+  setDefaultValue(value: unknown | undefined): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getEClassifier_DefaultValue(), value);
   }
   getInstanceTypeName(): string | undefined {
@@ -68,7 +55,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     return this._eTypeParameters;
   }
 
-  isInstance(object: EJavaObject): boolean {
+  isInstance(object: unknown): boolean {
     throw new Error(
       "EClassifier.isInstance() has no body:typescript annotation - nothing to generate.",
     );
@@ -82,10 +69,6 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._instanceClassName;
-      case 3:
-        return this._instanceClass;
       case 4:
         return this._defaultValue;
       case 5:
@@ -159,14 +142,8 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 2:
-        this._instanceClassName = value as string | undefined;
-        return;
-      case 3:
-        this._instanceClass = value as EJavaClass | undefined;
-        return;
       case 4:
-        this._defaultValue = value as EJavaObject | undefined;
+        this._defaultValue = value as unknown | undefined;
         return;
       case 5:
         this._instanceTypeName = value as string | undefined;
@@ -182,10 +159,6 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._instanceClassName !== undefined;
-      case 3:
-        return this._instanceClass !== undefined;
       case 4:
         return this._defaultValue !== undefined;
       case 5:
@@ -201,18 +174,6 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-      case 2: {
-        const oldValue = this._instanceClassName;
-        this._instanceClassName = undefined;
-        this.eDidRemove(feature, oldValue);
-        return;
-      }
-      case 3: {
-        const oldValue = this._instanceClass;
-        this._instanceClass = undefined;
-        this.eDidRemove(feature, oldValue);
-        return;
-      }
       case 4: {
         const oldValue = this._defaultValue;
         this._defaultValue = undefined;

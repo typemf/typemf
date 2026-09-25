@@ -9,7 +9,7 @@ export class EStructuralFeatureImpl
   private _volatile: boolean | undefined;
   private _transient: boolean | undefined;
   private _defaultValueLiteral: string | undefined;
-  private _defaultValue: EJavaObject | undefined;
+  private _defaultValue: unknown | undefined;
   private _unsettable: boolean | undefined;
   private _derived: boolean | undefined;
   private _eContainingClass: EClass | undefined;
@@ -58,11 +58,11 @@ export class EStructuralFeatureImpl
       value,
     );
   }
-  getDefaultValue(): EJavaObject | undefined {
+  getDefaultValue(): unknown | undefined {
     return this._defaultValue;
   }
 
-  setDefaultValue(value: EJavaObject | undefined): void {
+  setDefaultValue(value: unknown | undefined): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEStructuralFeature_DefaultValue(),
       value,
@@ -99,13 +99,7 @@ export class EStructuralFeatureImpl
     );
   }
 
-  getFeatureID(): number {
-    throw new Error(
-      "EStructuralFeature.getFeatureID() has no body:typescript annotation - nothing to generate.",
-    );
-  }
-
-  getContainerClass(): EJavaClass {
+  getContainerClass(): EClass {
     throw new Error(
       "EStructuralFeature.getContainerClass() has no body:typescript annotation - nothing to generate.",
     );
@@ -221,7 +215,7 @@ export class EStructuralFeatureImpl
         this._defaultValueLiteral = value as string | undefined;
         return;
       case 14:
-        this._defaultValue = value as EJavaObject | undefined;
+        this._defaultValue = value as unknown | undefined;
         return;
       case 15:
         this._unsettable = value as boolean | undefined;
@@ -315,5 +309,9 @@ export class EStructuralFeatureImpl
         super.eUnset(feature);
         return;
     }
+  }
+
+  getFeatureID(): number {
+    return -1;
   }
 }

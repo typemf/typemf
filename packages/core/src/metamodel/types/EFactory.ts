@@ -12,7 +12,7 @@ export interface EFactory extends EModelElement {
 
   create(eClass: EClass): EObject;
 
-  createFromString(eDataType: EDataType, literalValue: string): EJavaObject;
+  createFromString(eDataType: EDataType, literalValue: string): unknown;
 
-  convertToString(eDataType: EDataType, instanceValue: EJavaObject): string;
+  convertToString(eDataType: EDataType, instanceValue: unknown): string;
 }

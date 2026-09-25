@@ -29,13 +29,13 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
     );
   }
 
-  createFromString(eDataType: EDataType, literalValue: string): EJavaObject {
+  createFromString(eDataType: EDataType, literalValue: string): unknown {
     throw new Error(
       "EFactory.createFromString() has no body:typescript annotation - nothing to generate.",
     );
   }
 
-  convertToString(eDataType: EDataType, instanceValue: EJavaObject): string {
+  convertToString(eDataType: EDataType, instanceValue: unknown): string {
     throw new Error(
       "EFactory.convertToString() has no body:typescript annotation - nothing to generate.",
     );

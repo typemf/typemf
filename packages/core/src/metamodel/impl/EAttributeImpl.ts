@@ -10,14 +10,14 @@ export class EAttributeImpl
   extends EStructuralFeatureImpl
   implements EAttribute
 {
-  private _iD: boolean | undefined;
+  private _iD: boolean = false;
   private _eAttributeType: EDataType | undefined;
 
   eClass(): EClass {
     return EcorePackageImpl.eINSTANCE.getEAttribute();
   }
 
-  isID(): boolean | undefined {
+  isID(): boolean {
     return this._iD;
   }
 
@@ -70,7 +70,7 @@ export class EAttributeImpl
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 18:
-        this._iD = value as boolean | undefined;
+        this._iD = value as boolean;
         return;
       case 19:
         this._eAttributeType = value as EDataType | undefined;
@@ -96,7 +96,7 @@ export class EAttributeImpl
     switch (feature.getFeatureID()) {
       case 18: {
         const oldValue = this._iD;
-        this._iD = undefined;
+        this._iD = false;
         this.eDidRemove(feature, oldValue);
         return;
       }

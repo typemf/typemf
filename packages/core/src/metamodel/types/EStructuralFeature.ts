@@ -14,8 +14,8 @@ export interface EStructuralFeature extends ETypedElement {
   getDefaultValueLiteral(): string | undefined;
   setDefaultValueLiteral(value: string | undefined): void;
 
-  getDefaultValue(): EJavaObject | undefined;
-  setDefaultValue(value: EJavaObject | undefined): void;
+  getDefaultValue(): unknown | undefined;
+  setDefaultValue(value: unknown | undefined): void;
 
   getUnsettable(): boolean | undefined;
   setUnsettable(value: boolean | undefined): void;
@@ -28,5 +28,5 @@ export interface EStructuralFeature extends ETypedElement {
 
   getFeatureID(): number;
 
-  getContainerClass(): EJavaClass;
+  getContainerClass(): EClass;
 }

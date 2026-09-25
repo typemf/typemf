@@ -1,14 +1,8 @@
 import { EList, ENamedElement, EPackage, ETypeParameter } from "../../index.js";
 
 export interface EClassifier extends ENamedElement {
-  getInstanceClassName(): string | undefined;
-  setInstanceClassName(value: string | undefined): void;
-
-  getInstanceClass(): EJavaClass | undefined;
-  setInstanceClass(value: EJavaClass | undefined): void;
-
-  getDefaultValue(): EJavaObject | undefined;
-  setDefaultValue(value: EJavaObject | undefined): void;
+  getDefaultValue(): unknown | undefined;
+  setDefaultValue(value: unknown | undefined): void;
 
   getInstanceTypeName(): string | undefined;
   setInstanceTypeName(value: string | undefined): void;
@@ -18,7 +12,7 @@ export interface EClassifier extends ENamedElement {
 
   getETypeParameters(): EList<ETypeParameter>;
 
-  isInstance(object: EJavaObject): boolean;
+  isInstance(object: any): boolean;
 
   getClassifierID(): number;
 }
