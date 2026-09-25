@@ -1,8 +1,8 @@
-{% file switchClassName(package) + ".ts" %}
+{% file "util/" + switchClassName(package) + ".ts" %}
 import { EObject } from '@typemf/core';
-import { Ids } from './{{ packageClassName(package) }}.js';
+import { Ids } from '../{{ packageClassName(package) }}.js';
 {% for classifier in eClassesOf(package) %}
-import { {{ classifier.getName() }} } from './api/{{ classifier.getName() }}.js';
+import { {{ classifier.getName() }} } from '../types/{{ classifier.getName() }}.js';
 {% endfor %}
 
 export abstract class {{ switchClassName(package) }}<T> {

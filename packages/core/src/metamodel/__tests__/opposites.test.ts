@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { DynamicEFactoryImpl, EClassImpl, EList, EObject, EPackageImpl, EReferenceImpl } from '../../index.js';
+import { describe, expect, it } from "vitest";
+import {
+  DynamicEFactoryImpl,
+  EClassImpl,
+  EPackageImpl,
+  EReferenceImpl,
+} from "../impl/index";
+import { EList, EObject } from "../../index";
 
 /**
  *   EClass Department
@@ -15,14 +21,20 @@ import { DynamicEFactoryImpl, EClassImpl, EList, EObject, EPackageImpl, EReferen
  */
 function buildOppositeMetamodel() {
   const departmentClass = new EClassImpl();
-  departmentClass.setName('Department');
+  departmentClass.setName("Department");
   const personClass = new EClassImpl();
-  personClass.setName('Person');
+  personClass.setName("Person");
   const projectClass = new EClassImpl();
-  projectClass.setName('Project');
+  projectClass.setName("Project");
 
   const nextId = new Map<EClassImpl, number>();
-  const ref = (owner: EClassImpl, name: string, type: EClassImpl, upper: number, containment = false) => {
+  const ref = (
+    owner: EClassImpl,
+    name: string,
+    type: EClassImpl,
+    upper: number,
+    containment = false,
+  ) => {
     const r = new EReferenceImpl();
     r.setName(name);
     r.setEType(type);
@@ -40,13 +52,13 @@ function buildOppositeMetamodel() {
     b.setEOpposite(a);
   };
 
-  const employeesRef = ref(departmentClass, 'employees', personClass, -1, true);
-  const departmentRef = ref(personClass, 'department', departmentClass, 1);
-  const friendsRef = ref(personClass, 'friends', personClass, -1);
-  const mentorRef = ref(personClass, 'mentor', personClass, 1);
-  const menteeRef = ref(personClass, 'mentee', personClass, 1);
-  const projectsRef = ref(personClass, 'projects', projectClass, -1);
-  const membersRef = ref(projectClass, 'members', personClass, -1);
+  const employeesRef = ref(departmentClass, "employees", personClass, -1, true);
+  const departmentRef = ref(personClass, "department", departmentClass, 1);
+  const friendsRef = ref(personClass, "friends", personClass, -1);
+  const mentorRef = ref(personClass, "mentor", personClass, 1);
+  const menteeRef = ref(personClass, "mentee", personClass, 1);
+  const projectsRef = ref(personClass, "projects", projectClass, -1);
+  const membersRef = ref(projectClass, "members", personClass, -1);
 
   link(employeesRef, departmentRef);
   friendsRef.setEOpposite(friendsRef);
@@ -54,7 +66,7 @@ function buildOppositeMetamodel() {
   link(projectsRef, membersRef);
 
   const pkg = new EPackageImpl();
-  pkg.setName('org');
+  pkg.setName("org");
   for (const c of [departmentClass, personClass, projectClass]) {
     c.recomputeAllLists();
     pkg.getEClassifiers().add(c);
@@ -78,8 +90,8 @@ function buildOppositeMetamodel() {
 
 const list = (o: EObject, f: EReferenceImpl) => o.eGet(f) as EList<EObject>;
 
-describe('opposite (inverse) reference maintenance', () => {
-  it('many-to-many: adding on one side adds on the other', () => {
+describe("opposite (inverse) reference maintenance", () => {
+  it("many-to-many: adding on one side adds on the other", () => {
     const m = buildOppositeMetamodel();
     const alice = m.newPerson();
     const apollo = m.newProject();
@@ -91,7 +103,7 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(list(alice, m.projectsRef).isEmpty()).toBe(true);
   });
 
-  it('many-to-many: clear and eSet update the other side', () => {
+  it("many-to-many: clear and eSet update the other side", () => {
     const m = buildOppositeMetamodel();
     const alice = m.newPerson();
     const bob = m.newPerson();
@@ -108,7 +120,7 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(list(bob, m.projectsRef).toArray()).toEqual([gemini]);
   });
 
-  it('self-opposite many-valued reference is symmetric', () => {
+  it("self-opposite many-valued reference is symmetric", () => {
     const m = buildOppositeMetamodel();
     const alice = m.newPerson();
     const bob = m.newPerson();
@@ -120,7 +132,7 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(list(alice, m.friendsRef).isEmpty()).toBe(true);
   });
 
-  it('one-to-one: setting one side sets the other and detaches displaced partners', () => {
+  it("one-to-one: setting one side sets the other and detaches displaced partners", () => {
     const m = buildOppositeMetamodel();
     const alice = m.newPerson();
     const bob = m.newPerson();
@@ -143,7 +155,7 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(bob.eIsSet(m.menteeRef)).toBe(false);
   });
 
-  it('containment with a container reference: adding sets the back-pointer', () => {
+  it("containment with a container reference: adding sets the back-pointer", () => {
     const m = buildOppositeMetamodel();
     const sales = m.newDepartment();
     const alice = m.newPerson();
@@ -157,7 +169,7 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(alice.eContainer()).toBeUndefined();
   });
 
-  it('containment with a container reference: setting the back-pointer moves the child', () => {
+  it("containment with a container reference: setting the back-pointer moves the child", () => {
     const m = buildOppositeMetamodel();
     const sales = m.newDepartment();
     const research = m.newDepartment();
@@ -178,7 +190,7 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(alice.eContainer()).toBeUndefined();
   });
 
-  it('moving a child between containment lists updates old list and back-pointer', () => {
+  it("moving a child between containment lists updates old list and back-pointer", () => {
     const m = buildOppositeMetamodel();
     const sales = m.newDepartment();
     const research = m.newDepartment();

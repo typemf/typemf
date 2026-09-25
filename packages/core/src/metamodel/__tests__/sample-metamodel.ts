@@ -22,7 +22,7 @@ import {
   EDataTypeImpl,
   EPackageImpl,
   EReferenceImpl,
-} from '../../index.js';
+} from "../impl/index";
 
 export interface SampleMetamodel {
   libraryPackage: EPackageImpl;
@@ -38,23 +38,23 @@ export interface SampleMetamodel {
 
 export function buildSampleMetamodel(): SampleMetamodel {
   const eStringType = new EDataTypeImpl();
-  eStringType.setName('EString');
+  eStringType.setName("EString");
 
   const eIntType = new EDataTypeImpl();
-  eIntType.setName('EInt');
+  eIntType.setName("EInt");
 
   const bookClass = new EClassImpl();
-  bookClass.setName('Book');
+  bookClass.setName("Book");
 
   const titleAttr = new EAttributeImpl();
-  titleAttr.setName('title');
+  titleAttr.setName("title");
   titleAttr.setEType(eStringType);
   titleAttr.setID(true);
   titleAttr.setFeatureID(0);
   titleAttr.setEContainingClass(bookClass);
 
   const pageCountAttr = new EAttributeImpl();
-  pageCountAttr.setName('pageCount');
+  pageCountAttr.setName("pageCount");
   pageCountAttr.setEType(eIntType);
   pageCountAttr.setFeatureID(1);
   pageCountAttr.setEContainingClass(bookClass);
@@ -64,11 +64,11 @@ export function buildSampleMetamodel(): SampleMetamodel {
   bookClass.recomputeAllLists();
 
   const audioBookClass = new EClassImpl();
-  audioBookClass.setName('AudioBook');
+  audioBookClass.setName("AudioBook");
   audioBookClass.getESuperTypes().add(bookClass);
 
   const narratorAttr = new EAttributeImpl();
-  narratorAttr.setName('narrator');
+  narratorAttr.setName("narrator");
   narratorAttr.setEType(eStringType);
   // Continues numbering after the two inherited features from Book.
   narratorAttr.setFeatureID(2);
@@ -78,10 +78,10 @@ export function buildSampleMetamodel(): SampleMetamodel {
   audioBookClass.recomputeAllLists();
 
   const libraryClass = new EClassImpl();
-  libraryClass.setName('Library');
+  libraryClass.setName("Library");
 
   const booksRef = new EReferenceImpl();
-  booksRef.setName('books');
+  booksRef.setName("books");
   booksRef.setEType(bookClass);
   booksRef.setContainment(true);
   booksRef.setUpperBound(-1);
@@ -89,7 +89,7 @@ export function buildSampleMetamodel(): SampleMetamodel {
   booksRef.setEContainingClass(libraryClass);
 
   const featuredBookRef = new EReferenceImpl();
-  featuredBookRef.setName('featuredBook');
+  featuredBookRef.setName("featuredBook");
   featuredBookRef.setEType(bookClass);
   featuredBookRef.setContainment(false);
   featuredBookRef.setUpperBound(1);
@@ -101,9 +101,9 @@ export function buildSampleMetamodel(): SampleMetamodel {
   libraryClass.recomputeAllLists();
 
   const libraryPackage = new EPackageImpl();
-  libraryPackage.setName('library');
-  libraryPackage.setNsURI('https://typemf.dev/samples/library');
-  libraryPackage.setNsPrefix('lib');
+  libraryPackage.setName("library");
+  libraryPackage.setNsURI("https://typemf.dev/samples/library");
+  libraryPackage.setNsPrefix("lib");
   libraryPackage.getEClassifiers().add(eStringType);
   libraryPackage.getEClassifiers().add(eIntType);
   libraryPackage.getEClassifiers().add(bookClass);

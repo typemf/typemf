@@ -1,5 +1,5 @@
-import { EObject } from '../metamodel/api/eobject.js';
-import { Resource } from './resource.js';
+import { EObject } from "../metamodel/types/EObject.js";
+import { Resource } from "./resource.js";
 
 /**
  * Tracks which Resource a root EObject belongs to, without adding an

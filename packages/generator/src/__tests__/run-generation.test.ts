@@ -31,8 +31,8 @@ describe('runGeneration', () => {
     expect(result.writtenPaths.length).toBeGreaterThan(0);
     expect(result.writtenPaths).toContain(join(configDir, 'generated', 'LibraryPackage.ts'));
 
-    const bookApiContent = await readFile(join(configDir, 'generated', 'api', 'Book.ts'), 'utf-8');
-    expect(bookApiContent).toContain('export interface Book extends EObject');
+    const bookTypesContent = await readFile(join(configDir, 'generated', 'types', 'Book.ts'), 'utf-8');
+    expect(bookTypesContent).toContain('export interface Book extends EObject');
   });
 
   it('creates intermediate directories that do not exist yet', async () => {
@@ -46,8 +46,8 @@ describe('runGeneration', () => {
       libraryPackage
     );
 
-    const content = await readFile(join(result.outputRoot, 'LibraryFactory.ts'), 'utf-8');
-    expect(content).toContain('export class LibraryFactory');
+    const content = await readFile(join(result.outputRoot, 'impl', 'LibraryFactoryImpl.ts'), 'utf-8');
+    expect(content).toContain('export class LibraryFactoryImpl');
   });
 
   it('passes options through to the templates', async () => {

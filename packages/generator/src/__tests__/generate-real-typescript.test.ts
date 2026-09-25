@@ -86,18 +86,18 @@ describe('End-to-end: generated code actually compiles and runs', () => {
       jsPaths.set(file.path, jsFullPath);
     }
 
-    const factoryPath = jsPaths.get('LibraryFactory.ts')!;
+    const factoryPath = jsPaths.get('impl/LibraryFactoryImpl.ts')!;
     const packagePath = jsPaths.get('impl/LibraryPackageImpl.ts')!;
-    const switchPath = jsPaths.get('LibrarySwitch.ts')!;
+    const switchPath = jsPaths.get('util/LibrarySwitch.ts')!;
 
-    const { LibraryFactory } = (await import(factoryPath)) as { LibraryFactory: new () => unknown };
+    const { LibraryFactoryImpl } = (await import(factoryPath)) as { LibraryFactoryImpl: new () => unknown };
     const { LibraryPackageImpl } = (await import(packagePath)) as {
       LibraryPackageImpl: { eINSTANCE: { getBook(): unknown; getAudioBook(): unknown; getLibrary(): unknown } };
     };
     const { LibrarySwitch } = (await import(switchPath)) as { LibrarySwitch: new () => unknown };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const factory = new (LibraryFactory as any)();
+    const factory = new (LibraryFactoryImpl as any)();
     const eClasses = LibraryPackageImpl.eINSTANCE;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -17,9 +17,9 @@ rest become additionally-implemented interfaces"). `superType()`/`superTypeChain
 `typescript-filters.ts` only ever look at `eSuperTypes.get(0)` - a second or later declared
 supertype is silently ignored by the generator today.
 
-**Tracked for:** if/when a real metamodel needs multiple EClass inheritance, extend the `api`
+**Tracked for:** if/when a real metamodel needs multiple EClass inheritance, extend the `types`
 interface to `extends FirstSuper, SecondSuper, ...` (TS interfaces support multiple
-inheritance fine) while keeping the `gen`/`impl` class chain single-rooted - the API layer can
+inheritance fine) while keeping the `impl` class chain single-rooted - the `types` layer can
 honestly reflect multiple inheritance even though the implementation layer can't.
 
 ## Real EMF's "body" GenModel annotation vs. our own operation-body annotation
@@ -237,3 +237,53 @@ in this project, real GenModel/Ecore constraint annotations with their real sour
 `EObject`'s deliberate exclusion (both as a classifier and as a feature type, via `EAnnotation`'s
 `contents`/`references`), and `EGenericType`'s self-referential structure. All 89 pass against the
 real file, unmodified.
+
+## Gen/Impl merged into a single, fully-generated impl/ layer; api/ renamed to types/; Factory split; Switch moved to util/
+
+The three-layer `api`/`gen`/`impl` split (and the parallel single-file `Factory`/`Switch`) is
+gone, replaced by a layout matching real EMF's own generated output exactly:
+
+```
+types/{Name}.ts              interface, per classifier
+{Pkg}Package.ts              interface, root
+{Pkg}Factory.ts              interface, root (NEW split - was one file)
+impl/{Name}Impl.ts           concrete, fully generated (was api/gen/impl split into three)
+impl/{Pkg}PackageImpl.ts     concrete, unchanged
+impl/{Pkg}FactoryImpl.ts     concrete (NEW split)
+util/{Pkg}Switch.ts          moved from the package root
+```
+
+**Why the merge is correct now, when it wasn't earlier:** Gen/Impl was justified specifically
+because there was no merge tool - Gen had to stay always-safe-to-overwrite, Impl had to stay
+never-regenerated so hand-edits would survive. That reasoning held right up until customization
+moved to subclassing (`extend {Name}Impl`, override `createX()` on a custom `Factory`) instead of
+hand-editing the generated Impl file directly. Once that shift happened, nothing hand-written goes
+into `impl/{Name}Impl.ts` either - the original reason for keeping it a separate,
+never-regenerated layer had already stopped applying, it just hadn't been acted on until now.
+
+**One real behavioral consequence, not just a rename:** `impl/{Name}Impl.ts` is what `Factory`
+directly instantiates (`new {Name}Impl()`), so it can no longer have any `abstract` members the
+way the old `{Name}Gen` could. An `EOperation` with no `body:typescript` annotation previously
+generated an `abstract` method, relying on the (now-removed) separate Impl layer to fill it in.
+It now generates a method with a clear throwing body instead
+(`throw new Error('X.y() has no body:typescript annotation - nothing to generate.')`) - the
+honest behavior for fully-generated code with no further hand-editable layer, rather than
+silently failing to compile or silently doing nothing.
+
+**`api/` -> `types/`**: purely a rename (clearer purpose - "types" over the more Java-flavored
+"api"), no behavioral change.
+
+**`Factory` split into interface (root) + impl** (`{Pkg}FactoryImpl.ts`), matching `Package`'s
+existing split and real EMF's own `DlFactory`/`impl/DlFactoryImpl` shape. Unlike `Package`,
+`Factory` needs no `eINSTANCE`/`init()` singleton pattern of its own - it's constructed once,
+inside `Package`'s own `init()`, and accessed via `{Pkg}PackageImpl.eINSTANCE.getEFactoryInstance()`
+if needed elsewhere.
+
+**`Switch` moved into `util/{Pkg}Switch.ts`**, matching real EMF's own layout exactly.
+`AdapterFactory` (also under real EMF's `util/`) has no equivalent here and stays out of scope -
+EMF.Edit territory, relevant only to future editor work, not code generation.
+
+All existing tests that asserted specific file paths (`gen/XGen.ts`, `api/X.ts`,
+`LibraryFactory.ts` as a constructible class, `LibrarySwitch.ts` at the root) were updated to
+match - 140/140 passing, including the full compile-and-run end-to-end tests, confirming the new
+layout works, not just that it looks right.

@@ -1,23 +1,23 @@
-import { describe, expect, it } from 'vitest';
-import { BasicEList } from '../../index.js';
+import { describe, expect, it } from "vitest";
+import { BasicEList } from "../impl/index";
 
-describe('BasicEList', () => {
-  it('supports basic add/get/size/contains/indexOf', () => {
+describe("BasicEList", () => {
+  it("supports basic add/get/size/contains/indexOf", () => {
     const list = new BasicEList<string>();
     expect(list.isEmpty()).toBe(true);
 
-    list.add('a');
-    list.add('b');
-    list.add('c');
+    list.add("a");
+    list.add("b");
+    list.add("c");
 
     expect(list.size()).toBe(3);
-    expect(list.get(1)).toBe('b');
-    expect(list.contains('c')).toBe(true);
-    expect(list.indexOf('c')).toBe(2);
-    expect(list.toArray()).toEqual(['a', 'b', 'c']);
+    expect(list.get(1)).toBe("b");
+    expect(list.contains("c")).toBe(true);
+    expect(list.indexOf("c")).toBe(2);
+    expect(list.toArray()).toEqual(["a", "b", "c"]);
   });
 
-  it('supports addAt, remove, removeAt and clear', () => {
+  it("supports addAt, remove, removeAt and clear", () => {
     const list = new BasicEList<number>();
     list.addAll([1, 2, 4]);
     list.addAt(2, 3);
@@ -34,7 +34,7 @@ describe('BasicEList', () => {
     expect(list.isEmpty()).toBe(true);
   });
 
-  it('is iterable and supports the functional helpers', () => {
+  it("is iterable and supports the functional helpers", () => {
     const list = new BasicEList<number>();
     list.addAll([1, 2, 3, 4, 5]);
 
@@ -46,7 +46,7 @@ describe('BasicEList', () => {
     expect(list.map((n) => n * 2)).toEqual([2, 4, 6, 8, 10]);
   });
 
-  it('throws a RangeError for an out-of-bounds get()', () => {
+  it("throws a RangeError for an out-of-bounds get()", () => {
     const list = new BasicEList<number>();
     list.add(1);
     expect(() => list.get(5)).toThrow(RangeError);

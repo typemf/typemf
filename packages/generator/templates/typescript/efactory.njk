@@ -1,28 +1,44 @@
 {% set eFactoryClassifier = findEClassByName(package, "EFactory") %}
 {% file factoryClassName(package) + ".ts" %}
+import { EClass, EFactory, EObject } from '@typemf/core';
+{% for classifier in concreteEClassesOf(package) %}
+import { {{ classifier.getName() }} } from './types/{{ classifier.getName() }}.js';
+{% endfor %}
+
+export interface {{ factoryClassName(package) }} extends EFactory {
+{% for classifier in concreteEClassesOf(package) %}
+  create{{ classifier.getName() }}(): {{ classifier.getName() }};
+{% endfor %}
+  create(eClass: EClass): EObject;
+}
+{% endfile %}
+{% file "impl/" + factoryClassName(package) + "Impl.ts" %}
 import { EClass, EObject{{ ", EFactoryImpl" if not eFactoryClassifier else "" }} } from '@typemf/core';
-import { Ids } from './{{ packageClassName(package) }}.js';
+import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
+import { Ids } from '../{{ packageClassName(package) }}.js';
 {% if eFactoryClassifier %}
-import { EFactoryImpl } from './impl/EFactoryImpl.js';
+import { EFactoryImpl } from './EFactoryImpl.js';
 {% endif %}
 {% for classifier in concreteEClassesOf(package) %}
-import { {{ classifier.getName() }} } from './api/{{ classifier.getName() }}.js';
-import { {{ classifier.getName() }}Impl } from './impl/{{ classifier.getName() }}Impl.js';
+import { {{ classifier.getName() }} } from '../types/{{ classifier.getName() }}.js';
+import { {{ classifier.getName() }}Impl } from './{{ classifier.getName() }}Impl.js';
 {% endfor %}
 
 {% if eFactoryClassifier %}
 {#- real Ecore's own EFactoryImpl-extends-EFactoryImpl design: this
     package models a classifier literally named "EFactory" (see
-    findEClassByName), so the package-level Factory extends ITS generated
-    impl instead of the generic @typemf/core base - matching real EMF's
-    EcoreFactoryImpl extends EFactoryImpl exactly. This is Ecore-specific
-    template logic, not a general pattern: ordinary metamodels never hit
-    this branch. Note this deliberately reuses the name "EFactoryImpl" for
-    both the generated and the @typemf/core base class - a real, known,
-    accepted naming collision for the untested real-named Ecore.ecore
-    output (see NOTES.md), not something this template works around. #}
+    findEClassByName), so the package-level FactoryImpl extends ITS
+    generated impl (now living at impl/EFactoryImpl.ts, same folder as
+    this file, since Gen/Impl merged) instead of the generic @typemf/core
+    base - matching real EMF's EcoreFactoryImpl extends EFactoryImpl
+    exactly. This is Ecore-specific template logic, not a general pattern:
+    ordinary metamodels never hit this branch. Note this deliberately
+    reuses the name "EFactoryImpl" for both the generated and the
+    @typemf/core base class - a real, known, accepted naming collision for
+    the untested real-named Ecore.ecore output (see NOTES.md), not
+    something this template works around. #}
 {% endif %}
-export class {{ factoryClassName(package) }} extends EFactoryImpl {
+export class {{ factoryClassName(package) }}Impl extends EFactoryImpl implements {{ factoryClassName(package) }} {
 {% for classifier in concreteEClassesOf(package) %}
   create{{ classifier.getName() }}(): {{ classifier.getName() }} {
     return new {{ classifier.getName() }}Impl();

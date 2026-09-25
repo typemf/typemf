@@ -85,13 +85,13 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
     const { pkg } = buildDerivedFeatureMetamodel();
     const files = generate(pkg, typescriptTemplateSet, {});
 
-    const widgetGen = files.find((f) => f.path === 'gen/WidgetGen.ts')!;
-    expect(widgetGen.content).toContain('this.getUpperBound() === -1 || this.getUpperBound() > 1');
-    expect(widgetGen.content).not.toContain('setMany(');
+    const widgetImpl = files.find((f) => f.path === 'impl/WidgetImpl.ts')!;
+    expect(widgetImpl.content).toContain('this.getUpperBound() === -1 || this.getUpperBound() > 1');
+    expect(widgetImpl.content).not.toContain('setMany(');
 
-    const widgetApi = files.find((f) => f.path === 'api/Widget.ts')!;
-    expect(widgetApi.content).not.toContain('setMany(');
-    expect(widgetApi.content).toContain('getMany()');
+    const widgetTypes = files.find((f) => f.path === 'types/Widget.ts')!;
+    expect(widgetTypes.content).not.toContain('setMany(');
+    expect(widgetTypes.content).toContain('getMany()');
 
     // Actually compile and run it.
     const jsPaths = new Map<string, string>();
@@ -105,14 +105,14 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
       jsPaths.set(file.path, jsPath);
     }
 
-    const { DerivedtestFactory } = (await import(jsPaths.get('DerivedtestFactory.ts')!)) as {
-      DerivedtestFactory: new () => { create(eClass: unknown): unknown };
+    const { DerivedtestFactoryImpl } = (await import(jsPaths.get('impl/DerivedtestFactoryImpl.ts')!)) as {
+      DerivedtestFactoryImpl: new () => { create(eClass: unknown): unknown };
     };
     const { DerivedtestPackageImpl } = (await import(jsPaths.get('impl/DerivedtestPackageImpl.ts')!)) as {
       DerivedtestPackageImpl: { eINSTANCE: { getWidget(): unknown } };
     };
 
-    const factory = new DerivedtestFactory();
+    const factory = new DerivedtestFactoryImpl();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const widget: any = factory.create(DerivedtestPackageImpl.eINSTANCE.getWidget());
 

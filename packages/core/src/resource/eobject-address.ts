@@ -1,4 +1,4 @@
-import { EObject } from '../metamodel/api/eobject.js';
+import { EObject } from "../metamodel/types/EObject.js";
 
 /**
  * Computes a fragment addressing `target` relative to `roots` - the bare
@@ -31,8 +31,11 @@ export function computeFragment(target: EObject, roots: EObject[]): string {
 }
 
 /** The inverse of computeFragment(): resolves a "#"-less fragment against `roots`. */
-export function resolveFragment(fragment: string, roots: EObject[]): EObject | undefined {
-  if (fragment.startsWith('/')) {
+export function resolveFragment(
+  fragment: string,
+  roots: EObject[],
+): EObject | undefined {
+  if (fragment.startsWith("/")) {
     return resolvePositionalPath(fragment, roots);
   }
   return findByFullId(fragment, roots);
@@ -55,13 +58,17 @@ function computePositionalPath(target: EObject, roots: EObject[]): string {
   while (container) {
     const feature = current.eContainingFeature();
     if (!feature) {
-      throw new Error('Object has a container but no containing feature - inconsistent containment state.');
+      throw new Error(
+        "Object has a container but no containing feature - inconsistent containment state.",
+      );
     }
     if (feature.isMany()) {
       const siblings = [...(container.eGet(feature) as Iterable<EObject>)];
       const index = siblings.indexOf(current);
       if (index === -1) {
-        throw new Error(`Object not found within its own containing feature '${feature.getName()}'.`);
+        throw new Error(
+          `Object not found within its own containing feature '${feature.getName()}'.`,
+        );
       }
       segments.unshift(String(index));
     }
@@ -72,21 +79,29 @@ function computePositionalPath(target: EObject, roots: EObject[]): string {
 
   const rootIndex = roots.indexOf(current);
   if (rootIndex === -1) {
-    throw new Error('Target object is not reachable from the given roots via containment - cannot address it positionally.');
+    throw new Error(
+      "Target object is not reachable from the given roots via containment - cannot address it positionally.",
+    );
   }
   segments.unshift(String(rootIndex));
-  return `/${segments.join('/')}`;
+  return `/${segments.join("/")}`;
 }
 
 function resolvePositionalPath(path: string, roots: EObject[]): EObject {
-  const segments = path.split('/').filter((s) => s.length > 0);
+  const segments = path.split("/").filter((s) => s.length > 0);
   if (segments.length === 0) {
     throw new Error(`Empty positional path.`);
   }
 
   const rootIndex = Number(segments[0]);
-  if (!Number.isInteger(rootIndex) || rootIndex < 0 || rootIndex >= roots.length) {
-    throw new Error(`Positional path '${path}': root index '${segments[0]}' is out of range.`);
+  if (
+    !Number.isInteger(rootIndex) ||
+    rootIndex < 0 ||
+    rootIndex >= roots.length
+  ) {
+    throw new Error(
+      `Positional path '${path}': root index '${segments[0]}' is out of range.`,
+    );
   }
   let current: EObject = roots[rootIndex]!;
 
@@ -95,7 +110,9 @@ function resolvePositionalPath(path: string, roots: EObject[]): EObject {
     const featureName = segments[i]!;
     const feature = current.eClass().getEStructuralFeatureByName(featureName);
     if (!feature) {
-      throw new Error(`Positional path '${path}': '${current.eClass().getName()}' has no feature '${featureName}'.`);
+      throw new Error(
+        `Positional path '${path}': '${current.eClass().getName()}' has no feature '${featureName}'.`,
+      );
     }
     i += 1;
 
@@ -103,13 +120,17 @@ function resolvePositionalPath(path: string, roots: EObject[]): EObject {
       const indexSegment = segments[i];
       const index = Number(indexSegment);
       if (indexSegment === undefined || !Number.isInteger(index)) {
-        throw new Error(`Positional path '${path}': expected an array index after many-valued feature '${featureName}'.`);
+        throw new Error(
+          `Positional path '${path}': expected an array index after many-valued feature '${featureName}'.`,
+        );
       }
       i += 1;
       const list = [...(current.eGet(feature) as Iterable<EObject>)];
       const next = list[index];
       if (!next) {
-        throw new Error(`Positional path '${path}': index ${index} is out of range for '${featureName}'.`);
+        throw new Error(
+          `Positional path '${path}': index ${index} is out of range for '${featureName}'.`,
+        );
       }
       current = next;
     } else {

@@ -23,12 +23,21 @@ Template-based code generation, targeting the design agreed on in planning:
 Full custom generated classes (the original TMF architecture, not thin wrappers over
 `DynamicEObjectImpl`) - real private fields, real `eGet`/`eSet`/`eBasicSetValue`/`eIsSet`/
 `eUnset` switch dispatch per class, with inherited features delegated to `super.eGet()` etc.
-rather than re-handled locally. `api`/`gen`/`impl` three-layer split per `EClass`, matching the
-original TMF; `impl/` is generated once and never touched again.
+rather than re-handled locally. `types/{Name}.ts` (interface) + `impl/{Name}Impl.ts` (fully
+generated concrete class) per `EClass` - **not** the earlier three-layer `api`/`gen`/`impl`
+split. That split existed specifically because customization was originally meant to happen by
+hand-editing `impl/`, which needed a permanently-untouched layer; once customization moved to
+subclassing (`extend {Name}Impl`, override `createX()` on a custom `Factory`), nothing hand-written
+goes into `impl/` anymore either, so it collapsed into one fully-generated file, same as `gen/`
+always was. An operation with no `body:typescript` annotation now generates a clear throwing stub
+rather than an `abstract` method, since the merged `impl/{Name}Impl.ts` is what `Factory` directly
+instantiates (`new {Name}Impl()`) and can no longer have any unimplemented members.
 
-Also generates a `Package` singleton (rebuilding the metamodel as real runtime `EClassImpl`/
-`EAttributeImpl`/etc. objects), a `Factory`, and a `Switch` visitor with correct supertype-
-fallthrough dispatch.
+`Package` (interface, root) / `PackageImpl` (impl, singleton construction as real runtime
+`EClassImpl`/`EAttributeImpl`/etc. objects) and `Factory` (interface, root) / `FactoryImpl` (impl)
+both follow the same interface/impl split. `Switch` (visitor, correct supertype-fallthrough
+dispatch) lives under `util/`, matching real EMF's own layout - not `AdapterFactory`, though,
+which has no equivalent here (EMF.Edit territory, future editor work).
 
 **Documentation**: reads real EMF's own GenModel convention (`EAnnotation` source
 `http://www.eclipse.org/emf/2002/GenModel`, details key `documentation`) and renders it as a
@@ -77,8 +86,9 @@ own correctness for this scenario (5-level inheritance, two kinds of self-refere
 generated classes) was separately proven with a `Meta`-prefixed variant, compiled and actually
 executed against the real, built `@typemf/core`. The delivered output uses real, unprefixed
 names and has NOT been re-verified in that shape - see `NOTES.md` for the full reasoning,
-including the naming-collision finding and a real bug this surfaced (fixed) in how the `gen/`
-layer computes its own imports.
+including the naming-collision finding and a real bug this surfaced (fixed) in how the (at the
+time still separate) `gen/` layer computed its own imports - `gen/` was later merged into
+`impl/`, see the note on the built-in template set above.
 
 ## CLI
 

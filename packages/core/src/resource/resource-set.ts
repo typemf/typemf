@@ -1,9 +1,9 @@
-import { EObject } from '../metamodel/api/eobject.js';
-import { EPackageRegistry } from '../registry/epackage-registry.js';
-import { Resource } from './resource.js';
-import { ResourceFactoryRegistry } from './resource-factory-registry.js';
-import { URI } from './uri.js';
-import { UriConverterRegistry } from './uri-converter-registry.js';
+import { EObject } from "../metamodel/types/EObject.js";
+import { EPackageRegistry } from "../registry/epackage-registry.js";
+import { Resource } from "./resource.js";
+import { ResourceFactoryRegistry } from "./resource-factory-registry.js";
+import { URI } from "./uri.js";
+import { UriConverterRegistry } from "./uri-converter-registry.js";
 
 /**
  * Owns a group of Resources, resolves cross-resource proxies by URI, and

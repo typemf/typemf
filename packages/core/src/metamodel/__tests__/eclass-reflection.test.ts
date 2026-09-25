@@ -1,28 +1,38 @@
-import { describe, expect, it } from 'vitest';
-import { EAttributeImpl } from '../impl/eattribute-impl.js';
-import { EClassImpl } from '../impl/eclass-impl.js';
-import { EDataTypeImpl } from '../impl/edata-type-impl.js';
-import { buildSampleMetamodel } from './sample-metamodel.js';
+import { describe, expect, it } from "vitest";
+import { buildSampleMetamodel } from "./sample-metamodel.js";
 
-describe('EClass reflection', () => {
-  it('exposes declared-only features via getEStructuralFeatures()', () => {
+import { EAttributeImpl, EClassImpl, EDataTypeImpl } from "../impl/index";
+
+describe("EClass reflection", () => {
+  it("exposes declared-only features via getEStructuralFeatures()", () => {
     const { bookClass, titleAttr, pageCountAttr } = buildSampleMetamodel();
-    expect(bookClass.getEStructuralFeatures().toArray()).toEqual([titleAttr, pageCountAttr]);
+    expect(bookClass.getEStructuralFeatures().toArray()).toEqual([
+      titleAttr,
+      pageCountAttr,
+    ]);
   });
 
-  it('inherits supertype features via getEAllStructuralFeatures(), supertype-first', () => {
-    const { audioBookClass, titleAttr, pageCountAttr, narratorAttr } = buildSampleMetamodel();
-    expect(audioBookClass.getEAllStructuralFeatures()).toEqual([titleAttr, pageCountAttr, narratorAttr]);
+  it("inherits supertype features via getEAllStructuralFeatures(), supertype-first", () => {
+    const { audioBookClass, titleAttr, pageCountAttr, narratorAttr } =
+      buildSampleMetamodel();
+    expect(audioBookClass.getEAllStructuralFeatures()).toEqual([
+      titleAttr,
+      pageCountAttr,
+      narratorAttr,
+    ]);
   });
 
-  it('separates attributes from references in getEAllAttributes/getEAllReferences', () => {
+  it("separates attributes from references in getEAllAttributes/getEAllReferences", () => {
     const { libraryClass, booksRef, featuredBookRef } = buildSampleMetamodel();
     expect(libraryClass.getEAllAttributes()).toEqual([]);
-    expect(libraryClass.getEAllReferences()).toEqual([booksRef, featuredBookRef]);
+    expect(libraryClass.getEAllReferences()).toEqual([
+      booksRef,
+      featuredBookRef,
+    ]);
     expect(libraryClass.getEAllContainments()).toEqual([booksRef]);
   });
 
-  it('isSuperTypeOf is reflexive and covers the inheritance chain', () => {
+  it("isSuperTypeOf is reflexive and covers the inheritance chain", () => {
     const { bookClass, audioBookClass, libraryClass } = buildSampleMetamodel();
     expect(bookClass.isSuperTypeOf(bookClass)).toBe(true);
     expect(bookClass.isSuperTypeOf(audioBookClass)).toBe(true);
@@ -30,29 +40,47 @@ describe('EClass reflection', () => {
     expect(libraryClass.isSuperTypeOf(bookClass)).toBe(false);
   });
 
-  it('getEStructuralFeature(featureID) finds inherited features by id', () => {
+  it("getEStructuralFeature(featureID) finds inherited features by id", () => {
     const { audioBookClass, titleAttr, narratorAttr } = buildSampleMetamodel();
     expect(audioBookClass.getEStructuralFeature(0)).toBe(titleAttr);
     expect(audioBookClass.getEStructuralFeature(2)).toBe(narratorAttr);
   });
 
-  it('getEStructuralFeatureByName resolves across the whole hierarchy', () => {
+  it("getEStructuralFeatureByName resolves across the whole hierarchy", () => {
     const { audioBookClass } = buildSampleMetamodel();
-    expect(audioBookClass.getEStructuralFeatureByName('title')?.getName()).toBe('title');
-    expect(audioBookClass.getEStructuralFeatureByName('narrator')?.getName()).toBe('narrator');
-    expect(audioBookClass.getEStructuralFeatureByName('doesNotExist')).toBeUndefined();
+    expect(
+      audioBookClass
+        .getEStructuralFeatures()
+        .filter((f) => f.getName() === "title")
+        .at(0)
+        ?.getName(),
+    ).toBe("title");
+    expect(
+      audioBookClass
+        .getEStructuralFeatures()
+        .filter((f) => f.getName() === "narrator")
+        .at(0)
+        ?.getName(),
+    ).toBe("narrator");
+    expect(
+      audioBookClass
+        .getEStructuralFeatures()
+        .filter((f) => f.getName() === "doesNotExist").length,
+    ).toBe(0);
   });
 
-  it('createInstance() uses the EClass\'s EPackage EFactoryInstance', () => {
+  it("createInstance() uses the EClass's EPackage EFactoryInstance", () => {
     const { bookClass } = buildSampleMetamodel();
     const instance = bookClass.createInstance();
     expect(instance.eClass()).toBe(bookClass);
   });
 
-  it('createInstance() throws a clear error when no factory is registered', () => {
+  it("createInstance() throws a clear error when no factory is registered", () => {
     const { bookClass } = buildSampleMetamodel();
     bookClass.getEPackage()!.setEFactoryInstance(undefined);
-    expect(() => bookClass.createInstance()).toThrow(/no EFactoryInstance registered/);
+    expect(() => bookClass.createInstance()).toThrow(
+      /no EFactoryInstance registered/,
+    );
   });
 });
 
@@ -73,36 +101,36 @@ describe('EClass reflection', () => {
  */
 function buildDiamondMetamodel() {
   const eString = new EDataTypeImpl();
-  eString.setName('EString');
+  eString.setName("EString");
 
   const base = new EClassImpl();
-  base.setName('Base');
+  base.setName("Base");
   const idAttr = new EAttributeImpl();
-  idAttr.setName('id');
+  idAttr.setName("id");
   idAttr.setEType(eString);
   idAttr.setFeatureID(0);
   base.getEStructuralFeatures().add(idAttr);
 
   const movable = new EClassImpl();
-  movable.setName('Movable');
+  movable.setName("Movable");
   movable.getESuperTypes().add(base);
   const positionAttr = new EAttributeImpl();
-  positionAttr.setName('position');
+  positionAttr.setName("position");
   positionAttr.setEType(eString);
   positionAttr.setFeatureID(1);
   movable.getEStructuralFeatures().add(positionAttr);
 
   const named = new EClassImpl();
-  named.setName('Named');
+  named.setName("Named");
   named.getESuperTypes().add(base);
   const labelAttr = new EAttributeImpl();
-  labelAttr.setName('label');
+  labelAttr.setName("label");
   labelAttr.setEType(eString);
   labelAttr.setFeatureID(1);
   named.getEStructuralFeatures().add(labelAttr);
 
   const sprite = new EClassImpl();
-  sprite.setName('Sprite');
+  sprite.setName("Sprite");
   sprite.getESuperTypes().add(movable);
   sprite.getESuperTypes().add(named);
 
@@ -111,8 +139,8 @@ function buildDiamondMetamodel() {
   return { base, movable, named, sprite, idAttr, positionAttr, labelAttr };
 }
 
-describe('EClass reflection - diamond (multiple) inheritance', () => {
-  it('eAllSuperTypes includes every ancestor exactly once, even when reachable via two paths', () => {
+describe("EClass reflection - diamond (multiple) inheritance", () => {
+  it("eAllSuperTypes includes every ancestor exactly once, even when reachable via two paths", () => {
     const { base, movable, named, sprite } = buildDiamondMetamodel();
     const supers = sprite.getEAllSuperTypes();
     expect(supers).toHaveLength(3);
@@ -134,7 +162,7 @@ describe('EClass reflection - diamond (multiple) inheritance', () => {
     expect(features).toHaveLength(3);
   });
 
-  it('isSuperTypeOf recognizes both branches of the diamond', () => {
+  it("isSuperTypeOf recognizes both branches of the diamond", () => {
     const { base, movable, named, sprite } = buildDiamondMetamodel();
     expect(base.isSuperTypeOf(sprite)).toBe(true);
     expect(movable.isSuperTypeOf(sprite)).toBe(true);

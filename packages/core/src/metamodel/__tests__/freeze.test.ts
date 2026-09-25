@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { EAttributeImpl } from '../impl/eattribute-impl.js';
-import { EClassImpl } from '../impl/eclass-impl.js';
-import { EDataTypeImpl } from '../impl/edata-type-impl.js';
-import { EEnumImpl } from '../impl/eenum-impl.js';
-import { EEnumLiteralImpl } from '../impl/eenum-literal-impl.js';
-import { EPackageImpl } from '../impl/epackage-impl.js';
+import { describe, expect, it } from "vitest";
+import {
+  EAttributeImpl,
+  EClassImpl,
+  EDataTypeImpl,
+  EEnumImpl,
+  EEnumLiteralImpl,
+  EPackageImpl,
+} from "../impl/index";
 
 /**
  * freeze()/isFrozen() are protected, matching real EMF's own access level
@@ -20,25 +22,25 @@ function checkFrozen(obj: object): boolean {
   return (obj as unknown as { isFrozen(): boolean }).isFrozen();
 }
 
-describe('freeze()/isFrozen() - cascading immutability marker', () => {
-  it('starts unfrozen', () => {
+describe("freeze()/isFrozen() - cascading immutability marker", () => {
+  it("starts unfrozen", () => {
     const pkg = new EPackageImpl();
     expect(checkFrozen(pkg)).toBe(false);
   });
 
-  it('EPackageImpl.freeze() cascades to every classifier it contains', () => {
+  it("EPackageImpl.freeze() cascades to every classifier it contains", () => {
     const eString = new EDataTypeImpl();
-    eString.setName('EString');
+    eString.setName("EString");
 
     const book = new EClassImpl();
-    book.setName('Book');
+    book.setName("Book");
     const title = new EAttributeImpl();
-    title.setName('title');
+    title.setName("title");
     title.setEType(eString);
     book.getEStructuralFeatures().add(title);
 
     const pkg = new EPackageImpl();
-    pkg.setName('library');
+    pkg.setName("library");
     pkg.getEClassifiers().add(eString);
     pkg.getEClassifiers().add(book);
 
@@ -59,13 +61,13 @@ describe('freeze()/isFrozen() - cascading immutability marker', () => {
     expect(checkFrozen(title)).toBe(true);
   });
 
-  it('EClassImpl.freeze() alone (without going through a package) still cascades to its own features', () => {
+  it("EClassImpl.freeze() alone (without going through a package) still cascades to its own features", () => {
     const eString = new EDataTypeImpl();
-    eString.setName('EString');
+    eString.setName("EString");
     const widget = new EClassImpl();
-    widget.setName('Widget');
+    widget.setName("Widget");
     const name = new EAttributeImpl();
-    name.setName('name');
+    name.setName("name");
     name.setEType(eString);
     widget.getEStructuralFeatures().add(name);
 
@@ -78,12 +80,12 @@ describe('freeze()/isFrozen() - cascading immutability marker', () => {
     expect(checkFrozen(eString)).toBe(false);
   });
 
-  it('EEnumImpl.freeze() cascades to its own literals - a real gap found and fixed while writing this test (see NOTES.md)', () => {
+  it("EEnumImpl.freeze() cascades to its own literals - a real gap found and fixed while writing this test (see NOTES.md)", () => {
     const genre = new EEnumImpl();
-    genre.setName('Genre');
+    genre.setName("Genre");
     const scifi = new EEnumLiteralImpl();
-    scifi.setName('SciFi');
-    genre.addLiteral(scifi);
+    scifi.setName("SciFi");
+    genre.getELiterals().add(scifi);
 
     expect(checkFrozen(genre)).toBe(false);
     expect(checkFrozen(scifi)).toBe(false);
@@ -94,15 +96,15 @@ describe('freeze()/isFrozen() - cascading immutability marker', () => {
     expect(checkFrozen(scifi)).toBe(true);
   });
 
-  it('EPackageImpl.freeze() reaches an EEnum literal transitively (package -> EEnum -> literal)', () => {
+  it("EPackageImpl.freeze() reaches an EEnum literal transitively (package -> EEnum -> literal)", () => {
     const genre = new EEnumImpl();
-    genre.setName('Genre');
+    genre.setName("Genre");
     const scifi = new EEnumLiteralImpl();
-    scifi.setName('SciFi');
-    genre.addLiteral(scifi);
+    scifi.setName("SciFi");
+    genre.getELiterals().add(scifi);
 
     const pkg = new EPackageImpl();
-    pkg.setName('lib');
+    pkg.setName("lib");
     pkg.getEClassifiers().add(genre);
 
     callFreeze(pkg);

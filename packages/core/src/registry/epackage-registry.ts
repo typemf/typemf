@@ -1,4 +1,4 @@
-import { EPackage } from '../metamodel/api/epackage.js';
+import { EPackage } from "../metamodel/types/EPackage.js";
 
 /**
  * A lookup from namespace URI to EPackage - "which metamodel does this

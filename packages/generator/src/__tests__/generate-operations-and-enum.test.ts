@@ -87,12 +87,12 @@ describe('End-to-end: EOperation (with operation-body annotation) and EEnum', ()
     const { pkg } = buildOperationsAndEnumMetamodel();
     const files = generate(pkg, typescriptTemplateSet, {});
 
-    const bookGen = files.find((f) => f.path === 'gen/BookGen.ts')!;
-    expect(bookGen.content).toContain('describe(): string {');
-    expect(bookGen.content).toContain("return this.getTitle() + ' (' + this.getGenre() + ')';");
-    expect(bookGen.content).not.toContain('abstract describe');
+    const bookImpl = files.find((f) => f.path === 'impl/BookImpl.ts')!;
+    expect(bookImpl.content).toContain('describe(): string {');
+    expect(bookImpl.content).toContain("return this.getTitle() + ' (' + this.getGenre() + ')';");
+    expect(bookImpl.content).not.toContain('abstract describe');
 
-    const genreFile = files.find((f) => f.path === 'api/Genre.ts')!;
+    const genreFile = files.find((f) => f.path === 'types/Genre.ts')!;
     expect(genreFile.content).toContain('export enum Genre {');
     expect(genreFile.content).toContain('SciFi = "SciFi"');
     expect(genreFile.content).toContain('Fantasy = "Fantasy"');
@@ -132,15 +132,15 @@ describe('End-to-end: EOperation (with operation-body annotation) and EEnum', ()
     });
     expect(diagnostics, formatted).toHaveLength(0);
 
-    const { Library2Factory } = (await import(jsPaths.get('Library2Factory.ts')!)) as {
-      Library2Factory: new () => { create(eClass: unknown): unknown };
+    const { Library2FactoryImpl } = (await import(jsPaths.get('impl/Library2FactoryImpl.ts')!)) as {
+      Library2FactoryImpl: new () => { create(eClass: unknown): unknown };
     };
     const { Library2PackageImpl } = (await import(jsPaths.get('impl/Library2PackageImpl.ts')!)) as {
       Library2PackageImpl: { eINSTANCE: { getBook(): unknown } };
     };
-    const { Genre } = (await import(jsPaths.get('api/Genre.ts')!)) as { Genre: Record<string, string> };
+    const { Genre } = (await import(jsPaths.get('types/Genre.ts')!)) as { Genre: Record<string, string> };
 
-    const factory = new Library2Factory();
+    const factory = new Library2FactoryImpl();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const book: any = factory.create(Library2PackageImpl.eINSTANCE.getBook());
     book.setTitle('Dune');

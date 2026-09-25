@@ -1,4 +1,4 @@
-{% file "api/" + eEnum.getName() + ".ts" %}
+{% file "types/" + eEnum.getName() + ".ts" %}
 {{ docComment(eEnum) }}
 export enum {{ eEnum.getName() }} {
 {% for literal in eEnum.getELiterals() %}

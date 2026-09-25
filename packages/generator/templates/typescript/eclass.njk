@@ -1,6 +1,6 @@
 {% set superClass = superType(eClass) %}
 {% set ownFeatures = eClass.getEStructuralFeatures() %}
-{% file "api/" + eClass.getName() + ".ts" %}
+{% file "types/" + eClass.getName() + ".ts" %}
 import { EObject, EList } from '@typemf/core';
 {% if superClass %}
 import { {{ superClass.getName() }} } from './{{ superClass.getName() }}.js';
@@ -28,19 +28,19 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 {% endfor %}
 }
 {% endfile %}
-{% file "gen/" + eClass.getName() + "Gen.ts" %}
+{% file "impl/" + eClass.getName() + "Impl.ts" %}
 import { EClass, EList, EObject, EObjectImpl, EStructuralFeature, BasicEList } from '@typemf/core';
-import { {{ eClass.getName() }} } from '../api/{{ eClass.getName() }}.js';
-import { {{ packageClassName(package) }}Impl } from '../impl/{{ packageClassName(package) }}Impl.js';
+import { {{ eClass.getName() }} } from '../types/{{ eClass.getName() }}.js';
+import { {{ packageClassName(package) }}Impl } from './{{ packageClassName(package) }}Impl.js';
 {% for typeName in referencedApiTypes(ownFeatures, eClass.getName()) %}
-import { {{ typeName }} } from '../api/{{ typeName }}.js';
+import { {{ typeName }} } from '../types/{{ typeName }}.js';
 {% endfor %}
 {% if superClass %}
-import { {{ superClass.getName() }}Gen } from './{{ superClass.getName() }}Gen.js';
+import { {{ superClass.getName() }}Impl } from './{{ superClass.getName() }}Impl.js';
 {% endif %}
 
 {{ docComment(eClass) }}
-export abstract class {{ eClass.getName() }}Gen extends {{ (superClass.getName() + "Gen") if superClass else "EObjectImpl" }} implements {{ eClass.getName() }} {
+export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl") if superClass else "EObjectImpl" }} implements {{ eClass.getName() }} {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
   private readonly _{{ feature.getName() }} = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this, {{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
@@ -82,7 +82,16 @@ export abstract class {{ eClass.getName() }}Gen extends {{ (superClass.getName()
     {{ body }}
   }
 {% else %}
-  abstract {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }};
+  {#- No body:typescript annotation - there is no further hand-editable
+      layer to fill this in anymore (Gen/Impl merged: this class is
+      instantiated directly via `new X Impl()` in the Factory, so it
+      cannot have any abstract members). A clear throwing stub is the
+      honest behavior for fully-generated code with nothing to base a
+      real implementation on, rather than silently failing to compile or
+      silently doing nothing. #}
+  {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }} {
+    throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() has no body:typescript annotation - nothing to generate.');
+  }
 {% endif %}
 {% endfor %}
 
@@ -188,13 +197,5 @@ export abstract class {{ eClass.getName() }}Gen extends {{ (superClass.getName()
 {% endif %}
     }
   }
-}
-{% endfile %}
-{% file "impl/" + eClass.getName() + "Impl.ts" %}
-import { {{ eClass.getName() }}Gen } from '../gen/{{ eClass.getName() }}Gen.js';
-
-{{ docComment(eClass) }}
-export class {{ eClass.getName() }}Impl extends {{ eClass.getName() }}Gen {
-  // Add custom methods here. This file is never regenerated once created.
 }
 {% endfile %}

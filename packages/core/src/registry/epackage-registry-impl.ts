@@ -1,5 +1,5 @@
-import { EPackage } from '../metamodel/api/epackage.js';
-import { EPackageRegistry } from './epackage-registry.js';
+import { EPackage } from "../metamodel/types/EPackage.js";
+import { EPackageRegistry } from "./epackage-registry.js";
 
 export class EPackageRegistryImpl implements EPackageRegistry {
   private readonly packagesByNsURI = new Map<string, EPackage>();
@@ -9,7 +9,7 @@ export class EPackageRegistryImpl implements EPackageRegistry {
     if (!nsURI) {
       throw new Error(
         `Cannot register EPackage '${pkg.getName()}': it has no nsURI set. ` +
-          'Every registrable EPackage needs a unique namespace URI - see setNsURI().'
+          "Every registrable EPackage needs a unique namespace URI - see setNsURI().",
       );
     }
     this.packagesByNsURI.set(nsURI, pkg);

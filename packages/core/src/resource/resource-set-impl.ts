@@ -1,15 +1,15 @@
-import { EObject } from '../metamodel/api/eobject.js';
-import { EPackageRegistry } from '../registry/epackage-registry.js';
-import { EPackageRegistryImpl } from '../registry/epackage-registry-impl.js';
-import { resolveFragment } from './eobject-address.js';
-import { ProxyEObjectImpl } from './proxy-eobject-impl.js';
-import { Resource } from './resource.js';
-import { ResourceFactoryRegistry } from './resource-factory-registry.js';
-import { ResourceFactoryRegistryImpl } from './resource-factory-registry-impl.js';
-import { ResourceSet } from './resource-set.js';
-import { URI } from './uri.js';
-import { UriConverterRegistry } from './uri-converter-registry.js';
-import { UriConverterRegistryImpl } from './uri-converter-registry-impl.js';
+import { EObject } from "../metamodel/types/EObject.js";
+import { EPackageRegistry } from "../registry/epackage-registry.js";
+import { EPackageRegistryImpl } from "../registry/epackage-registry-impl.js";
+import { resolveFragment } from "./eobject-address.js";
+import { ProxyEObjectImpl } from "./proxy-eobject-impl.js";
+import { Resource } from "./resource.js";
+import { ResourceFactoryRegistry } from "./resource-factory-registry.js";
+import { ResourceFactoryRegistryImpl } from "./resource-factory-registry-impl.js";
+import { ResourceSet } from "./resource-set.js";
+import { URI } from "./uri.js";
+import { UriConverterRegistry } from "./uri-converter-registry.js";
+import { UriConverterRegistryImpl } from "./uri-converter-registry-impl.js";
 
 export class ResourceSetImpl implements ResourceSet {
   private readonly resources: Resource[] = [];
@@ -17,7 +17,7 @@ export class ResourceSetImpl implements ResourceSet {
   constructor(
     private readonly packageRegistry: EPackageRegistry = new EPackageRegistryImpl(),
     private readonly resourceFactoryRegistry: ResourceFactoryRegistry = new ResourceFactoryRegistryImpl(),
-    private readonly uriConverterRegistry: UriConverterRegistry = new UriConverterRegistryImpl()
+    private readonly uriConverterRegistry: UriConverterRegistry = new UriConverterRegistryImpl(),
   ) {}
 
   getPackageRegistry(): EPackageRegistry {
@@ -40,9 +40,9 @@ export class ResourceSetImpl implements ResourceSet {
     const factory = this.resourceFactoryRegistry.getFactory(uri);
     if (!factory) {
       throw new Error(
-        `No ResourceFactory registered for '${uri.toString()}' (extension '${uri.getFileExtension() ?? '<none>'}', ` +
+        `No ResourceFactory registered for '${uri.toString()}' (extension '${uri.getFileExtension() ?? "<none>"}', ` +
           `scheme '${uri.getScheme()}'). Register one via getResourceFactoryRegistry().registerForExtension(...) ` +
-          'or .registerForProtocol(...) first.'
+          "or .registerForProtocol(...) first.",
       );
     }
     const resource = factory.createResource(uri);
@@ -51,9 +51,14 @@ export class ResourceSetImpl implements ResourceSet {
     return resource;
   }
 
-  async getResource(uri: URI, loadOnDemand: boolean): Promise<Resource | undefined> {
+  async getResource(
+    uri: URI,
+    loadOnDemand: boolean,
+  ): Promise<Resource | undefined> {
     const trimmed = uri.trimFragment();
-    let resource = this.resources.find((r) => r.getURI().trimFragment().equals(trimmed));
+    let resource = this.resources.find((r) =>
+      r.getURI().trimFragment().equals(trimmed),
+    );
 
     if (!resource) {
       if (!loadOnDemand) return undefined;
@@ -77,13 +82,20 @@ export class ResourceSetImpl implements ResourceSet {
   async resolve(proxy: EObject): Promise<EObject> {
     if (!proxy.eIsProxy()) return proxy;
     if (!(proxy instanceof ProxyEObjectImpl)) {
-      throw new Error('eIsProxy() is true but the object is not a ProxyEObjectImpl - cannot resolve it.');
+      throw new Error(
+        "eIsProxy() is true but the object is not a ProxyEObjectImpl - cannot resolve it.",
+      );
     }
 
     const proxyURI = proxy.getProxyURI();
-    const targetResource = await this.getResource(proxyURI.trimFragment(), true);
+    const targetResource = await this.getResource(
+      proxyURI.trimFragment(),
+      true,
+    );
     if (!targetResource) {
-      throw new Error(`Could not resolve proxy '${proxy.fullId()}': its resource could not be loaded.`);
+      throw new Error(
+        `Could not resolve proxy '${proxy.fullId()}': its resource could not be loaded.`,
+      );
     }
 
     const fragment = proxyURI.getFragment();
@@ -97,12 +109,13 @@ export class ResourceSetImpl implements ResourceSet {
     // correctly - a json document's proxy into an xmi document, or vice
     // versa - since the target's format, not the referencing one, decides
     // how ITS fragments are read.
-    const resolver = serializer.resolveFragment?.bind(serializer) ?? resolveFragment;
+    const resolver =
+      serializer.resolveFragment?.bind(serializer) ?? resolveFragment;
     const found = fragment ? resolver(fragment, roots) : undefined;
     if (!found) {
       throw new Error(
-        `Could not resolve proxy '${proxy.fullId()}': fragment '${fragment ?? '<none>'}' did not match any ` +
-          `object in '${targetResource.getURI().toString()}'.`
+        `Could not resolve proxy '${proxy.fullId()}': fragment '${fragment ?? "<none>"}' did not match any ` +
+          `object in '${targetResource.getURI().toString()}'.`,
       );
     }
     return found;
