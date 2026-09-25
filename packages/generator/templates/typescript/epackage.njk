@@ -1,0 +1,231 @@
+{% set pkgClass = packageClassName(package) %}
+{% file pkgClass + ".ts" %}
+import { EAttribute, EClass, EClassifier, EDataType, EEnum, EPackage, EReference } from '@typemf/core';
+
+/**
+ * Classifier/feature IDs, as pure numeric literals - safe to import from
+ * anywhere (Factory, Switch) with zero risk of the circular-import hazard
+ * that made a lazy, explicit init() necessary for the singleton itself
+ * (see {{ pkgClass }}Impl.ts) - these are just numbers, never require
+ * constructing anything.
+ */
+export const Ids = {
+{% for classifier in package.getEClassifiers() %}
+  {{ classifier.getName() }}: { self: {{ classifier.getClassifierID() }}{% if isEClass(classifier) %}{% for feature in classifier.getEStructuralFeatures() %}, {{ feature.getName() }}: {{ feature.getFeatureID() }}{% endfor %}{% endif %} },
+{% endfor %}
+} as const;
+
+{{ docComment(package) }}
+export interface {{ pkgClass }} extends EPackage {
+{% for classifier in package.getEClassifiers() %}
+{% if isEClass(classifier) %}
+  get{{ classifier.getName() }}(): EClass;
+{% for feature in classifier.getEStructuralFeatures() %}
+  get{{ classifier.getName() }}_{{ ucfirst(feature.getName()) }}(): {{ "EReference" if isEReference(feature) else "EAttribute" }};
+{% endfor %}
+{% elif isEEnum(classifier) %}
+  get{{ classifier.getName() }}(): EEnum;
+{% else %}
+  get{{ classifier.getName() }}(): EDataType;
+{% endif %}
+{% endfor %}
+}
+{% endfile %}
+{% file "impl/" + pkgClass + "Impl.ts" %}
+import {
+  EPackageImpl,
+  EClassImpl,
+  EAttributeImpl,
+  EReferenceImpl,
+  EDataTypeImpl,
+  EEnumImpl,
+  EEnumLiteralImpl,
+  EAnnotationImpl,
+  EFactoryImpl,
+  EClass,
+  EAttribute,
+  EReference,
+  EEnum,
+  EDataType,
+} from '@typemf/core';
+import { {{ pkgClass }}, Ids } from '../{{ pkgClass }}.js';
+import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
+
+{#-
+  Emits code reconstructing `element`'s real EAnnotations (source +
+  details) onto the runtime object built at `targetExpr`. Scoped to
+  package/classifier/feature/enum-literal only - EOperations have no
+  runtime representation in the converted metamodel yet, so there's
+  nowhere for an operation-level annotation to attach (see NOTES.md).
+#}
+{% macro emitAnnotations(targetExpr, element) %}
+{% for annotation in element.getEAnnotations() %}
+    {
+      const annotation = new EAnnotationImpl();
+{% if annotation.getSource() %}
+      annotation.setSource({{ jsString(annotation.getSource()) }});
+{% endif %}
+{% for entry in detailsEntries(annotation) %}
+      annotation.getDetails().set({{ jsString(entry.key) }}, {{ jsString(entry.value) }});
+{% endfor %}
+      {{ targetExpr }}.getEAnnotations().add(annotation);
+    }
+{% endfor %}
+{% endmacro %}
+
+{{ docComment(package) }}
+export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
+{% for classifier in package.getEClassifiers() %}
+{% if isEClass(classifier) %}
+  private readonly _{{ classifier.getName() }}: EClass;
+{% for feature in classifier.getEStructuralFeatures() %}
+  private readonly _{{ classifier.getName() }}_{{ feature.getName() }}: {{ "EReference" if isEReference(feature) else "EAttribute" }};
+{% endfor %}
+{% elif isEEnum(classifier) %}
+  private readonly _{{ classifier.getName() }}: EEnumImpl;
+{% else %}
+  private readonly _{{ classifier.getName() }}: EDataType;
+{% endif %}
+{% endfor %}
+
+  private static _instance: {{ pkgClass }}Impl | undefined;
+
+  /**
+   * The one explicit entry point that constructs the singleton - call it
+   * yourself, with your own factory, before anything else in your program
+   * touches {{ pkgClass }}Impl.eINSTANCE, to use a custom factory (e.g. one
+   * overriding createX() to return your own derived classes). Whichever
+   * caller gets here FIRST wins; a later call with a *different* factory
+   * is logged and otherwise ignored, rather than silently replacing an
+   * already-in-use singleton or throwing on a caller who didn't cause the
+   * conflict.
+   */
+  static init(factory?: {{ factoryClassName(package) }}): {{ pkgClass }}Impl {
+    if (!{{ pkgClass }}Impl._instance) {
+      {{ pkgClass }}Impl._instance = new {{ pkgClass }}Impl();
+      {{ pkgClass }}Impl._instance.setEFactoryInstance(factory ?? new {{ factoryClassName(package) }}());
+    } else if (factory) {
+      console.warn(
+        '{{ pkgClass }}Impl.init() called again with a different factory after the singleton already ' +
+          'existed - ignoring the new factory and keeping the existing one.'
+      );
+    }
+    return {{ pkgClass }}Impl._instance;
+  }
+
+  static get eINSTANCE(): {{ pkgClass }}Impl {
+    return {{ pkgClass }}Impl.init();
+  }
+
+  private constructor() {
+    super();
+    this.setName({{ jsString(package.getName()) }});
+    this.setNsURI({{ jsString(package.getNsURI()) }});
+    this.setNsPrefix({{ jsString(package.getNsPrefix()) }});
+{{ emitAnnotations("this", package) }}
+
+    // Pass 1: create every classifier (empty shell - no features/supertypes
+    // yet), so later passes can reference any of them regardless of
+    // declaration order.
+{% for classifier in package.getEClassifiers() %}
+{% if isEClass(classifier) %}
+    this._{{ classifier.getName() }} = new EClassImpl();
+    this._{{ classifier.getName() }}.setName({{ jsString(classifier.getName()) }});
+    this._{{ classifier.getName() }}.setClassifierID(Ids.{{ classifier.getName() }}.self);
+{% if classifier.isAbstract() %}
+    this._{{ classifier.getName() }}.setAbstract(true);
+{% endif %}
+{{ emitAnnotations("this._" + classifier.getName(), classifier) }}
+    this.getEClassifiers().add(this._{{ classifier.getName() }});
+{% elif isEEnum(classifier) %}
+    this._{{ classifier.getName() }} = new EEnumImpl();
+    this._{{ classifier.getName() }}.setName({{ jsString(classifier.getName()) }});
+    this._{{ classifier.getName() }}.setClassifierID(Ids.{{ classifier.getName() }}.self);
+{% for literal in classifier.getELiterals() %}
+    {
+      const literal = new EEnumLiteralImpl();
+      literal.setName({{ jsString(literal.getName()) }});
+      literal.setValue({{ literal.getValue() }});
+      literal.setLiteral({{ jsString(literal.getLiteral()) }});
+{{ emitAnnotations("literal", literal) }}
+      this._{{ classifier.getName() }}.addLiteral(literal);
+    }
+{% endfor %}
+{{ emitAnnotations("this._" + classifier.getName(), classifier) }}
+    this.getEClassifiers().add(this._{{ classifier.getName() }});
+{% else %}
+    this._{{ classifier.getName() }} = new EDataTypeImpl();
+    this._{{ classifier.getName() }}.setName({{ jsString(classifier.getName()) }});
+    this._{{ classifier.getName() }}.setClassifierID(Ids.{{ classifier.getName() }}.self);
+{{ emitAnnotations("this._" + classifier.getName(), classifier) }}
+    this.getEClassifiers().add(this._{{ classifier.getName() }});
+{% endif %}
+{% endfor %}
+
+    // Pass 2: attributes/references, now that every classifier (including
+    // ones referenced as a feature's eType) already exists.
+{% for classifier in eClassesOf(package) %}
+{% for feature in classifier.getEStructuralFeatures() %}
+    this._{{ classifier.getName() }}_{{ feature.getName() }} = new {{ "EReferenceImpl" if isEReference(feature) else "EAttributeImpl" }}();
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setName({{ jsString(feature.getName()) }});
+{% if feature.getEType() %}
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setEType(this._{{ feature.getEType().getName() }});
+{% endif %}
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setLowerBound({{ feature.getLowerBound() }});
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setUpperBound({{ feature.getUpperBound() }});
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setEContainingClass(this._{{ classifier.getName() }});
+{% if isEReference(feature) %}
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setContainment({{ 'true' if feature.isContainment() else 'false' }});
+{% else %}
+{% if feature.isID() %}
+    this._{{ classifier.getName() }}_{{ feature.getName() }}.setID(true);
+{% endif %}
+{% endif %}
+{{ emitAnnotations("this._" + classifier.getName() + "_" + feature.getName(), feature) }}
+    this._{{ classifier.getName() }}.getEStructuralFeatures().add(this._{{ classifier.getName() }}_{{ feature.getName() }});
+{% endfor %}
+{% endfor %}
+
+    // Pass 3: every classifier's owning package (self-referential, so must
+    // come after pass 1 creates them all).
+{% for classifier in package.getEClassifiers() %}
+    this._{{ classifier.getName() }}.setEPackage(this);
+{% endfor %}
+
+    // Pass 4: supertypes.
+{% for classifier in eClassesOf(package) %}
+{% set parent = superType(classifier) %}
+{% if parent %}
+    this._{{ classifier.getName() }}.getESuperTypes().add(this._{{ parent.getName() }});
+{% endif %}
+{% endfor %}
+
+    // Pass 5: recompute EAll* caches now that supertypes/features are wired.
+{% for classifier in eClassesOf(package) %}
+    this._{{ classifier.getName() }}.recomputeAllLists();
+{% endfor %}
+  }
+
+{% for classifier in package.getEClassifiers() %}
+{% if isEClass(classifier) %}
+  get{{ classifier.getName() }}(): EClass {
+    return this._{{ classifier.getName() }};
+  }
+{% for feature in classifier.getEStructuralFeatures() %}
+  get{{ classifier.getName() }}_{{ ucfirst(feature.getName()) }}(): {{ "EReference" if isEReference(feature) else "EAttribute" }} {
+    return this._{{ classifier.getName() }}_{{ feature.getName() }};
+  }
+{% endfor %}
+{% elif isEEnum(classifier) %}
+  get{{ classifier.getName() }}(): EEnum {
+    return this._{{ classifier.getName() }};
+  }
+{% else %}
+  get{{ classifier.getName() }}(): EDataType {
+    return this._{{ classifier.getName() }};
+  }
+{% endif %}
+{% endfor %}
+}
+{% endfile %}

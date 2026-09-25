@@ -1,0 +1,200 @@
+{% set superClass = superType(eClass) %}
+{% set ownFeatures = eClass.getEStructuralFeatures() %}
+{% file "api/" + eClass.getName() + ".ts" %}
+import { EObject, EList } from '@typemf/core';
+{% if superClass %}
+import { {{ superClass.getName() }} } from './{{ superClass.getName() }}.js';
+{% endif %}
+{% for typeName in referencedApiTypes(ownFeatures, eClass.getName(), superClass.getName() if superClass else '') %}
+import { {{ typeName }} } from './{{ typeName }}.js';
+{% endfor %}
+
+{{ docComment(eClass) }}
+export interface {{ eClass.getName() }} extends {{ superClass.getName() if superClass else "EObject" }} {
+{% for feature in ownFeatures %}
+{{ docComment(feature, "  ") }}
+{% if feature.isMany() %}
+  get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature.getEType()) }}>;
+{% else %}
+  get{{ ucfirst(feature.getName()) }}(): {{ tsScalarType(feature.getEType()) }} | undefined;
+{% if not trivialDerivedFormula(feature) %}
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsScalarType(feature.getEType()) }} | undefined): void;
+{% endif %}
+{% endif %}
+{% endfor %}
+{% for op in eClass.getEOperations() %}
+{{ docComment(op, "  ") }}
+  {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }};
+{% endfor %}
+}
+{% endfile %}
+{% file "gen/" + eClass.getName() + "Gen.ts" %}
+import { EClass, EList, EObject, EObjectImpl, EStructuralFeature, BasicEList } from '@typemf/core';
+import { {{ eClass.getName() }} } from '../api/{{ eClass.getName() }}.js';
+import { {{ packageClassName(package) }}Impl } from '../impl/{{ packageClassName(package) }}Impl.js';
+{% for typeName in referencedApiTypes(ownFeatures, eClass.getName()) %}
+import { {{ typeName }} } from '../api/{{ typeName }}.js';
+{% endfor %}
+{% if superClass %}
+import { {{ superClass.getName() }}Gen } from './{{ superClass.getName() }}Gen.js';
+{% endif %}
+
+{{ docComment(eClass) }}
+export abstract class {{ eClass.getName() }}Gen extends {{ (superClass.getName() + "Gen") if superClass else "EObjectImpl" }} implements {{ eClass.getName() }} {
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+  private readonly _{{ feature.getName() }} = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this, {{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
+{% else %}
+  private _{{ feature.getName() }}: {{ tsScalarType(feature.getEType()) }} | undefined;
+{% endif %}
+{% endfor %}
+
+  eClass(): EClass {
+    return {{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}();
+  }
+
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+  get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature.getEType()) }}> {
+    return this._{{ feature.getName() }};
+  }
+{% else %}
+{% set formula = trivialDerivedFormula(feature) %}
+{% if formula %}
+  get{{ ucfirst(feature.getName()) }}(): {{ tsScalarType(feature.getEType()) }} | undefined {
+    return {{ formula }};
+  }
+{% else %}
+  get{{ ucfirst(feature.getName()) }}(): {{ tsScalarType(feature.getEType()) }} | undefined {
+    return this._{{ feature.getName() }};
+  }
+
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsScalarType(feature.getEType()) }} | undefined): void {
+    this.eSet({{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}(), value);
+  }
+{% endif %}
+{% endif %}
+{% endfor %}
+{% for op in eClass.getEOperations() %}
+{% set body = operationBody(op) %}
+{% if body %}
+  {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }} {
+    {{ body }}
+  }
+{% else %}
+  abstract {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }};
+{% endif %}
+{% endfor %}
+
+  eGet(feature: EStructuralFeature): unknown {
+    switch (feature.getFeatureID()) {
+{% for feature in ownFeatures %}
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }};
+{% endfor %}
+      default:
+{% if superClass %}
+        return super.eGet(feature);
+{% else %}
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+{% endif %}
+    }
+  }
+
+  eSet(feature: EStructuralFeature, value: unknown): void {
+    switch (feature.getFeatureID()) {
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+      case {{ feature.getFeatureID() }}: {
+        const list = this._{{ feature.getName() }};
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
+        list.clear();
+        for (const item of items) list.add(item as {{ tsScalarType(feature.getEType()) }});
+        return;
+      }
+{% else %}
+      case {{ feature.getFeatureID() }}: {
+        const oldValue = this.eGet(feature);
+        if (oldValue === value) return;
+        this.eBasicSetValue(feature, value);
+        this.eDidRemove(feature, oldValue);
+        this.eDidAdd(feature, value);
+        return;
+      }
+{% endif %}
+{% endfor %}
+      default:
+{% if superClass %}
+        super.eSet(feature, value);
+        return;
+{% else %}
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+{% endif %}
+    }
+  }
+
+  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
+    switch (feature.getFeatureID()) {
+{% for feature in singleValuedFeatures(ownFeatures) %}
+      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsScalarType(feature.getEType()) }} | undefined; return;
+{% endfor %}
+      default:
+{% if superClass %}
+        super.eBasicSetValue(feature, value);
+        return;
+{% else %}
+        throw new Error(`Feature ${feature.getFeatureID()} on {{ eClass.getName() }} is many-valued or unknown.`);
+{% endif %}
+    }
+  }
+
+  eIsSet(feature: EStructuralFeature): boolean {
+    switch (feature.getFeatureID()) {
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }}.size() !== 0;
+{% else %}
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== undefined;
+{% endif %}
+{% endfor %}
+      default:
+{% if superClass %}
+        return super.eIsSet(feature);
+{% else %}
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+{% endif %}
+    }
+  }
+
+  eUnset(feature: EStructuralFeature): void {
+    switch (feature.getFeatureID()) {
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }}.clear(); return;
+{% else %}
+      case {{ feature.getFeatureID() }}: {
+        const oldValue = this._{{ feature.getName() }};
+        this._{{ feature.getName() }} = undefined;
+        this.eDidRemove(feature, oldValue);
+        return;
+      }
+{% endif %}
+{% endfor %}
+      default:
+{% if superClass %}
+        super.eUnset(feature);
+        return;
+{% else %}
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+{% endif %}
+    }
+  }
+}
+{% endfile %}
+{% file "impl/" + eClass.getName() + "Impl.ts" %}
+import { {{ eClass.getName() }}Gen } from '../gen/{{ eClass.getName() }}Gen.js';
+
+{{ docComment(eClass) }}
+export class {{ eClass.getName() }}Impl extends {{ eClass.getName() }}Gen {
+  // Add custom methods here. This file is never regenerated once created.
+}
+{% endfile %}

@@ -1,0 +1,31 @@
+{
+  "name": "typemf",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "remoteUser": "vscode",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "postCreateCommand": "npm install -g corepack@latest && corepack enable && (corepack use pnpm@latest || npm install -g pnpm@latest) && pnpm install",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "editorconfig.editorconfig",
+        "streetsidesoftware.code-spell-checker",
+        "redhat.vscode-yaml",
+        "ms-vscode.extension-test-runner"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "eslint.workingDirectories": [{ "mode": "auto" }],
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  }
+}

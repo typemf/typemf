@@ -1,0 +1,17 @@
+{% for classifier in package.getEClassifiers() %}
+{% if classifier.getName() == "EObject" %}
+{# Deliberately no files generated - see typescript-filters.ts's tsScalarType()
+   doc comment and eclass.njk's existing no-declared-supertype fallback,
+   which already resolve any reference to "EObject" to the real
+   @typemf/core EObject rather than a generated, shadowing one. #}
+{% elif isEClass(classifier) %}
+{% set eClass = classifier %}
+{% include "eclass.njk" %}
+{% elif isEEnum(classifier) %}
+{% set eEnum = classifier %}
+{% include "eenum.njk" %}
+{% endif %}
+{% endfor %}
+{% include "epackage.njk" %}
+{% include "efactory.njk" %}
+{% include "eswitch.njk" %}

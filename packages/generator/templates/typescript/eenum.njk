@@ -1,0 +1,8 @@
+{% file "api/" + eEnum.getName() + ".ts" %}
+{{ docComment(eEnum) }}
+export enum {{ eEnum.getName() }} {
+{% for literal in eEnum.getELiterals() %}
+  {{ literal.getName() }} = {{ jsString(literal.getLiteral()) }},
+{% endfor %}
+}
+{% endfile %}

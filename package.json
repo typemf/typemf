@@ -1,0 +1,28 @@
+{
+  "name": "typemf-monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@12.5.1",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.3",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3",
+    "@typescript-eslint/eslint-plugin": "^8.70.1",
+    "@typescript-eslint/parser": "^8.70.1",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.8",
+    "tsup": "^8.5.1",
+    "turbo": "^2.11.2",
+    "vitest": "^5.0.1"
+  }
+}

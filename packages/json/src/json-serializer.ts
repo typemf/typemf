@@ -1,0 +1,304 @@
+import {
+  EClass,
+  EObject,
+  EPackageRegistry,
+  EReference,
+  EStructuralFeature,
+  ProxyEObjectImpl,
+  Resource,
+  URI,
+  computeFragment,
+  getResourceOf,
+  resolveFragment,
+  type EObjectSerializer,
+} from '@typemf/core';
+import { EClassRef, eClassToRef, refToEClass } from './eclass-ref.js';
+import { NamespaceTable } from './namespace-table.js';
+
+interface TypemfJsonDocument {
+  $namespaces?: Record<string, string>;
+  $roots: Record<string, unknown>[];
+}
+
+interface RefJson {
+  $ref: string;
+  $eClass?: EClassRef;
+}
+
+/**
+ * The wire format, in brief (see the design discussion for the full
+ * rationale): a document-level $namespaces prefix table; $eClass on every
+ * object as {namespace, name} rather than a repeated full nsURI; EEnum
+ * attribute values as their literal name (see the note on
+ * decodeAttributeValue below for what that implies about the in-memory
+ * representation); containment features nest inline; non-containment
+ * references become { $ref, $eClass? }, where $ref is:
+ *   - "#fullId"           same-resource, by ID attribute
+ *   - "#/0/books/2"        same-resource, positional (JSON Pointer-shaped)
+ *   - "<uri>#<either form>" cross-resource - becomes a ProxyEObjectImpl
+ * and the optional $eClass on a $ref is only present when the target's
+ * actual EClass differs from the feature's statically declared type
+ * (mirrors XMI's xsi:type, which is likewise only emitted when needed).
+ */
+export class JsonSerializer implements EObjectSerializer {
+  async serialize(roots: EObject[], resource: Resource): Promise<Uint8Array> {
+    const namespaces = new NamespaceTable();
+    const rootJson = roots.map((root) => serializeObject(root, roots, resource, namespaces));
+    const doc: TypemfJsonDocument = { $namespaces: namespaces.toJSON(), $roots: rootJson };
+    return new TextEncoder().encode(JSON.stringify(doc, null, 2));
+  }
+
+  async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
+    const text = new TextDecoder().decode(content);
+    const doc = JSON.parse(text) as TypemfJsonDocument;
+    const namespaces = new NamespaceTable(doc.$namespaces);
+
+    const packageRegistry = resource.getResourceSet()?.getPackageRegistry();
+    if (!packageRegistry) {
+      throw new Error(
+        `Cannot deserialize '${resource.getURI().toString()}': its Resource has no ResourceSet, which is ` +
+          'needed to look up EPackages by namespace. Create it via ResourceSet.createResource()/getResource(), ' +
+          'not the ResourceImpl constructor directly.'
+      );
+    }
+
+    const ctx: DeserializeContext = {
+      namespaces,
+      packageRegistry,
+      pendingRefs: [],
+    };
+
+    const roots: EObject[] = [];
+    for (const rootJson of doc.$roots) {
+      roots.push(constructObject(rootJson, roots, ctx));
+    }
+    for (const wire of ctx.pendingRefs) wire();
+
+    return roots;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Serialization
+// ---------------------------------------------------------------------
+
+function serializeObject(
+  obj: EObject,
+  roots: EObject[],
+  sourceResource: Resource,
+  namespaces: NamespaceTable
+): Record<string, unknown> {
+  const eClass = obj.eClass();
+  const json: Record<string, unknown> = { $eClass: eClassToRef(eClass, namespaces) };
+
+  for (const feature of eClass.getEAllStructuralFeatures()) {
+    if (!obj.eIsSet(feature)) continue;
+
+    if (!isReferenceFeature(feature)) {
+      json[feature.getName()] = feature.isMany()
+        ? [...(obj.eGet(feature) as Iterable<unknown>)].map((v) => encodeAttributeValue(v, feature))
+        : encodeAttributeValue(obj.eGet(feature), feature);
+      continue;
+    }
+
+    json[feature.getName()] = feature.isMany()
+      ? [...(obj.eGet(feature) as Iterable<EObject>)].map((v) =>
+          serializeReferenceValue(v, feature, roots, sourceResource, namespaces)
+        )
+      : serializeReferenceValue(obj.eGet(feature) as EObject, feature, roots, sourceResource, namespaces);
+  }
+
+  return json;
+}
+
+function serializeReferenceValue(
+  target: EObject,
+  feature: EReference,
+  roots: EObject[],
+  sourceResource: Resource,
+  namespaces: NamespaceTable
+): unknown {
+  if (feature.isContainment()) {
+    return serializeObject(target, roots, sourceResource, namespaces);
+  }
+
+  if (target.eIsProxy()) {
+    // Round-trip an already-unresolved proxy as-is, no need to load it.
+    const proxy = target as ProxyEObjectImpl;
+    return buildRefJson(proxy.getProxyURI().toString(), proxy.eClass(), feature, namespaces);
+  }
+
+  const targetResource = getResourceOf(target);
+  const isLocal = !targetResource || targetResource === sourceResource;
+
+  const fragment = fragmentForTarget(target, targetResource, roots);
+  const refString = isLocal ? `#${fragment}` : `${targetResource!.getURI().toString()}#${fragment}`;
+
+  return buildRefJson(refString, target.eClass(), feature, namespaces);
+}
+
+/**
+ * Defers to whichever resource actually owns `target` for how its
+ * fragment should be written - its own serializer's computeFragment()
+ * when it provides one, @typemf/core's default otherwise. This is what
+ * lets a JSON document correctly reference an object living in an XMI
+ * document (or vice versa): the TARGET's format decides its own fragment
+ * grammar, not the format doing the referencing. When `target` isn't
+ * attached to any resource yet (a newly created object never saved
+ * anywhere), falls back to computeFragment() against `fallbackRoots` -
+ * the same behaviour as before this dispatch existed.
+ */
+function fragmentForTarget(target: EObject, owningResource: Resource | undefined, fallbackRoots: EObject[]): string {
+  if (!owningResource) return computeFragment(target, fallbackRoots);
+  const roots = owningResource.getContents().toArray();
+  const serializer = owningResource.getSerializer();
+  return serializer.computeFragment ? serializer.computeFragment(target, roots) : computeFragment(target, roots);
+}
+
+function buildRefJson(refString: string, actualEClass: EClass, feature: EReference, namespaces: NamespaceTable): RefJson {
+  const declaredEClass = feature.getEType() as EClass | undefined;
+  const json: RefJson = { $ref: refString };
+  if (declaredEClass !== actualEClass) {
+    json.$eClass = eClassToRef(actualEClass, namespaces);
+  }
+  return json;
+}
+
+/**
+ * "#" is never included here - callers prepend it. Fragment computation
+ * itself is delegated per-target via fragmentForTarget() above, not called
+ * directly here, so a reference into a differently-formatted resource
+ * (e.g. an @typemf/xmi document) gets that format's own grammar rather
+ * than always assuming @typemf/core's default.
+ */
+
+function isReferenceFeature(feature: EStructuralFeature): feature is EReference {
+  return 'isContainment' in feature;
+}
+
+/**
+ * EDate becomes an ISO string (JSON has no native date type, matching how
+ * EFactoryImpl already converts EDate elsewhere in @typemf/core). Every
+ * other primitive (EString/EInt/ELong/EDouble/EFloat/EBoolean) is written
+ * as-is - JSON's own string/number/boolean already match their in-memory
+ * representation, no conversion needed.
+ *
+ * EEnum-typed attributes: this package establishes (there was no prior
+ * convention anywhere in @typemf/core - no EEnum-typed attribute exists in
+ * any test fixture yet) that an EEnum attribute's in-memory value IS its
+ * literal's name as a plain string, the same way an EString attribute's
+ * value is a plain string. That makes serialization here a no-op
+ * passthrough, matching the "literal name over ordinal" choice already
+ * made for the wire format - the wire and in-memory representations are
+ * literally the same value, not just serialized the same way. Worth
+ * carrying this convention back into @typemf/core's own docs once an
+ * EEnum-typed feature actually exists there.
+ */
+function encodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
+  const eType = feature.getEType();
+  if (eType?.getName() === 'EDate' && value instanceof Date) {
+    return value.toISOString();
+  }
+  return value;
+}
+
+// ---------------------------------------------------------------------
+// Deserialization
+// ---------------------------------------------------------------------
+
+interface DeserializeContext {
+  namespaces: NamespaceTable;
+  packageRegistry: EPackageRegistry;
+  /** Reference-wiring deferred until every object in the document has been constructed. */
+  pendingRefs: Array<() => void>;
+}
+
+function constructObject(json: Record<string, unknown>, roots: EObject[], ctx: DeserializeContext): EObject {
+  const eClass = refToEClass(json.$eClass as EClassRef, ctx.namespaces, ctx.packageRegistry);
+  const obj = eClass.createInstance();
+
+  for (const feature of eClass.getEAllStructuralFeatures()) {
+    const name = feature.getName();
+    if (!(name in json)) continue;
+    const raw = json[name];
+
+    if (!isReferenceFeature(feature)) {
+      if (feature.isMany()) {
+        const list = obj.eGet(feature) as { add(v: unknown): void };
+        for (const v of raw as unknown[]) list.add(decodeAttributeValue(v, feature));
+      } else {
+        obj.eSet(feature, decodeAttributeValue(raw, feature));
+      }
+      continue;
+    }
+
+    if (!feature.isContainment()) {
+      // Deferred to phase 2: the target may not be constructed yet
+      // (same-resource forward references are legal regardless of
+      // document order), and cross-resource targets are never loaded
+      // eagerly here at all.
+      ctx.pendingRefs.push(() => wireReference(obj, feature, raw, roots, ctx));
+      continue;
+    }
+
+    if (feature.isMany()) {
+      const list = obj.eGet(feature) as { add(v: EObject): void };
+      for (const childJson of raw as Record<string, unknown>[]) {
+        list.add(constructObject(childJson, roots, ctx));
+      }
+    } else {
+      obj.eSet(feature, constructObject(raw as Record<string, unknown>, roots, ctx));
+    }
+  }
+
+  return obj;
+}
+
+function wireReference(
+  obj: EObject,
+  feature: EReference,
+  raw: unknown,
+  roots: EObject[],
+  ctx: DeserializeContext
+): void {
+  if (feature.isMany()) {
+    const list = obj.eGet(feature) as { add(v: EObject): void };
+    for (const refJson of raw as RefJson[]) {
+      list.add(resolveRef(refJson, feature, roots, ctx));
+    }
+  } else {
+    obj.eSet(feature, resolveRef(raw as RefJson, feature, roots, ctx));
+  }
+}
+
+function resolveRef(refJson: RefJson, feature: EReference, roots: EObject[], ctx: DeserializeContext): EObject {
+  const refString = refJson.$ref;
+  const declaredEClass = feature.getEType() as EClass;
+  const overrideEClass = refJson.$eClass ? refToEClass(refJson.$eClass, ctx.namespaces, ctx.packageRegistry) : undefined;
+
+  if (refString.startsWith('#')) {
+    // Same-resource: resolveFragment() from @typemf/core handles both the
+    // ID-attribute form ("Book_Dune") and the positional form
+    // ("/0/books/2") - the same function ResourceSet.resolve() uses for
+    // the cross-resource case, so both stay in sync by construction.
+    const fragment = refString.slice(1);
+    const found = resolveFragment(fragment, roots);
+    if (!found) {
+      throw new Error(`Unresolved reference '${refString}': no object matches this fragment in this document.`);
+    }
+    return found;
+  }
+
+  // Cross-resource: never loaded eagerly - a proxy, resolved later via
+  // ResourceSet.resolve() (which uses the identical resolveFragment()).
+  const uri = URI.parse(refString);
+  return new ProxyEObjectImpl(overrideEClass ?? declaredEClass, uri);
+}
+
+function decodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
+  const eType = feature.getEType();
+  if (eType?.getName() === 'EDate' && typeof value === 'string') {
+    return new Date(value);
+  }
+  return value;
+}

@@ -1,0 +1,39 @@
+{% file switchClassName(package) + ".ts" %}
+import { EObject } from '@typemf/core';
+import { Ids } from './{{ packageClassName(package) }}.js';
+{% for classifier in eClassesOf(package) %}
+import { {{ classifier.getName() }} } from './api/{{ classifier.getName() }}.js';
+{% endfor %}
+
+export abstract class {{ switchClassName(package) }}<T> {
+  doSwitch(eObject: EObject): T | undefined {
+    switch (eObject.eClass().getClassifierID()) {
+{% for classifier in concreteEClassesOf(package) %}
+      case Ids.{{ classifier.getName() }}.self: {
+        // {{ classifier.getName() }}
+        let result: T | undefined;
+{% for c in superTypeChain(classifier) %}
+        result = this.case{{ c.getName() }}(eObject as {{ c.getName() }});
+        if (result !== undefined) return result;
+{% endfor %}
+        return this.defaultCase(eObject);
+      }
+{% endfor %}
+      default:
+        return this.defaultCase(eObject);
+    }
+  }
+
+{% for classifier in eClassesOf(package) %}
+  case{{ classifier.getName() }}(object: {{ classifier.getName() }}): T | undefined {
+    void object;
+    return undefined;
+  }
+{% endfor %}
+
+  defaultCase(object: EObject): T | undefined {
+    void object;
+    return undefined;
+  }
+}
+{% endfile %}
