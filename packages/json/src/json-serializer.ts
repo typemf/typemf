@@ -4,6 +4,9 @@ import {
   EPackageRegistry,
   EReference,
   EStructuralFeature,
+  EcoreFactoryImpl,
+  EcorePackage,
+  EcorePackageImpl,
   ProxyEObjectImpl,
   Resource,
   URI,
@@ -95,13 +98,13 @@ function serializeObject(
     if (!obj.eIsSet(feature)) continue;
 
     if (!isReferenceFeature(feature)) {
-      json[feature.getName()] = feature.isMany()
+      json[feature.getName() as string] = feature.isMany()
         ? [...(obj.eGet(feature) as Iterable<unknown>)].map((v) => encodeAttributeValue(v, feature))
         : encodeAttributeValue(obj.eGet(feature), feature);
       continue;
     }
 
-    json[feature.getName()] = feature.isMany()
+    json[feature.getName() as string] = feature.isMany()
       ? [...(obj.eGet(feature) as Iterable<EObject>)].map((v) =>
           serializeReferenceValue(v, feature, roots, sourceResource, namespaces)
         )
@@ -215,13 +218,17 @@ interface DeserializeContext {
 
 function constructObject(json: Record<string, unknown>, roots: EObject[], ctx: DeserializeContext): EObject {
   const eClass = refToEClass(json.$eClass as EClassRef, ctx.namespaces, ctx.packageRegistry);
-  const obj = eClass.createInstance();
+  const obj = eClass.getEPackage()?.getEFactoryInstance()?.create(eClass);
+
+  if(obj === undefined) {
+    throw Error("Could not create object");
+  }
 
   for (const feature of eClass.getEAllStructuralFeatures()) {
     const name = feature.getName();
-    if (!(name in json)) continue;
-    const raw = json[name];
-
+    if (!(name as string in json)) continue;
+    const raw = json[name as string];
+    
     if (!isReferenceFeature(feature)) {
       if (feature.isMany()) {
         const list = obj.eGet(feature) as { add(v: unknown): void };

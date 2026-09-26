@@ -1,7 +1,7 @@
 export * from "./metamodel/index";
-
-// types
 export * from "./metamodel/types/index";
+export * from "./metamodel/impl/index";
+export * from "./metamodel/util/index";
 
 // registry
 export * from "./registry/epackage-registry.js";

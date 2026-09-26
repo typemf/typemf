@@ -138,7 +138,7 @@ function writeObjectParts(
           childrenXml += `<${feature.getName()}>${escapeText(encodeAttributeValue(value, feature))}</${feature.getName()}>`;
         }
       } else {
-        attributes.push([feature.getName(), encodeAttributeValue(obj.eGet(feature), feature)]);
+        attributes.push([feature.getName() as string, encodeAttributeValue(obj.eGet(feature), feature)]);
       }
       continue;
     }
@@ -149,7 +149,7 @@ function writeObjectParts(
     if (refFeature.isContainment()) {
       for (const child of values) {
         const childTag = childElementTag(child, refFeature, namespaces);
-        const childParts = writeObjectParts(child, feature.getName(), roots, sourceResource, namespaces);
+        const childParts = writeObjectParts(child, feature.getName() as string, roots, sourceResource, namespaces);
         const attrs = childTag.xsiType ? [['xsi:type', childTag.xsiType], ...childParts.attributes] : childParts.attributes;
         childrenXml += renderElement({ tagName: childParts.tagName, attributes: attrs as Array<[string, string]>, childrenXml: childParts.childrenXml });
       }
@@ -163,12 +163,12 @@ function writeObjectParts(
       for (const e of encoded) {
         const attrs: Array<[string, string]> = [['href', e.value]];
         if (e.xsiType) attrs.unshift(['xsi:type', e.xsiType]);
-        childrenXml += renderElement({ tagName: feature.getName(), attributes: attrs, childrenXml: '' });
+        childrenXml += renderElement({ tagName: feature.getName() as string, attributes: attrs, childrenXml: '' });
       }
     } else {
       const anyPolymorphic = encoded.some((e) => e.xsiType);
       const tokens = encoded.map((e) => (anyPolymorphic ? `${e.xsiType ?? sameTypeToken(refFeature, namespaces)} ${e.value}` : e.value));
-      attributes.push([feature.getName(), tokens.join(' ')]);
+      attributes.push([feature.getName() as string, tokens.join(' ')]);
     }
   }
 
@@ -346,14 +346,17 @@ function resolvePrefixedName(token: string, contextElement: Element, packageRegi
 }
 
 function constructObject(element: Element, eClass: EClass, ctx: DeserializeContext): EObject {
-  const obj = eClass.createInstance();
+  const obj = eClass.getEPackage()?.getEFactoryInstance()?.create(eClass);
+  if(!obj) throw new Error("Could not create object");
 
   for (let i = 0; i < element.attributes.length; i++) {
     const attr = element.attributes.item(i)!;
     if (attr.namespaceURI === XMI_NS || attr.namespaceURI === XSI_NS) continue;
     if (attr.name.startsWith('xmlns')) continue;
 
-    const feature = eClass.getEStructuralFeatureByName(attr.localName);
+    const feature = eClass.getEStructuralFeatures()
+                          .filter(feature => feature.getName() === attr.localName)
+                          .at(0);
     if (!feature) continue;
 
     if (!isReferenceFeature(feature)) {
@@ -387,7 +390,9 @@ function constructObject(element: Element, eClass: EClass, ctx: DeserializeConte
     if (!node || node.nodeType !== 1 /* ELEMENT_NODE */) continue;
     const child = node as unknown as Element;
 
-    const feature = eClass.getEStructuralFeatureByName(child.localName);
+    const feature = eClass.getEStructuralFeatures()
+                          .filter(feature => feature.getName() === child.localName)
+                          .at(0);
     if (!feature) continue;
 
     if (!isReferenceFeature(feature)) {

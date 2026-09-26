@@ -1,4 +1,4 @@
-import { EClass, EClassifier, EPackage } from '@typemf/core';
+import { EClass, EClassifier, EClassifierImpl, EPackage, EStructuralFeatureImpl } from '@typemf/core';
 
 /**
  * Assigns classifierID/featureID freshly, in declaration order, mutating
@@ -26,12 +26,11 @@ import { EClass, EClassifier, EPackage } from '@typemf/core';
 export function assignFreshIds(pkg: EPackage): void {
   let classifierId = 0;
   for (const classifier of pkg.getEClassifiers()) {
-    classifier.setClassifierID(classifierId++);
+    (classifier as EClassifierImpl).setClassifierID(classifierId++);
   }
   for (const classifier of pkg.getEClassifiers()) {
     if (!isEClass(classifier)) continue;
-    classifier.recomputeAllLists();
-    classifier.getEAllStructuralFeatures().forEach((feature, index) => feature.setFeatureID(index));
+    classifier.getEAllStructuralFeatures().forEach((feature, index) => (feature as EStructuralFeatureImpl).setFeatureID(index));
   }
 }
 

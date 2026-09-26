@@ -11,7 +11,7 @@ export function eClassToRef(eClass: EClass, namespaces: NamespaceTable): EClassR
   if (!pkg) {
     throw new Error(`EClass '${eClass.getName()}' has no owning EPackage - cannot serialize instances of it.`);
   }
-  return { namespace: namespaces.prefixFor(pkg), name: eClass.getName() };
+  return { namespace: namespaces.prefixFor(pkg), name: eClass.getName() as string };
 }
 
 export function refToEClass(ref: EClassRef, namespaces: NamespaceTable, packageRegistry: EPackageRegistry): EClass {

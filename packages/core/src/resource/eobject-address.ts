@@ -72,7 +72,8 @@ function computePositionalPath(target: EObject, roots: EObject[]): string {
       }
       segments.unshift(String(index));
     }
-    segments.unshift(feature.getName());
+    const name = feature.getName();
+    segments.unshift(name ? name : "");
     current = container;
     container = current.eContainer();
   }
@@ -108,7 +109,11 @@ function resolvePositionalPath(path: string, roots: EObject[]): EObject {
   let i = 1;
   while (i < segments.length) {
     const featureName = segments[i]!;
-    const feature = current.eClass().getEStructuralFeatureByName(featureName);
+    const feature = current
+      .eClass()
+      .getEStructuralFeatures()
+      .filter((feature) => feature.getName() === featureName)
+      .at(0);
     if (!feature) {
       throw new Error(
         `Positional path '${path}': '${current.eClass().getName()}' has no feature '${featureName}'.`,
