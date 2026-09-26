@@ -25,19 +25,25 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
     this.eSet(EcorePackageImpl.eINSTANCE.getEFactory_EPackage(), value);
   }
 
-  create(eClass: EClass): EObject {
+  create(eClass: EClass): EObject | undefined {
     throw new Error(
       "EFactory.create() has no body:typescript annotation - nothing to generate.",
     );
   }
 
-  createFromString(eDataType: EDataType, literalValue: string): unknown {
+  createFromString(
+    eDataType: EDataType,
+    literalValue: string,
+  ): unknown | undefined {
     throw new Error(
       "EFactory.createFromString() has no body:typescript annotation - nothing to generate.",
     );
   }
 
-  convertToString(eDataType: EDataType, instanceValue: unknown): string {
+  convertToString(
+    eDataType: EDataType,
+    instanceValue: unknown,
+  ): string | undefined {
     throw new Error(
       "EFactory.convertToString() has no body:typescript annotation - nothing to generate.",
     );

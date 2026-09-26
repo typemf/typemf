@@ -274,9 +274,36 @@ export function mergedParamList(group: EOperation[]): string {
   return parts.join(', ');
 }
 
-/** The merged implementation signature's return type for a group - the union of every overload's return type, deduplicated (so an all-identical group collapses to just that one type, not a redundant self-union). */
+/**
+ * An operation's return type, with " | undefined" appended only if its
+ * OWN declared multiplicity says the result may genuinely be absent
+ * (not required - lowerBound < 1) - unlike tsOptionalScalarType() (used
+ * for structural features' getters), which appends it unconditionally
+ * for every non-primitive type. Operations need this per-operation check
+ * instead of a blanket rule: most operations (isSuperTypeOf(): boolean,
+ * getClassifierID(): number, ...) are genuinely never-null by their own
+ * declared multiplicity, and blanket-appending | undefined to every one
+ * of them would be wrong - unlike structural features, where treating
+ * every single-valued reference as "may be unset" is the reasonable
+ * default.
+ *
+ * This is the fix for a real, confirmed gap: real Ecore.ecore's own
+ * EModelElement.getEAnnotation(source) has no declared lowerBound (real
+ * EMF's default there is 0 - not required), meaning the operation is
+ * genuinely allowed to return nothing when no annotation with that
+ * source is attached - but the generator previously always emitted the
+ * bare, non-optional return type for every operation regardless.
+ */
+export function tsOperationReturnType(op: EOperation): string {
+  const scalar = tsScalarType(op.getEType());
+  if (isPrimitiveValueType(op.getEType())) return scalar;
+  if (op.isRequired()) return scalar;
+  return `${scalar} | undefined`;
+}
+
+/** The merged implementation signature's return type for a group - the union of every overload's OWN (possibly optional) return type via tsOperationReturnType(), deduplicated (so an all-identical group collapses to just that one type, not a redundant self-union). */
 export function mergedReturnType(group: EOperation[]): string {
-  return [...new Set(group.map((op) => tsScalarType(op.getEType())))].join(' | ');
+  return [...new Set(group.map((op) => tsOperationReturnType(op)))].join(' | ');
 }
 
 /**

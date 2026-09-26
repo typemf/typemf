@@ -22,5 +22,5 @@ export interface EPackage extends ENamedElement {
   getESuperPackage(): EPackage | undefined;
   setESuperPackage(value: EPackage | undefined): void;
 
-  getEClassifier(name: string): EClassifier;
+  getEClassifier(name: string): EClassifier | undefined;
 }

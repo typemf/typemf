@@ -168,11 +168,19 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
       op.setName(byName<string>(dynOp, 'name') ?? '');
       const opType = resolveType(dynOp);
       if (opType) op.setEType(opType);
+      const opLowerBound = byName<number>(dynOp, 'lowerBound');
+      const opUpperBound = byName<number>(dynOp, 'upperBound');
+      if (typeof opLowerBound === 'number') op.setLowerBound(opLowerBound);
+      if (typeof opUpperBound === 'number') op.setUpperBound(opUpperBound);
       for (const dynParam of listByName(dynOp, 'eParameters')) {
         const param = new EParameterImpl();
         param.setName(byName<string>(dynParam, 'name') ?? '');
         const paramType = resolveType(dynParam);
         if (paramType) param.setEType(paramType);
+        const paramLowerBound = byName<number>(dynParam, 'lowerBound');
+        const paramUpperBound = byName<number>(dynParam, 'upperBound');
+        if (typeof paramLowerBound === 'number') param.setLowerBound(paramLowerBound);
+        if (typeof paramUpperBound === 'number') param.setUpperBound(paramUpperBound);
         op.getEParameters().add(param);
       }
       realClass.getEOperations().add(op);

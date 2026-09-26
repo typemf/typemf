@@ -1,5 +1,5 @@
 import { EClass, EList, EStructuralFeature } from "../types/index.js";
-import { BasicEList } from "./index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
 import { EPackage } from "../types/EPackage.js";
 import { EcorePackageImpl } from "./EcorePackageImpl.js";
 import { EFactory } from "../types/EFactory.js";
@@ -59,7 +59,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
     this.eSet(EcorePackageImpl.eINSTANCE.getEPackage_ESuperPackage(), value);
   }
 
-  getEClassifier(name: string): EClassifier {
+  getEClassifier(name: string): EClassifier | undefined {
     throw new Error(
       "EPackage.getEClassifier() has no body:typescript annotation - nothing to generate.",
     );

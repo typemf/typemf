@@ -35,6 +35,7 @@ import {
   switchClassName,
   trivialDerivedFormula,
   tsFeatureType,
+  tsOperationReturnType,
   tsOptionalScalarType,
   tsScalarType,
   typeGuardsClassName,
@@ -55,6 +56,7 @@ export const typescriptTemplateSet: TemplateSet = {
     env.addGlobal('operationBody', (op: Parameters<typeof operationBody>[0]) => operationBody(op, 'typescript'));
     env.addGlobal('tsScalarType', tsScalarType);
     env.addGlobal('tsFeatureType', tsFeatureType);
+    env.addGlobal('tsOperationReturnType', tsOperationReturnType);
     env.addGlobal('isOptional', isOptional);
     env.addGlobal('isEClass', isEClass);
     env.addGlobal('isEEnum', isEEnum);

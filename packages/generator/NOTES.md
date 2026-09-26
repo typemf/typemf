@@ -520,3 +520,70 @@ Separately, confirmed (not new) while doing this real compilation: `EJavaClass`/
 references in `EClassifierImpl.ts` (from `instanceClass`) resolve to nothing, exactly matching
 the already-tracked, not-yet-implemented `EJavaClass` TypeScript mapping TODO above - this is
 that same gap surfacing in real compiled output, not an additional problem.
+
+## RESOLVED: operation return types now respect the operation's OWN declared multiplicity
+
+Real Ecore.ecore's own `EModelElement.getEAnnotation(source)` declares no `lowerBound` at all -
+real EMF's default there is 0 (not required), meaning the operation is genuinely allowed to
+return nothing when no annotation with that source is attached. The generator previously
+ignored this entirely: operation return types were always the bare `tsScalarType(op.getEType())`,
+in both `types/` and `impl/`, with no `| undefined` regardless of what the source metamodel
+actually declared.
+
+**Two real, distinct gaps, both fixed:**
+
+1. `ecore-dynamic-to-typed.ts`'s operation-construction loop never copied `lowerBound`/
+   `upperBound` at all - for the operation's own return type, or its parameters. Fixed: both
+   are now copied, for both.
+2. Even where the information existed (e.g. structural features, which already track this),
+   operations never consulted it. Fixed with a new `tsOperationReturnType(op)`, deliberately
+   NOT reusing `tsOptionalScalarType()` (used for structural feature getters): that function
+   appends `| undefined` unconditionally for every non-primitive type, which is the right
+   default for features but would be wrong for most operations - things like
+   `isSuperTypeOf(): boolean` or `getClassifierID(): number` are genuinely never-null by their
+   own declared multiplicity, and blanket-optioning every operation's return type would be
+   incorrect. `tsOperationReturnType()` checks the operation's own `isRequired()` (after the
+   same primitive short-circuit `tsOptionalScalarType()` already uses) instead of assuming.
+   `mergedReturnType()` (the overloaded-operations merge) was updated to use it per-overload too.
+
+**Verified three ways:**
+- A dedicated conversion-level test (`ecore-dynamic-to-typed.test.ts`) proving `lowerBound`
+  survives conversion correctly for both an operation and its parameter, matching real
+  Ecore.ecore's own `getEAnnotation(source)` shape exactly (operation not required, parameter
+  required).
+- The existing end-to-end tests already exercised both branches once corrected: the not-required
+  case (`overloaded-operations.test.ts`'s `find` operations, which never declared a lowerBound,
+  correctly gained `| undefined` once the fix was in) and the required case
+  (`generate-operations-and-enum.test.ts`'s `describe` operation, explicitly marked
+  `lowerBound=1` since it genuinely never returns undefined - a real, meaningful test of the
+  "required" branch, not just a loosened assertion).
+- Confirmed directly in a real Ecore.ecore regeneration: `EModelElement.getEAnnotation(source:
+  string): EAnnotation | undefined` in both `types/EModelElement.ts` and
+  `impl/EModelElementImpl.ts`; `EClass.isSuperTypeOf()`/`EClassifier.getClassifierID()` (real,
+  primitive-typed operations) correctly remain non-optional regardless of their own declared
+  multiplicity, confirming the primitive short-circuit still applies correctly to operations too.
+
+## Fixture updated to a newer Ecore.ecore - one real, concrete difference, confirming an existing tracked gap
+
+The person supplied an updated `Ecore.ecore`; `src/__tests__/fixtures/Ecore.ecore` replaced with
+it (confirmed via `diff` against the previous version, not assumed). Exactly one real difference:
+`EJavaObject` now carries a real annotation -
+`source="https://typemf.dev/generator"`, `details key="typescript-type" value="unknown"` -
+matching the three-tier `EDataType` naming resolution discussed much earlier (read a
+`typescript-type` annotation detail first, then `instanceClassName`, then the plain name), which
+was explicitly scoped as the person's own `@typemf/core` work plus a not-yet-built generator-side
+piece.
+
+**Confirmed, concretely, that the generator-side piece is still not built**: regenerating with
+this fixture shows the annotation itself correctly surviving conversion
+(`EcorePackageImpl.ts` correctly attaches it via `getEAnnotations().add(...)`, matching the
+existing, working annotation-copying machinery) - but `tsPrimitiveType()` still has no logic
+reading it, so `EJavaObject` is emitted as a bare, unresolved nominal type (`EJavaObject | undefined`,
+etc.) in over 20 places across the output (`EClassifier.defaultValue`, `EFactory.createFromString`/
+`convertToString`, ...) rather than resolving to `unknown` as the annotation now explicitly
+requests. This was previously a hypothetical gap; it is now confirmed against a real, concrete
+instance in the actual metamodel.
+
+All 150 tests still pass against the new fixture (no regressions from the swap); the
+duplicate-import and operation-nullability fixes were both reconfirmed against a fresh
+regeneration from it.

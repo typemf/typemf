@@ -1,4 +1,4 @@
-import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { EList, EClass, EStructuralFeature } from "../types/index.js";
 import { EObjectImpl, BasicEList } from "./index.js";
 import { EModelElement } from "../types/EModelElement.js";
 import { EcorePackageImpl } from "./EcorePackageImpl.js";
@@ -18,7 +18,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
     return this._eAnnotations;
   }
 
-  getEAnnotation(source: string): EAnnotation {
+  getEAnnotation(source: string): EAnnotation | undefined {
     throw new Error(
       "EModelElement.getEAnnotation() has no body:typescript annotation - nothing to generate.",
     );

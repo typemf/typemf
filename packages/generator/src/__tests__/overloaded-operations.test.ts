@@ -69,19 +69,19 @@ describe('overloaded EOperations (same name, same arity) - real compilation', ()
 
     const widgetImpl = files.find((f) => f.path === 'impl/WidgetImpl.ts')!;
     // Two bodyless overload signatures...
-    expect(widgetImpl.content).toContain('find(name: string): Widget;');
-    expect(widgetImpl.content).toContain('find(value: number): Widget;');
+    expect(widgetImpl.content).toContain('find(name: string): Widget | undefined;');
+    expect(widgetImpl.content).toContain('find(value: number): Widget | undefined;');
     // ...and exactly one implementation, with the merged, union-typed
     // parameter name/type - not two separate method bodies (which is
     // exactly what was invalid before this fix).
-    expect(widgetImpl.content).toContain('find(nameOrValue: string | number): Widget {');
+    expect(widgetImpl.content).toContain('find(nameOrValue: string | number): Widget | undefined {');
     expect(widgetImpl.content).toContain('is overloaded with no body:typescript annotation');
 
     // The interface side needs no special handling - TS interfaces
     // support overloads natively.
     const widgetTypes = files.find((f) => f.path === 'types/Widget.ts')!;
-    expect(widgetTypes.content).toContain('find(name: string): Widget;');
-    expect(widgetTypes.content).toContain('find(value: number): Widget;');
+    expect(widgetTypes.content).toContain('find(name: string): Widget | undefined;');
+    expect(widgetTypes.content).toContain('find(value: number): Widget | undefined;');
 
     for (const file of files) {
       const tsPath = join(dir, file.path);

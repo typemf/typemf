@@ -48,10 +48,16 @@ function buildOperationsAndEnumMetamodel() {
   bookClass.getEStructuralFeatures().add(genreAttr);
   bookClass.recomputeAllLists();
 
-  // An operation WITH a body annotation - should generate as a concrete method.
+  // An operation WITH a body annotation - should generate as a concrete
+  // method. Marked required (lowerBound=1): it always computes a real
+  // string from the book's own fields, never genuinely undefined - a
+  // meaningful test of tsOperationReturnType()'s "required -> no
+  // | undefined" case, complementing overloaded-operations.test.ts's
+  // "not required -> | undefined" case for the `find` operations there.
   const describeOp = new EOperationImpl();
   describeOp.setName('describe');
   describeOp.setEType(eStringType);
+  describeOp.setLowerBound(1);
   const bodyAnnotation = new EAnnotationImpl();
   bodyAnnotation.setSource('https://typemf.dev/generator');
   bodyAnnotation.getDetails().set('body:typescript', "return this.getTitle() + ' (' + this.getGenre() + ')';");

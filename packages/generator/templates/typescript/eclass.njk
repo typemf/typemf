@@ -24,7 +24,7 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 {% endfor %}
 {% for op in eClass.getEOperations() %}
 {{ docComment(op, "  ") }}
-  {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }};
+  {{ op.getName() }}({{ paramList(op) }}): {{ tsOperationReturnType(op) }};
 {% endfor %}
 }
 {% endfile %}
@@ -91,7 +91,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     does not attempt; every overload real Ecore.ecore actually has is
     bodyless anyway. #}
 {% for o in group %}
-  {{ o.getName() }}({{ paramList(o) }}): {{ tsScalarType(o.getEType()) }};
+  {{ o.getName() }}({{ paramList(o) }}): {{ tsOperationReturnType(o) }};
 {% endfor %}
   {{ op.getName() }}({{ mergedParamList(group) }}): {{ mergedReturnType(group) }} {
     throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() is overloaded with no body:typescript annotation - nothing to generate.');
@@ -99,7 +99,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% else %}
 {% set body = operationBody(op) %}
 {% if body %}
-  {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }} {
+  {{ op.getName() }}({{ paramList(op) }}): {{ tsOperationReturnType(op) }} {
     {{ body }}
   }
 {% else %}
@@ -110,7 +110,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
       honest behavior for fully-generated code with nothing to base a
       real implementation on, rather than silently failing to compile or
       silently doing nothing. #}
-  {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }} {
+  {{ op.getName() }}({{ paramList(op) }}): {{ tsOperationReturnType(op) }} {
     throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() has no body:typescript annotation - nothing to generate.');
   }
 {% endif %}

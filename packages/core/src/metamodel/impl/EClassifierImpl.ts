@@ -1,4 +1,4 @@
-import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { EList, EClass, EStructuralFeature } from "../types/index.js";
 import { EObjectImpl, BasicEList } from "./index.js";
 import { EClassifier } from "../types/EClassifier.js";
 import { EcorePackageImpl } from "./EcorePackageImpl.js";

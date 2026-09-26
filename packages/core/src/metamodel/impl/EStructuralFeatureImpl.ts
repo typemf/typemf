@@ -9,6 +9,7 @@ export class EStructuralFeatureImpl
   extends ETypedElementImpl
   implements EStructuralFeature
 {
+  private _featureID: number = -1;
   private _changeable: boolean = false;
   private _volatile: boolean = false;
   private _transient: boolean = false;
@@ -104,12 +105,14 @@ export class EStructuralFeatureImpl
   }
 
   getFeatureID(): number {
-    throw new Error(
-      "EStructuralFeature.getFeatureID() has no body:typescript annotation - nothing to generate.",
-    );
+    return this._featureID;
   }
 
-  getContainerClass(): EJavaClass {
+  setFeatureID(featureID: number) {
+    this._featureID = featureID;
+  }
+
+  getContainerClass(): EJavaClass | undefined {
     throw new Error(
       "EStructuralFeature.getContainerClass() has no body:typescript annotation - nothing to generate.",
     );

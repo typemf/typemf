@@ -1,4 +1,4 @@
-import { EClass, EStructuralFeature, EEnumerator } from "../types/index.js";
+import { EEnumerator, EClass, EStructuralFeature } from "../types/index.js";
 import { EObjectImpl, BasicEList } from "./index.js";
 import { EEnumLiteral } from "../types/EEnumLiteral.js";
 import { EcorePackageImpl } from "./EcorePackageImpl.js";

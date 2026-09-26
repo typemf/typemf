@@ -63,7 +63,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private readonly _EEnumLiteral_instance: EAttribute;
   private readonly _EEnumLiteral_literal: EAttribute;
   private readonly _EEnumLiteral_eEnum: EReference;
-  private readonly _EFactory: EClass;
+  private readonly _EFactory: EClassImpl;
   private readonly _EFactory_ePackage: EReference;
   private readonly _EModelElement: EClass;
   private readonly _EModelElement_eAnnotations: EReference;

@@ -48,17 +48,17 @@ export interface EClass extends EClassifier {
 
   getFeatureCount(): number;
 
-  getEStructuralFeature(featureID: number): EStructuralFeature;
+  getEStructuralFeature(featureID: number): EStructuralFeature | undefined;
 
   getFeatureID(feature: EStructuralFeature): number;
 
-  getEStructuralFeature(featureName: string): EStructuralFeature;
+  getEStructuralFeature(featureName: string): EStructuralFeature | undefined;
 
   getOperationCount(): number;
 
-  getEOperation(operationID: number): EOperation;
+  getEOperation(operationID: number): EOperation | undefined;
 
   getOperationID(operation: EOperation): number;
 
-  getOverride(operation: EOperation): EOperation;
+  getOverride(operation: EOperation): EOperation | undefined;
 }

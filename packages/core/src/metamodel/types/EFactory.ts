@@ -1,4 +1,4 @@
-import { EClass, EDataType, EObject, EList } from "./index.js";
+import { EObject, EClass, EDataType } from "./index.js";
 import { EModelElement } from "./EModelElement.js";
 import { EPackage } from "./EPackage.js";
 
@@ -6,9 +6,15 @@ export interface EFactory extends EModelElement {
   getEPackage(): EPackage | undefined;
   setEPackage(value: EPackage | undefined): void;
 
-  create(eClass: EClass): EObject;
+  create(eClass: EClass): EObject | undefined;
 
-  createFromString(eDataType: EDataType, literalValue: string): unknown;
+  createFromString(
+    eDataType: EDataType,
+    literalValue: string,
+  ): unknown | undefined;
 
-  convertToString(eDataType: EDataType, instanceValue: unknown): string;
+  convertToString(
+    eDataType: EDataType,
+    instanceValue: unknown,
+  ): string | undefined;
 }

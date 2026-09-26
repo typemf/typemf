@@ -29,5 +29,5 @@ export interface EStructuralFeature extends ETypedElement {
 
   getFeatureID(): number;
 
-  getContainerClass(): EJavaClass;
+  getContainerClass(): EJavaClass | undefined;
 }

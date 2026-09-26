@@ -321,4 +321,53 @@ describe('convertDynamicEcoreToTyped', () => {
     expect(requiredReal.isTransient()).toBe(true);
     expect(requiredReal.isDerived()).toBe(true);
   });
+
+  it('copies lowerBound/upperBound for operations and their parameters - a real, previously-missed gap (see NOTES.md)', () => {
+    const meta = buildEcoreMetaSchema();
+    const set = <T extends EObject>(obj: T, featureName: string, value: unknown): void => {
+      const f = obj.eClass().getEStructuralFeatureByName(featureName)!;
+      obj.eSet(f, value);
+    };
+    const addTo = (obj: EObject, featureName: string, value: EObject): void => {
+      const f = obj.eClass().getEStructuralFeatureByName(featureName)!;
+      (obj.eGet(f) as { add(v: EObject): void }).add(value);
+    };
+
+    const dynPkg = new DynamicEObjectImpl(meta.ePackage);
+    set(dynPkg, 'name', 'pkg');
+    set(dynPkg, 'nsURI', 'https://typemf.dev/test/opbounds');
+    set(dynPkg, 'nsPrefix', 'opbounds');
+
+    const eString = new DynamicEObjectImpl(meta.eDataType);
+    set(eString, 'name', 'EString');
+    addTo(dynPkg, 'eClassifiers', eString);
+
+    const widget = new DynamicEObjectImpl(meta.eClass);
+    set(widget, 'name', 'Widget');
+    addTo(dynPkg, 'eClassifiers', widget);
+
+    // Matches real Ecore.ecore's own EModelElement.getEAnnotation(source)
+    // exactly: no lowerBound declared at all (real EMF's own default is
+    // 0 - not required), meaning the operation's result may genuinely be
+    // absent.
+    const findOp = new DynamicEObjectImpl(meta.eOperation);
+    set(findOp, 'name', 'find');
+    set(findOp, 'eType', eString);
+    addTo(widget, 'eOperations', findOp);
+    const sourceParam = new DynamicEObjectImpl(meta.eParameter);
+    set(sourceParam, 'name', 'source');
+    set(sourceParam, 'eType', eString);
+    set(sourceParam, 'lowerBound', 1);
+    addTo(findOp, 'eParameters', sourceParam);
+
+    const real = convertDynamicEcoreToTyped(dynPkg);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const widgetReal = real.getEClassifier('Widget') as any;
+    const findReal = widgetReal.getEOperations().get(0);
+
+    expect(findReal.getLowerBound()).toBe(0);
+    expect(findReal.isRequired()).toBe(false);
+    expect(findReal.getEParameters().get(0).getLowerBound()).toBe(1);
+    expect(findReal.getEParameters().get(0).isRequired()).toBe(true);
+  });
 });
