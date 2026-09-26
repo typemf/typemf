@@ -287,3 +287,236 @@ All existing tests that asserted specific file paths (`gen/XGen.ts`, `api/X.ts`,
 `LibraryFactory.ts` as a constructible class, `LibrarySwitch.ts` at the root) were updated to
 match - 140/140 passing, including the full compile-and-run end-to-end tests, confirming the new
 layout works, not just that it looks right.
+
+## Three template changes: index.ts per folder, isX() naming for boolean getters, primitive types without | undefined
+
+- **`index.ts`/`types/index.ts`/`impl/index.ts`** (new `index.njk`), each scoped to its own
+  folder only (not aggregating across folders) - re-exports everything in that folder.
+- **`beanGetterName()`**: a single-valued `EBoolean` attribute's getter is now `isX()`, not
+  `getX()` - the setter is unaffected (`setX` regardless), and many-valued booleans are
+  unaffected (an `EList<boolean>` has no sensible "isX" reading).
+- **`isPrimitiveValueType()`/`tsOptionalScalarType()`/`primitiveDefaultValue()`**:
+  `EBoolean`/`EInt`/`ELong`/`EFloat`/`EDouble`/`EShort`/`EByte` map to real TS primitives with a
+  genuine zero-default (`false`/`0`) and no longer get `| undefined` - mirrors real Java EMF's
+  own primitive-vs-wrapper distinction exactly (these seven correspond to Java's primitive
+  types; the `*Object` variants are the wrapper counterparts and still get `| undefined`).
+  ELong/EShort/EByte were extended to this treatment by the same reasoning as EInt/EFloat/
+  EDouble even though only four were named explicitly in the request that added this - flagged
+  as an interpretive extension. This change reaches further than the getter/setter signature:
+  `eIsSet()` for a primitive field now compares against its real default (matching how
+  `@typemf/core`'s own hand-written classes already do this) instead of `!== undefined`, which
+  would otherwise always be `true`; `eUnset()` resets to the default instead of assigning
+  `undefined`, which would otherwise be a type error.
+
+All three verified with real compilation, including a dedicated test importing exclusively
+through the new index files (`index-generation.test.ts`) to prove they're genuinely resolvable,
+not just plausible-looking text.
+
+## Two items from the same request explicitly deferred - not gaps, decisions
+
+- **`instanceClassName`-based EDataType naming (item 5 of that request)**: needs
+  `getInstanceClassName()`/`setInstanceClassName()` added to `@typemf/core`'s `EClassifierImpl`
+  first (currently dropped during conversion - see the earlier note on `ecore-dynamic-to-typed.ts`),
+  which is out of this package's scope. The person is making that `@typemf/core` change
+  themselves; the generator-side three-tier name resolution (EAnnotation `typescript-type` detail
+  -> `instanceClassName` -> plain name) is not yet built, waiting on that.
+- **`abstract class` instead of `interface` for `types/{Name}.ts` (item 3)**: postponed, still
+  being decided. The real problem, worth remembering when this comes back: `implements` in
+  TypeScript is purely compile-time and gives zero `instanceof` benefit regardless of whether the
+  implemented thing is an `interface` or an `abstract class` - and `{Name}Impl` already spends its
+  one `extends` slot on `{Super}Impl` for real field/method inheritance, so it can't also
+  `extends {Name}` for a real prototype-chain relationship. Three routes were laid out: (1,
+  recommended) a static `Symbol.hasInstance` on each abstract class, checking the instance
+  reflectively against the real metamodel `EClass` hierarchy - correct `instanceof` behavior,
+  zero restructuring of the existing `{Name}Impl extends {Super}Impl implements {Name}` shape;
+  (2) flatten inherited features directly into the abstract classes and have `{Name}Impl extends
+  {Name}` - real prototype-chain `instanceof`, but a substantially bigger change that also
+  inverts which folder holds the real logic; (3) accept only-partial `instanceof` correctness.
+
+## RESOLVED: overloaded EOperations generate invalid TypeScript (two method bodies, same name)
+
+Real `Ecore.ecore` has genuine overloaded operations - e.g. `EEnum` declares
+`getEEnumLiteral(name: EString): EEnumLiteral` and `getEEnumLiteral(value: EInt): EEnumLiteral`
+as two separate `EOperation`s with the same name. `eclass.njk` used to loop
+`for op in eClass.getEOperations()` and emit one full method per operation, unconditionally, with
+no grouping-by-name step - two same-named operations produced two full method declarations with
+bodies in the same class, which TypeScript rejects outright.
+
+**Fixed, scoped to same-arity overloads only (explicit decision, not a limitation discovered
+after the fact):** `groupOperationsByName()` groups a class's own operations by name. A name with
+one operation generates exactly as before. `types/{Name}.ts` needed no change at all - TS
+interfaces support overloads natively, so the existing per-operation loop already produced valid
+overload signatures. `impl/{Name}Impl.ts`'s loop now emits, per group of 2+: every overload
+signature with no body, followed by exactly one implementation signature via
+`mergedParamList()`/`mergedReturnType()` - each parameter position's type the union of every
+overload's type there, with the name synthesized from every overload's own name at that position
+(`name`/`value` -> `nameOrValue`). Always throws regardless of any individual overload's own
+`body:typescript` annotation - dispatching to a specific overload's real body based on
+runtime-`typeof`'d merged arguments is a bigger feature not attempted here; every overload real
+Ecore.ecore actually has is bodyless anyway.
+
+Verified with a dedicated test (`overloaded-operations.test.ts` - real compilation, zero
+TypeScript errors) and confirmed directly in the real Ecore.ecore output: `EEnumImpl.ts` generates
+`getEEnumLiteral(name: string): EEnumLiteral;` / `getEEnumLiteral(value: number): EEnumLiteral;` /
+`getEEnumLiteral(nameOrValue: string | number): EEnumLiteral { throw ...; }`.
+
+## RESOLVED: imports now go through the index files, and a relative-import mode exists for self-hosting into @typemf/core
+
+**a) `index.ts` files are now actually used for imports.** `efactory.njk` and `eswitch.njk` (the
+two templates that used to loop over every classifier importing its `types/`/`impl/` file
+individually - the most repetitive cases) now import once from `../types/index.js` / `./index.js`
+and destructure everything from that single statement. `eclass.njk`'s own per-classifier
+cross-references (superclass, `referencedApiTypes()` entries) still resolve to specific sibling
+files rather than the index - that's a different, narrower case (a handful of specific names, not
+"every classifier") and was left as-is; only the "import every classifier" pattern was collapsed.
+
+**b) `coreImportSpecifier(location, kind, options)` implements the `generate-ecore` relative-import
+mode.** The real design question flagged before implementing this - where would generated output
+actually live inside `@typemf/core`'s tree, which determines the relative depth back to every
+core symbol - is now answered concretely, from the person's own already-integrated
+`@typemf/core`: generated classifier files sit as **plain siblings** in the *same* `types/`/
+`impl/`/`util/` folders as `@typemf/core`'s own foundational classes (`EObject`, `EObjectImpl`,
+`BasicEList`, ...), confirmed by reading that structure directly - `types/EAttribute.ts` and
+`impl/EAttributeImpl.ts` there already use ordinary same-folder/cross-folder relative imports for
+everything, no package boundary at all. That answer collapsed what looked like it might need a
+real symbol -> path lookup table into a small, fixed depth table (`root`/`types`/`impl`/`util` x
+`types`/`impl`), reused for every `@typemf/core` import across all four templates - normally
+`'@typemf/core'`; in `generate-ecore` mode, the correct relative path for the calling template's
+own location.
+
+Verified two ways: a dedicated test (`import-modes.test.ts`) checking both the default
+(`'@typemf/core'`) and `generate-ecore` (relative, correct depth per of four output locations)
+cases via real generated content, not just successful compilation; and confirmed directly in a
+full real-Ecore.ecore regeneration in `generate-ecore` mode - zero `'@typemf/core'` imports
+anywhere across all 46 files, every relative path resolving correctly (e.g.
+`impl/EAttributeImpl.ts`: `from '../types/index.js'` for types-shaped symbols, `from
+'./index.js'` for impl-shaped ones).
+
+## TODO: EJavaClass has no real TypeScript mapping yet
+
+`tsPrimitiveType()` has no `case 'EJavaClass'` at all - confirmed by reading it directly - so it
+falls into the `default` branch and emits the classifier's own name, `"EJavaClass"`, as a bare
+nominal type. That resolves to nothing anywhere in generated output; any feature typed
+`EJavaClass` (e.g. `EClassifier.instanceClass` in real Ecore.ecore, which uses exactly this type)
+currently generates a reference to an undefined type name.
+
+**The real mapping, decided in discussion, not yet implemented:** a constructor type, since a
+JS/TS class *is* its own constructor function - the same "reference to the class itself, not an
+instance of it" relationship `Class<T>` has in Java:
+
+```ts
+type JavaClass<T = unknown> = new (...args: any[]) => T;
+```
+
+Parameterized where the specific type is known (`JavaClass<Book>`); falls back to the
+unparameterized `JavaClass` (i.e. `JavaClass<unknown>`) for the bare-`EDataType` case, which is
+how `EJavaClass` is actually used today (registered generically in the meta-schema, no type
+argument attached).
+
+**Worth remembering when this is implemented:** if `EJavaClass` ever needs to represent an
+*abstract* Java class, `new (...args) => T` is too strict (abstract classes can't be
+constructed with `new` directly) - TypeScript's `abstract new (...args: any[]) => T`
+construct-signature form (4.2+) is the correct alternative for that case, if abstractness is
+something the metamodel actually needs to distinguish.
+
+**A real, acknowledged limit, not a gap to close:** Java's `Class<T>` carries far more reflective
+surface (`getSuperclass()`, `getMethods()`, `isAssignableFrom()`, annotations, ...) than any JS
+constructor reference does. `instanceof` covers roughly `isInstance()`, `.name` covers roughly
+`getName()`, and that's approximately where the overlap ends - a bare constructor type will not
+carry deeper reflection if something downstream ever needs it.
+
+Not yet implemented - `JavaClass<T>` doesn't exist anywhere in `@typemf/core` yet, and
+`tsPrimitiveType()`'s `EJavaClass` case still needs to be added to actually use it.
+
+## New: reflective isX() type guards, one per classifier, in util/{Pkg}TypeGuards.ts
+
+Directly grew out of a real, hand-written function the person showed while discussing item 3
+(`instanceof`/abstract classes, still postponed): `isReference(feature): feature is EReference`,
+checking `"isContainment" in feature`. That's a structural (duck-typing) guard, and it works
+because `isContainment` happens to be a genuinely distinguishing member of `EReference` among its
+siblings - but nothing guarantees an arbitrary generated classifier has an equivalent own member
+to key off (a subclass might add nothing of its own, inheriting every feature). So the generated
+guards use a different, generally-correct mechanism instead: the object's REAL runtime `EClass`,
+checked reflectively via the already-existing `EClass.isSuperTypeOf()` (confirmed present on
+`@typemf/core`'s `EClassImpl` before relying on it, not assumed) - correct unconditionally,
+including for abstract classifiers (correctly true for any concrete subclass instance) and for
+dynamic instances (no dependency on the object's actual JS prototype chain at all, unlike
+`instanceof`).
+
+This sidesteps the item 3 discussion entirely rather than resolving it - these are plain callable
+functions, not something requiring `instanceof`/`abstract class` to work, so item 3 stays
+independently open, unaffected either way.
+
+New template `etypeguards.njk`, producing `util/{Pkg}TypeGuards.ts` (named via the new
+`typeGuardsClassName()`, added to match `switchClassName()`'s exact convention - plain package
+name + suffix, not `packageClassName()`'s `Package`-suffixed form; caught a real naming mismatch
+in my own first attempt by checking the ACTUAL generated filename rather than assuming). One
+`isX(obj): obj is X` per classifier in `types/` (`eClassesOf(package)` - enums excluded, since
+they're not interfaces).
+
+Verified two ways: a dedicated test (`type-guards.test.ts`) with real compilation, and specifically
+the key case a naive per-class check couldn't guarantee - an `AudioBook` instance correctly
+satisfies `isBook()` too, since `AudioBook extends Book` - plus correct rejection of an unrelated
+classifier and safe (non-throwing) handling of `null`/`undefined`/primitives/plain objects; and
+confirmed directly in a real Ecore.ecore regeneration (`util/EcoreTypeGuards.ts`, `isEAttribute`
+etc. generated correctly, using the exact same reflective mechanism as the hand-written
+`isReference` this was modeled on, just generalized to every classifier automatically).
+
+## RESOLVED: duplicate imports in generate-ecore mode, when a real Ecore.ecore classifier name coincides with a core-foundational symbol name
+
+Real Ecore.ecore genuinely models classifiers literally named `EClass`, `EStructuralFeature`,
+`EFactory`, etc. - not something an ordinary user metamodel would ever do, which is why this only
+ever affects self-hosted Ecore.ecore generation. Confirmed by generating the real file in
+`generate-ecore` mode and scanning every one of the 47 output files for duplicate imported
+names, not assumed: `EClassImpl.ts`, `EOperationImpl.ts`, `EReferenceImpl.ts`,
+`EStructuralFeatureImpl.ts` (all via `eclass.njk`'s unconditional core-symbol import colliding
+with the classifier's own self-import or a `referencedApiTypes()` entry), and
+`EcoreFactoryImpl.ts`/`EcoreFactory.ts` (via `efactory.njk`'s fixed `EClass`/`EFactory`/`EObject`
+import colliding with its `concreteEClassesOf()` loop - the exact case originally reported).
+
+**Fixed with `excludeCollidingCoreNames()`/`coreImportLine()`**: filters a requested core-symbol
+list to drop any name that's also a real classifier in this package, since whichever *other*
+import already brings that name into scope (the classifier's own self-import, a
+`referencedApiTypes()` entry, or a `concreteEClassesOf()`/`eClassesOf()` loop) is - in every such
+case - a real classifier of this exact package, so nothing is actually lost by not
+double-importing it. Emits nothing at all (not an empty `import {}`) if every requested name
+collided. Wired into `eclass.njk` (both files) and `efactory.njk` (both files); `epackage.njk`,
+`eswitch.njk`, and `etypeguards.njk` don't need it - confirmed they have no second import line
+that could ever bring the same core name back in.
+
+A third, distinct instance of the same underlying pattern was found and fixed separately:
+`EcoreFactoryImpl.ts`'s own `EFactory`-unification special case (`import { EFactoryImpl } from
+'./EFactoryImpl.js'`) collided with its *own* `concreteEClassesOf()`-based classifier-impl loop,
+which also brings in `EFactoryImpl` (since `EFactory` is itself a concrete classifier). Fixed by
+excluding `EFactory`'s own `Impl` name from that loop specifically when the unification case
+applies.
+
+**Verified**: a full scan for duplicate imported names across every one of the 47 real
+Ecore.ecore output files, in `generate-ecore` mode - zero duplicates, confirmed mechanically,
+not by spot-checking the two files originally reported.
+
+## TODO: a genuinely different, NOT YET FIXED problem - method-name collisions, distinct from the import-collision issue above
+
+Found while verifying the fix above by actually compiling the real self-hosted output (not just
+scanning for duplicate imports): `EcorePackage.ts` declares `getEAnnotation(): EClass` - the
+per-classifier metamodel accessor `epackage.njk` generates for every `EClass`-kind classifier
+(`get{ClassifierName}(): EClass`), which fires for "EAnnotation" since it's a real classifier in
+Ecore.ecore - but `EcorePackage extends EPackage`, and `EPackage` inherits
+`EModelElement.getEAnnotation(source: string): EAnnotation | undefined` (the *reflective*
+"look up an attached annotation by source URI" operation). Both are named `getEAnnotation`;
+TypeScript correctly rejects the interface as incompatible.
+
+This is NOT the same bug as the import-collision issue - it's a method name colliding with an
+*inherited operation name*, not two imports of the same symbol. The general shape: **any real
+Ecore.ecore classifier whose name coincides with an existing `EModelElement`/`ENamedElement`/
+`EPackage` operation name** (`getEAnnotation` is the one confirmed instance; others may exist -
+not yet exhaustively checked) will hit this. Needs its own analysis before fixing - not attempted
+here, to avoid rushing a second, different kind of naming-collision fix in the same pass as the
+first. `Ids`-based dispatch and the `Package`/`Factory`/`Switch`/`TypeGuards` files are unaffected
+(they never call the per-classifier accessor by this ambiguous name internally); this is purely
+an interface-declaration conflict.
+
+Separately, confirmed (not new) while doing this real compilation: `EJavaClass`/`EJavaObject`
+references in `EClassifierImpl.ts` (from `instanceClass`) resolve to nothing, exactly matching
+the already-tracked, not-yet-implemented `EJavaClass` TypeScript mapping TODO above - this is
+that same gap surfacing in real compiled output, not an additional problem.

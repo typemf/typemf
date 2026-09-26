@@ -1,9 +1,7 @@
 {% set eFactoryClassifier = findEClassByName(package, "EFactory") %}
 {% file factoryClassName(package) + ".ts" %}
-import { EClass, EFactory, EObject } from '@typemf/core';
-{% for classifier in concreteEClassesOf(package) %}
-import { {{ classifier.getName() }} } from './types/{{ classifier.getName() }}.js';
-{% endfor %}
+{{ coreImportLine(["EClass", "EFactory", "EObject"], "root", "types", options, package) }}
+import { {% for classifier in concreteEClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from './types/index.js';
 
 export interface {{ factoryClassName(package) }} extends EFactory {
 {% for classifier in concreteEClassesOf(package) %}
@@ -13,16 +11,22 @@ export interface {{ factoryClassName(package) }} extends EFactory {
 }
 {% endfile %}
 {% file "impl/" + factoryClassName(package) + "Impl.ts" %}
-import { EClass, EObject{{ ", EFactoryImpl" if not eFactoryClassifier else "" }} } from '@typemf/core';
+{{ coreImportLine(["EClass", "EObject"], "impl", "types", options, package) }}
+{% if not eFactoryClassifier %}
+import { EFactoryImpl } from '{{ coreImportSpecifier("impl", "impl", options) }}';
+{% endif %}
 import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
 import { Ids } from '../{{ packageClassName(package) }}.js';
 {% if eFactoryClassifier %}
 import { EFactoryImpl } from './EFactoryImpl.js';
 {% endif %}
-{% for classifier in concreteEClassesOf(package) %}
-import { {{ classifier.getName() }} } from '../types/{{ classifier.getName() }}.js';
-import { {{ classifier.getName() }}Impl } from './{{ classifier.getName() }}Impl.js';
-{% endfor %}
+import { {% for classifier in concreteEClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from '../types/index.js';
+{#- EFactory's own Impl is deliberately excluded from this loop when the
+    EFactory-unification special case applies (see above) - it's already
+    imported directly there (`from './EFactoryImpl.js'`), and importing it
+    a second time here too (`from './index.js'`, which re-exports the same
+    file) would be a duplicate binding for the same name. #}
+import { {% for classifier in concreteEClassesOf(package) %}{% if not (eFactoryClassifier and classifier.getName() == "EFactory") %}{{ classifier.getName() }}Impl{% if not loop.last %}, {% endif %}{% endif %}{% endfor %} } from './index.js';
 
 {% if eFactoryClassifier %}
 {#- real Ecore's own EFactoryImpl-extends-EFactoryImpl design: this

@@ -1,28 +1,7 @@
-export * from "./metamodel/EcoreFactory.js";
-export * from "./metamodel/EcorePackage.js";
+export * from "./metamodel/index";
 
 // types
-export * from "./metamodel/types/EAnnotation.js";
-export * from "./metamodel/types/EAttribute.js";
-export * from "./metamodel/types/EClass.js";
-export * from "./metamodel/types/EClassifier.js";
-export * from "./metamodel/types/EDataType.js";
-export * from "./metamodel/types/EEnumerator.js";
-export * from "./metamodel/types/EEnumLiteral.js";
-export * from "./metamodel/types/EEnum.js";
-export * from "./metamodel/types/EFactory.js";
-export * from "./metamodel/types/EGenericType.js";
-export * from "./metamodel/types/EList.js";
-export * from "./metamodel/types/EModelElement.js";
-export * from "./metamodel/types/ENamedElement.js";
-export * from "./metamodel/types/EObject.js";
-export * from "./metamodel/types/EOperation.js";
-export * from "./metamodel/types/EPackage.js";
-export * from "./metamodel/types/EParameter.js";
-export * from "./metamodel/types/EReference.js";
-export * from "./metamodel/types/EStructuralFeature.js";
-export * from "./metamodel/types/ETypedElement.js";
-export * from "./metamodel/types/ETypeParameter.js";
+export * from "./metamodel/types/index";
 
 // registry
 export * from "./registry/epackage-registry.js";

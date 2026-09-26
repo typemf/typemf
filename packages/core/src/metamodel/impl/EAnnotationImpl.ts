@@ -1,13 +1,10 @@
-import {
-  EAnnotation,
-  EClass,
-  EList,
-  EModelElement,
-  EObject,
-  EStringToStringMapEntry,
-  EStructuralFeature,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, EModelElementImpl } from "./index.js";
+import { EClass, EList, EObject, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EAnnotation } from "../types/EAnnotation.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EStringToStringMapEntry } from "../types/EStringToStringMapEntry.js";
+import { EModelElement } from "../types/EModelElement.js";
+import { EModelElementImpl } from "./EModelElementImpl.js";
 
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   private _source: string | undefined;

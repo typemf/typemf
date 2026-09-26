@@ -1,6 +1,11 @@
-import { EClassifier, EFactory, EList, ENamedElement } from "../../index.js";
+import { EObject, EList } from './index.js';
+import { ENamedElement } from './ENamedElement.js';
+import { EFactory } from './EFactory.js';
+import { EClassifier } from './EClassifier.js';
+
 
 export interface EPackage extends ENamedElement {
+
   getNsURI(): string | undefined;
   setNsURI(value: string | undefined): void;
 

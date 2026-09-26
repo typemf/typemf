@@ -1,12 +1,14 @@
 import {
   EClass,
   EDataType,
-  EFactory,
   EObject,
-  EPackage,
   EStructuralFeature,
-} from "../../index.js";
-import { EcorePackageImpl, EModelElementImpl } from "./index.js";
+} from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EFactory } from "../types/EFactory.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EPackage } from "../types/EPackage.js";
+import { EModelElementImpl } from "./EModelElementImpl.js";
 
 export class EFactoryImpl extends EModelElementImpl implements EFactory {
   private _ePackage: EPackage | undefined;

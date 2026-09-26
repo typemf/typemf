@@ -1,14 +1,14 @@
-import {
-  EAttribute,
-  EClassifier,
-  EGenericType,
-  EList,
-  EOperation,
-  EReference,
-  EStructuralFeature,
-} from "../../index.js";
+import { EObject, EList } from './index.js';
+import { EClassifier } from './EClassifier.js';
+import { EOperation } from './EOperation.js';
+import { EAttribute } from './EAttribute.js';
+import { EReference } from './EReference.js';
+import { EStructuralFeature } from './EStructuralFeature.js';
+import { EGenericType } from './EGenericType.js';
+
 
 export interface EClass extends EClassifier {
+
   isAbstract(): boolean;
   setAbstract(value: boolean): void;
 
@@ -43,4 +43,22 @@ export interface EClass extends EClassifier {
   getEGenericSuperTypes(): EList<EGenericType>;
 
   getEAllGenericSuperTypes(): EList<EGenericType>;
+
+  isSuperTypeOf(someClass: EClass): boolean;
+
+  getFeatureCount(): number;
+
+  getEStructuralFeature(featureID: number): EStructuralFeature;
+
+  getFeatureID(feature: EStructuralFeature): number;
+
+  getEStructuralFeature(featureName: string): EStructuralFeature;
+
+  getOperationCount(): number;
+
+  getEOperation(operationID: number): EOperation;
+
+  getOperationID(operation: EOperation): number;
+
+  getOverride(operation: EOperation): EOperation;
 }

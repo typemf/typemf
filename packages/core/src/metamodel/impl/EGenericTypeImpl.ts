@@ -1,12 +1,9 @@
-import {
-  EClass,
-  EClassifier,
-  EGenericType,
-  EList,
-  EStructuralFeature,
-  ETypeParameter,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, EObjectImpl } from "./index.js";
+import { EList, EClass, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EGenericType } from "../types/EGenericType.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EClassifier } from "../types/EClassifier.js";
+import { ETypeParameter } from "../types/ETypeParameter.js";
 
 export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   private _eUpperBound: EGenericType | undefined;

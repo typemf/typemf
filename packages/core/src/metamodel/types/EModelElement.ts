@@ -1,7 +1,8 @@
-import { EAnnotation, EList, EObject } from "../../index.js";
+import { EObject, EList } from "./index.js";
+import { EAnnotation } from "./EAnnotation.js";
 
 export interface EModelElement extends EObject {
   getEAnnotations(): EList<EAnnotation>;
 
-  getEAnnotation(source: string): EAnnotation;
+  getEAnnotation(source: string): EAnnotation | undefined;
 }

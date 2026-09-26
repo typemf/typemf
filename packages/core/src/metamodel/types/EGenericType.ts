@@ -1,6 +1,10 @@
-import { EClassifier, EList, EObject, ETypeParameter } from "../../index.js";
+import { EObject, EList } from './index.js';
+import { EClassifier } from './EClassifier.js';
+import { ETypeParameter } from './ETypeParameter.js';
+
 
 export interface EGenericType extends EObject {
+
   getEUpperBound(): EGenericType | undefined;
   setEUpperBound(value: EGenericType | undefined): void;
 

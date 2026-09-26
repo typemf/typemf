@@ -1,8 +1,10 @@
-import { EEnum, EEnumerator, ENamedElement } from "../../index.js";
+import { EEnumerator } from "./index.js";
+import { ENamedElement } from "./ENamedElement.js";
+import { EEnum } from "./EEnum.js";
 
 export interface EEnumLiteral extends ENamedElement {
-  getValue(): number | undefined;
-  setValue(value: number | undefined): void;
+  getValue(): number;
+  setValue(value: number): void;
 
   getInstance(): EEnumerator | undefined;
   setInstance(value: EEnumerator | undefined): void;

@@ -1,11 +1,9 @@
-import {
-  EClass,
-  EGenericType,
-  EList,
-  EStructuralFeature,
-  ETypeParameter,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, ENamedElementImpl } from "./index.js";
+import { EList, EClass, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { ETypeParameter } from "../types/ETypeParameter.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EGenericType } from "../types/EGenericType.js";
+import { ENamedElementImpl } from "./ENamedElementImpl.js";
 
 export class ETypeParameterImpl
   extends ENamedElementImpl

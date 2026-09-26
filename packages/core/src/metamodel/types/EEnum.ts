@@ -1,6 +1,10 @@
-import { EDataType, EEnumLiteral, EList } from "../../index.js";
+import { EObject, EList } from './index.js';
+import { EDataType } from './EDataType.js';
+import { EEnumLiteral } from './EEnumLiteral.js';
+
 
 export interface EEnum extends EDataType {
+
   getELiterals(): EList<EEnumLiteral>;
 
   getEEnumLiteral(name: string): EEnumLiteral;

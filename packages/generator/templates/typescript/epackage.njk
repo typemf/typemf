@@ -1,6 +1,6 @@
 {% set pkgClass = packageClassName(package) %}
 {% file pkgClass + ".ts" %}
-import { EAttribute, EClass, EClassifier, EDataType, EEnum, EPackage, EReference } from '@typemf/core';
+import { EAttribute, EClass, EClassifier, EDataType, EEnum, EPackage, EReference } from '{{ coreImportSpecifier("root", "types", options) }}';
 
 /**
  * Classifier/feature IDs, as pure numeric literals - safe to import from
@@ -32,6 +32,7 @@ export interface {{ pkgClass }} extends EPackage {
 }
 {% endfile %}
 {% file "impl/" + pkgClass + "Impl.ts" %}
+import { EClass, EAttribute, EReference, EEnum, EDataType } from '{{ coreImportSpecifier("impl", "types", options) }}';
 import {
   EPackageImpl,
   EClassImpl,
@@ -42,12 +43,7 @@ import {
   EEnumLiteralImpl,
   EAnnotationImpl,
   EFactoryImpl,
-  EClass,
-  EAttribute,
-  EReference,
-  EEnum,
-  EDataType,
-} from '@typemf/core';
+} from '{{ coreImportSpecifier("impl", "impl", options) }}';
 import { {{ pkgClass }}, Ids } from '../{{ pkgClass }}.js';
 import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
 import { {{ factoryClassName(package) }}Impl } from './{{ factoryClassName(package) }}Impl.js';

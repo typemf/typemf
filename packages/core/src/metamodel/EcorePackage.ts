@@ -1,4 +1,5 @@
 import {
+  EAnnotation,
   EAttribute,
   EClass,
   EClassifier,
@@ -6,7 +7,7 @@ import {
   EEnum,
   EPackage,
   EReference,
-} from "@typemf/core";
+} from "./types/index.js";
 
 /**
  * Classifier/feature IDs, as pure numeric literals - safe to import from
@@ -154,11 +155,12 @@ export const Ids = {
   EInvocationTargetException: { self: 51 },
 } as const;
 
-export interface EcorePackage {
+export interface EcorePackage extends EPackage {
   getEAttribute(): EClass;
   getEAttribute_ID(): EAttribute;
   getEAttribute_EAttributeType(): EReference;
   getEAnnotation(): EClass;
+  getEAnnotation(source: string): EAnnotation | undefined;
   getEAnnotation_Source(): EAttribute;
   getEAnnotation_Details(): EReference;
   getEAnnotation_EModelElement(): EReference;

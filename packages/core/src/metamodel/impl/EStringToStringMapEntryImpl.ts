@@ -1,12 +1,11 @@
-import {
-  EClass,
-  EStructuralFeature,
-} from "../../index.js";
-import { EcorePackageImpl, EObjectImpl } from "./index.js";
+import { EClass, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EStringToStringMapEntry } from "../types/EStringToStringMapEntry.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
 
 export class EStringToStringMapEntryImpl
   extends EObjectImpl
-  implements [string, number]
+  implements EStringToStringMapEntry
 {
   private _key: string | undefined;
   private _value: string | undefined;

@@ -1,11 +1,8 @@
-import {
-  EAnnotation,
-  EClass,
-  EList,
-  EModelElement,
-  EStructuralFeature,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, EObjectImpl } from "./index.js";
+import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EModelElement } from "../types/EModelElement.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EAnnotation } from "../types/EAnnotation.js";
 
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
   private readonly _eAnnotations = new BasicEList<EAnnotation>(

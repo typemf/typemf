@@ -1,18 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { EClass } from '../../metamodel/api/eclass.js';
-import { EObject } from '../../metamodel/api/eobject.js';
-import { EReference } from '../../metamodel/api/ereference.js';
-import { buildSampleMetamodel } from '../../metamodel/__tests__/sample-metamodel.js';
-import { computeFragment } from '../eobject-address.js';
-import { ProxyEObjectImpl } from '../proxy-eobject-impl.js';
-import { Resource } from '../resource.js';
-import { ResourceFactory } from '../resource-factory.js';
-import { ResourceImpl } from '../resource-impl.js';
-import { ResourceSetImpl } from '../resource-set-impl.js';
-import { getResourceOf } from '../resource-utils.js';
-import { EObjectSerializer } from '../serializer.js';
-import { URI } from '../uri.js';
-import { UriConverter } from '../uri-converter.js';
+import { describe, expect, it } from "vitest";
+import { EClass } from "../../metamodel/types/EClass.js";
+import { EObject } from "../../metamodel/types/EObject.js";
+import { EReference } from "../../metamodel/types/EReference.js";
+import { buildSampleMetamodel } from "../../metamodel/__tests__/sample-metamodel.js";
+import { computeFragment } from "../eobject-address.js";
+import { ProxyEObjectImpl } from "../proxy-eobject-impl.js";
+import { Resource } from "../resource.js";
+import { ResourceFactory } from "../resource-factory.js";
+import { ResourceImpl } from "../resource-impl.js";
+import { ResourceSetImpl } from "../resource-set-impl.js";
+import { getResourceOf } from "../resource-utils.js";
+import { EObjectSerializer } from "../serializer.js";
+import { URI } from "../uri.js";
+import { UriConverter } from "../uri-converter.js";
 
 /**
  * A deliberately minimal fixture serializer/converter, built only to
@@ -27,45 +27,61 @@ import { UriConverter } from '../uri-converter.js';
  */
 function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
   const eClassByName = new Map<string, EClass>([
-    ['Book', bookClass],
-    ['Library', libraryClass],
+    ["Book", bookClass],
+    ["Library", libraryClass],
   ]);
 
   function serializeObject(obj: EObject, sourceResource: Resource): unknown {
     const json: Record<string, unknown> = { $eClass: obj.eClass().getName() };
     for (const feature of obj.eClass().getEAllStructuralFeatures()) {
       if (!obj.eIsSet(feature)) continue;
-      const isReference = 'isContainment' in feature;
+      const isReference = "isContainment" in feature;
       if (!isReference) {
         json[feature.getName()] = obj.eGet(feature);
         continue;
       }
       const refFeature = feature as EReference;
       if (feature.isMany()) {
-        const children = (obj.eGet(feature) as Iterable<EObject>);
-        json[feature.getName()] = [...children].map((c) => serializeObject(c, sourceResource));
+        const children = obj.eGet(feature) as Iterable<EObject>;
+        json[feature.getName()] = [...children].map((c) =>
+          serializeObject(c, sourceResource),
+        );
       } else if (refFeature.isContainment()) {
-        json[feature.getName()] = serializeObject(obj.eGet(feature) as EObject, sourceResource);
+        json[feature.getName()] = serializeObject(
+          obj.eGet(feature) as EObject,
+          sourceResource,
+        );
       } else {
         const target = obj.eGet(feature) as EObject;
         const targetResource = getResourceOf(target);
         if (!targetResource || targetResource === sourceResource) {
-          throw new Error('Fixture serializer does not support same-resource non-containment references.');
+          throw new Error(
+            "Fixture serializer does not support same-resource non-containment references.",
+          );
         }
-        json[feature.getName()] = { $ref: target.fullId(), $refResource: targetResource.getURI().toString() };
+        json[feature.getName()] = {
+          $ref: target.fullId(),
+          $refResource: targetResource.getURI().toString(),
+        };
       }
     }
     return json;
   }
 
-  function deserializeObject(json: Record<string, unknown>, resource: Resource): EObject {
+  function deserializeObject(
+    json: Record<string, unknown>,
+    resource: Resource,
+  ): EObject {
     const eClass = eClassByName.get(json.$eClass as string);
-    if (!eClass) throw new Error(`Unknown $eClass '${json.$eClass as string}' in fixture data.`);
+    if (!eClass)
+      throw new Error(
+        `Unknown $eClass '${json.$eClass as string}' in fixture data.`,
+      );
     const obj = eClass.createInstance();
     for (const feature of eClass.getEAllStructuralFeatures()) {
       if (!(feature.getName() in json)) continue;
       const raw = json[feature.getName()];
-      const isReference = 'isContainment' in feature;
+      const isReference = "isContainment" in feature;
       if (!isReference) {
         obj.eSet(feature, raw);
         continue;
@@ -77,11 +93,23 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
           list.add(deserializeObject(childJson, resource));
         }
       } else if (refFeature.isContainment()) {
-        obj.eSet(feature, deserializeObject(raw as Record<string, unknown>, resource));
+        obj.eSet(
+          feature,
+          deserializeObject(raw as Record<string, unknown>, resource),
+        );
       } else {
-        const { $ref, $refResource } = raw as { $ref: string; $refResource: string };
+        const { $ref, $refResource } = raw as {
+          $ref: string;
+          $refResource: string;
+        };
         const proxyEClass = refFeature.getEType() as EClass;
-        obj.eSet(feature, new ProxyEObjectImpl(proxyEClass, URI.parse($refResource).withFragment($ref)));
+        obj.eSet(
+          feature,
+          new ProxyEObjectImpl(
+            proxyEClass,
+            URI.parse($refResource).withFragment($ref),
+          ),
+        );
       }
     }
     return obj;
@@ -92,8 +120,14 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
       const json = roots.map((r) => serializeObject(r, resource));
       return new TextEncoder().encode(JSON.stringify(json));
     },
-    async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
-      const json = JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>[];
+    async deserialize(
+      content: Uint8Array,
+      resource: Resource,
+    ): Promise<EObject[]> {
+      const json = JSON.parse(new TextDecoder().decode(content)) as Record<
+        string,
+        unknown
+      >[];
       return json.map((r) => deserializeObject(r, resource));
     },
   };
@@ -108,7 +142,7 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
 class InMemoryUriConverter implements UriConverter {
   private readonly store = new Map<string, Uint8Array>();
 
-  constructor(private readonly scheme: string = 'mem') {}
+  constructor(private readonly scheme: string = "mem") {}
 
   canHandle(uri: URI): boolean {
     return uri.getScheme() === this.scheme;
@@ -129,22 +163,25 @@ class InMemoryUriConverter implements UriConverter {
   }
 }
 
-describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
-  it('saves and reloads a single resource with containment', async () => {
-    const { bookClass, libraryClass, booksRef, titleAttr } = buildSampleMetamodel();
+describe("ResourceSet + Resource (via an in-memory fixture format)", () => {
+  it("saves and reloads a single resource with containment", async () => {
+    const { bookClass, libraryClass, booksRef, titleAttr } =
+      buildSampleMetamodel();
     const { factory } = buildFixtureIo(bookClass, libraryClass);
     const converter = new InMemoryUriConverter();
 
     const resourceSet = new ResourceSetImpl();
     resourceSet.getUriConverterRegistry().register(converter);
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("mem", factory);
 
-    const uri = URI.parse('mem:library-a');
+    const uri = URI.parse("mem:library-a");
     const resource = resourceSet.createResource(uri);
 
     const library = libraryClass.createInstance();
     const book = bookClass.createInstance();
-    book.eSet(titleAttr, 'Dune');
+    book.eSet(titleAttr, "Dune");
     (library.eGet(booksRef) as { add(item: EObject): void }).add(book);
     resource.getContents().add(library);
 
@@ -152,7 +189,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
 
     const freshSet = new ResourceSetImpl();
     freshSet.getUriConverterRegistry().register(converter);
-    freshSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    freshSet.getResourceFactoryRegistry().registerForProtocol("mem", factory);
     const reloaded = await freshSet.getResource(uri, true);
 
     expect(reloaded).toBeDefined();
@@ -160,31 +197,34 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const reloadedLibrary = reloaded!.getContents().get(0);
     const reloadedBooks = reloadedLibrary.eGet(booksRef) as Iterable<EObject>;
     expect([...reloadedBooks]).toHaveLength(1);
-    expect([...reloadedBooks][0]!.eGet(titleAttr)).toBe('Dune');
+    expect([...reloadedBooks][0]!.eGet(titleAttr)).toBe("Dune");
   });
 
-  it('creates a proxy for a cross-resource reference, and resolves it lazily via ResourceSet', async () => {
+  it("creates a proxy for a cross-resource reference, and resolves it lazily via ResourceSet", async () => {
     const sample = buildSampleMetamodel();
-    const { bookClass, libraryClass, booksRef, featuredBookRef, titleAttr } = sample;
+    const { bookClass, libraryClass, booksRef, featuredBookRef, titleAttr } =
+      sample;
     const { factory } = buildFixtureIo(bookClass, libraryClass);
     const converter = new InMemoryUriConverter();
 
     const resourceSet = new ResourceSetImpl();
     resourceSet.getUriConverterRegistry().register(converter);
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("mem", factory);
 
     // Resource A: a Library containing the actual Book.
-    const uriA = URI.parse('mem:library-a');
+    const uriA = URI.parse("mem:library-a");
     const resourceA = resourceSet.createResource(uriA);
     const libraryA = libraryClass.createInstance();
     const book = bookClass.createInstance();
-    book.eSet(titleAttr, 'Dune');
+    book.eSet(titleAttr, "Dune");
     (libraryA.eGet(booksRef) as { add(item: EObject): void }).add(book);
     resourceA.getContents().add(libraryA);
     await resourceA.save();
 
     // Resource B: a different Library whose featuredBook points at the Book in A.
-    const uriB = URI.parse('mem:library-b');
+    const uriB = URI.parse("mem:library-b");
     const resourceB = resourceSet.createResource(uriB);
     const libraryB = libraryClass.createInstance();
     libraryB.eSet(featuredBookRef, book);
@@ -194,7 +234,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     // Fresh ResourceSet, loading ONLY resource B.
     const freshSet = new ResourceSetImpl();
     freshSet.getUriConverterRegistry().register(converter);
-    freshSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    freshSet.getResourceFactoryRegistry().registerForProtocol("mem", factory);
     const loadedB = await freshSet.getResource(uriB, true);
     const loadedLibraryB = loadedB!.getContents().get(0);
 
@@ -205,36 +245,40 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const resolved = await freshSet.resolve(featuredBook);
 
     expect(resolved.eIsProxy()).toBe(false);
-    expect(resolved.eGet(titleAttr)).toBe('Dune');
+    expect(resolved.eGet(titleAttr)).toBe("Dune");
     expect(freshSet.getResources()).toHaveLength(2); // A got loaded on demand
   });
 
-  it('resolve() is a no-op for a non-proxy object', async () => {
+  it("resolve() is a no-op for a non-proxy object", async () => {
     const { bookClass, titleAttr } = buildSampleMetamodel();
     const book = bookClass.createInstance();
-    book.eSet(titleAttr, 'Dune');
+    book.eSet(titleAttr, "Dune");
 
     const resourceSet = new ResourceSetImpl();
     const result = await resourceSet.resolve(book);
     expect(result).toBe(book);
   });
 
-  it('createResource throws a clear error when no factory is registered', () => {
+  it("createResource throws a clear error when no factory is registered", () => {
     const resourceSet = new ResourceSetImpl();
-    expect(() => resourceSet.createResource(URI.parse('mem:whatever'))).toThrow(/No ResourceFactory registered/);
+    expect(() => resourceSet.createResource(URI.parse("mem:whatever"))).toThrow(
+      /No ResourceFactory registered/,
+    );
   });
 
   it("load() throws a clear error when the resource has no UriConverter available", async () => {
     const { bookClass, libraryClass } = buildSampleMetamodel();
     const { factory } = buildFixtureIo(bookClass, libraryClass);
     const resourceSet = new ResourceSetImpl();
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("mem", factory);
     // Deliberately no converter registered.
-    const resource = resourceSet.createResource(URI.parse('mem:no-converter'));
+    const resource = resourceSet.createResource(URI.parse("mem:no-converter"));
     await expect(resource.load()).rejects.toThrow(/no UriConverter available/);
   });
 
-  it('resolves a cross-resource proxy addressed by a positional path, not just by ID', async () => {
+  it("resolves a cross-resource proxy addressed by a positional path, not just by ID", async () => {
     // Regression test: computeFragment()/resolveFragment() must be used
     // consistently for cross-resource addressing too, not just same-
     // resource. A target with no ID attribute set produces a positional
@@ -242,25 +286,41 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     // walk that against the *target* resource's own roots - this is
     // exactly the gap that existed before eobject-address.ts unified
     // same-resource and cross-resource fragment handling into one place.
-    const { bookClass, libraryClass, booksRef, featuredBookRef } = buildSampleMetamodel();
+    const { bookClass, libraryClass, booksRef, featuredBookRef } =
+      buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
 
     const serializer: EObjectSerializer = {
-      async serialize(roots: EObject[], resource: Resource): Promise<Uint8Array> {
-        const json = roots.map((r) => serializeWithPositionalRefs(r, roots, resource));
+      async serialize(
+        roots: EObject[],
+        resource: Resource,
+      ): Promise<Uint8Array> {
+        const json = roots.map((r) =>
+          serializeWithPositionalRefs(r, roots, resource),
+        );
         return new TextEncoder().encode(JSON.stringify(json));
       },
-      async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
-        const json = JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>[];
+      async deserialize(
+        content: Uint8Array,
+        resource: Resource,
+      ): Promise<EObject[]> {
+        const json = JSON.parse(new TextDecoder().decode(content)) as Record<
+          string,
+          unknown
+        >[];
         return json.map((r) => deserializeWithPositionalRefs(r, resource));
       },
     };
 
-    function serializeWithPositionalRefs(obj: EObject, roots: EObject[], sourceResource: Resource): unknown {
+    function serializeWithPositionalRefs(
+      obj: EObject,
+      roots: EObject[],
+      sourceResource: Resource,
+    ): unknown {
       const json: Record<string, unknown> = { $eClass: obj.eClass().getName() };
       for (const feature of obj.eClass().getEAllStructuralFeatures()) {
         if (!obj.eIsSet(feature)) continue;
-        const isReference = 'isContainment' in feature;
+        const isReference = "isContainment" in feature;
         if (!isReference) {
           json[feature.getName()] = obj.eGet(feature);
           continue;
@@ -268,9 +328,15 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
         const refFeature = feature as EReference;
         if (feature.isMany()) {
           const children = [...(obj.eGet(feature) as Iterable<EObject>)];
-          json[feature.getName()] = children.map((c) => serializeWithPositionalRefs(c, roots, sourceResource));
+          json[feature.getName()] = children.map((c) =>
+            serializeWithPositionalRefs(c, roots, sourceResource),
+          );
         } else if (refFeature.isContainment()) {
-          json[feature.getName()] = serializeWithPositionalRefs(obj.eGet(feature) as EObject, roots, sourceResource);
+          json[feature.getName()] = serializeWithPositionalRefs(
+            obj.eGet(feature) as EObject,
+            roots,
+            sourceResource,
+          );
         } else {
           const target = obj.eGet(feature) as EObject;
           const targetResource = getResourceOf(target)!;
@@ -283,13 +349,16 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
       return json;
     }
 
-    function deserializeWithPositionalRefs(json: Record<string, unknown>, resource: Resource): EObject {
-      const eClass = json.$eClass === 'Book' ? bookClass : libraryClass;
+    function deserializeWithPositionalRefs(
+      json: Record<string, unknown>,
+      resource: Resource,
+    ): EObject {
+      const eClass = json.$eClass === "Book" ? bookClass : libraryClass;
       const obj = eClass.createInstance();
       for (const feature of eClass.getEAllStructuralFeatures()) {
         if (!(feature.getName() in json)) continue;
         const raw = json[feature.getName()];
-        const isReference = 'isContainment' in feature;
+        const isReference = "isContainment" in feature;
         if (!isReference) {
           obj.eSet(feature, raw);
           continue;
@@ -301,7 +370,13 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
             list.add(deserializeWithPositionalRefs(childJson, resource));
           }
         } else if (refFeature.isContainment()) {
-          obj.eSet(feature, deserializeWithPositionalRefs(raw as Record<string, unknown>, resource));
+          obj.eSet(
+            feature,
+            deserializeWithPositionalRefs(
+              raw as Record<string, unknown>,
+              resource,
+            ),
+          );
         } else {
           const { $ref } = raw as { $ref: string };
           obj.eSet(feature, new ProxyEObjectImpl(bookClass, URI.parse($ref)));
@@ -310,12 +385,16 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
       return obj;
     }
 
-    const factory: ResourceFactory = { createResource: (uri) => new ResourceImpl(uri, serializer) };
+    const factory: ResourceFactory = {
+      createResource: (uri) => new ResourceImpl(uri, serializer),
+    };
     const resourceSet = new ResourceSetImpl();
     resourceSet.getUriConverterRegistry().register(converter);
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("mem", factory);
 
-    const uriA = URI.parse('mem:library-a');
+    const uriA = URI.parse("mem:library-a");
     const resourceA = resourceSet.createResource(uriA);
     const libraryA = libraryClass.createInstance();
     const untitledBook = bookClass.createInstance(); // deliberately no title -> no ID
@@ -323,7 +402,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     resourceA.getContents().add(libraryA);
     await resourceA.save();
 
-    const uriB = URI.parse('mem:library-b');
+    const uriB = URI.parse("mem:library-b");
     const resourceB = resourceSet.createResource(uriB);
     const libraryB = libraryClass.createInstance();
     libraryB.eSet(featuredBookRef, untitledBook);
@@ -332,47 +411,57 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
 
     const freshSet = new ResourceSetImpl();
     freshSet.getUriConverterRegistry().register(converter);
-    freshSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    freshSet.getResourceFactoryRegistry().registerForProtocol("mem", factory);
     const loadedB = await freshSet.getResource(uriB, true);
-    const proxy = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    const proxy = loadedB!
+      .getContents()
+      .get(0)
+      .eGet(featuredBookRef) as EObject;
     expect(proxy.eIsProxy()).toBe(true);
-    expect((proxy as ProxyEObjectImpl).getProxyURI().toString()).toBe('mem:library-a#/0/books/0');
+    expect((proxy as ProxyEObjectImpl).getProxyURI().toString()).toBe(
+      "mem:library-a#/0/books/0",
+    );
 
     const resolved = await freshSet.resolve(proxy);
     expect(resolved.eIsProxy()).toBe(false);
     expect(resolved.eClass()).toBe(bookClass);
   });
 
-  it('supports two different transports registered in the same ResourceSet at once', async () => {
+  it("supports two different transports registered in the same ResourceSet at once", async () => {
     // The scenario from the design discussion: a resource one "transport"
     // handles (e.g. a local-file-shaped scheme) cross-referencing an
     // object that lives behind a *different* scheme (e.g. a network-shaped
     // one) - neither converter needs to know the other exists, and neither
     // needs to handle both schemes itself.
-    const { bookClass, libraryClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const { bookClass, libraryClass, booksRef, featuredBookRef, titleAttr } =
+      buildSampleMetamodel();
     const { factory } = buildFixtureIo(bookClass, libraryClass);
 
-    const localConverter = new InMemoryUriConverter('local');
-    const networkConverter = new InMemoryUriConverter('net');
+    const localConverter = new InMemoryUriConverter("local");
+    const networkConverter = new InMemoryUriConverter("net");
 
     const resourceSet = new ResourceSetImpl();
     resourceSet.getUriConverterRegistry().register(localConverter);
     resourceSet.getUriConverterRegistry().register(networkConverter);
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('local', factory);
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('net', factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("local", factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("net", factory);
 
     // The Book lives behind the "network" transport.
-    const netUri = URI.parse('net:library-remote');
+    const netUri = URI.parse("net:library-remote");
     const netResource = resourceSet.createResource(netUri);
     const remoteLibrary = libraryClass.createInstance();
     const book = bookClass.createInstance();
-    book.eSet(titleAttr, 'Dune');
+    book.eSet(titleAttr, "Dune");
     (remoteLibrary.eGet(booksRef) as { add(item: EObject): void }).add(book);
     netResource.getContents().add(remoteLibrary);
     await netResource.save();
 
     // The referencing Library lives behind the "local" transport.
-    const localUri = URI.parse('local:library-here');
+    const localUri = URI.parse("local:library-here");
     const localResource = resourceSet.createResource(localUri);
     const localLibrary = libraryClass.createInstance();
     localLibrary.eSet(featuredBookRef, book);
@@ -384,18 +473,21 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const freshSet = new ResourceSetImpl();
     freshSet.getUriConverterRegistry().register(localConverter);
     freshSet.getUriConverterRegistry().register(networkConverter);
-    freshSet.getResourceFactoryRegistry().registerForProtocol('local', factory);
-    freshSet.getResourceFactoryRegistry().registerForProtocol('net', factory);
+    freshSet.getResourceFactoryRegistry().registerForProtocol("local", factory);
+    freshSet.getResourceFactoryRegistry().registerForProtocol("net", factory);
 
     const loadedLocal = await freshSet.getResource(localUri, true);
     expect(freshSet.getResources()).toHaveLength(1); // net resource not loaded yet
 
-    const featuredBook = loadedLocal!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    const featuredBook = loadedLocal!
+      .getContents()
+      .get(0)
+      .eGet(featuredBookRef) as EObject;
     expect(featuredBook.eIsProxy()).toBe(true);
 
     const resolved = await freshSet.resolve(featuredBook);
     expect(resolved.eIsProxy()).toBe(false);
-    expect(resolved.eGet(titleAttr)).toBe('Dune');
+    expect(resolved.eGet(titleAttr)).toBe("Dune");
     expect(freshSet.getResources()).toHaveLength(2); // net resource loaded on demand, via its own converter
   });
 
@@ -406,12 +498,13 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     // grammar ("CUSTOM:<index>" instead of core's own) must still resolve
     // correctly through the generic ResourceSet.resolve(), because it
     // supplies its own resolveFragment() rather than relying on core's.
-    const { bookClass, libraryClass, booksRef, titleAttr } = buildSampleMetamodel();
-    const converter = new InMemoryUriConverter('custom');
+    const { bookClass, libraryClass, booksRef, titleAttr } =
+      buildSampleMetamodel();
+    const converter = new InMemoryUriConverter("custom");
 
     const customSerializer: EObjectSerializer = {
       async serialize(): Promise<Uint8Array> {
-        return new TextEncoder().encode('marker'); // content is irrelevant to this test
+        return new TextEncoder().encode("marker"); // content is irrelevant to this test
       },
       async deserialize(): Promise<EObject[]> {
         // Deliberately reconstructs fresh, ignoring the input bytes - this
@@ -420,40 +513,49 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
         // @typemf/json's and @typemf/xmi's own test suites).
         const library = libraryClass.createInstance();
         const book = bookClass.createInstance();
-        book.eSet(titleAttr, 'Dune');
+        book.eSet(titleAttr, "Dune");
         (library.eGet(booksRef) as { add(v: EObject): void }).add(book);
         return [library];
       },
       resolveFragment(fragment: string, roots: EObject[]): EObject | undefined {
-        if (!fragment.startsWith('CUSTOM:')) return undefined;
-        const index = Number(fragment.slice('CUSTOM:'.length));
+        if (!fragment.startsWith("CUSTOM:")) return undefined;
+        const index = Number(fragment.slice("CUSTOM:".length));
         return roots[0]?.eAllContents()[index];
       },
     };
-    const factory: ResourceFactory = { createResource: (uri) => new ResourceImpl(uri, customSerializer) };
+    const factory: ResourceFactory = {
+      createResource: (uri) => new ResourceImpl(uri, customSerializer),
+    };
 
     const resourceSet = new ResourceSetImpl();
     resourceSet.getUriConverterRegistry().register(converter);
-    resourceSet.getResourceFactoryRegistry().registerForProtocol('custom', factory);
+    resourceSet
+      .getResourceFactoryRegistry()
+      .registerForProtocol("custom", factory);
 
-    const targetResource = resourceSet.createResource(URI.parse('custom:target'));
+    const targetResource = resourceSet.createResource(
+      URI.parse("custom:target"),
+    );
     await targetResource.save(); // writes the marker bytes via the converter
 
-    const proxy = new ProxyEObjectImpl(bookClass, URI.parse('custom:target#CUSTOM:0'));
+    const proxy = new ProxyEObjectImpl(
+      bookClass,
+      URI.parse("custom:target#CUSTOM:0"),
+    );
     const resolved = await resourceSet.resolve(proxy);
     expect(resolved.eIsProxy()).toBe(false);
-    expect(resolved.eGet(titleAttr)).toBe('Dune');
+    expect(resolved.eGet(titleAttr)).toBe("Dune");
   });
 });
 
-describe('getResourceOf() - root-walking for nested, non-root objects', () => {
-  it('finds the owning resource for a contained (non-root) object by walking up to its root', () => {
+describe("getResourceOf() - root-walking for nested, non-root objects", () => {
+  it("finds the owning resource for a contained (non-root) object by walking up to its root", () => {
     const { libraryClass, bookClass, booksRef } = buildSampleMetamodel();
     const library = libraryClass.createInstance();
     const book = bookClass.createInstance();
     (library.eGet(booksRef) as { add(item: unknown): void }).add(book);
 
-    const resource = new ResourceImpl(URI.parse('mem:lib.xmi'), {
+    const resource = new ResourceImpl(URI.parse("mem:lib.xmi"), {
       serialize: async () => new Uint8Array(),
       deserialize: async () => [],
     });
@@ -467,7 +569,7 @@ describe('getResourceOf() - root-walking for nested, non-root objects', () => {
     expect(getResourceOf(book)).toBe(resource);
   });
 
-  it('returns undefined for an object that was never added to any resource at all', () => {
+  it("returns undefined for an object that was never added to any resource at all", () => {
     const { bookClass } = buildSampleMetamodel();
     const orphan = bookClass.createInstance();
     expect(getResourceOf(orphan)).toBeUndefined();

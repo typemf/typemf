@@ -1,25 +1,6 @@
-import { EObject } from "@typemf/core";
-import { Ids } from "../EcorePackage.js";
-import { EAttribute } from "../types/EAttribute.js";
-import { EAnnotation } from "../types/EAnnotation.js";
-import { EClass } from "../types/EClass.js";
-import { EClassifier } from "../types/EClassifier.js";
-import { EDataType } from "../types/EDataType.js";
-import { EEnum } from "../types/EEnum.js";
-import { EEnumLiteral } from "../types/EEnumLiteral.js";
-import { EFactory } from "../types/EFactory.js";
-import { EModelElement } from "../types/EModelElement.js";
-import { ENamedElement } from "../types/ENamedElement.js";
-import { EOperation } from "../types/EOperation.js";
-import { EPackage } from "../types/EPackage.js";
-import { EParameter } from "../types/EParameter.js";
-import { EReference } from "../types/EReference.js";
-import { EStructuralFeature } from "../types/EStructuralFeature.js";
-import { ETypedElement } from "../types/ETypedElement.js";
-import { EStringToStringMapEntry } from "../types/EStringToStringMapEntry.js";
-import { EGenericType } from "../types/EGenericType.js";
-import { ETypeParameter } from "../types/ETypeParameter.js";
-
+import { EObject } from '../types/index.js';
+import { Ids } from '../EcorePackage.js';
+import { EAttribute, EAnnotation, EClass, EClassifier, EDataType, EEnum, EEnumLiteral, EFactory, EModelElement, ENamedElement, EOperation, EPackage, EParameter, EReference, EStructuralFeature, ETypedElement, EStringToStringMapEntry, EGenericType, ETypeParameter } from '../types/index.js';
 
 export abstract class EcoreSwitch<T> {
   doSwitch(eObject: EObject): T | undefined {
@@ -164,9 +145,7 @@ export abstract class EcoreSwitch<T> {
       case Ids.EStringToStringMapEntry.self: {
         // EStringToStringMapEntry
         let result: T | undefined;
-        result = this.caseEStringToStringMapEntry(
-          eObject as EStringToStringMapEntry,
-        );
+        result = this.caseEStringToStringMapEntry(eObject as EStringToStringMapEntry);
         if (result !== undefined) return result;
         return this.defaultCase(eObject);
       }

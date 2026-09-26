@@ -1,10 +1,6 @@
-import {
-  EClass,
-  EDataType,
-  EModelElement,
-  EObject,
-  EPackage,
-} from "../../index.js";
+import { EClass, EDataType, EObject, EList } from "./index.js";
+import { EModelElement } from "./EModelElement.js";
+import { EPackage } from "./EPackage.js";
 
 export interface EFactory extends EModelElement {
   getEPackage(): EPackage | undefined;

@@ -1,15 +1,16 @@
+import { EObject, EList } from "./index.js";
 import { ETypedElement } from "./ETypedElement.js";
 import { EClass } from "./EClass.js";
 
 export interface EStructuralFeature extends ETypedElement {
-  getChangeable(): boolean | undefined;
-  setChangeable(value: boolean | undefined): void;
+  isChangeable(): boolean;
+  setChangeable(value: boolean): void;
 
-  getVolatile(): boolean | undefined;
-  setVolatile(value: boolean | undefined): void;
+  isVolatile(): boolean;
+  setVolatile(value: boolean): void;
 
-  getTransient(): boolean | undefined;
-  setTransient(value: boolean | undefined): void;
+  isTransient(): boolean;
+  setTransient(value: boolean): void;
 
   getDefaultValueLiteral(): string | undefined;
   setDefaultValueLiteral(value: string | undefined): void;
@@ -17,16 +18,16 @@ export interface EStructuralFeature extends ETypedElement {
   getDefaultValue(): unknown | undefined;
   setDefaultValue(value: unknown | undefined): void;
 
-  getUnsettable(): boolean | undefined;
-  setUnsettable(value: boolean | undefined): void;
+  isUnsettable(): boolean;
+  setUnsettable(value: boolean): void;
 
-  getDerived(): boolean | undefined;
-  setDerived(value: boolean | undefined): void;
+  isDerived(): boolean;
+  setDerived(value: boolean): void;
 
   getEContainingClass(): EClass | undefined;
   setEContainingClass(value: EClass | undefined): void;
 
   getFeatureID(): number;
 
-  getContainerClass(): EClass;
+  getContainerClass(): EJavaClass;
 }

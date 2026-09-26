@@ -1,7 +1,7 @@
 {% set superClass = superType(eClass) %}
 {% set ownFeatures = eClass.getEStructuralFeatures() %}
 {% file "types/" + eClass.getName() + ".ts" %}
-import { EObject, EList } from '@typemf/core';
+{{ coreImportLine(["EObject", "EList"], "types", "types", options, package) }}
 {% if superClass %}
 import { {{ superClass.getName() }} } from './{{ superClass.getName() }}.js';
 {% endif %}
@@ -16,9 +16,9 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 {% if feature.isMany() %}
   get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature.getEType()) }}>;
 {% else %}
-  get{{ ucfirst(feature.getName()) }}(): {{ tsScalarType(feature.getEType()) }} | undefined;
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature.getEType()) }};
 {% if not trivialDerivedFormula(feature) %}
-  set{{ ucfirst(feature.getName()) }}(value: {{ tsScalarType(feature.getEType()) }} | undefined): void;
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature.getEType()) }}): void;
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -29,7 +29,8 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 }
 {% endfile %}
 {% file "impl/" + eClass.getName() + "Impl.ts" %}
-import { EClass, EList, EObject, EObjectImpl, EStructuralFeature, BasicEList } from '@typemf/core';
+{{ coreImportLine(["EClass", "EList", "EObject", "EStructuralFeature"], "impl", "types", options, package) }}
+{{ coreImportLine(["EObjectImpl", "BasicEList"], "impl", "impl", options, package) }}
 import { {{ eClass.getName() }} } from '../types/{{ eClass.getName() }}.js';
 import { {{ packageClassName(package) }}Impl } from './{{ packageClassName(package) }}Impl.js';
 {% for typeName in referencedApiTypes(ownFeatures, eClass.getName()) %}
@@ -45,7 +46,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if feature.isMany() %}
   private readonly _{{ feature.getName() }} = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this, {{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
 {% else %}
-  private _{{ feature.getName() }}: {{ tsScalarType(feature.getEType()) }} | undefined;
+  private _{{ feature.getName() }}: {{ tsOptionalScalarType(feature.getEType()) }}{% if isPrimitiveValueType(feature.getEType()) %} = {{ primitiveDefaultValue(feature.getEType()) }}{% endif %};
 {% endif %}
 {% endfor %}
 
@@ -61,21 +62,41 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% else %}
 {% set formula = trivialDerivedFormula(feature) %}
 {% if formula %}
-  get{{ ucfirst(feature.getName()) }}(): {{ tsScalarType(feature.getEType()) }} | undefined {
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature.getEType()) }} {
     return {{ formula }};
   }
 {% else %}
-  get{{ ucfirst(feature.getName()) }}(): {{ tsScalarType(feature.getEType()) }} | undefined {
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature.getEType()) }} {
     return this._{{ feature.getName() }};
   }
 
-  set{{ ucfirst(feature.getName()) }}(value: {{ tsScalarType(feature.getEType()) }} | undefined): void {
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature.getEType()) }}): void {
     this.eSet({{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}(), value);
   }
 {% endif %}
 {% endif %}
 {% endfor %}
-{% for op in eClass.getEOperations() %}
+{% for group in groupOperationsByName(eClass.getEOperations()) %}
+{% set op = group[0] %}
+{% if group.length > 1 %}
+{#- Overloaded (2+ EOperations sharing this name - real Ecore.ecore has
+    this, e.g. EEnum.getEEnumLiteral by name vs by value). Scoped to
+    same-arity overloads only (see NOTES.md): every overload signature is
+    emitted with no body (a TS class can only have one), followed by ONE
+    implementation signature whose parameter list is the union of every
+    overload's types at each position (see mergedParamList). Always
+    throws regardless of any individual overload's own body:typescript
+    annotation - dispatching to a specific overload's real body based on
+    the merged, runtime-typeof'd arguments is a bigger feature this scope
+    does not attempt; every overload real Ecore.ecore actually has is
+    bodyless anyway. #}
+{% for o in group %}
+  {{ o.getName() }}({{ paramList(o) }}): {{ tsScalarType(o.getEType()) }};
+{% endfor %}
+  {{ op.getName() }}({{ mergedParamList(group) }}): {{ mergedReturnType(group) }} {
+    throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() is overloaded with no body:typescript annotation - nothing to generate.');
+  }
+{% else %}
 {% set body = operationBody(op) %}
 {% if body %}
   {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }} {
@@ -92,6 +113,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   {{ op.getName() }}({{ paramList(op) }}): {{ tsScalarType(op.getEType()) }} {
     throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() has no body:typescript annotation - nothing to generate.');
   }
+{% endif %}
 {% endif %}
 {% endfor %}
 
@@ -144,7 +166,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
 {% for feature in singleValuedFeatures(ownFeatures) %}
-      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsScalarType(feature.getEType()) }} | undefined; return;
+      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsOptionalScalarType(feature.getEType()) }}; return;
 {% endfor %}
       default:
 {% if superClass %}
@@ -162,7 +184,11 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if feature.isMany() %}
       case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }}.size() !== 0;
 {% else %}
+{% if isPrimitiveValueType(feature.getEType()) %}
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== {{ primitiveDefaultValue(feature.getEType()) }};
+{% else %}
       case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== undefined;
+{% endif %}
 {% endif %}
 {% endfor %}
       default:
@@ -182,7 +208,11 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% else %}
       case {{ feature.getFeatureID() }}: {
         const oldValue = this._{{ feature.getName() }};
+{% if isPrimitiveValueType(feature.getEType()) %}
+        this._{{ feature.getName() }} = {{ primitiveDefaultValue(feature.getEType()) }};
+{% else %}
         this._{{ feature.getName() }} = undefined;
+{% endif %}
         this.eDidRemove(feature, oldValue);
         return;
       }

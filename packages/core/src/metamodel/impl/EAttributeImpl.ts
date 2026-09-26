@@ -1,10 +1,8 @@
-import {
-  EAttribute,
-  EClass,
-  EDataType,
-  EStructuralFeature,
-} from "../../index.js";
-import { EcorePackageImpl, EStructuralFeatureImpl } from "./index.js";
+import { EClass, EStructuralFeature } from "../types/index.js";
+import { EAttribute } from "../types/EAttribute.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EDataType } from "../types/EDataType.js";
+import { EStructuralFeatureImpl } from "./EStructuralFeatureImpl.js";
 
 export class EAttributeImpl
   extends EStructuralFeatureImpl
@@ -21,7 +19,7 @@ export class EAttributeImpl
     return this._iD;
   }
 
-  setID(value: boolean | undefined): void {
+  setID(value: boolean): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getEAttribute_ID(), value);
   }
   getEAttributeType(): EDataType | undefined {
@@ -84,7 +82,7 @@ export class EAttributeImpl
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 18:
-        return this._iD !== undefined;
+        return this._iD !== false;
       case 19:
         return this._eAttributeType !== undefined;
       default:

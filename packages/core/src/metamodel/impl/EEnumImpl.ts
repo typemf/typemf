@@ -1,11 +1,9 @@
-import {
-  EClass,
-  EEnum,
-  EEnumLiteral,
-  EList,
-  EStructuralFeature,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, EDataTypeImpl } from "./index.js";
+import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { BasicEList } from "./index.js";
+import { EEnum } from "../types/EEnum.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EEnumLiteral } from "../types/EEnumLiteral.js";
+import { EDataTypeImpl } from "./EDataTypeImpl.js";
 
 export class EEnumImpl extends EDataTypeImpl implements EEnum {
   private readonly _eLiterals = new BasicEList<EEnumLiteral>(
@@ -21,15 +19,11 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
     return this._eLiterals;
   }
 
-  getEEnumLiteral(name: string): EEnumLiteral {
+  getEEnumLiteral(name: string): EEnumLiteral;
+  getEEnumLiteral(value: number): EEnumLiteral;
+  getEEnumLiteral(nameOrValue: string | number): EEnumLiteral {
     throw new Error(
-      "EEnum.getEEnumLiteral() has no body:typescript annotation - nothing to generate.",
-    );
-  }
-
-  getEEnumLiteral(value: number): EEnumLiteral {
-    throw new Error(
-      "EEnum.getEEnumLiteral() has no body:typescript annotation - nothing to generate.",
+      "EEnum.getEEnumLiteral() is overloaded with no body:typescript annotation - nothing to generate.",
     );
   }
 

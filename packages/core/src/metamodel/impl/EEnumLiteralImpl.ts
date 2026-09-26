@@ -1,19 +1,17 @@
-import {
-  EClass,
-  EEnum,
-  EEnumerator,
-  EEnumLiteral,
-  EStructuralFeature,
-} from "../../index.js";
-import { EcorePackageImpl, ENamedElementImpl } from "./index.js";
+import { EClass, EStructuralFeature, EEnumerator } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EEnumLiteral } from "../types/EEnumLiteral.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EEnum } from "../types/EEnum.js";
+import { ENamedElementImpl } from "./ENamedElementImpl.js";
 
 export class EEnumLiteralImpl
   extends ENamedElementImpl
-  implements EEnumLiteral, EEnumerator
+  implements EEnumLiteral
 {
   private _value: number = 0;
   private _instance: EEnumerator | undefined;
-  private _literal: string = "";
+  private _literal: string | undefined;
   private _eEnum: EEnum | undefined;
 
   eClass(): EClass {
@@ -24,7 +22,7 @@ export class EEnumLiteralImpl
     return this._value;
   }
 
-  setValue(value: number | undefined): void {
+  setValue(value: number): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getEEnumLiteral_Value(), value);
   }
   getInstance(): EEnumerator | undefined {
@@ -34,7 +32,7 @@ export class EEnumLiteralImpl
   setInstance(value: EEnumerator | undefined): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getEEnumLiteral_Instance(), value);
   }
-  getLiteral(): string {
+  getLiteral(): string | undefined {
     return this._literal;
   }
 
@@ -113,7 +111,7 @@ export class EEnumLiteralImpl
         this._instance = value as EEnumerator | undefined;
         return;
       case 4:
-        this._literal = value as string;
+        this._literal = value as string | undefined;
         return;
       case 5:
         this._eEnum = value as EEnum | undefined;
@@ -127,7 +125,7 @@ export class EEnumLiteralImpl
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 2:
-        return this._value !== undefined;
+        return this._value !== 0;
       case 3:
         return this._instance !== undefined;
       case 4:
@@ -155,7 +153,7 @@ export class EEnumLiteralImpl
       }
       case 4: {
         const oldValue = this._literal;
-        this._literal = "undefined";
+        this._literal = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }

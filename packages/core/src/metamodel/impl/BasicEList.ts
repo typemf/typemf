@@ -1,4 +1,4 @@
-import { EList, EReference, EStructuralFeature } from "../../index.js";
+import { EList, EReference, EStructuralFeature } from "../types/index.js";
 import { EObjectImpl } from "./index.js";
 
 /**

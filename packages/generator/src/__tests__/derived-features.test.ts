@@ -91,7 +91,7 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
 
     const widgetTypes = files.find((f) => f.path === 'types/Widget.ts')!;
     expect(widgetTypes.content).not.toContain('setMany(');
-    expect(widgetTypes.content).toContain('getMany()');
+    expect(widgetTypes.content).toContain('isMany()');
 
     // Actually compile and run it.
     const jsPaths = new Map<string, string>();
@@ -117,13 +117,13 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
     const widget: any = factory.create(DerivedtestPackageImpl.eINSTANCE.getWidget());
 
     widget.setUpperBound(1);
-    expect(widget.getMany()).toBe(false);
+    expect(widget.isMany()).toBe(false);
 
     widget.setUpperBound(5);
-    expect(widget.getMany()).toBe(true);
+    expect(widget.isMany()).toBe(true);
 
     widget.setUpperBound(-1);
-    expect(widget.getMany()).toBe(true);
+    expect(widget.isMany()).toBe(true);
 
     // required = lowerBound >= 1, with NO !many check - verified directly
     // against real EMF's ETypedElementImpl.isRequired() source. An
@@ -131,10 +131,10 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
     // specific case (lowerBound=1 AND many=true, i.e. upperBound=-1) is
     // exactly where that bug would have wrongly returned false.
     widget.setLowerBound(0);
-    expect(widget.getRequired()).toBe(false);
+    expect(widget.isRequired()).toBe(false);
 
     widget.setLowerBound(1);
-    expect(widget.getRequired()).toBe(true);
-    expect(widget.getMany()).toBe(true); // still -1 from above - required AND many, the case the old formula got wrong
+    expect(widget.isRequired()).toBe(true);
+    expect(widget.isMany()).toBe(true); // still -1 from above - required AND many, the case the old formula got wrong
   });
 });

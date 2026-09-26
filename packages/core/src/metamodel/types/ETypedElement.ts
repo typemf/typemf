@@ -1,23 +1,26 @@
-import { ENamedElement } from "./ENamedElement.js";
-import { EClassifier } from "./EClassifier.js";
-import { EGenericType } from "./EGenericType.js";
+import { EObject, EList } from './index.js';
+import { ENamedElement } from './ENamedElement.js';
+import { EClassifier } from './EClassifier.js';
+import { EGenericType } from './EGenericType.js';
+
 
 export interface ETypedElement extends ENamedElement {
-  isOrdered(): boolean | undefined;
-  setOrdered(value: boolean | undefined): void;
 
-  isUnique(): boolean | undefined;
-  setUnique(value: boolean | undefined): void;
+  isOrdered(): boolean;
+  setOrdered(value: boolean): void;
 
-  getLowerBound(): number | undefined;
-  setLowerBound(value: number | undefined): void;
+  isUnique(): boolean;
+  setUnique(value: boolean): void;
 
-  getUpperBound(): number | undefined;
-  setUpperBound(value: number | undefined): void;
+  getLowerBound(): number;
+  setLowerBound(value: number): void;
 
-  isMany(): boolean | undefined;
+  getUpperBound(): number;
+  setUpperBound(value: number): void;
 
-  isRequired(): boolean | undefined;
+  isMany(): boolean;
+
+  isRequired(): boolean;
 
   getEType(): EClassifier | undefined;
   setEType(value: EClassifier | undefined): void;

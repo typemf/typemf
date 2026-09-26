@@ -1,4 +1,4 @@
-import { EClass, EObject } from "../../index.js";
+import { EClass, EObject } from "../types/index.js";
 import { DynamicEObjectImpl, EFactoryImpl } from "./index.js";
 
 /**

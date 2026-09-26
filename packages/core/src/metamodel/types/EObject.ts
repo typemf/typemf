@@ -1,5 +1,4 @@
-import { EClass, EList, EStructuralFeature } from "../../index.js";
-
+import { EClass, EList, EStructuralFeature } from "./index";
 /**
  * The universal reflective base type. Every model instance - whether it was
  * produced by generated code or by DynamicEObjectImpl against a parsed-only

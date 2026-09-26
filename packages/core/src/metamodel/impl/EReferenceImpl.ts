@@ -1,23 +1,17 @@
-import {
-  EAttribute,
-  EClass,
-  EList,
-  EReference,
-  EStructuralFeature,
-} from "../../index.js";
-import {
-  BasicEList,
-  EcorePackageImpl,
-  EStructuralFeatureImpl,
-} from "./index.js";
+import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EReference } from "../types/EReference.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EAttribute } from "../types/EAttribute.js";
+import { EStructuralFeatureImpl } from "./EStructuralFeatureImpl.js";
 
 export class EReferenceImpl
   extends EStructuralFeatureImpl
   implements EReference
 {
-  private _containment: boolean | undefined;
-  private _container: boolean | undefined;
-  private _resolveProxies: boolean | undefined;
+  private _containment: boolean = false;
+  private _container: boolean = false;
+  private _resolveProxies: boolean = false;
   private _eOpposite: EReference | undefined;
   private _eReferenceType: EClass | undefined;
   private readonly _eKeys = new BasicEList<EAttribute>(
@@ -29,21 +23,21 @@ export class EReferenceImpl
     return EcorePackageImpl.eINSTANCE.getEReference();
   }
 
-  getContainment(): boolean | undefined {
+  isContainment(): boolean {
     return this._containment;
   }
 
-  setContainment(value: boolean | undefined): void {
+  setContainment(value: boolean): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getEReference_Containment(), value);
   }
-  getContainer(): boolean | undefined {
+  isContainer(): boolean {
     return this.getEOpposite()?.isContainment() ?? false;
   }
-  getResolveProxies(): boolean | undefined {
+  isResolveProxies(): boolean {
     return this._resolveProxies;
   }
 
-  setResolveProxies(value: boolean | undefined): void {
+  setResolveProxies(value: boolean): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getEReference_ResolveProxies(), value);
   }
   getEOpposite(): EReference | undefined {
@@ -140,13 +134,13 @@ export class EReferenceImpl
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 18:
-        this._containment = value as boolean | undefined;
+        this._containment = value as boolean;
         return;
       case 19:
-        this._container = value as boolean | undefined;
+        this._container = value as boolean;
         return;
       case 20:
-        this._resolveProxies = value as boolean | undefined;
+        this._resolveProxies = value as boolean;
         return;
       case 21:
         this._eOpposite = value as EReference | undefined;
@@ -163,11 +157,11 @@ export class EReferenceImpl
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 18:
-        return this._containment !== undefined;
+        return this._containment !== false;
       case 19:
-        return this._container !== undefined;
+        return this._container !== false;
       case 20:
-        return this._resolveProxies !== undefined;
+        return this._resolveProxies !== false;
       case 21:
         return this._eOpposite !== undefined;
       case 22:
@@ -183,19 +177,19 @@ export class EReferenceImpl
     switch (feature.getFeatureID()) {
       case 18: {
         const oldValue = this._containment;
-        this._containment = undefined;
+        this._containment = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 19: {
         const oldValue = this._container;
-        this._container = undefined;
+        this._container = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 20: {
         const oldValue = this._resolveProxies;
-        this._resolveProxies = undefined;
+        this._resolveProxies = false;
         this.eDidRemove(feature, oldValue);
         return;
       }

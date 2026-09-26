@@ -1,22 +1,20 @@
-import {
-  EClass,
-  EClassifier,
-  EGenericType,
-  EStructuralFeature,
-  ETypedElement,
-} from "../../index.js";
-import { EcorePackageImpl, ENamedElementImpl } from "./index.js";
+import { EClass, EStructuralFeature } from "../types/index.js";
+import { ETypedElement } from "../types/ETypedElement.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EClassifier } from "../types/EClassifier.js";
+import { EGenericType } from "../types/EGenericType.js";
+import { ENamedElementImpl } from "./ENamedElementImpl.js";
 
 export class ETypedElementImpl
   extends ENamedElementImpl
   implements ETypedElement
 {
-  private _ordered: boolean | undefined;
-  private _unique: boolean | undefined;
-  private _lowerBound: number | undefined;
-  private _upperBound: number | undefined;
-  private _many: boolean | undefined;
-  private _required: boolean | undefined;
+  private _ordered: boolean = false;
+  private _unique: boolean = false;
+  private _lowerBound: number = 0;
+  private _upperBound: number = 0;
+  private _many: boolean = false;
+  private _required: boolean = false;
   private _eType: EClassifier | undefined;
   private _eGenericType: EGenericType | undefined;
 
@@ -24,51 +22,39 @@ export class ETypedElementImpl
     return EcorePackageImpl.eINSTANCE.getETypedElement();
   }
 
-  isOrdered(): boolean | undefined {
+  isOrdered(): boolean {
     return this._ordered;
   }
 
-  setOrdered(value: boolean | undefined): void {
+  setOrdered(value: boolean): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_Ordered(), value);
   }
-  isUnique(): boolean | undefined {
+  isUnique(): boolean {
     return this._unique;
   }
 
-  setUnique(value: boolean | undefined): void {
+  setUnique(value: boolean): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_Unique(), value);
   }
-  getLowerBound(): number | undefined {
+  getLowerBound(): number {
     return this._lowerBound;
   }
 
-  setLowerBound(value: number | undefined): void {
+  setLowerBound(value: number): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_LowerBound(), value);
   }
-  getUpperBound(): number | undefined {
+  getUpperBound(): number {
     return this._upperBound;
   }
 
-  setUpperBound(value: number | undefined): void {
+  setUpperBound(value: number): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_UpperBound(), value);
   }
-  isMany(): boolean | undefined {
-    const upperBound = this.getUpperBound();
-
-    if (upperBound === undefined) {
-      return false;
-    }
-
-    return this.getUpperBound() === -1 || upperBound > 1;
+  isMany(): boolean {
+    return this.getUpperBound() === -1 || this.getUpperBound() > 1;
   }
-  isRequired(): boolean | undefined {
-    const lowerBound = this.getLowerBound();
-
-    if (lowerBound === undefined) {
-      return false;
-    }
-
-    return lowerBound >= 1;
+  isRequired(): boolean {
+    return this.getLowerBound() >= 1;
   }
   getEType(): EClassifier | undefined {
     return this._eType;
@@ -186,22 +172,22 @@ export class ETypedElementImpl
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 2:
-        this._ordered = value as boolean | undefined;
+        this._ordered = value as boolean;
         return;
       case 3:
-        this._unique = value as boolean | undefined;
+        this._unique = value as boolean;
         return;
       case 4:
-        this._lowerBound = value as number | undefined;
+        this._lowerBound = value as number;
         return;
       case 5:
-        this._upperBound = value as number | undefined;
+        this._upperBound = value as number;
         return;
       case 6:
-        this._many = value as boolean | undefined;
+        this._many = value as boolean;
         return;
       case 7:
-        this._required = value as boolean | undefined;
+        this._required = value as boolean;
         return;
       case 8:
         this._eType = value as EClassifier | undefined;
@@ -218,17 +204,17 @@ export class ETypedElementImpl
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 2:
-        return this._ordered !== undefined;
+        return this._ordered !== false;
       case 3:
-        return this._unique !== undefined;
+        return this._unique !== false;
       case 4:
-        return this._lowerBound !== undefined;
+        return this._lowerBound !== 0;
       case 5:
-        return this._upperBound !== undefined;
+        return this._upperBound !== 0;
       case 6:
-        return this._many !== undefined;
+        return this._many !== false;
       case 7:
-        return this._required !== undefined;
+        return this._required !== false;
       case 8:
         return this._eType !== undefined;
       case 9:
@@ -242,37 +228,37 @@ export class ETypedElementImpl
     switch (feature.getFeatureID()) {
       case 2: {
         const oldValue = this._ordered;
-        this._ordered = undefined;
+        this._ordered = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 3: {
         const oldValue = this._unique;
-        this._unique = undefined;
+        this._unique = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 4: {
         const oldValue = this._lowerBound;
-        this._lowerBound = undefined;
+        this._lowerBound = 0;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 5: {
         const oldValue = this._upperBound;
-        this._upperBound = undefined;
+        this._upperBound = 0;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 6: {
         const oldValue = this._many;
-        this._many = undefined;
+        this._many = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 7: {
         const oldValue = this._required;
-        this._required = undefined;
+        this._required = false;
         this.eDidRemove(feature, oldValue);
         return;
       }

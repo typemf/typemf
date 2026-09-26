@@ -1,14 +1,13 @@
-import {
-  EClass,
-  EClassifier,
-  EGenericType,
-  EList,
-  EOperation,
-  EParameter,
-  EStructuralFeature,
-  ETypeParameter,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, ETypedElementImpl } from "./index.js";
+import { EList, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EOperation } from "../types/EOperation.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EClass } from "../types/EClass.js";
+import { ETypeParameter } from "../types/ETypeParameter.js";
+import { EParameter } from "../types/EParameter.js";
+import { EClassifier } from "../types/EClassifier.js";
+import { EGenericType } from "../types/EGenericType.js";
+import { ETypedElementImpl } from "./ETypedElementImpl.js";
 
 export class EOperationImpl extends ETypedElementImpl implements EOperation {
   private _eContainingClass: EClass | undefined;

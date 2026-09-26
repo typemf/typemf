@@ -4,21 +4,30 @@ import type nunjucks from 'nunjucks';
 import { TemplateSet } from './template-set.js';
 import {
   argList,
+  beanGetterName,
   concreteEClassesOf,
+  coreImportLine,
+  coreImportSpecifier,
   detailsEntries,
   docComment,
   eClassesOf,
+  excludeCollidingCoreNames,
   factoryClassName,
   findEClassByName,
+  groupOperationsByName,
   isEClass,
   isEDataType,
   isEEnum,
   isEReference,
   isOptional,
+  isPrimitiveValueType,
   jsString,
+  mergedParamList,
+  mergedReturnType,
   operationBody,
   packageClassName,
   paramList,
+  primitiveDefaultValue,
   referencedApiTypes,
   singleValuedFeatures,
   superType,
@@ -26,7 +35,9 @@ import {
   switchClassName,
   trivialDerivedFormula,
   tsFeatureType,
+  tsOptionalScalarType,
   tsScalarType,
+  typeGuardsClassName,
   ucfirst,
 } from './typescript-filters.js';
 
@@ -65,5 +76,16 @@ export const typescriptTemplateSet: TemplateSet = {
     env.addGlobal('findEClassByName', findEClassByName);
     env.addGlobal('jsString', jsString);
     env.addGlobal('detailsEntries', detailsEntries);
+    env.addGlobal('beanGetterName', beanGetterName);
+    env.addGlobal('isPrimitiveValueType', isPrimitiveValueType);
+    env.addGlobal('primitiveDefaultValue', primitiveDefaultValue);
+    env.addGlobal('tsOptionalScalarType', tsOptionalScalarType);
+    env.addGlobal('groupOperationsByName', groupOperationsByName);
+    env.addGlobal('mergedParamList', mergedParamList);
+    env.addGlobal('mergedReturnType', mergedReturnType);
+    env.addGlobal('coreImportSpecifier', coreImportSpecifier);
+    env.addGlobal('excludeCollidingCoreNames', excludeCollidingCoreNames);
+    env.addGlobal('coreImportLine', coreImportLine);
+    env.addGlobal('typeGuardsClassName', typeGuardsClassName);
   },
 };

@@ -1,6 +1,8 @@
-import { EObject } from "../../index.js";
+import { EObject, EList } from './index.js';
+
 
 export interface EStringToStringMapEntry extends EObject {
+
   getKey(): string | undefined;
   setKey(value: string | undefined): void;
 

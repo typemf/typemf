@@ -64,7 +64,8 @@ export abstract class EObjectImpl implements EObject {
    */
   eDidAdd(feature: EStructuralFeature, value: unknown): void {
     if (!isReference(feature) || !(value instanceof EObjectImpl)) return;
-    if ((feature instanceof EReference) && ((EReference)feature).isContainment()) value.eBasicMoveInto(this, feature);
+    if (isReference(feature) && feature.isContainment())
+      value.eBasicMoveInto(this, feature);
     const opposite = feature.getEOpposite();
     if (opposite) value.eInverseAdd(this, opposite);
   }

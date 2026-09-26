@@ -1,6 +1,10 @@
-import { EDataType, EStructuralFeature } from "../../index.js";
+import { EObject, EList } from './index.js';
+import { EStructuralFeature } from './EStructuralFeature.js';
+import { EDataType } from './EDataType.js';
+
 
 export interface EAttribute extends EStructuralFeature {
+
   isID(): boolean;
   setID(value: boolean): void;
 

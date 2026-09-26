@@ -1,10 +1,9 @@
-import {
-  EClass,
-  EOperation,
-  EParameter,
-  EStructuralFeature,
-} from "../../index.js";
-import { EcorePackageImpl, ETypedElementImpl } from "./index.js";
+import { EClass, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EParameter } from "../types/EParameter.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EOperation } from "../types/EOperation.js";
+import { ETypedElementImpl } from "./ETypedElementImpl.js";
 
 export class EParameterImpl extends ETypedElementImpl implements EParameter {
   private _eOperation: EOperation | undefined;

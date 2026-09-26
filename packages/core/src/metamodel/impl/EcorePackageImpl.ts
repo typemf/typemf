@@ -1,21 +1,24 @@
 import {
-  EAttribute,
   EClass,
-  EDataType,
-  EcoreFactory,
-  EcorePackage,
+  EAttribute,
   EReference,
-} from "../../index.js";
-
+  EEnum,
+  EDataType,
+} from "../types/index.js";
 import {
-  EAnnotationImpl,
-  EAttributeImpl,
-  EClassImpl,
-  EDataTypeImpl,
   EPackageImpl,
+  EClassImpl,
+  EAttributeImpl,
   EReferenceImpl,
-  EcoreFactoryImpl,
-} from "./index";
+  EDataTypeImpl,
+  EEnumImpl,
+  EEnumLiteralImpl,
+  EAnnotationImpl,
+  EFactoryImpl,
+} from "./index.js";
+import { EcorePackage, Ids } from "../EcorePackage.js";
+import { EcoreFactory } from "../EcoreFactory.js";
+import { EcoreFactoryImpl } from "./EcoreFactoryImpl.js";
 
 export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private readonly _EAttribute: EClass;

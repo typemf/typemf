@@ -1,21 +1,24 @@
-import { EClass, ENamedElement, EStructuralFeature } from "../../index.js";
-import { EcorePackageImpl, EModelElementImpl } from "./index.js";
+import { EClass, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { ENamedElement } from "../types/ENamedElement.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EModelElementImpl } from "./EModelElementImpl.js";
 
 export class ENamedElementImpl
   extends EModelElementImpl
   implements ENamedElement
 {
-  private _name: string = "undefined";
+  private _name: string | undefined;
 
   eClass(): EClass {
     return EcorePackageImpl.eINSTANCE.getENamedElement();
   }
 
-  getName(): string {
+  getName(): string | undefined {
     return this._name;
   }
 
-  setName(value: string): void {
+  setName(value: string | undefined): void {
     this.eSet(EcorePackageImpl.eINSTANCE.getENamedElement_Name(), value);
   }
 
@@ -47,7 +50,7 @@ export class ENamedElementImpl
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 1:
-        this._name = value as string;
+        this._name = value as string | undefined;
         return;
       default:
         super.eBasicSetValue(feature, value);
@@ -68,7 +71,7 @@ export class ENamedElementImpl
     switch (feature.getFeatureID()) {
       case 1: {
         const oldValue = this._name;
-        this._name = "undefined";
+        this._name = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }

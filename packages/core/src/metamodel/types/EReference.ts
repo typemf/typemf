@@ -1,13 +1,18 @@
-import { EAttribute, EClass, EList, EStructuralFeature } from "../../index.js";
+import { EObject, EList } from './index.js';
+import { EStructuralFeature } from './EStructuralFeature.js';
+import { EClass } from './EClass.js';
+import { EAttribute } from './EAttribute.js';
+
 
 export interface EReference extends EStructuralFeature {
-  getContainment(): boolean | undefined;
-  setContainment(value: boolean | undefined): void;
 
-  getContainer(): boolean | undefined;
+  isContainment(): boolean;
+  setContainment(value: boolean): void;
 
-  getResolveProxies(): boolean | undefined;
-  setResolveProxies(value: boolean | undefined): void;
+  isContainer(): boolean;
+
+  isResolveProxies(): boolean;
+  setResolveProxies(value: boolean): void;
 
   getEOpposite(): EReference | undefined;
   setEOpposite(value: EReference | undefined): void;

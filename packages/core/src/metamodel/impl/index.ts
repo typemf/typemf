@@ -1,13 +1,12 @@
-// impl
 export * from "./BasicEList.js";
-export * from "./DynamicEObjectImpl.js";
 export * from "./DynamicEFactoryImpl.js";
-export * from "./EAnnotationImpl.js";
+export * from "./DynamicEObjectImpl.js";
+export * from "./EcorePackageImpl.js";
+export * from "./EcoreFactoryImpl.js";
 export * from "./EAttributeImpl.js";
+export * from "./EAnnotationImpl.js";
 export * from "./EClassImpl.js";
 export * from "./EClassifierImpl.js";
-export * from "./EcoreFactoryImpl.js";
-export * from "./EcorePackageImpl.js";
 export * from "./EDataTypeImpl.js";
 export * from "./EEnumImpl.js";
 export * from "./EEnumLiteralImpl.js";
@@ -21,4 +20,6 @@ export * from "./EParameterImpl.js";
 export * from "./EReferenceImpl.js";
 export * from "./EStructuralFeatureImpl.js";
 export * from "./ETypedElementImpl.js";
+export * from "./EStringToStringMapEntryImpl.js";
+export * from "./EGenericTypeImpl.js";
 export * from "./ETypeParameterImpl.js";

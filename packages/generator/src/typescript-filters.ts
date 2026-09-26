@@ -106,6 +106,8 @@ function tsPrimitiveType(dataType: EDataType): string {
     case 'ELong':
     case 'EDouble':
     case 'EFloat':
+    case 'EShort':
+    case 'EByte':
       return 'number';
     case 'EBoolean':
       return 'boolean';
@@ -116,6 +118,63 @@ function tsPrimitiveType(dataType: EDataType): string {
       // nominal type, same convention generated EClass/EEnum types use.
       return dataType.getName();
   }
+}
+
+/**
+ * The EDataTypes that map to real TypeScript primitives with a genuine
+ * zero-value, mirroring real Java EMF's own primitive/wrapper distinction
+ * exactly: EBoolean/EInt/ELong/EFloat/EDouble/EShort/EByte correspond to
+ * Java's `boolean`/`int`/`long`/`float`/`double`/`short`/`byte` (never
+ * null, always has a real default) - EBooleanObject/EIntegerObject/etc.
+ * are the wrapper counterparts (can be null/absent) and are NOT included
+ * here. EString is deliberately excluded too: `String` has no primitive
+ * counterpart in Java at all, unlike the numeric/boolean types.
+ *
+ * Only EBoolean/EInt/EFloat/EDouble were named explicitly in the request
+ * that added this; ELong/EShort/EByte were added here for consistency
+ * with the same underlying Java primitive-vs-wrapper reasoning - flagged
+ * as an interpretive extension, not a literal instruction.
+ */
+const PRIMITIVE_VALUE_DATATYPE_NAMES = new Set(['EBoolean', 'EInt', 'ELong', 'EFloat', 'EDouble', 'EShort', 'EByte']);
+
+export function isPrimitiveValueType(classifier: EClassifier | undefined): boolean {
+  return classifier !== undefined && isEDataType(classifier) && PRIMITIVE_VALUE_DATATYPE_NAMES.has(classifier.getName());
+}
+
+/** 'false' for EBoolean, '0' for every other primitive numeric EDataType - the real Java-primitive zero-default, used as a stored field's initial value instead of `undefined`. */
+export function primitiveDefaultValue(classifier: EClassifier): string {
+  return classifier.getName() === 'EBoolean' ? 'false' : '0';
+}
+
+/**
+ * A feature's scalar TypeScript type, with " | undefined" appended UNLESS
+ * the type is one of the real JS-primitive-with-a-zero-value EDataTypes
+ * (see isPrimitiveValueType) - those never need the union, since a
+ * generated field for one always has a real value (the zero-default),
+ * never a genuine absence. Prefer this over manually appending
+ * " | undefined" to tsScalarType()'s result in a template, so the
+ * primitive-type exception lives in one place.
+ */
+export function tsOptionalScalarType(classifier: EClassifier | undefined): string {
+  const scalar = tsScalarType(classifier);
+  if (classifier && isPrimitiveValueType(classifier)) return scalar;
+  return `${scalar} | undefined`;
+}
+
+/**
+ * "getTitle" or, for a single-valued EBoolean attribute specifically,
+ * "isPublished" - matching the common convention (real EMF does this too,
+ * gated on the same isMany()===false && type===EBoolean condition).
+ * Deliberately does NOT affect many-valued features (an EList<boolean>
+ * has no sensible "isX" reading) or the setter (which stays "setX"
+ * regardless - only asked for the getter to change).
+ */
+export function beanGetterName(feature: EStructuralFeature): string {
+  const type = feature.getEType();
+  if (!feature.isMany() && type && type.getName() === 'EBoolean') {
+    return `is${ucfirst(feature.getName())}`;
+  }
+  return `get${ucfirst(feature.getName())}`;
 }
 
 /** The full TypeScript type for a feature's getter/setter, including EList<T> for many-valued features. */
@@ -167,6 +226,140 @@ export function argList(operation: EOperation): string {
 }
 
 /**
+ * Groups a class's own operations by name, preserving first-seen order -
+ * needed because real Ecore.ecore has genuine overloaded operations
+ * (EEnum.getEEnumLiteral, by name and by value) and a TS class can only
+ * have ONE method body per name, unlike an interface, which supports
+ * overloads natively (so only the impl side needs this grouping, not the
+ * types/ interface side - see the loop in eclass.njk). Scoped to
+ * same-arity overloads only, matching what real Ecore.ecore actually
+ * has - a genuine arity mismatch within one name is not handled (see
+ * NOTES.md).
+ */
+export function groupOperationsByName(operations: Iterable<EOperation>): EOperation[][] {
+  const groups = new Map<string, EOperation[]>();
+  for (const op of operations) {
+    const list = groups.get(op.getName());
+    if (list) list.push(op);
+    else groups.set(op.getName(), [op]);
+  }
+  return [...groups.values()];
+}
+
+/** "name" if every name in `names` is identical, otherwise "nameOrValueOrEtc" - used to synthesize a merged parameter name for an overload group. */
+function mergeNames(names: string[]): string {
+  const unique = [...new Set(names)];
+  return unique[0] + unique.slice(1).map((n) => `Or${ucfirst(n)}`).join('');
+}
+
+/**
+ * The merged implementation signature's parameter list for a group of
+ * same-named, same-arity operations - each position's type is the union
+ * of every overload's type there, and its name is synthesized via
+ * mergeNames() when the overloads used different names for that
+ * position (e.g. getEEnumLiteral(name)/getEEnumLiteral(value) merges to
+ * a single "nameOrValue: string | number" parameter). For a group of
+ * exactly one operation, this is identical to paramList().
+ */
+export function mergedParamList(group: EOperation[]): string {
+  const first = group[0]!;
+  if (group.length === 1) return paramList(first);
+  const arity = first.getEParameters().size();
+  const parts: string[] = [];
+  for (let i = 0; i < arity; i++) {
+    const paramName = mergeNames(group.map((op) => op.getEParameters().get(i)!.getName()));
+    const paramType = [...new Set(group.map((op) => tsFeatureType(op.getEParameters().get(i)!)))].join(' | ');
+    parts.push(`${paramName}: ${paramType}`);
+  }
+  return parts.join(', ');
+}
+
+/** The merged implementation signature's return type for a group - the union of every overload's return type, deduplicated (so an all-identical group collapses to just that one type, not a redundant self-union). */
+export function mergedReturnType(group: EOperation[]): string {
+  return [...new Set(group.map((op) => tsScalarType(op.getEType())))].join(' | ');
+}
+
+/**
+ * Where a set of @typemf/core symbols should be imported from, given the
+ * calling template's own output location and whether the symbols are
+ * types-shaped (live in @typemf/core's types/ folder) or impl-shaped
+ * (live in its impl/ folder).
+ *
+ * Normally '@typemf/core' (the published package). In generate-ecore mode
+ * (options['generate-ecore']), a relative import instead: that mode
+ * generates code meant to live INSIDE @typemf/core's own source tree
+ * (self-hosting), where these symbols are plain sibling files in its own
+ * types/ and impl/ folders, not something to import as an external
+ * package - confirmed against @typemf/core's own actual, already-
+ * integrated structure, not assumed (see NOTES.md).
+ */
+export function coreImportSpecifier(
+  location: 'root' | 'types' | 'impl' | 'util',
+  kind: 'types' | 'impl',
+  options: Record<string, unknown>
+): string {
+  if (!options['generate-ecore']) return '@typemf/core';
+  const depth: Record<'root' | 'types' | 'impl' | 'util', Record<'types' | 'impl', string>> = {
+    root: { types: './types', impl: './impl' },
+    types: { types: '.', impl: '../impl' },
+    impl: { types: '../types', impl: '.' },
+    util: { types: '../types', impl: '../impl' },
+  };
+  return `${depth[location][kind]}/index.js`;
+}
+
+/**
+ * Filters a list of @typemf/core symbol names, dropping any that ALSO
+ * happen to be a real classifier's name in this package - avoiding a
+ * duplicate-binding import error where the same local name would
+ * otherwise be imported twice in the same generated file: once as a
+ * core-foundational symbol (this list), once via some other reference
+ * elsewhere in that file (the classifier's own self-import, a
+ * `referencedApiTypes()` entry, or a `concreteEClassesOf()`/
+ * `eClassesOf()` loop).
+ *
+ * Real Ecore.ecore is the case this exists for, confirmed directly by
+ * generating it and scanning every output file for duplicate imported
+ * names: it genuinely models classifiers literally named
+ * "EClass"/"EStructuralFeature"/"EFactory"/etc, coinciding with
+ * @typemf/core's own foundational symbol names - not something an
+ * ordinary user metamodel would ever do (this filter is a no-op for
+ * those). Safe to drop unconditionally rather than alias: whichever
+ * OTHER import brings the colliding name into scope already supplies it
+ * correctly, since in every such case the colliding name IS itself a
+ * real classifier of this exact package - there is no second, DIFFERENT
+ * "EClass" that also needs importing under some other alias.
+ *
+ * This does not, on its own, guarantee the generated code that RELIES on
+ * the dropped foundational symbol still type-checks (e.g.
+ * `eClass.getClassifierID()` needs classifierID to exist on whatever
+ * "EClass" now resolves to) - see NOTES.md for that separate, deeper
+ * finding.
+ */
+export function excludeCollidingCoreNames(names: string[], pkg: EPackage): string[] {
+  const classifierNames = new Set(pkg.getEClassifiers().toArray().map((c) => c.getName()));
+  return names.filter((n) => !classifierNames.has(n));
+}
+
+/**
+ * The complete "import { A, B } from '...';" line for a set of core
+ * symbols, after excludeCollidingCoreNames() filtering - or an empty
+ * string if every requested name collided, so a template can emit this
+ * directly without its own {% if %} guard against an empty import.
+ */
+export function coreImportLine(
+  names: string[],
+  location: 'root' | 'types' | 'impl' | 'util',
+  kind: 'types' | 'impl',
+  options: Record<string, unknown>,
+  pkg: EPackage
+): string {
+  const filtered = excludeCollidingCoreNames(names, pkg);
+  if (filtered.length === 0) return '';
+  return `import { ${filtered.join(', ')} } from '${coreImportSpecifier(location, kind, options)}';`;
+}
+
+/**
  * Uppercases only the first character, leaving the rest untouched -
  * NOT the same as Nunjucks' built-in `capitalize` filter, which mirrors
  * Jinja2's and lowercases everything after the first letter (breaking any
@@ -188,6 +381,10 @@ export function factoryClassName(pkg: EPackage): string {
 
 export function switchClassName(pkg: EPackage): string {
   return `${ucfirst(pkg.getName())}Switch`;
+}
+
+export function typeGuardsClassName(pkg: EPackage): string {
+  return `${ucfirst(pkg.getName())}TypeGuards`;
 }
 
 /** The EClass's single supertype for TS `extends` purposes, or undefined - see NOTES.md on multiple inheritance. */

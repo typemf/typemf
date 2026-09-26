@@ -1,12 +1,10 @@
-import {
-  EClass,
-  EClassifier,
-  EFactory,
-  EList,
-  EPackage,
-  EStructuralFeature,
-} from "../../index.js";
-import { BasicEList, EcorePackageImpl, ENamedElementImpl } from "./index.js";
+import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { BasicEList } from "./index.js";
+import { EPackage } from "../types/EPackage.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EFactory } from "../types/EFactory.js";
+import { EClassifier } from "../types/EClassifier.js";
+import { ENamedElementImpl } from "./ENamedElementImpl.js";
 
 export class EPackageImpl extends ENamedElementImpl implements EPackage {
   private _nsURI: string | undefined;

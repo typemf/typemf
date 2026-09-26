@@ -1,6 +1,9 @@
-import { EClassifier } from "../../index.js";
+import { EObject, EList } from './index.js';
+import { EClassifier } from './EClassifier.js';
+
 
 export interface EDataType extends EClassifier {
-  getSerializable(): boolean | undefined;
-  setSerializable(value: boolean | undefined): void;
+
+  isSerializable(): boolean;
+  setSerializable(value: boolean): void;
 }

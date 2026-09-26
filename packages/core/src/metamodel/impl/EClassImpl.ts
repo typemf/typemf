@@ -1,13 +1,11 @@
-import {
-  EAttribute,
-  EClass,
-  EList,
-  EGenericType,
-  EOperation,
-  EReference,
-  EStructuralFeature,
-} from "../../index.js";
-import { BasicEList, EClassifierImpl, EcorePackageImpl } from "./index.js";
+import { EClass, EList, EStructuralFeature } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EOperation } from "../types/EOperation.js";
+import { EAttribute } from "../types/EAttribute.js";
+import { EReference } from "../types/EReference.js";
+import { EGenericType } from "../types/EGenericType.js";
+import { EClassifierImpl } from "./EClassifierImpl.js";
 
 export class EClassImpl extends EClassifierImpl implements EClass {
   private _abstract: boolean = false;
@@ -129,6 +127,58 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
   getEAllGenericSuperTypes(): EList<EGenericType> {
     return this._eAllGenericSuperTypes;
+  }
+
+  isSuperTypeOf(someClass: EClass): boolean {
+    throw new Error(
+      "EClass.isSuperTypeOf() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getFeatureCount(): number {
+    throw new Error(
+      "EClass.getFeatureCount() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getEStructuralFeature(featureID: number): EStructuralFeature;
+  getEStructuralFeature(featureName: string): EStructuralFeature;
+  getEStructuralFeature(
+    featureIDOrFeatureName: number | string,
+  ): EStructuralFeature {
+    throw new Error(
+      "EClass.getEStructuralFeature() is overloaded with no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getFeatureID(feature: EStructuralFeature): number {
+    throw new Error(
+      "EClass.getFeatureID() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getOperationCount(): number {
+    throw new Error(
+      "EClass.getOperationCount() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getEOperation(operationID: number): EOperation {
+    throw new Error(
+      "EClass.getEOperation() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getOperationID(operation: EOperation): number {
+    throw new Error(
+      "EClass.getOperationID() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getOverride(operation: EOperation): EOperation {
+    throw new Error(
+      "EClass.getOverride() has no body:typescript annotation - nothing to generate.",
+    );
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -352,9 +402,9 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 8:
-        return this._abstract !== undefined;
+        return this._abstract !== false;
       case 9:
-        return this._interface !== undefined;
+        return this._interface !== false;
       case 10:
         return this._eSuperTypes.size() !== 0;
       case 11:

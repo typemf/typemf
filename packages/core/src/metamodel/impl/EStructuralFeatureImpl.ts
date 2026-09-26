@@ -1,48 +1,52 @@
-import { EClass, EStructuralFeature } from "../../index.js";
-import { EcorePackageImpl, ETypedElementImpl } from "./index.js";
+import { EList, EObject } from "../types/index.js";
+import { EObjectImpl, BasicEList } from "./index.js";
+import { EStructuralFeature } from "../types/EStructuralFeature.js";
+import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EClass } from "../types/EClass.js";
+import { ETypedElementImpl } from "./ETypedElementImpl.js";
 
 export class EStructuralFeatureImpl
   extends ETypedElementImpl
   implements EStructuralFeature
 {
-  private _changeable: boolean | undefined;
-  private _volatile: boolean | undefined;
-  private _transient: boolean | undefined;
+  private _changeable: boolean = false;
+  private _volatile: boolean = false;
+  private _transient: boolean = false;
   private _defaultValueLiteral: string | undefined;
   private _defaultValue: unknown | undefined;
-  private _unsettable: boolean | undefined;
-  private _derived: boolean | undefined;
+  private _unsettable: boolean = false;
+  private _derived: boolean = false;
   private _eContainingClass: EClass | undefined;
 
   eClass(): EClass {
     return EcorePackageImpl.eINSTANCE.getEStructuralFeature();
   }
 
-  getChangeable(): boolean | undefined {
+  isChangeable(): boolean {
     return this._changeable;
   }
 
-  setChangeable(value: boolean | undefined): void {
+  setChangeable(value: boolean): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEStructuralFeature_Changeable(),
       value,
     );
   }
-  getVolatile(): boolean | undefined {
+  isVolatile(): boolean {
     return this._volatile;
   }
 
-  setVolatile(value: boolean | undefined): void {
+  setVolatile(value: boolean): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEStructuralFeature_Volatile(),
       value,
     );
   }
-  getTransient(): boolean | undefined {
+  isTransient(): boolean {
     return this._transient;
   }
 
-  setTransient(value: boolean | undefined): void {
+  setTransient(value: boolean): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEStructuralFeature_Transient(),
       value,
@@ -68,21 +72,21 @@ export class EStructuralFeatureImpl
       value,
     );
   }
-  getUnsettable(): boolean | undefined {
+  isUnsettable(): boolean {
     return this._unsettable;
   }
 
-  setUnsettable(value: boolean | undefined): void {
+  setUnsettable(value: boolean): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEStructuralFeature_Unsettable(),
       value,
     );
   }
-  getDerived(): boolean | undefined {
+  isDerived(): boolean {
     return this._derived;
   }
 
-  setDerived(value: boolean | undefined): void {
+  setDerived(value: boolean): void {
     this.eSet(
       EcorePackageImpl.eINSTANCE.getEStructuralFeature_Derived(),
       value,
@@ -99,7 +103,13 @@ export class EStructuralFeatureImpl
     );
   }
 
-  getContainerClass(): EClass {
+  getFeatureID(): number {
+    throw new Error(
+      "EStructuralFeature.getFeatureID() has no body:typescript annotation - nothing to generate.",
+    );
+  }
+
+  getContainerClass(): EJavaClass {
     throw new Error(
       "EStructuralFeature.getContainerClass() has no body:typescript annotation - nothing to generate.",
     );
@@ -203,13 +213,13 @@ export class EStructuralFeatureImpl
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 10:
-        this._changeable = value as boolean | undefined;
+        this._changeable = value as boolean;
         return;
       case 11:
-        this._volatile = value as boolean | undefined;
+        this._volatile = value as boolean;
         return;
       case 12:
-        this._transient = value as boolean | undefined;
+        this._transient = value as boolean;
         return;
       case 13:
         this._defaultValueLiteral = value as string | undefined;
@@ -218,10 +228,10 @@ export class EStructuralFeatureImpl
         this._defaultValue = value as unknown | undefined;
         return;
       case 15:
-        this._unsettable = value as boolean | undefined;
+        this._unsettable = value as boolean;
         return;
       case 16:
-        this._derived = value as boolean | undefined;
+        this._derived = value as boolean;
         return;
       case 17:
         this._eContainingClass = value as EClass | undefined;
@@ -235,19 +245,19 @@ export class EStructuralFeatureImpl
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 10:
-        return this._changeable !== undefined;
+        return this._changeable !== false;
       case 11:
-        return this._volatile !== undefined;
+        return this._volatile !== false;
       case 12:
-        return this._transient !== undefined;
+        return this._transient !== false;
       case 13:
         return this._defaultValueLiteral !== undefined;
       case 14:
         return this._defaultValue !== undefined;
       case 15:
-        return this._unsettable !== undefined;
+        return this._unsettable !== false;
       case 16:
-        return this._derived !== undefined;
+        return this._derived !== false;
       case 17:
         return this._eContainingClass !== undefined;
       default:
@@ -259,19 +269,19 @@ export class EStructuralFeatureImpl
     switch (feature.getFeatureID()) {
       case 10: {
         const oldValue = this._changeable;
-        this._changeable = undefined;
+        this._changeable = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 11: {
         const oldValue = this._volatile;
-        this._volatile = undefined;
+        this._volatile = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 12: {
         const oldValue = this._transient;
-        this._transient = undefined;
+        this._transient = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
@@ -289,13 +299,13 @@ export class EStructuralFeatureImpl
       }
       case 15: {
         const oldValue = this._unsettable;
-        this._unsettable = undefined;
+        this._unsettable = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
       case 16: {
         const oldValue = this._derived;
-        this._derived = undefined;
+        this._derived = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
@@ -309,9 +319,5 @@ export class EStructuralFeatureImpl
         super.eUnset(feature);
         return;
     }
-  }
-
-  getFeatureID(): number {
-    return -1;
   }
 }
