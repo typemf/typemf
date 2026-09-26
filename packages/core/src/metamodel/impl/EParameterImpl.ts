@@ -1,9 +1,10 @@
-import { EClass, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { EParameter } from "../types/EParameter.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EOperation } from "../types/EOperation.js";
-import { ETypedElementImpl } from "./ETypedElementImpl.js";
+import { EClass, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EParameter } from '../types/EParameter.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EOperation } from '../types/EOperation.js';
+import { ETypedElementImpl } from './ETypedElementImpl.js';
+
 
 export class EParameterImpl extends ETypedElementImpl implements EParameter {
   private _eOperation: EOperation | undefined;
@@ -22,8 +23,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 10:
-        return this._eOperation;
+      case 10: return this._eOperation;
       default:
         return super.eGet(feature);
     }
@@ -47,9 +47,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 10:
-        this._eOperation = value as EOperation | undefined;
-        return;
+      case 10: this._eOperation = value as EOperation | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -58,8 +56,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 10:
-        return this._eOperation !== undefined;
+      case 10: return this._eOperation !== undefined;
       default:
         return super.eIsSet(feature);
     }

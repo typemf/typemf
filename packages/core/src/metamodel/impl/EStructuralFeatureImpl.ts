@@ -1,4 +1,4 @@
-import { EList, EObject } from "../types/index.js";
+import { TypeScriptClass, EObject } from "../types/index.js";
 import { EObjectImpl, BasicEList } from "./index.js";
 import { EStructuralFeature } from "../types/EStructuralFeature.js";
 import { EcorePackageImpl } from "./EcorePackageImpl.js";
@@ -9,7 +9,6 @@ export class EStructuralFeatureImpl
   extends ETypedElementImpl
   implements EStructuralFeature
 {
-  private _featureID: number = -1;
   private _changeable: boolean = false;
   private _volatile: boolean = false;
   private _transient: boolean = false;
@@ -18,6 +17,7 @@ export class EStructuralFeatureImpl
   private _unsettable: boolean = false;
   private _derived: boolean = false;
   private _eContainingClass: EClass | undefined;
+  private _featureID: number = -1;
 
   eClass(): EClass {
     return EcorePackageImpl.eINSTANCE.getEStructuralFeature();
@@ -108,11 +108,11 @@ export class EStructuralFeatureImpl
     return this._featureID;
   }
 
-  setFeatureID(featureID: number) {
+  setFeatureID(featureID : number) {
     this._featureID = featureID;
   }
 
-  getContainerClass(): EJavaClass | undefined {
+  getContainerClass(): TypeScriptClass<unknown> | undefined {
     throw new Error(
       "EStructuralFeature.getContainerClass() has no body:typescript annotation - nothing to generate.",
     );

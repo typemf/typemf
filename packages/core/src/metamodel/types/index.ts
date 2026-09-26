@@ -1,5 +1,5 @@
-export * from "./EAttribute.js";
 export * from "./EAnnotation.js";
+export * from "./EAttribute.js";
 export * from "./EClass.js";
 export * from "./EClassifier.js";
 export * from "./EDataType.js";
@@ -20,3 +20,4 @@ export * from "./ETypedElement.js";
 export * from "./EStringToStringMapEntry.js";
 export * from "./EGenericType.js";
 export * from "./ETypeParameter.js";
+export * from "./TypeScriptClass.js";

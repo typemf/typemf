@@ -1,4 +1,4 @@
-import { EObject, EList } from "./index.js";
+import { TypeScriptClass } from "./index.js";
 import { ETypedElement } from "./ETypedElement.js";
 import { EClass } from "./EClass.js";
 
@@ -29,5 +29,5 @@ export interface EStructuralFeature extends ETypedElement {
 
   getFeatureID(): number;
 
-  getContainerClass(): EJavaClass | undefined;
+  getContainerClass(): TypeScriptClass<unknown> | undefined;
 }

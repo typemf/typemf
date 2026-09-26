@@ -1,26 +1,18 @@
-import { EClass, EList, EStructuralFeature, EObject } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { EAnnotation } from "../types/EAnnotation.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EStringToStringMapEntry } from "../types/EStringToStringMapEntry.js";
-import { EModelElement } from "../types/EModelElement.js";
-import { EModelElementImpl } from "./EModelElementImpl.js";
+import { EClass, EList, EObject, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EAnnotation } from '../types/EAnnotation.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
+import { EModelElement } from '../types/EModelElement.js';
+import { EModelElementImpl } from './EModelElementImpl.js';
+
 
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   private _source: string | undefined;
-  private readonly _details = new BasicEList<EStringToStringMapEntry>(
-    this,
-    EcorePackageImpl.eINSTANCE.getEAnnotation_Details(),
-  );
+  private readonly _details = new BasicEList<EStringToStringMapEntry>(this, EcorePackageImpl.eINSTANCE.getEAnnotation_Details());
   private _eModelElement: EModelElement | undefined;
-  private readonly _contents = new BasicEList<EObject>(
-    this,
-    EcorePackageImpl.eINSTANCE.getEAnnotation_Contents(),
-  );
-  private readonly _references = new BasicEList<EObject>(
-    this,
-    EcorePackageImpl.eINSTANCE.getEAnnotation_References(),
-  );
+  private readonly _contents = new BasicEList<EObject>(this, EcorePackageImpl.eINSTANCE.getEAnnotation_Contents());
+  private readonly _references = new BasicEList<EObject>(this, EcorePackageImpl.eINSTANCE.getEAnnotation_References());
 
   eClass(): EClass {
     return EcorePackageImpl.eINSTANCE.getEAnnotation();
@@ -52,16 +44,11 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 1:
-        return this._source;
-      case 2:
-        return this._details;
-      case 3:
-        return this._eModelElement;
-      case 4:
-        return this._contents;
-      case 5:
-        return this._references;
+      case 1: return this._source;
+      case 2: return this._details;
+      case 3: return this._eModelElement;
+      case 4: return this._contents;
+      case 5: return this._references;
       default:
         return super.eGet(feature);
     }
@@ -79,10 +66,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
       }
       case 2: {
         const list = this._details;
-        const items =
-          value === undefined || value === null
-            ? []
-            : [...(value as Iterable<unknown>)];
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
         for (const item of items) list.add(item as EStringToStringMapEntry);
         return;
@@ -97,20 +81,14 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
       }
       case 4: {
         const list = this._contents;
-        const items =
-          value === undefined || value === null
-            ? []
-            : [...(value as Iterable<unknown>)];
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
         for (const item of items) list.add(item as EObject);
         return;
       }
       case 5: {
         const list = this._references;
-        const items =
-          value === undefined || value === null
-            ? []
-            : [...(value as Iterable<unknown>)];
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
         for (const item of items) list.add(item as EObject);
         return;
@@ -123,12 +101,8 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 1:
-        this._source = value as string | undefined;
-        return;
-      case 3:
-        this._eModelElement = value as EModelElement | undefined;
-        return;
+      case 1: this._source = value as string | undefined; return;
+      case 3: this._eModelElement = value as EModelElement | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -137,16 +111,11 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 1:
-        return this._source !== undefined;
-      case 2:
-        return this._details.size() !== 0;
-      case 3:
-        return this._eModelElement !== undefined;
-      case 4:
-        return this._contents.size() !== 0;
-      case 5:
-        return this._references.size() !== 0;
+      case 1: return this._source !== undefined;
+      case 2: return this._details.size() !== 0;
+      case 3: return this._eModelElement !== undefined;
+      case 4: return this._contents.size() !== 0;
+      case 5: return this._references.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -160,21 +129,15 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 2:
-        this._details.clear();
-        return;
+      case 2: this._details.clear(); return;
       case 3: {
         const oldValue = this._eModelElement;
         this._eModelElement = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 4:
-        this._contents.clear();
-        return;
-      case 5:
-        this._references.clear();
-        return;
+      case 4: this._contents.clear(); return;
+      case 5: this._references.clear(); return;
       default:
         super.eUnset(feature);
         return;

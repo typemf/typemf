@@ -1,13 +1,12 @@
-import { EClass, EStructuralFeature } from "../types/index.js";
-import { EAttribute } from "../types/EAttribute.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EDataType } from "../types/EDataType.js";
-import { EStructuralFeatureImpl } from "./EStructuralFeatureImpl.js";
+import { EClass, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EAttribute } from '../types/EAttribute.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EDataType } from '../types/EDataType.js';
+import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
 
-export class EAttributeImpl
-  extends EStructuralFeatureImpl
-  implements EAttribute
-{
+
+export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute {
   private _iD: boolean = false;
   private _eAttributeType: EDataType | undefined;
 
@@ -32,10 +31,8 @@ export class EAttributeImpl
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 18:
-        return this._iD;
-      case 19:
-        return this._eAttributeType;
+      case 18: return this._iD;
+      case 19: return this._eAttributeType;
       default:
         return super.eGet(feature);
     }
@@ -67,12 +64,8 @@ export class EAttributeImpl
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 18:
-        this._iD = value as boolean;
-        return;
-      case 19:
-        this._eAttributeType = value as EDataType | undefined;
-        return;
+      case 18: this._iD = value as boolean; return;
+      case 19: this._eAttributeType = value as EDataType | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -81,10 +74,8 @@ export class EAttributeImpl
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 18:
-        return this._iD !== false;
-      case 19:
-        return this._eAttributeType !== undefined;
+      case 18: return this._iD !== false;
+      case 19: return this._eAttributeType !== undefined;
       default:
         return super.eIsSet(feature);
     }

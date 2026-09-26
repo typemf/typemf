@@ -1,14 +1,10 @@
-import {
-  EClass,
-  EDataType,
-  EObject,
-  EStructuralFeature,
-} from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { EFactory } from "../types/EFactory.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EPackage } from "../types/EPackage.js";
-import { EModelElementImpl } from "./EModelElementImpl.js";
+import { EClass, EDataType, EObject, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EFactory } from '../types/EFactory.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EPackage } from '../types/EPackage.js';
+import { EModelElementImpl } from './EModelElementImpl.js';
+
 
 export class EFactoryImpl extends EModelElementImpl implements EFactory {
   private _ePackage: EPackage | undefined;
@@ -26,33 +22,20 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   }
 
   create(eClass: EClass): EObject | undefined {
-    throw new Error(
-      "EFactory.create() has no body:typescript annotation - nothing to generate.",
-    );
+    throw new Error('EFactory.create() has no body:typescript annotation - nothing to generate.');
   }
 
-  createFromString(
-    eDataType: EDataType,
-    literalValue: string,
-  ): unknown | undefined {
-    throw new Error(
-      "EFactory.createFromString() has no body:typescript annotation - nothing to generate.",
-    );
+  createFromString(eDataType: EDataType, literalValue: string): unknown | undefined {
+    throw new Error('EFactory.createFromString() has no body:typescript annotation - nothing to generate.');
   }
 
-  convertToString(
-    eDataType: EDataType,
-    instanceValue: unknown,
-  ): string | undefined {
-    throw new Error(
-      "EFactory.convertToString() has no body:typescript annotation - nothing to generate.",
-    );
+  convertToString(eDataType: EDataType, instanceValue: unknown): string | undefined {
+    throw new Error('EFactory.convertToString() has no body:typescript annotation - nothing to generate.');
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 1:
-        return this._ePackage;
+      case 1: return this._ePackage;
       default:
         return super.eGet(feature);
     }
@@ -76,9 +59,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 1:
-        this._ePackage = value as EPackage | undefined;
-        return;
+      case 1: this._ePackage = value as EPackage | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -87,8 +68,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 1:
-        return this._ePackage !== undefined;
+      case 1: return this._ePackage !== undefined;
       default:
         return super.eIsSet(feature);
     }

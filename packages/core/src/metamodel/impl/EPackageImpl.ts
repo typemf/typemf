@@ -1,23 +1,18 @@
-import { EClass, EList, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { EPackage } from "../types/EPackage.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EFactory } from "../types/EFactory.js";
-import { EClassifier } from "../types/EClassifier.js";
-import { ENamedElementImpl } from "./ENamedElementImpl.js";
+import { EClass, EList, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EPackage } from '../types/EPackage.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EFactory } from '../types/EFactory.js';
+import { EClassifier } from '../types/EClassifier.js';
+import { ENamedElementImpl } from './ENamedElementImpl.js';
+
 
 export class EPackageImpl extends ENamedElementImpl implements EPackage {
   private _nsURI: string | undefined;
   private _nsPrefix: string | undefined;
   private _eFactoryInstance: EFactory | undefined;
-  private readonly _eClassifiers = new BasicEList<EClassifier>(
-    this,
-    EcorePackageImpl.eINSTANCE.getEPackage_EClassifiers(),
-  );
-  private readonly _eSubpackages = new BasicEList<EPackage>(
-    this,
-    EcorePackageImpl.eINSTANCE.getEPackage_ESubpackages(),
-  );
+  private readonly _eClassifiers = new BasicEList<EClassifier>(this, EcorePackageImpl.eINSTANCE.getEPackage_EClassifiers());
+  private readonly _eSubpackages = new BasicEList<EPackage>(this, EcorePackageImpl.eINSTANCE.getEPackage_ESubpackages());
   private _eSuperPackage: EPackage | undefined;
 
   eClass(): EClass {
@@ -60,25 +55,17 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   getEClassifier(name: string): EClassifier | undefined {
-    throw new Error(
-      "EPackage.getEClassifier() has no body:typescript annotation - nothing to generate.",
-    );
+    throw new Error('EPackage.getEClassifier() has no body:typescript annotation - nothing to generate.');
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._nsURI;
-      case 3:
-        return this._nsPrefix;
-      case 4:
-        return this._eFactoryInstance;
-      case 5:
-        return this._eClassifiers;
-      case 6:
-        return this._eSubpackages;
-      case 7:
-        return this._eSuperPackage;
+      case 2: return this._nsURI;
+      case 3: return this._nsPrefix;
+      case 4: return this._eFactoryInstance;
+      case 5: return this._eClassifiers;
+      case 6: return this._eSubpackages;
+      case 7: return this._eSuperPackage;
       default:
         return super.eGet(feature);
     }
@@ -112,20 +99,14 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
       }
       case 5: {
         const list = this._eClassifiers;
-        const items =
-          value === undefined || value === null
-            ? []
-            : [...(value as Iterable<unknown>)];
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
         for (const item of items) list.add(item as EClassifier);
         return;
       }
       case 6: {
         const list = this._eSubpackages;
-        const items =
-          value === undefined || value === null
-            ? []
-            : [...(value as Iterable<unknown>)];
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
         for (const item of items) list.add(item as EPackage);
         return;
@@ -146,18 +127,10 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 2:
-        this._nsURI = value as string | undefined;
-        return;
-      case 3:
-        this._nsPrefix = value as string | undefined;
-        return;
-      case 4:
-        this._eFactoryInstance = value as EFactory | undefined;
-        return;
-      case 7:
-        this._eSuperPackage = value as EPackage | undefined;
-        return;
+      case 2: this._nsURI = value as string | undefined; return;
+      case 3: this._nsPrefix = value as string | undefined; return;
+      case 4: this._eFactoryInstance = value as EFactory | undefined; return;
+      case 7: this._eSuperPackage = value as EPackage | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -166,18 +139,12 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._nsURI !== undefined;
-      case 3:
-        return this._nsPrefix !== undefined;
-      case 4:
-        return this._eFactoryInstance !== undefined;
-      case 5:
-        return this._eClassifiers.size() !== 0;
-      case 6:
-        return this._eSubpackages.size() !== 0;
-      case 7:
-        return this._eSuperPackage !== undefined;
+      case 2: return this._nsURI !== undefined;
+      case 3: return this._nsPrefix !== undefined;
+      case 4: return this._eFactoryInstance !== undefined;
+      case 5: return this._eClassifiers.size() !== 0;
+      case 6: return this._eSubpackages.size() !== 0;
+      case 7: return this._eSuperPackage !== undefined;
       default:
         return super.eIsSet(feature);
     }
@@ -203,12 +170,8 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 5:
-        this._eClassifiers.clear();
-        return;
-      case 6:
-        this._eSubpackages.clear();
-        return;
+      case 5: this._eClassifiers.clear(); return;
+      case 6: this._eSubpackages.clear(); return;
       case 7: {
         const oldValue = this._eSuperPackage;
         this._eSuperPackage = undefined;

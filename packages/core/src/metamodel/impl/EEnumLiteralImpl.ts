@@ -1,14 +1,12 @@
-import { EEnumerator, EClass, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { EEnumLiteral } from "../types/EEnumLiteral.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EEnum } from "../types/EEnum.js";
-import { ENamedElementImpl } from "./ENamedElementImpl.js";
+import { EClass, EEnumerator, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EEnumLiteral } from '../types/EEnumLiteral.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EEnum } from '../types/EEnum.js';
+import { ENamedElementImpl } from './ENamedElementImpl.js';
 
-export class EEnumLiteralImpl
-  extends ENamedElementImpl
-  implements EEnumLiteral
-{
+
+export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral {
   private _value: number = 0;
   private _instance: EEnumerator | undefined;
   private _literal: string | undefined;
@@ -49,14 +47,10 @@ export class EEnumLiteralImpl
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._value;
-      case 3:
-        return this._instance;
-      case 4:
-        return this._literal;
-      case 5:
-        return this._eEnum;
+      case 2: return this._value;
+      case 3: return this._instance;
+      case 4: return this._literal;
+      case 5: return this._eEnum;
       default:
         return super.eGet(feature);
     }
@@ -104,18 +98,10 @@ export class EEnumLiteralImpl
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 2:
-        this._value = value as number;
-        return;
-      case 3:
-        this._instance = value as EEnumerator | undefined;
-        return;
-      case 4:
-        this._literal = value as string | undefined;
-        return;
-      case 5:
-        this._eEnum = value as EEnum | undefined;
-        return;
+      case 2: this._value = value as number; return;
+      case 3: this._instance = value as EEnumerator | undefined; return;
+      case 4: this._literal = value as string | undefined; return;
+      case 5: this._eEnum = value as EEnum | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -124,14 +110,10 @@ export class EEnumLiteralImpl
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._value !== 0;
-      case 3:
-        return this._instance !== undefined;
-      case 4:
-        return this._literal !== undefined;
-      case 5:
-        return this._eEnum !== undefined;
+      case 2: return this._value !== 0;
+      case 3: return this._instance !== undefined;
+      case 4: return this._literal !== undefined;
+      case 5: return this._eEnum !== undefined;
       default:
         return super.eIsSet(feature);
     }

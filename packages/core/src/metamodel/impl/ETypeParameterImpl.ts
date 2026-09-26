@@ -1,18 +1,13 @@
-import { EClass, EList, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { ETypeParameter } from "../types/ETypeParameter.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EGenericType } from "../types/EGenericType.js";
-import { ENamedElementImpl } from "./ENamedElementImpl.js";
+import { EClass, EList, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { ETypeParameter } from '../types/ETypeParameter.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EGenericType } from '../types/EGenericType.js';
+import { ENamedElementImpl } from './ENamedElementImpl.js';
 
-export class ETypeParameterImpl
-  extends ENamedElementImpl
-  implements ETypeParameter
-{
-  private readonly _eBounds = new BasicEList<EGenericType>(
-    this,
-    EcorePackageImpl.eINSTANCE.getETypeParameter_EBounds(),
-  );
+
+export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParameter {
+  private readonly _eBounds = new BasicEList<EGenericType>(this, EcorePackageImpl.eINSTANCE.getETypeParameter_EBounds());
 
   eClass(): EClass {
     return EcorePackageImpl.eINSTANCE.getETypeParameter();
@@ -24,8 +19,7 @@ export class ETypeParameterImpl
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._eBounds;
+      case 2: return this._eBounds;
       default:
         return super.eGet(feature);
     }
@@ -35,10 +29,7 @@ export class ETypeParameterImpl
     switch (feature.getFeatureID()) {
       case 2: {
         const list = this._eBounds;
-        const items =
-          value === undefined || value === null
-            ? []
-            : [...(value as Iterable<unknown>)];
+        const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
         for (const item of items) list.add(item as EGenericType);
         return;
@@ -59,8 +50,7 @@ export class ETypeParameterImpl
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._eBounds.size() !== 0;
+      case 2: return this._eBounds.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -68,9 +58,7 @@ export class ETypeParameterImpl
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-      case 2:
-        this._eBounds.clear();
-        return;
+      case 2: this._eBounds.clear(); return;
       default:
         super.eUnset(feature);
         return;

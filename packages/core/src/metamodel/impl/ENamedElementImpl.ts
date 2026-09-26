@@ -1,13 +1,11 @@
-import { EClass, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { ENamedElement } from "../types/ENamedElement.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EModelElementImpl } from "./EModelElementImpl.js";
+import { EClass, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { ENamedElement } from '../types/ENamedElement.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EModelElementImpl } from './EModelElementImpl.js';
 
-export class ENamedElementImpl
-  extends EModelElementImpl
-  implements ENamedElement
-{
+
+export class ENamedElementImpl extends EModelElementImpl implements ENamedElement {
   private _name: string | undefined;
 
   eClass(): EClass {
@@ -24,8 +22,7 @@ export class ENamedElementImpl
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 1:
-        return this._name;
+      case 1: return this._name;
       default:
         return super.eGet(feature);
     }
@@ -49,9 +46,7 @@ export class ENamedElementImpl
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 1:
-        this._name = value as string | undefined;
-        return;
+      case 1: this._name = value as string | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -60,8 +55,7 @@ export class ENamedElementImpl
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 1:
-        return this._name !== undefined;
+      case 1: return this._name !== undefined;
       default:
         return super.eIsSet(feature);
     }

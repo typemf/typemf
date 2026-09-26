@@ -4,6 +4,9 @@ import {
   EReference,
   EEnum,
   EDataType,
+  EList,
+  EStringToStringMapEntry,
+  EAnnotation,
 } from "../types/index.js";
 import {
   EPackageImpl,
@@ -15,145 +18,146 @@ import {
   EEnumLiteralImpl,
   EAnnotationImpl,
   EFactoryImpl,
+  EStringToStringMapEntryImpl,
 } from "./index.js";
 import { EcorePackage, Ids } from "../EcorePackage.js";
 import { EcoreFactory } from "../EcoreFactory.js";
 import { EcoreFactoryImpl } from "./EcoreFactoryImpl.js";
 
 export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
-  private readonly _EAttribute: EClass;
-  private readonly _EAttribute_iD: EAttribute;
-  private readonly _EAttribute_eAttributeType: EReference;
-  private readonly _EAnnotation: EClass;
-  private readonly _EAnnotation_source: EAttribute;
-  private readonly _EAnnotation_details: EReference;
-  private readonly _EAnnotation_eModelElement: EReference;
-  private readonly _EAnnotation_contents: EReference;
-  private readonly _EAnnotation_references: EReference;
-  private readonly _EClass: EClass;
-  private readonly _EClass_abstract: EAttribute;
-  private readonly _EClass_interface: EAttribute;
-  private readonly _EClass_eSuperTypes: EReference;
-  private readonly _EClass_eOperations: EReference;
-  private readonly _EClass_eAllAttributes: EReference;
-  private readonly _EClass_eAllReferences: EReference;
-  private readonly _EClass_eReferences: EReference;
-  private readonly _EClass_eAttributes: EReference;
-  private readonly _EClass_eAllContainments: EReference;
-  private readonly _EClass_eAllOperations: EReference;
-  private readonly _EClass_eAllStructuralFeatures: EReference;
-  private readonly _EClass_eAllSuperTypes: EReference;
-  private readonly _EClass_eIDAttribute: EReference;
-  private readonly _EClass_eStructuralFeatures: EReference;
-  private readonly _EClass_eGenericSuperTypes: EReference;
-  private readonly _EClass_eAllGenericSuperTypes: EReference;
-  private readonly _EClassifier: EClass;
-  private readonly _EClassifier_instanceClassName: EAttribute;
-  private readonly _EClassifier_instanceClass: EAttribute;
-  private readonly _EClassifier_defaultValue: EAttribute;
-  private readonly _EClassifier_instanceTypeName: EAttribute;
-  private readonly _EClassifier_ePackage: EReference;
-  private readonly _EClassifier_eTypeParameters: EReference;
-  private readonly _EDataType: EClass;
-  private readonly _EDataType_serializable: EAttribute;
-  private readonly _EEnum: EClass;
-  private readonly _EEnum_eLiterals: EReference;
-  private readonly _EEnumLiteral: EClass;
-  private readonly _EEnumLiteral_value: EAttribute;
-  private readonly _EEnumLiteral_instance: EAttribute;
-  private readonly _EEnumLiteral_literal: EAttribute;
-  private readonly _EEnumLiteral_eEnum: EReference;
+  private readonly _EAttribute: EClassImpl;
+  private readonly _EAttribute_iD: EAttributeImpl;
+  private readonly _EAttribute_eAttributeType: EReferenceImpl;
+  private readonly _EAnnotation: EClassImpl;
+  private readonly _EAnnotation_source: EAttributeImpl;
+  private readonly _EAnnotation_details: EReferenceImpl;
+  private readonly _EAnnotation_eModelElement: EReferenceImpl;
+  private readonly _EAnnotation_contents: EReferenceImpl;
+  private readonly _EAnnotation_references: EReferenceImpl;
+  private readonly _EClass: EClassImpl;
+  private readonly _EClass_abstract: EAttributeImpl;
+  private readonly _EClass_interface: EAttributeImpl;
+  private readonly _EClass_eSuperTypes: EReferenceImpl;
+  private readonly _EClass_eOperations: EReferenceImpl;
+  private readonly _EClass_eAllAttributes: EReferenceImpl;
+  private readonly _EClass_eAllReferences: EReferenceImpl;
+  private readonly _EClass_EReferences: EReferenceImpl;
+  private readonly _EClass_eAttributes: EReferenceImpl;
+  private readonly _EClass_eAllContainments: EReferenceImpl;
+  private readonly _EClass_eAllOperations: EReferenceImpl;
+  private readonly _EClass_eAllStructuralFeatures: EReferenceImpl;
+  private readonly _EClass_eAllSuperTypes: EReferenceImpl;
+  private readonly _EClass_eIDAttribute: EReferenceImpl;
+  private readonly _EClass_eStructuralFeatures: EReferenceImpl;
+  private readonly _EClass_eGenericSuperTypes: EReferenceImpl;
+  private readonly _EClass_eAllGenericSuperTypes: EReferenceImpl;
+  private readonly _EClassifier: EClassImpl;
+  private readonly _EClassifier_instanceClassName: EAttributeImpl;
+  private readonly _EClassifier_instanceClass: EAttributeImpl;
+  private readonly _EClassifier_defaultValue: EAttributeImpl;
+  private readonly _EClassifier_instanceTypeName: EAttributeImpl;
+  private readonly _EClassifier_ePackage: EReferenceImpl;
+  private readonly _EClassifier_eTypeParameters: EReferenceImpl;
+  private readonly _EDataType: EClassImpl;
+  private readonly _EDataType_serializable: EAttributeImpl;
+  private readonly _EEnum: EClassImpl;
+  private readonly _EEnum_eLiterals: EReferenceImpl;
+  private readonly _EEnumLiteral: EClassImpl;
+  private readonly _EEnumLiteral_value: EAttributeImpl;
+  private readonly _EEnumLiteral_instance: EAttributeImpl;
+  private readonly _EEnumLiteral_literal: EAttributeImpl;
+  private readonly _EEnumLiteral_eEnum: EReferenceImpl;
   private readonly _EFactory: EClassImpl;
-  private readonly _EFactory_ePackage: EReference;
-  private readonly _EModelElement: EClass;
-  private readonly _EModelElement_eAnnotations: EReference;
-  private readonly _ENamedElement: EClass;
-  private readonly _ENamedElement_name: EAttribute;
-  private readonly _EOperation: EClass;
-  private readonly _EOperation_eContainingClass: EReference;
-  private readonly _EOperation_eTypeParameters: EReference;
-  private readonly _EOperation_eParameters: EReference;
-  private readonly _EOperation_eExceptions: EReference;
-  private readonly _EOperation_eGenericExceptions: EReference;
-  private readonly _EPackage: EClass;
-  private readonly _EPackage_nsURI: EAttribute;
-  private readonly _EPackage_nsPrefix: EAttribute;
-  private readonly _EPackage_eFactoryInstance: EReference;
-  private readonly _EPackage_eClassifiers: EReference;
-  private readonly _EPackage_eSubpackages: EReference;
-  private readonly _EPackage_eSuperPackage: EReference;
-  private readonly _EParameter: EClass;
-  private readonly _EParameter_eOperation: EReference;
-  private readonly _EReference: EClass;
-  private readonly _EReference_containment: EAttribute;
-  private readonly _EReference_container: EAttribute;
-  private readonly _EReference_resolveProxies: EAttribute;
-  private readonly _EReference_eOpposite: EReference;
-  private readonly _EReference_eReferenceType: EReference;
-  private readonly _EReference_eKeys: EReference;
-  private readonly _EStructuralFeature: EClass;
-  private readonly _EStructuralFeature_changeable: EAttribute;
-  private readonly _EStructuralFeature_volatile: EAttribute;
-  private readonly _EStructuralFeature_transient: EAttribute;
-  private readonly _EStructuralFeature_defaultValueLiteral: EAttribute;
-  private readonly _EStructuralFeature_defaultValue: EAttribute;
-  private readonly _EStructuralFeature_unsettable: EAttribute;
-  private readonly _EStructuralFeature_derived: EAttribute;
-  private readonly _EStructuralFeature_eContainingClass: EReference;
-  private readonly _ETypedElement: EClass;
-  private readonly _ETypedElement_ordered: EAttribute;
-  private readonly _ETypedElement_unique: EAttribute;
-  private readonly _ETypedElement_lowerBound: EAttribute;
-  private readonly _ETypedElement_upperBound: EAttribute;
-  private readonly _ETypedElement_many: EAttribute;
-  private readonly _ETypedElement_required: EAttribute;
-  private readonly _ETypedElement_eType: EReference;
-  private readonly _ETypedElement_eGenericType: EReference;
-  private readonly _EBigDecimal: EDataType;
-  private readonly _EBigInteger: EDataType;
-  private readonly _EBoolean: EDataType;
-  private readonly _EBooleanObject: EDataType;
-  private readonly _EByte: EDataType;
-  private readonly _EByteArray: EDataType;
-  private readonly _EByteObject: EDataType;
-  private readonly _EChar: EDataType;
-  private readonly _ECharacterObject: EDataType;
-  private readonly _EDate: EDataType;
-  private readonly _EDiagnosticChain: EDataType;
-  private readonly _EDouble: EDataType;
-  private readonly _EDoubleObject: EDataType;
-  private readonly _EEList: EDataType;
-  private readonly _EEnumerator: EDataType;
-  private readonly _EFeatureMap: EDataType;
-  private readonly _EFeatureMapEntry: EDataType;
-  private readonly _EFloat: EDataType;
-  private readonly _EFloatObject: EDataType;
-  private readonly _EInt: EDataType;
-  private readonly _EIntegerObject: EDataType;
-  private readonly _EJavaClass: EDataType;
-  private readonly _EJavaObject: EDataType;
-  private readonly _ELong: EDataType;
-  private readonly _ELongObject: EDataType;
-  private readonly _EMap: EDataType;
-  private readonly _EResource: EDataType;
-  private readonly _EResourceSet: EDataType;
-  private readonly _EShort: EDataType;
-  private readonly _EShortObject: EDataType;
-  private readonly _EString: EDataType;
-  private readonly _EStringToStringMapEntry: EClass;
-  private readonly _EStringToStringMapEntry_key: EAttribute;
-  private readonly _EStringToStringMapEntry_value: EAttribute;
-  private readonly _ETreeIterator: EDataType;
-  private readonly _EGenericType: EClass;
-  private readonly _EGenericType_eUpperBound: EReference;
-  private readonly _EGenericType_eTypeArguments: EReference;
-  private readonly _EGenericType_eRawType: EReference;
-  private readonly _EGenericType_eLowerBound: EReference;
-  private readonly _EGenericType_eTypeParameter: EReference;
-  private readonly _EGenericType_eClassifier: EReference;
-  private readonly _ETypeParameter: EClass;
-  private readonly _ETypeParameter_eBounds: EReference;
-  private readonly _EInvocationTargetException: EDataType;
+  private readonly _EFactory_ePackage: EReferenceImpl;
+  private readonly _EModelElement: EClassImpl;
+  private readonly _EModelElement_eAnnotations: EReferenceImpl;
+  private readonly _ENamedElement: EClassImpl;
+  private readonly _ENamedElement_name: EAttributeImpl;
+  private readonly _EOperation: EClassImpl;
+  private readonly _EOperation_eContainingClass: EReferenceImpl;
+  private readonly _EOperation_eTypeParameters: EReferenceImpl;
+  private readonly _EOperation_eParameters: EReferenceImpl;
+  private readonly _EOperation_eExceptions: EReferenceImpl;
+  private readonly _EOperation_eGenericExceptions: EReferenceImpl;
+  private readonly _EPackage: EClassImpl;
+  private readonly _EPackage_nsURI: EAttributeImpl;
+  private readonly _EPackage_nsPrefix: EAttributeImpl;
+  private readonly _EPackage_eFactoryInstance: EReferenceImpl;
+  private readonly _EPackage_eClassifiers: EReferenceImpl;
+  private readonly _EPackage_eSubpackages: EReferenceImpl;
+  private readonly _EPackage_eSuperPackage: EReferenceImpl;
+  private readonly _EParameter: EClassImpl;
+  private readonly _EParameter_eOperation: EReferenceImpl;
+  private readonly _EReferenceImpl: EClassImpl;
+  private readonly _EReferenceImpl_containment: EAttributeImpl;
+  private readonly _EReferenceImpl_container: EAttributeImpl;
+  private readonly _EReferenceImpl_resolveProxies: EAttributeImpl;
+  private readonly _EReferenceImpl_eOpposite: EReferenceImpl;
+  private readonly _EReferenceImpl_EReferenceImplType: EReferenceImpl;
+  private readonly _EReferenceImpl_eKeys: EReferenceImpl;
+  private readonly _EStructuralFeature: EClassImpl;
+  private readonly _EStructuralFeature_changeable: EAttributeImpl;
+  private readonly _EStructuralFeature_volatile: EAttributeImpl;
+  private readonly _EStructuralFeature_transient: EAttributeImpl;
+  private readonly _EStructuralFeature_defaultValueLiteral: EAttributeImpl;
+  private readonly _EStructuralFeature_defaultValue: EAttributeImpl;
+  private readonly _EStructuralFeature_unsettable: EAttributeImpl;
+  private readonly _EStructuralFeature_derived: EAttributeImpl;
+  private readonly _EStructuralFeature_eContainingClass: EReferenceImpl;
+  private readonly _ETypedElement: EClassImpl;
+  private readonly _ETypedElement_ordered: EAttributeImpl;
+  private readonly _ETypedElement_unique: EAttributeImpl;
+  private readonly _ETypedElement_lowerBound: EAttributeImpl;
+  private readonly _ETypedElement_upperBound: EAttributeImpl;
+  private readonly _ETypedElement_many: EAttributeImpl;
+  private readonly _ETypedElement_required: EAttributeImpl;
+  private readonly _ETypedElement_eType: EReferenceImpl;
+  private readonly _ETypedElement_eGenericType: EReferenceImpl;
+  private readonly _EBigDecimal: EDataTypeImpl;
+  private readonly _EBigInteger: EDataTypeImpl;
+  private readonly _EBoolean: EDataTypeImpl;
+  private readonly _EBooleanObject: EDataTypeImpl;
+  private readonly _EByte: EDataTypeImpl;
+  private readonly _EByteArray: EDataTypeImpl;
+  private readonly _EByteObject: EDataTypeImpl;
+  private readonly _EChar: EDataTypeImpl;
+  private readonly _ECharacterObject: EDataTypeImpl;
+  private readonly _EDate: EDataTypeImpl;
+  private readonly _EDiagnosticChain: EDataTypeImpl;
+  private readonly _EDouble: EDataTypeImpl;
+  private readonly _EDoubleObject: EDataTypeImpl;
+  private readonly _EEList: EDataTypeImpl;
+  private readonly _EEnumerator: EDataTypeImpl;
+  private readonly _EFeatureMap: EDataTypeImpl;
+  private readonly _EFeatureMapEntry: EDataTypeImpl;
+  private readonly _EFloat: EDataTypeImpl;
+  private readonly _EFloatObject: EDataTypeImpl;
+  private readonly _EInt: EDataTypeImpl;
+  private readonly _EIntegerObject: EDataTypeImpl;
+  private readonly _EJavaClass: EDataTypeImpl;
+  private readonly _EJavaObject: EDataTypeImpl;
+  private readonly _ELong: EDataTypeImpl;
+  private readonly _ELongObject: EDataTypeImpl;
+  private readonly _EMap: EDataTypeImpl;
+  private readonly _EResource: EDataTypeImpl;
+  private readonly _EResourceSet: EDataTypeImpl;
+  private readonly _EShort: EDataTypeImpl;
+  private readonly _EShortObject: EDataTypeImpl;
+  private readonly _EString: EDataTypeImpl;
+  private readonly _EStringToStringMapEntry: EClassImpl;
+  private readonly _EStringToStringMapEntry_key: EAttributeImpl;
+  private readonly _EStringToStringMapEntry_value: EAttributeImpl;
+  private readonly _ETreeIterator: EDataTypeImpl;
+  private readonly _EGenericType: EClassImpl;
+  private readonly _EGenericType_eUpperBound: EReferenceImpl;
+  private readonly _EGenericType_eTypeArguments: EReferenceImpl;
+  private readonly _EGenericType_eRawType: EReferenceImpl;
+  private readonly _EGenericType_eLowerBound: EReferenceImpl;
+  private readonly _EGenericType_eTypeParameter: EReferenceImpl;
+  private readonly _EGenericType_eClassifier: EReferenceImpl;
+  private readonly _ETypeParameter: EClassImpl;
+  private readonly _ETypeParameter_eBounds: EReferenceImpl;
+  private readonly _EInvocationTargetException: EDataTypeImpl;
 
   private static _instance: EcorePackageImpl | undefined;
 
@@ -201,7 +205,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation.getDetails().set("constraints", "ConsistentTransient");
+      this.add(annotation, "constraints", "ConsistentTransient");
       this._EAttribute.getEAnnotations().add(annotation);
     }
 
@@ -212,7 +216,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation.getDetails().set("constraints", "WellFormedSourceURI");
+      this.add(annotation, "constraints", "WellFormedSourceURI");
       this._EAnnotation.getEAnnotations().add(annotation);
     }
 
@@ -223,12 +227,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "InterfaceIsAbstract AtMostOneID UniqueFeatureNames UniqueOperationSignatures NoCircularSuperTypes WellFormedMapEntryClass ConsistentSuperTypes DisjointFeatureAndOperationSignatures",
-        );
+      this.add(
+        annotation,
+        "constraints",
+        "InterfaceIsAbstract AtMostOneID UniqueFeatureNames UniqueOperationSignatures NoCircularSuperTypes WellFormedMapEntryClass ConsistentSuperTypes DisjointFeatureAndOperationSignatures",
+      );
       this._EClass.getEAnnotations().add(annotation);
     }
 
@@ -240,12 +243,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "WellFormedInstanceTypeName UniqueTypeParameterNames",
-        );
+      this.add(
+        annotation,
+        "constraints",
+        "WellFormedInstanceTypeName UniqueTypeParameterNames",
+      );
       this._EClassifier.getEAnnotations().add(annotation);
     }
 
@@ -261,9 +263,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set("constraints", "UniqueEnumeratorNames UniqueEnumeratorLiterals");
+      this.add(
+        annotation,
+        "constraints",
+        "UniqueEnumeratorNames UniqueEnumeratorLiterals",
+      );
       this._EEnum.getEAnnotations().add(annotation);
     }
 
@@ -291,7 +295,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation.getDetails().set("constraints", "WellFormedName");
+      this.add(annotation, "constraints", "WellFormedName");
       this._ENamedElement.getEAnnotations().add(annotation);
     }
 
@@ -302,12 +306,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "UniqueParameterNames UniqueTypeParameterNames NoRepeatingVoid",
-        );
+      this.add(
+        annotation,
+        "constraints",
+        "UniqueParameterNames UniqueTypeParameterNames NoRepeatingVoid",
+      );
       this._EOperation.getEAnnotations().add(annotation);
     }
 
@@ -318,12 +321,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "WellFormedNsURI WellFormedNsPrefix UniqueSubpackageNames UniqueClassifierNames UniqueNsURIs",
-        );
+      this.add(
+        annotation,
+        "constraints",
+        "WellFormedNsURI WellFormedNsPrefix UniqueSubpackageNames UniqueClassifierNames UniqueNsURIs",
+      );
       this._EPackage.getEAnnotations().add(annotation);
     }
 
@@ -333,22 +335,21 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EParameter.setClassifierID(Ids.EParameter.self);
 
     this.getEClassifiers().add(this._EParameter);
-    this._EReference = new EClassImpl();
-    this._EReference.setName("EReference");
-    this._EReference.setClassifierID(Ids.EReference.self);
+    this._EReferenceImpl = new EClassImpl();
+    this._EReferenceImpl.setName("EReferenceImpl");
+    this._EReferenceImpl.setClassifierID(Ids.EReference.self);
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "ConsistentOpposite SingleContainer ConsistentKeys ConsistentUnique ConsistentContainer",
-        );
-      this._EReference.getEAnnotations().add(annotation);
+      this.add(
+        annotation,
+        "constraints",
+        "ConsistentOpposite SingleContainer ConsistentKeys ConsistentUnique ConsistentContainer",
+      );
+      this._EReferenceImpl.getEAnnotations().add(annotation);
     }
 
-    this.getEClassifiers().add(this._EReference);
+    this.getEClassifiers().add(this._EReferenceImpl);
     this._EStructuralFeature = new EClassImpl();
     this._EStructuralFeature.setName("EStructuralFeature");
     this._EStructuralFeature.setClassifierID(Ids.EStructuralFeature.self);
@@ -356,7 +357,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation.getDetails().set("constraints", "ValidDefaultValueLiteral");
+      this.add(annotation, "constraints", "ValidDefaultValueLiteral");
       this._EStructuralFeature.getEAnnotations().add(annotation);
     }
 
@@ -368,12 +369,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "ValidLowerBound ValidUpperBound ConsistentBounds ValidType",
-        );
+      this.add(
+        annotation,
+        "constraints",
+        "ValidLowerBound ValidUpperBound ConsistentBounds ValidType",
+      );
       this._ETypedElement.getEAnnotations().add(annotation);
     }
 
@@ -386,9 +386,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#decimal");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#decimal",
+      );
       this._EBigDecimal.getEAnnotations().add(annotation);
     }
 
@@ -401,9 +403,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#integer");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#integer",
+      );
       this._EBigInteger.getEAnnotations().add(annotation);
     }
 
@@ -416,9 +420,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#boolean");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#boolean",
+      );
       this._EBoolean.getEAnnotations().add(annotation);
     }
 
@@ -431,8 +437,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EBoolean");
-      annotation.getDetails().set("name", "EBoolean:Object");
+      this.add(annotation, "baseType", "EBoolean");
+      this.add(annotation, "name", "EBoolean:Object");
       this._EBooleanObject.getEAnnotations().add(annotation);
     }
 
@@ -445,9 +451,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#byte");
+      this.add(annotation, "baseType", "http://www.w3.org/2001/XMLSchema#byte");
       this._EByte.getEAnnotations().add(annotation);
     }
 
@@ -460,9 +464,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#hexBinary");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#hexBinary",
+      );
       this._EByteArray.getEAnnotations().add(annotation);
     }
 
@@ -475,8 +481,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EByte");
-      annotation.getDetails().set("name", "EByte:Object");
+      this.add(annotation, "baseType", "EByte");
+      this.add(annotation, "name", "EByte:Object");
       this._EByteObject.getEAnnotations().add(annotation);
     }
 
@@ -494,8 +500,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EChar");
-      annotation.getDetails().set("name", "EChar:Object");
+      this.add(annotation, "baseType", "EChar");
+      this.add(annotation, "name", "EChar:Object");
       this._ECharacterObject.getEAnnotations().add(annotation);
     }
 
@@ -518,9 +524,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#double");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#double",
+      );
       this._EDouble.getEAnnotations().add(annotation);
     }
 
@@ -533,8 +541,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EDouble");
-      annotation.getDetails().set("name", "EDouble:Object");
+      this.add(annotation, "baseType", "EDouble");
+      this.add(annotation, "name", "EDouble:Object");
       this._EDoubleObject.getEAnnotations().add(annotation);
     }
 
@@ -567,9 +575,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#float");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#float",
+      );
       this._EFloat.getEAnnotations().add(annotation);
     }
 
@@ -582,8 +592,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EFloat");
-      annotation.getDetails().set("name", "EFloat:Object");
+      this.add(annotation, "baseType", "EFloat");
+      this.add(annotation, "name", "EFloat:Object");
       this._EFloatObject.getEAnnotations().add(annotation);
     }
 
@@ -596,9 +606,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#int");
+      this.add(annotation, "baseType", "http://www.w3.org/2001/XMLSchema#int");
       this._EInt.getEAnnotations().add(annotation);
     }
 
@@ -611,8 +619,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EInt");
-      annotation.getDetails().set("name", "EInt:Object");
+      this.add(annotation, "baseType", "EInt");
+      this.add(annotation, "name", "EInt:Object");
       this._EIntegerObject.getEAnnotations().add(annotation);
     }
 
@@ -635,9 +643,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#long");
+      this.add(annotation, "baseType", "http://www.w3.org/2001/XMLSchema#long");
       this._ELong.getEAnnotations().add(annotation);
     }
 
@@ -650,8 +656,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "ELong");
-      annotation.getDetails().set("name", "ELong:Object");
+      this.add(annotation, "baseType", "ELong");
+      this.add(annotation, "name", "ELong:Object");
       this._ELongObject.getEAnnotations().add(annotation);
     }
 
@@ -679,9 +685,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#short");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#short",
+      );
       this._EShort.getEAnnotations().add(annotation);
     }
 
@@ -694,8 +702,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation.getDetails().set("baseType", "EShort");
-      annotation.getDetails().set("name", "EShort:Object");
+      this.add(annotation, "baseType", "EShort");
+      this.add(annotation, "name", "EShort:Object");
       this._EShortObject.getEAnnotations().add(annotation);
     }
 
@@ -708,9 +716,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       annotation.setSource(
         "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
       );
-      annotation
-        .getDetails()
-        .set("baseType", "http://www.w3.org/2001/XMLSchema#string");
+      this.add(
+        annotation,
+        "baseType",
+        "http://www.w3.org/2001/XMLSchema#string",
+      );
       this._EString.getEAnnotations().add(annotation);
     }
 
@@ -733,12 +743,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      annotation
-        .getDetails()
-        .set(
-          "constraints",
-          "ConsistentType ConsistentBounds ConsistentArguments",
-        );
+      this.add(
+        annotation,
+        "constraints",
+        "ConsistentType ConsistentBounds ConsistentArguments",
+      );
       this._EGenericType.getEAnnotations().add(annotation);
     }
 
@@ -859,8 +868,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._EClass_eSuperTypes.getEAnnotations().add(annotation);
     }
 
@@ -887,7 +896,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass.getEStructuralFeatures().add(this._EClass_eAllAttributes);
     this._EClass_eAllReferences = new EReferenceImpl();
     this._EClass_eAllReferences.setName("eAllReferences");
-    this._EClass_eAllReferences.setEType(this._EReference);
+    this._EClass_eAllReferences.setEType(this._EReferenceImpl);
     this._EClass_eAllReferences.setLowerBound(0);
     this._EClass_eAllReferences.setUpperBound(-1);
     this._EClass_eAllReferences.setFeatureID(Ids.EClass.eAllReferences);
@@ -895,16 +904,16 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_eAllReferences.setContainment(false);
 
     this._EClass.getEStructuralFeatures().add(this._EClass_eAllReferences);
-    this._EClass_eReferences = new EReferenceImpl();
-    this._EClass_eReferences.setName("eReferences");
-    this._EClass_eReferences.setEType(this._EReference);
-    this._EClass_eReferences.setLowerBound(0);
-    this._EClass_eReferences.setUpperBound(-1);
-    this._EClass_eReferences.setFeatureID(Ids.EClass.eReferences);
-    this._EClass_eReferences.setEContainingClass(this._EClass);
-    this._EClass_eReferences.setContainment(false);
+    this._EClass_EReferences = new EReferenceImpl();
+    this._EClass_EReferences.setName("EReferenceImpls");
+    this._EClass_EReferences.setEType(this._EReferenceImpl);
+    this._EClass_EReferences.setLowerBound(0);
+    this._EClass_EReferences.setUpperBound(-1);
+    this._EClass_EReferences.setFeatureID(Ids.EClass.eReferences);
+    this._EClass_EReferences.setEContainingClass(this._EClass);
+    this._EClass_EReferences.setContainment(false);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eReferences);
+    this._EClass.getEStructuralFeatures().add(this._EClass_EReferences);
     this._EClass_eAttributes = new EReferenceImpl();
     this._EClass_eAttributes.setName("eAttributes");
     this._EClass_eAttributes.setEType(this._EAttribute);
@@ -917,7 +926,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass.getEStructuralFeatures().add(this._EClass_eAttributes);
     this._EClass_eAllContainments = new EReferenceImpl();
     this._EClass_eAllContainments.setName("eAllContainments");
-    this._EClass_eAllContainments.setEType(this._EReference);
+    this._EClass_eAllContainments.setEType(this._EReferenceImpl);
     this._EClass_eAllContainments.setLowerBound(0);
     this._EClass_eAllContainments.setUpperBound(-1);
     this._EClass_eAllContainments.setFeatureID(Ids.EClass.eAllContainments);
@@ -992,8 +1001,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._EClass_eGenericSuperTypes.getEAnnotations().add(annotation);
     }
 
@@ -1024,8 +1033,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._EClassifier_instanceClassName.getEAnnotations().add(annotation);
     }
 
@@ -1066,8 +1075,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._EClassifier_instanceTypeName.getEAnnotations().add(annotation);
     }
 
@@ -1238,8 +1247,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._EOperation_eExceptions.getEAnnotations().add(annotation);
     }
 
@@ -1257,8 +1266,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._EOperation_eGenericExceptions.getEAnnotations().add(annotation);
     }
 
@@ -1335,67 +1344,83 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EParameter_eOperation.setContainment(false);
 
     this._EParameter.getEStructuralFeatures().add(this._EParameter_eOperation);
-    this._EReference_containment = new EAttributeImpl();
-    this._EReference_containment.setName("containment");
-    this._EReference_containment.setEType(this._EBoolean);
-    this._EReference_containment.setLowerBound(0);
-    this._EReference_containment.setUpperBound(1);
-    this._EReference_containment.setFeatureID(Ids.EReference.containment);
-    this._EReference_containment.setEContainingClass(this._EReference);
+    this._EReferenceImpl_containment = new EAttributeImpl();
+    this._EReferenceImpl_containment.setName("containment");
+    this._EReferenceImpl_containment.setEType(this._EBoolean);
+    this._EReferenceImpl_containment.setLowerBound(0);
+    this._EReferenceImpl_containment.setUpperBound(1);
+    this._EReferenceImpl_containment.setFeatureID(Ids.EReference.containment);
+    this._EReferenceImpl_containment.setEContainingClass(this._EReferenceImpl);
 
-    this._EReference.getEStructuralFeatures().add(this._EReference_containment);
-    this._EReference_container = new EAttributeImpl();
-    this._EReference_container.setName("container");
-    this._EReference_container.setEType(this._EBoolean);
-    this._EReference_container.setLowerBound(0);
-    this._EReference_container.setUpperBound(1);
-    this._EReference_container.setFeatureID(Ids.EReference.container);
-    this._EReference_container.setEContainingClass(this._EReference);
-
-    this._EReference.getEStructuralFeatures().add(this._EReference_container);
-    this._EReference_resolveProxies = new EAttributeImpl();
-    this._EReference_resolveProxies.setName("resolveProxies");
-    this._EReference_resolveProxies.setEType(this._EBoolean);
-    this._EReference_resolveProxies.setLowerBound(0);
-    this._EReference_resolveProxies.setUpperBound(1);
-    this._EReference_resolveProxies.setFeatureID(Ids.EReference.resolveProxies);
-    this._EReference_resolveProxies.setEContainingClass(this._EReference);
-
-    this._EReference
+    this._EReferenceImpl
       .getEStructuralFeatures()
-      .add(this._EReference_resolveProxies);
-    this._EReference_eOpposite = new EReferenceImpl();
-    this._EReference_eOpposite.setName("eOpposite");
-    this._EReference_eOpposite.setEType(this._EReference);
-    this._EReference_eOpposite.setLowerBound(0);
-    this._EReference_eOpposite.setUpperBound(1);
-    this._EReference_eOpposite.setFeatureID(Ids.EReference.eOpposite);
-    this._EReference_eOpposite.setEContainingClass(this._EReference);
-    this._EReference_eOpposite.setContainment(false);
+      .add(this._EReferenceImpl_containment);
+    this._EReferenceImpl_container = new EAttributeImpl();
+    this._EReferenceImpl_container.setName("container");
+    this._EReferenceImpl_container.setEType(this._EBoolean);
+    this._EReferenceImpl_container.setLowerBound(0);
+    this._EReferenceImpl_container.setUpperBound(1);
+    this._EReferenceImpl_container.setFeatureID(Ids.EReference.container);
+    this._EReferenceImpl_container.setEContainingClass(this._EReferenceImpl);
 
-    this._EReference.getEStructuralFeatures().add(this._EReference_eOpposite);
-    this._EReference_eReferenceType = new EReferenceImpl();
-    this._EReference_eReferenceType.setName("eReferenceType");
-    this._EReference_eReferenceType.setEType(this._EClass);
-    this._EReference_eReferenceType.setLowerBound(1);
-    this._EReference_eReferenceType.setUpperBound(1);
-    this._EReference_eReferenceType.setFeatureID(Ids.EReference.eReferenceType);
-    this._EReference_eReferenceType.setEContainingClass(this._EReference);
-    this._EReference_eReferenceType.setContainment(false);
-
-    this._EReference
+    this._EReferenceImpl
       .getEStructuralFeatures()
-      .add(this._EReference_eReferenceType);
-    this._EReference_eKeys = new EReferenceImpl();
-    this._EReference_eKeys.setName("eKeys");
-    this._EReference_eKeys.setEType(this._EAttribute);
-    this._EReference_eKeys.setLowerBound(0);
-    this._EReference_eKeys.setUpperBound(-1);
-    this._EReference_eKeys.setFeatureID(Ids.EReference.eKeys);
-    this._EReference_eKeys.setEContainingClass(this._EReference);
-    this._EReference_eKeys.setContainment(false);
+      .add(this._EReferenceImpl_container);
+    this._EReferenceImpl_resolveProxies = new EAttributeImpl();
+    this._EReferenceImpl_resolveProxies.setName("resolveProxies");
+    this._EReferenceImpl_resolveProxies.setEType(this._EBoolean);
+    this._EReferenceImpl_resolveProxies.setLowerBound(0);
+    this._EReferenceImpl_resolveProxies.setUpperBound(1);
+    this._EReferenceImpl_resolveProxies.setFeatureID(
+      Ids.EReference.resolveProxies,
+    );
+    this._EReferenceImpl_resolveProxies.setEContainingClass(
+      this._EReferenceImpl,
+    );
 
-    this._EReference.getEStructuralFeatures().add(this._EReference_eKeys);
+    this._EReferenceImpl
+      .getEStructuralFeatures()
+      .add(this._EReferenceImpl_resolveProxies);
+    this._EReferenceImpl_eOpposite = new EReferenceImpl();
+    this._EReferenceImpl_eOpposite.setName("eOpposite");
+    this._EReferenceImpl_eOpposite.setEType(this._EReferenceImpl);
+    this._EReferenceImpl_eOpposite.setLowerBound(0);
+    this._EReferenceImpl_eOpposite.setUpperBound(1);
+    this._EReferenceImpl_eOpposite.setFeatureID(Ids.EReference.eOpposite);
+    this._EReferenceImpl_eOpposite.setEContainingClass(this._EReferenceImpl);
+    this._EReferenceImpl_eOpposite.setContainment(false);
+
+    this._EReferenceImpl
+      .getEStructuralFeatures()
+      .add(this._EReferenceImpl_eOpposite);
+    this._EReferenceImpl_EReferenceImplType = new EReferenceImpl();
+    this._EReferenceImpl_EReferenceImplType.setName("EReferenceImplType");
+    this._EReferenceImpl_EReferenceImplType.setEType(this._EClass);
+    this._EReferenceImpl_EReferenceImplType.setLowerBound(1);
+    this._EReferenceImpl_EReferenceImplType.setUpperBound(1);
+    this._EReferenceImpl_EReferenceImplType.setFeatureID(
+      Ids.EReference.eReferenceType,
+    );
+    this._EReferenceImpl_EReferenceImplType.setEContainingClass(
+      this._EReferenceImpl,
+    );
+    this._EReferenceImpl_EReferenceImplType.setContainment(false);
+
+    this._EReferenceImpl
+      .getEStructuralFeatures()
+      .add(this._EReferenceImpl_EReferenceImplType);
+    this._EReferenceImpl_eKeys = new EReferenceImpl();
+    this._EReferenceImpl_eKeys.setName("eKeys");
+    this._EReferenceImpl_eKeys.setEType(this._EAttribute);
+    this._EReferenceImpl_eKeys.setLowerBound(0);
+    this._EReferenceImpl_eKeys.setUpperBound(-1);
+    this._EReferenceImpl_eKeys.setFeatureID(Ids.EReference.eKeys);
+    this._EReferenceImpl_eKeys.setEContainingClass(this._EReferenceImpl);
+    this._EReferenceImpl_eKeys.setContainment(false);
+
+    this._EReferenceImpl
+      .getEStructuralFeatures()
+      .add(this._EReferenceImpl_eKeys);
     this._EStructuralFeature_changeable = new EAttributeImpl();
     this._EStructuralFeature_changeable.setName("changeable");
     this._EStructuralFeature_changeable.setEType(this._EBoolean);
@@ -1592,8 +1617,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._ETypedElement_eType.getEAnnotations().add(annotation);
     }
 
@@ -1611,8 +1636,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     {
       const annotation = new EAnnotationImpl();
       annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      annotation.getDetails().set("suppressedIsSetVisibility", "true");
-      annotation.getDetails().set("suppressedUnsetVisibility", "true");
+      this.add(annotation, "suppressedIsSetVisibility", "true");
+      this.add(annotation, "suppressedUnsetVisibility", "true");
       this._ETypedElement_eGenericType.getEAnnotations().add(annotation);
     }
 
@@ -1753,7 +1778,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EOperation.setEPackage(this);
     this._EPackage.setEPackage(this);
     this._EParameter.setEPackage(this);
-    this._EReference.setEPackage(this);
+    this._EReferenceImpl.setEPackage(this);
     this._EStructuralFeature.setEPackage(this);
     this._ETypedElement.setEPackage(this);
     this._EBigDecimal.setEPackage(this);
@@ -1806,31 +1831,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EOperation.getESuperTypes().add(this._ETypedElement);
     this._EPackage.getESuperTypes().add(this._ENamedElement);
     this._EParameter.getESuperTypes().add(this._ETypedElement);
-    this._EReference.getESuperTypes().add(this._EStructuralFeature);
+    this._EReferenceImpl.getESuperTypes().add(this._EStructuralFeature);
     this._EStructuralFeature.getESuperTypes().add(this._ETypedElement);
     this._ETypedElement.getESuperTypes().add(this._ENamedElement);
     this._ETypeParameter.getESuperTypes().add(this._ENamedElement);
-
-    // Pass 5: recompute EAll* caches now that supertypes/features are wired.
-    this._EAttribute.recomputeAllLists();
-    this._EAnnotation.recomputeAllLists();
-    this._EClass.recomputeAllLists();
-    this._EClassifier.recomputeAllLists();
-    this._EDataType.recomputeAllLists();
-    this._EEnum.recomputeAllLists();
-    this._EEnumLiteral.recomputeAllLists();
-    this._EFactory.recomputeAllLists();
-    this._EModelElement.recomputeAllLists();
-    this._ENamedElement.recomputeAllLists();
-    this._EOperation.recomputeAllLists();
-    this._EPackage.recomputeAllLists();
-    this._EParameter.recomputeAllLists();
-    this._EReference.recomputeAllLists();
-    this._EStructuralFeature.recomputeAllLists();
-    this._ETypedElement.recomputeAllLists();
-    this._EStringToStringMapEntry.recomputeAllLists();
-    this._EGenericType.recomputeAllLists();
-    this._ETypeParameter.recomputeAllLists();
   }
 
   getEAttribute(): EClass {
@@ -1839,25 +1843,31 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEAttribute_ID(): EAttribute {
     return this._EAttribute_iD;
   }
-  getEAttribute_EAttributeType(): EReference {
+  getEAttribute_EAttributeType(): EReferenceImpl {
     return this._EAttribute_eAttributeType;
   }
-  getEAnnotation(): EClass {
-    return this._EAnnotation;
+  getEAnnotation(): EClass;
+  getEAnnotation(source: string): EAnnotation | undefined;
+  getEAnnotation(source?: string): EClass | EAnnotation | undefined {
+    if (source === undefined) {
+      return this._EAnnotation;
+    } else {
+      return super.getEAnnotation(source);
+    }
   }
   getEAnnotation_Source(): EAttribute {
     return this._EAnnotation_source;
   }
-  getEAnnotation_Details(): EReference {
+  getEAnnotation_Details(): EReferenceImpl {
     return this._EAnnotation_details;
   }
-  getEAnnotation_EModelElement(): EReference {
+  getEAnnotation_EModelElement(): EReferenceImpl {
     return this._EAnnotation_eModelElement;
   }
-  getEAnnotation_Contents(): EReference {
+  getEAnnotation_Contents(): EReferenceImpl {
     return this._EAnnotation_contents;
   }
-  getEAnnotation_References(): EReference {
+  getEAnnotation_References(): EReferenceImpl {
     return this._EAnnotation_references;
   }
   getEClass(): EClass {
@@ -1869,46 +1879,46 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEClass_Interface(): EAttribute {
     return this._EClass_interface;
   }
-  getEClass_ESuperTypes(): EReference {
+  getEClass_ESuperTypes(): EReferenceImpl {
     return this._EClass_eSuperTypes;
   }
-  getEClass_EOperations(): EReference {
+  getEClass_EOperations(): EReferenceImpl {
     return this._EClass_eOperations;
   }
-  getEClass_EAllAttributes(): EReference {
+  getEClass_EAllAttributes(): EReferenceImpl {
     return this._EClass_eAllAttributes;
   }
-  getEClass_EAllReferences(): EReference {
+  getEClass_EAllReferences(): EReferenceImpl {
     return this._EClass_eAllReferences;
   }
-  getEClass_EReferences(): EReference {
-    return this._EClass_eReferences;
+  getEClass_EReferences(): EReferenceImpl {
+    return this._EClass_EReferences;
   }
-  getEClass_EAttributes(): EReference {
+  getEClass_EAttributes(): EReferenceImpl {
     return this._EClass_eAttributes;
   }
-  getEClass_EAllContainments(): EReference {
+  getEClass_EAllContainments(): EReferenceImpl {
     return this._EClass_eAllContainments;
   }
-  getEClass_EAllOperations(): EReference {
+  getEClass_EAllOperations(): EReferenceImpl {
     return this._EClass_eAllOperations;
   }
-  getEClass_EAllStructuralFeatures(): EReference {
+  getEClass_EAllStructuralFeatures(): EReferenceImpl {
     return this._EClass_eAllStructuralFeatures;
   }
-  getEClass_EAllSuperTypes(): EReference {
+  getEClass_EAllSuperTypes(): EReferenceImpl {
     return this._EClass_eAllSuperTypes;
   }
-  getEClass_EIDAttribute(): EReference {
+  getEClass_EIDAttribute(): EReferenceImpl {
     return this._EClass_eIDAttribute;
   }
-  getEClass_EStructuralFeatures(): EReference {
+  getEClass_EStructuralFeatures(): EReferenceImpl {
     return this._EClass_eStructuralFeatures;
   }
-  getEClass_EGenericSuperTypes(): EReference {
+  getEClass_EGenericSuperTypes(): EReferenceImpl {
     return this._EClass_eGenericSuperTypes;
   }
-  getEClass_EAllGenericSuperTypes(): EReference {
+  getEClass_EAllGenericSuperTypes(): EReferenceImpl {
     return this._EClass_eAllGenericSuperTypes;
   }
   getEClassifier(): EClass {
@@ -1926,10 +1936,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEClassifier_InstanceTypeName(): EAttribute {
     return this._EClassifier_instanceTypeName;
   }
-  getEClassifier_EPackage(): EReference {
+  getEClassifier_EPackage(): EReferenceImpl {
     return this._EClassifier_ePackage;
   }
-  getEClassifier_ETypeParameters(): EReference {
+  getEClassifier_ETypeParameters(): EReferenceImpl {
     return this._EClassifier_eTypeParameters;
   }
   getEDataType(): EClass {
@@ -1941,7 +1951,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEEnum(): EClass {
     return this._EEnum;
   }
-  getEEnum_ELiterals(): EReference {
+  getEEnum_ELiterals(): EReferenceImpl {
     return this._EEnum_eLiterals;
   }
   getEEnumLiteral(): EClass {
@@ -1956,19 +1966,19 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEEnumLiteral_Literal(): EAttribute {
     return this._EEnumLiteral_literal;
   }
-  getEEnumLiteral_EEnum(): EReference {
+  getEEnumLiteral_EEnum(): EReferenceImpl {
     return this._EEnumLiteral_eEnum;
   }
   getEFactory(): EClass {
     return this._EFactory;
   }
-  getEFactory_EPackage(): EReference {
+  getEFactory_EPackage(): EReferenceImpl {
     return this._EFactory_ePackage;
   }
   getEModelElement(): EClass {
     return this._EModelElement;
   }
-  getEModelElement_EAnnotations(): EReference {
+  getEModelElement_EAnnotations(): EReferenceImpl {
     return this._EModelElement_eAnnotations;
   }
   getENamedElement(): EClass {
@@ -1980,19 +1990,19 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEOperation(): EClass {
     return this._EOperation;
   }
-  getEOperation_EContainingClass(): EReference {
+  getEOperation_EContainingClass(): EReferenceImpl {
     return this._EOperation_eContainingClass;
   }
-  getEOperation_ETypeParameters(): EReference {
+  getEOperation_ETypeParameters(): EReferenceImpl {
     return this._EOperation_eTypeParameters;
   }
-  getEOperation_EParameters(): EReference {
+  getEOperation_EParameters(): EReferenceImpl {
     return this._EOperation_eParameters;
   }
-  getEOperation_EExceptions(): EReference {
+  getEOperation_EExceptions(): EReferenceImpl {
     return this._EOperation_eExceptions;
   }
-  getEOperation_EGenericExceptions(): EReference {
+  getEOperation_EGenericExceptions(): EReferenceImpl {
     return this._EOperation_eGenericExceptions;
   }
   getEPackage(): EClass {
@@ -2004,44 +2014,44 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEPackage_NsPrefix(): EAttribute {
     return this._EPackage_nsPrefix;
   }
-  getEPackage_EFactoryInstance(): EReference {
+  getEPackage_EFactoryInstance(): EReferenceImpl {
     return this._EPackage_eFactoryInstance;
   }
-  getEPackage_EClassifiers(): EReference {
+  getEPackage_EClassifiers(): EReferenceImpl {
     return this._EPackage_eClassifiers;
   }
-  getEPackage_ESubpackages(): EReference {
+  getEPackage_ESubpackages(): EReferenceImpl {
     return this._EPackage_eSubpackages;
   }
-  getEPackage_ESuperPackage(): EReference {
+  getEPackage_ESuperPackage(): EReferenceImpl {
     return this._EPackage_eSuperPackage;
   }
   getEParameter(): EClass {
     return this._EParameter;
   }
-  getEParameter_EOperation(): EReference {
+  getEParameter_EOperation(): EReferenceImpl {
     return this._EParameter_eOperation;
   }
   getEReference(): EClass {
-    return this._EReference;
+    return this._EReferenceImpl;
   }
   getEReference_Containment(): EAttribute {
-    return this._EReference_containment;
+    return this._EReferenceImpl_containment;
   }
   getEReference_Container(): EAttribute {
-    return this._EReference_container;
+    return this._EReferenceImpl_container;
   }
   getEReference_ResolveProxies(): EAttribute {
-    return this._EReference_resolveProxies;
+    return this._EReferenceImpl_resolveProxies;
   }
-  getEReference_EOpposite(): EReference {
-    return this._EReference_eOpposite;
+  getEReference_EOpposite(): EReferenceImpl {
+    return this._EReferenceImpl_eOpposite;
   }
-  getEReference_EReferenceType(): EReference {
-    return this._EReference_eReferenceType;
+  getEReference_EReferenceType(): EReferenceImpl {
+    return this._EReferenceImpl_EReferenceImplType;
   }
-  getEReference_EKeys(): EReference {
-    return this._EReference_eKeys;
+  getEReference_EKeys(): EReferenceImpl {
+    return this._EReferenceImpl_eKeys;
   }
   getEStructuralFeature(): EClass {
     return this._EStructuralFeature;
@@ -2067,7 +2077,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEStructuralFeature_Derived(): EAttribute {
     return this._EStructuralFeature_derived;
   }
-  getEStructuralFeature_EContainingClass(): EReference {
+  getEStructuralFeature_EContainingClass(): EReferenceImpl {
     return this._EStructuralFeature_eContainingClass;
   }
   getETypedElement(): EClass {
@@ -2091,10 +2101,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getETypedElement_Required(): EAttribute {
     return this._ETypedElement_required;
   }
-  getETypedElement_EType(): EReference {
+  getETypedElement_EType(): EReferenceImpl {
     return this._ETypedElement_eType;
   }
-  getETypedElement_EGenericType(): EReference {
+  getETypedElement_EGenericType(): EReferenceImpl {
     return this._ETypedElement_eGenericType;
   }
   getEBigDecimal(): EDataType {
@@ -2205,31 +2215,39 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEGenericType(): EClass {
     return this._EGenericType;
   }
-  getEGenericType_EUpperBound(): EReference {
+  getEGenericType_EUpperBound(): EReferenceImpl {
     return this._EGenericType_eUpperBound;
   }
-  getEGenericType_ETypeArguments(): EReference {
+  getEGenericType_ETypeArguments(): EReferenceImpl {
     return this._EGenericType_eTypeArguments;
   }
-  getEGenericType_ERawType(): EReference {
+  getEGenericType_ERawType(): EReferenceImpl {
     return this._EGenericType_eRawType;
   }
-  getEGenericType_ELowerBound(): EReference {
+  getEGenericType_ELowerBound(): EReferenceImpl {
     return this._EGenericType_eLowerBound;
   }
-  getEGenericType_ETypeParameter(): EReference {
+  getEGenericType_ETypeParameter(): EReferenceImpl {
     return this._EGenericType_eTypeParameter;
   }
-  getEGenericType_EClassifier(): EReference {
+  getEGenericType_EClassifier(): EReferenceImpl {
     return this._EGenericType_eClassifier;
   }
   getETypeParameter(): EClass {
     return this._ETypeParameter;
   }
-  getETypeParameter_EBounds(): EReference {
+  getETypeParameter_EBounds(): EReferenceImpl {
     return this._ETypeParameter_eBounds;
   }
   getEInvocationTargetException(): EDataType {
     return this._EInvocationTargetException;
+  }
+
+  private add(annotation: EAnnotationImpl, key: string, value: string) {
+    const details = new EStringToStringMapEntryImpl();
+    details.setKey(key);
+    details.setValue(value);
+
+    annotation.getDetails().add(details);
   }
 }

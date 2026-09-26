@@ -1,12 +1,10 @@
-import { EClass, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl, BasicEList } from "./index.js";
-import { EStringToStringMapEntry } from "../types/EStringToStringMapEntry.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
+import { EClass, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
 
-export class EStringToStringMapEntryImpl
-  extends EObjectImpl
-  implements EStringToStringMapEntry
-{
+
+export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {
   private _key: string | undefined;
   private _value: string | undefined;
 
@@ -19,32 +17,22 @@ export class EStringToStringMapEntryImpl
   }
 
   setKey(value: string | undefined): void {
-    this.eSet(
-      EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry_Key(),
-      value,
-    );
+    this.eSet(EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry_Key(), value);
   }
   getValue(): string | undefined {
     return this._value;
   }
 
   setValue(value: string | undefined): void {
-    this.eSet(
-      EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry_Value(),
-      value,
-    );
+    this.eSet(EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry_Value(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 0:
-        return this._key;
-      case 1:
-        return this._value;
+      case 0: return this._key;
+      case 1: return this._value;
       default:
-        throw new Error(
-          `EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`,
-        );
+        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
   }
 
@@ -67,37 +55,25 @@ export class EStringToStringMapEntryImpl
         return;
       }
       default:
-        throw new Error(
-          `EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`,
-        );
+        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
   }
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 0:
-        this._key = value as string | undefined;
-        return;
-      case 1:
-        this._value = value as string | undefined;
-        return;
+      case 0: this._key = value as string | undefined; return;
+      case 1: this._value = value as string | undefined; return;
       default:
-        throw new Error(
-          `Feature ${feature.getFeatureID()} on EStringToStringMapEntry is many-valued or unknown.`,
-        );
+        throw new Error(`Feature ${feature.getFeatureID()} on EStringToStringMapEntry is many-valued or unknown.`);
     }
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 0:
-        return this._key !== undefined;
-      case 1:
-        return this._value !== undefined;
+      case 0: return this._key !== undefined;
+      case 1: return this._value !== undefined;
       default:
-        throw new Error(
-          `EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`,
-        );
+        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
   }
 
@@ -116,9 +92,7 @@ export class EStringToStringMapEntryImpl
         return;
       }
       default:
-        throw new Error(
-          `EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`,
-        );
+        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
   }
 }

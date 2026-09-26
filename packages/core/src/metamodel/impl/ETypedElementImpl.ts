@@ -1,14 +1,13 @@
-import { EClass, EStructuralFeature } from "../types/index.js";
-import { ETypedElement } from "../types/ETypedElement.js";
-import { EcorePackageImpl } from "./EcorePackageImpl.js";
-import { EClassifier } from "../types/EClassifier.js";
-import { EGenericType } from "../types/EGenericType.js";
-import { ENamedElementImpl } from "./ENamedElementImpl.js";
+import { EClass, EStructuralFeature } from '../types/index.js';
+import { EObjectImpl, BasicEList } from './index.js';
+import { ETypedElement } from '../types/ETypedElement.js';
+import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { EClassifier } from '../types/EClassifier.js';
+import { EGenericType } from '../types/EGenericType.js';
+import { ENamedElementImpl } from './ENamedElementImpl.js';
 
-export class ETypedElementImpl
-  extends ENamedElementImpl
-  implements ETypedElement
-{
+
+export class ETypedElementImpl extends ENamedElementImpl implements ETypedElement {
   private _ordered: boolean = false;
   private _unique: boolean = false;
   private _lowerBound: number = 0;
@@ -68,30 +67,19 @@ export class ETypedElementImpl
   }
 
   setEGenericType(value: EGenericType | undefined): void {
-    this.eSet(
-      EcorePackageImpl.eINSTANCE.getETypedElement_EGenericType(),
-      value,
-    );
+    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_EGenericType(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._ordered;
-      case 3:
-        return this._unique;
-      case 4:
-        return this._lowerBound;
-      case 5:
-        return this._upperBound;
-      case 6:
-        return this._many;
-      case 7:
-        return this._required;
-      case 8:
-        return this._eType;
-      case 9:
-        return this._eGenericType;
+      case 2: return this._ordered;
+      case 3: return this._unique;
+      case 4: return this._lowerBound;
+      case 5: return this._upperBound;
+      case 6: return this._many;
+      case 7: return this._required;
+      case 8: return this._eType;
+      case 9: return this._eGenericType;
       default:
         return super.eGet(feature);
     }
@@ -171,30 +159,14 @@ export class ETypedElementImpl
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 2:
-        this._ordered = value as boolean;
-        return;
-      case 3:
-        this._unique = value as boolean;
-        return;
-      case 4:
-        this._lowerBound = value as number;
-        return;
-      case 5:
-        this._upperBound = value as number;
-        return;
-      case 6:
-        this._many = value as boolean;
-        return;
-      case 7:
-        this._required = value as boolean;
-        return;
-      case 8:
-        this._eType = value as EClassifier | undefined;
-        return;
-      case 9:
-        this._eGenericType = value as EGenericType | undefined;
-        return;
+      case 2: this._ordered = value as boolean; return;
+      case 3: this._unique = value as boolean; return;
+      case 4: this._lowerBound = value as number; return;
+      case 5: this._upperBound = value as number; return;
+      case 6: this._many = value as boolean; return;
+      case 7: this._required = value as boolean; return;
+      case 8: this._eType = value as EClassifier | undefined; return;
+      case 9: this._eGenericType = value as EGenericType | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -203,22 +175,14 @@ export class ETypedElementImpl
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2:
-        return this._ordered !== false;
-      case 3:
-        return this._unique !== false;
-      case 4:
-        return this._lowerBound !== 0;
-      case 5:
-        return this._upperBound !== 0;
-      case 6:
-        return this._many !== false;
-      case 7:
-        return this._required !== false;
-      case 8:
-        return this._eType !== undefined;
-      case 9:
-        return this._eGenericType !== undefined;
+      case 2: return this._ordered !== false;
+      case 3: return this._unique !== false;
+      case 4: return this._lowerBound !== 0;
+      case 5: return this._upperBound !== 0;
+      case 6: return this._many !== false;
+      case 7: return this._required !== false;
+      case 8: return this._eType !== undefined;
+      case 9: return this._eGenericType !== undefined;
       default:
         return super.eIsSet(feature);
     }

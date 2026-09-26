@@ -1,14 +1,16 @@
-import { EObject, EList } from "./index.js";
-import { ENamedElement } from "./ENamedElement.js";
-import { EPackage } from "./EPackage.js";
-import { ETypeParameter } from "./ETypeParameter.js";
+import { EObject, EList, TypeScriptClass } from './index.js';
+import { ENamedElement } from './ENamedElement.js';
+import { EPackage } from './EPackage.js';
+import { ETypeParameter } from './ETypeParameter.js';
+
 
 export interface EClassifier extends ENamedElement {
+
   getInstanceClassName(): string | undefined;
   setInstanceClassName(value: string | undefined): void;
 
-  getInstanceClass(): EJavaClass | undefined;
-  setInstanceClass(value: EJavaClass | undefined): void;
+  getInstanceClass(): TypeScriptClass<unknown> | undefined;
+  setInstanceClass(value: TypeScriptClass<unknown> | undefined): void;
 
   getDefaultValue(): unknown | undefined;
   setDefaultValue(value: unknown | undefined): void;
