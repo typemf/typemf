@@ -20,6 +20,8 @@ import {
   isEEnum,
   isEReference,
   isOptional,
+  isClassifierDerived,
+  isBookkeepingOperation,
   isPrimitiveValueType,
   jsString,
   mergedParamList,
@@ -87,6 +89,8 @@ export const typescriptTemplateSet: TemplateSet = {
     env.addGlobal('mergedReturnType', mergedReturnType);
     env.addGlobal('coreImportSpecifier', coreImportSpecifier);
     env.addGlobal('excludeCollidingCoreNames', excludeCollidingCoreNames);
+    env.addGlobal('isClassifierDerived', isClassifierDerived);
+    env.addGlobal('isBookkeepingOperation', isBookkeepingOperation);
     env.addGlobal('coreImportLine', coreImportLine);
     env.addGlobal('typeGuardsClassName', typeGuardsClassName);
   },

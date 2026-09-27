@@ -16,7 +16,7 @@ import {
   EParameterImpl,
   EReferenceImpl,
   EStructuralFeature,
-} from "@typemf/core";
+} from '@typemf/core';
 
 /**
  * Converts a dynamic EObject graph - produced by parsing a real .ecore
@@ -40,12 +40,12 @@ import {
  */
 export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   const realPkg = new EPackageImpl();
-  realPkg.setName(byName<string>(dynamicPkg, "name") ?? "");
-  realPkg.setNsURI(byName<string>(dynamicPkg, "nsURI") ?? "");
-  realPkg.setNsPrefix(byName<string>(dynamicPkg, "nsPrefix") ?? "");
+  realPkg.setName(byName<string>(dynamicPkg, 'name') ?? '');
+  realPkg.setNsURI(byName<string>(dynamicPkg, 'nsURI') ?? '');
+  realPkg.setNsPrefix(byName<string>(dynamicPkg, 'nsPrefix') ?? '');
   copyAnnotations(dynamicPkg, realPkg);
 
-  const dynamicClassifiers = listByName(dynamicPkg, "eClassifiers");
+  const dynamicClassifiers = listByName(dynamicPkg, 'eClassifiers');
 
   // dynamic classifier instance -> real classifier (EObject-named ones map
   // to undefined - see doc comment).
@@ -59,17 +59,17 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   // the meta-schema's own "EClass"/"EDataType"/"EEnum" classifier).
   for (const dyn of dynamicClassifiers) {
     const kind = dyn.eClass().getName();
-    const name = byName<string>(dyn, "name") ?? "";
-    if (name === "EObject") {
+    const name = byName<string>(dyn, 'name') ?? '';
+    if (name === 'EObject') {
       classifierMap.set(dyn, undefined);
       continue;
     }
-    if (kind === "EClass") {
+    if (kind === 'EClass') {
       const c = new EClassImpl();
       c.setName(name);
       copyAnnotations(dyn, c);
       classifierMap.set(dyn, c);
-    } else if (kind === "EEnum") {
+    } else if (kind === 'EEnum') {
       const e = new EEnumImpl();
       e.setName(name);
       copyAnnotations(dyn, e);
@@ -86,13 +86,11 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
 
   /** Resolves a dynamic classifier reference through classifierMap, or reads eGenericType.eClassifier as a fallback when eType itself is unset. */
   function resolveType(dynFeature: EObject): EClassifier | undefined {
-    const dynType = byNameRaw(dynFeature, "eType") as EObject | undefined;
+    const dynType = byNameRaw(dynFeature, 'eType') as EObject | undefined;
     if (dynType) return classifierMap.get(dynType);
-    const dynGeneric = byNameRaw(dynFeature, "eGenericType") as
-      EObject | undefined;
+    const dynGeneric = byNameRaw(dynFeature, 'eGenericType') as EObject | undefined;
     if (dynGeneric) {
-      const dynClassifier = byNameRaw(dynGeneric, "eClassifier") as
-        EObject | undefined;
+      const dynClassifier = byNameRaw(dynGeneric, 'eClassifier') as EObject | undefined;
       if (dynClassifier) return classifierMap.get(dynClassifier);
     }
     return undefined;
@@ -109,11 +107,11 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
     // EClassifier yet - informational only in real EMF; dropped here. See
     // NOTES.md.
 
-    if (kind === "EClass") {
+    if (kind === 'EClass') {
       const c = real as EClass;
-      if (byName<boolean>(dyn, "abstract")) c.setAbstract(true);
-      if (byName<boolean>(dyn, "interface")) c.setInterface(true);
-      for (const dynSuper of listByName(dyn, "eSuperTypes")) {
+      if (byName<boolean>(dyn, 'abstract')) c.setAbstract(true);
+      if (byName<boolean>(dyn, 'interface')) c.setInterface(true);
+      for (const dynSuper of listByName(dyn, 'eSuperTypes')) {
         const realSuper = classifierMap.get(dynSuper);
         if (realSuper) c.getESuperTypes().add(realSuper as EClass);
       }
@@ -123,25 +121,24 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   // Pass 3: structural features + operations, for every EClass.
   for (const dyn of dynamicClassifiers) {
     const real = classifierMap.get(dyn);
-    if (!real || dyn.eClass().getName() !== "EClass") continue;
+    if (!real || dyn.eClass().getName() !== 'EClass') continue;
     const realClass = real as EClass;
 
-    for (const dynFeature of listByName(dyn, "eStructuralFeatures")) {
+    for (const dynFeature of listByName(dyn, 'eStructuralFeatures')) {
       const featureKind = dynFeature.eClass().getName();
-      const name = byName<string>(dynFeature, "name") ?? "";
+      const name = byName<string>(dynFeature, 'name') ?? '';
       const type = resolveType(dynFeature);
-      const lowerBound = byName<number>(dynFeature, "lowerBound");
-      const upperBound = byName<number>(dynFeature, "upperBound");
+      const lowerBound = byName<number>(dynFeature, 'lowerBound');
+      const upperBound = byName<number>(dynFeature, 'upperBound');
 
-      if (featureKind === "EReference") {
+      if (featureKind === 'EReference') {
         const r = new EReferenceImpl();
         r.setName(name);
         if (type) r.setEType(type);
-        if (typeof lowerBound === "number") r.setLowerBound(lowerBound);
-        if (typeof upperBound === "number") r.setUpperBound(upperBound);
-        if (byName<boolean>(dynFeature, "containment")) r.setContainment(true);
-        if (byName<boolean>(dynFeature, "resolveProxies") === false)
-          r.setResolveProxies(false);
+        if (typeof lowerBound === 'number') r.setLowerBound(lowerBound);
+        if (typeof upperBound === 'number') r.setUpperBound(upperBound);
+        if (byName<boolean>(dynFeature, 'containment')) r.setContainment(true);
+        if (byName<boolean>(dynFeature, 'resolveProxies') === false) r.setResolveProxies(false);
         r.setEContainingClass(realClass);
         copyFeatureFlags(dynFeature, r);
         copyAnnotations(dynFeature, r);
@@ -152,9 +149,9 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
         const a = new EAttributeImpl();
         a.setName(name);
         if (type) a.setEType(type);
-        if (typeof lowerBound === "number") a.setLowerBound(lowerBound);
-        if (typeof upperBound === "number") a.setUpperBound(upperBound);
-        if (byName<boolean>(dynFeature, "iD")) a.setID(true);
+        if (typeof lowerBound === 'number') a.setLowerBound(lowerBound);
+        if (typeof upperBound === 'number') a.setUpperBound(upperBound);
+        if (byName<boolean>(dynFeature, 'iD')) a.setID(true);
         copyFeatureFlags(dynFeature, a);
         // defaultValueLiteral: not yet modeled on @typemf/core's EAttribute
         // - real EMF bakes it into the generated field's initial value at
@@ -167,26 +164,24 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
       }
     }
 
-    for (const dynOp of listByName(dyn, "eOperations")) {
+    for (const dynOp of listByName(dyn, 'eOperations')) {
       const op = new EOperationImpl();
-      op.setName(byName<string>(dynOp, "name") ?? "");
+      op.setName(byName<string>(dynOp, 'name') ?? '');
       const opType = resolveType(dynOp);
       if (opType) op.setEType(opType);
-      const opLowerBound = byName<number>(dynOp, "lowerBound");
-      const opUpperBound = byName<number>(dynOp, "upperBound");
-      if (typeof opLowerBound === "number") op.setLowerBound(opLowerBound);
-      if (typeof opUpperBound === "number") op.setUpperBound(opUpperBound);
-      for (const dynParam of listByName(dynOp, "eParameters")) {
+      const opLowerBound = byName<number>(dynOp, 'lowerBound');
+      const opUpperBound = byName<number>(dynOp, 'upperBound');
+      if (typeof opLowerBound === 'number') op.setLowerBound(opLowerBound);
+      if (typeof opUpperBound === 'number') op.setUpperBound(opUpperBound);
+      for (const dynParam of listByName(dynOp, 'eParameters')) {
         const param = new EParameterImpl();
-        param.setName(byName<string>(dynParam, "name") ?? "");
+        param.setName(byName<string>(dynParam, 'name') ?? '');
         const paramType = resolveType(dynParam);
         if (paramType) param.setEType(paramType);
-        const paramLowerBound = byName<number>(dynParam, "lowerBound");
-        const paramUpperBound = byName<number>(dynParam, "upperBound");
-        if (typeof paramLowerBound === "number")
-          param.setLowerBound(paramLowerBound);
-        if (typeof paramUpperBound === "number")
-          param.setUpperBound(paramUpperBound);
+        const paramLowerBound = byName<number>(dynParam, 'lowerBound');
+        const paramUpperBound = byName<number>(dynParam, 'upperBound');
+        if (typeof paramLowerBound === 'number') param.setLowerBound(paramLowerBound);
+        if (typeof paramUpperBound === 'number') param.setUpperBound(paramUpperBound);
         op.getEParameters().add(param);
       }
       realClass.getEOperations().add(op);
@@ -197,35 +192,27 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   // no cross-classifier dependency involved).
   for (const dyn of dynamicClassifiers) {
     const real = classifierMap.get(dyn);
-    if (!real || dyn.eClass().getName() !== "EEnum") continue;
-    for (const dynLiteral of listByName(dyn, "eLiterals")) {
+    if (!real || dyn.eClass().getName() !== 'EEnum') continue;
+    for (const dynLiteral of listByName(dyn, 'eLiterals')) {
       const lit = new EEnumLiteralImpl();
-      lit.setName(byName<string>(dynLiteral, "name") ?? "");
-      lit.setValue(byName<number>(dynLiteral, "value") ?? 0);
-      lit.setLiteral(
-        byName<string>(dynLiteral, "literal") ??
-          byName<string>(dynLiteral, "name") ??
-          "",
-      );
+      lit.setName(byName<string>(dynLiteral, 'name') ?? '');
+      lit.setValue(byName<number>(dynLiteral, 'value') ?? 0);
+      lit.setLiteral(byName<string>(dynLiteral, 'literal') ?? byName<string>(dynLiteral, 'name') ?? '');
       copyAnnotations(dynLiteral, lit);
-      (real as unknown as { addLiteral(l: EEnumLiteralImpl): void }).addLiteral(
-        lit,
-      );
+      (real as unknown as { addLiteral(l: EEnumLiteralImpl): void }).addLiteral(lit);
     }
   }
 
   // Pass 5: eOpposite (every feature on every class now exists).
   for (const [dynFeature, realFeature] of featureMap) {
-    const dynOpposite = byNameRaw(dynFeature, "eOpposite") as
-      EObject | undefined;
+    const dynOpposite = byNameRaw(dynFeature, 'eOpposite') as EObject | undefined;
     if (!dynOpposite) continue;
     const realOpposite = featureMap.get(dynOpposite);
-    if (realOpposite && "setEOpposite" in realFeature) {
-      (realFeature as EReferenceImpl).setEOpposite(
-        realOpposite as EReferenceImpl,
-      );
+    if (realOpposite && 'setEOpposite' in realFeature) {
+      (realFeature as EReferenceImpl).setEOpposite(realOpposite as EReferenceImpl);
     }
   }
+
 
   // Assemble.
   for (const real of classifierMap.values()) {
@@ -245,18 +232,18 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
  * nowhere for an operation-level annotation to attach until that's built.
  */
 function copyAnnotations(dyn: EObject, real: EModelElement): void {
-  for (const dynAnnotation of listByName(dyn, "eAnnotations")) {
+  for (const dynAnnotation of listByName(dyn, 'eAnnotations')) {
     const annotation = new EAnnotationImpl();
-    const source = byName<string>(dynAnnotation, "source");
+    const source = byName<string>(dynAnnotation, 'source');
     if (source !== undefined) annotation.setSource(source);
-    for (const dynDetail of listByName(dynAnnotation, "details")) {
-      const key = byName<string>(dynDetail, "key");
-      const value = byName<string>(dynDetail, "value");
+    for (const dynDetail of listByName(dynAnnotation, 'details')) {
+      const key = byName<string>(dynDetail, 'key');
+      const value = byName<string>(dynDetail, 'value');
       if (key !== undefined && value !== undefined) {
-        const binding = new EcoreFactoryImpl().createEStringToStringMapEntry(); // XXX FIXME BUG
-        binding.setKey(key);
-        binding.setValue(value);
-        annotation.getDetails().add(binding);
+        const details = new EcoreFactoryImpl().createEStringToStringMapEntry();
+        details.setKey(key);
+        details.setValue(value);
+        annotation.getDetails().add(details);
       }
     }
     real.getEAnnotations().add(annotation);
@@ -276,21 +263,21 @@ function copyAnnotations(dyn: EObject, real: EModelElement): void {
  * fields, not the intended formulas, until this was added.
  */
 function copyFeatureFlags(dyn: EObject, real: EStructuralFeature): void {
-  const changeable = byName<boolean>(dyn, "changeable");
+  const changeable = byName<boolean>(dyn, 'changeable');
   if (changeable === false) real.setChangeable(false);
-  if (byName<boolean>(dyn, "volatile")) real.setVolatile(true);
-  if (byName<boolean>(dyn, "transient")) real.setTransient(true);
-  if (byName<boolean>(dyn, "derived")) real.setDerived(true);
-  if (byName<boolean>(dyn, "unsettable")) real.setUnsettable(true);
+  if (byName<boolean>(dyn, 'volatile')) real.setVolatile(true);
+  if (byName<boolean>(dyn, 'transient')) real.setTransient(true);
+  if (byName<boolean>(dyn, 'derived')) real.setDerived(true);
+  if (byName<boolean>(dyn, 'unsettable')) real.setUnsettable(true);
 }
 
 /** Reads a named feature's value reflectively, off whatever classifier `obj` happens to be an instance of. */
 function byNameRaw(obj: EObject, featureName: string): unknown {
   const feature = obj
-    .eClass()
-    .getEStructuralFeatures()
-    .filter((feature) => feature.getName() === featureName)
-    .at(0);
+      .eClass()
+      .getEStructuralFeatures()
+      .filter(feature => featureName === feature.getName())
+      .at(0);
   if (!feature) return undefined;
   return obj.eGet(feature);
 }

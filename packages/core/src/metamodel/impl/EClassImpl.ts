@@ -1,7 +1,8 @@
-import { EList, EObject } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EList } from '../types/EList.js';
+import { EObjectImpl } from './EObjectImpl.js';
+import { BasicEList } from './BasicEList.js';
 import { EClass } from '../types/EClass.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EOperation } from '../types/EOperation.js';
 import { EAttribute } from '../types/EAttribute.js';
 import { EReference } from '../types/EReference.js';
@@ -13,23 +14,128 @@ import { EClassifierImpl } from './EClassifierImpl.js';
 export class EClassImpl extends EClassifierImpl implements EClass {
   private _abstract: boolean = false;
   private _interface: boolean = false;
-  private readonly _eSuperTypes = new BasicEList<EClass>(this, EcorePackageImpl.eINSTANCE.getEClass_ESuperTypes());
-  private readonly _eOperations = new BasicEList<EOperation>(this, EcorePackageImpl.eINSTANCE.getEClass_EOperations());
-  private readonly _eAllAttributes = new BasicEList<EAttribute>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllAttributes());
-  private readonly _eAllReferences = new BasicEList<EReference>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllReferences());
-  private readonly _eReferences = new BasicEList<EReference>(this, EcorePackageImpl.eINSTANCE.getEClass_EReferences());
-  private readonly _eAttributes = new BasicEList<EAttribute>(this, EcorePackageImpl.eINSTANCE.getEClass_EAttributes());
-  private readonly _eAllContainments = new BasicEList<EReference>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllContainments());
-  private readonly _eAllOperations = new BasicEList<EOperation>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllOperations());
-  private readonly _eAllStructuralFeatures = new BasicEList<EStructuralFeature>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllStructuralFeatures());
-  private readonly _eAllSuperTypes = new BasicEList<EClass>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllSuperTypes());
+
+  private _eSuperTypesCache: BasicEList<EClass> | undefined;
+
+  private get _eSuperTypes(): BasicEList<EClass> {
+    if (!this._eSuperTypesCache) {
+      this._eSuperTypesCache = new BasicEList<EClass>(this, getEcorePackageRef().getEClass_ESuperTypes());
+    }
+    return this._eSuperTypesCache;
+  }
+
+  private _eOperationsCache: BasicEList<EOperation> | undefined;
+
+  private get _eOperations(): BasicEList<EOperation> {
+    if (!this._eOperationsCache) {
+      this._eOperationsCache = new BasicEList<EOperation>(this, getEcorePackageRef().getEClass_EOperations());
+    }
+    return this._eOperationsCache;
+  }
+
+  private _eAllAttributesCache: BasicEList<EAttribute> | undefined;
+
+  private get _eAllAttributes(): BasicEList<EAttribute> {
+    if (!this._eAllAttributesCache) {
+      this._eAllAttributesCache = new BasicEList<EAttribute>(this, getEcorePackageRef().getEClass_EAllAttributes());
+    }
+    return this._eAllAttributesCache;
+  }
+
+  private _eAllReferencesCache: BasicEList<EReference> | undefined;
+
+  private get _eAllReferences(): BasicEList<EReference> {
+    if (!this._eAllReferencesCache) {
+      this._eAllReferencesCache = new BasicEList<EReference>(this, getEcorePackageRef().getEClass_EAllReferences());
+    }
+    return this._eAllReferencesCache;
+  }
+
+  private _eReferencesCache: BasicEList<EReference> | undefined;
+
+  private get _eReferences(): BasicEList<EReference> {
+    if (!this._eReferencesCache) {
+      this._eReferencesCache = new BasicEList<EReference>(this, getEcorePackageRef().getEClass_EReferences());
+    }
+    return this._eReferencesCache;
+  }
+
+  private _eAttributesCache: BasicEList<EAttribute> | undefined;
+
+  private get _eAttributes(): BasicEList<EAttribute> {
+    if (!this._eAttributesCache) {
+      this._eAttributesCache = new BasicEList<EAttribute>(this, getEcorePackageRef().getEClass_EAttributes());
+    }
+    return this._eAttributesCache;
+  }
+
+  private _eAllContainmentsCache: BasicEList<EReference> | undefined;
+
+  private get _eAllContainments(): BasicEList<EReference> {
+    if (!this._eAllContainmentsCache) {
+      this._eAllContainmentsCache = new BasicEList<EReference>(this, getEcorePackageRef().getEClass_EAllContainments());
+    }
+    return this._eAllContainmentsCache;
+  }
+
+  private _eAllOperationsCache: BasicEList<EOperation> | undefined;
+
+  private get _eAllOperations(): BasicEList<EOperation> {
+    if (!this._eAllOperationsCache) {
+      this._eAllOperationsCache = new BasicEList<EOperation>(this, getEcorePackageRef().getEClass_EAllOperations());
+    }
+    return this._eAllOperationsCache;
+  }
+
+  private _eAllStructuralFeaturesCache: BasicEList<EStructuralFeature> | undefined;
+
+  private get _eAllStructuralFeatures(): BasicEList<EStructuralFeature> {
+    if (!this._eAllStructuralFeaturesCache) {
+      this._eAllStructuralFeaturesCache = new BasicEList<EStructuralFeature>(this, getEcorePackageRef().getEClass_EAllStructuralFeatures());
+    }
+    return this._eAllStructuralFeaturesCache;
+  }
+
+  private _eAllSuperTypesCache: BasicEList<EClass> | undefined;
+
+  private get _eAllSuperTypes(): BasicEList<EClass> {
+    if (!this._eAllSuperTypesCache) {
+      this._eAllSuperTypesCache = new BasicEList<EClass>(this, getEcorePackageRef().getEClass_EAllSuperTypes());
+    }
+    return this._eAllSuperTypesCache;
+  }
   private _eIDAttribute: EAttribute | undefined;
-  private readonly _eStructuralFeatures = new BasicEList<EStructuralFeature>(this, EcorePackageImpl.eINSTANCE.getEClass_EStructuralFeatures());
-  private readonly _eGenericSuperTypes = new BasicEList<EGenericType>(this, EcorePackageImpl.eINSTANCE.getEClass_EGenericSuperTypes());
-  private readonly _eAllGenericSuperTypes = new BasicEList<EGenericType>(this, EcorePackageImpl.eINSTANCE.getEClass_EAllGenericSuperTypes());
+
+  private _eStructuralFeaturesCache: BasicEList<EStructuralFeature> | undefined;
+
+  private get _eStructuralFeatures(): BasicEList<EStructuralFeature> {
+    if (!this._eStructuralFeaturesCache) {
+      this._eStructuralFeaturesCache = new BasicEList<EStructuralFeature>(this, getEcorePackageRef().getEClass_EStructuralFeatures());
+    }
+    return this._eStructuralFeaturesCache;
+  }
+
+  private _eGenericSuperTypesCache: BasicEList<EGenericType> | undefined;
+
+  private get _eGenericSuperTypes(): BasicEList<EGenericType> {
+    if (!this._eGenericSuperTypesCache) {
+      this._eGenericSuperTypesCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getEClass_EGenericSuperTypes());
+    }
+    return this._eGenericSuperTypesCache;
+  }
+
+  private _eAllGenericSuperTypesCache: BasicEList<EGenericType> | undefined;
+
+  private get _eAllGenericSuperTypes(): BasicEList<EGenericType> {
+    if (!this._eAllGenericSuperTypesCache) {
+      this._eAllGenericSuperTypesCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getEClass_EAllGenericSuperTypes());
+    }
+    return this._eAllGenericSuperTypesCache;
+  }
+
 
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEClass();
+    return getEcorePackageRef().getEClass();
   }
 
   isAbstract(): boolean {
@@ -37,14 +143,14 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
 
   setAbstract(value: boolean): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEClass_Abstract(), value);
+    this.eSet(getEcorePackageRef().getEClass_Abstract(), value);
   }
   isInterface(): boolean {
     return this._interface;
   }
 
   setInterface(value: boolean): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEClass_Interface(), value);
+    this.eSet(getEcorePackageRef().getEClass_Interface(), value);
   }
   getESuperTypes(): EList<EClass> {
     return this._eSuperTypes;
@@ -81,7 +187,7 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
 
   setEIDAttribute(value: EAttribute | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEClass_EIDAttribute(), value);
+    this.eSet(getEcorePackageRef().getEClass_EIDAttribute(), value);
   }
   getEStructuralFeatures(): EList<EStructuralFeature> {
     return this._eStructuralFeatures;
@@ -272,9 +378,9 @@ export class EClassImpl extends EClassifierImpl implements EClass {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 8: this._abstract = value as boolean; return;
       case 9: this._interface = value as boolean; return;
       case 20: this._eIDAttribute = value as EAttribute | undefined; return;
@@ -283,25 +389,70 @@ export class EClassImpl extends EClassifierImpl implements EClass {
         return;
     }
   }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 10:
+        if (!this._eSuperTypesCache) this._eSuperTypesCache = new BasicEList<EClass>(this);
+        return this._eSuperTypesCache;
+      case 11:
+        if (!this._eOperationsCache) this._eOperationsCache = new BasicEList<EOperation>(this);
+        return this._eOperationsCache;
+      case 12:
+        if (!this._eAllAttributesCache) this._eAllAttributesCache = new BasicEList<EAttribute>(this);
+        return this._eAllAttributesCache;
+      case 13:
+        if (!this._eAllReferencesCache) this._eAllReferencesCache = new BasicEList<EReference>(this);
+        return this._eAllReferencesCache;
+      case 14:
+        if (!this._eReferencesCache) this._eReferencesCache = new BasicEList<EReference>(this);
+        return this._eReferencesCache;
+      case 15:
+        if (!this._eAttributesCache) this._eAttributesCache = new BasicEList<EAttribute>(this);
+        return this._eAttributesCache;
+      case 16:
+        if (!this._eAllContainmentsCache) this._eAllContainmentsCache = new BasicEList<EReference>(this);
+        return this._eAllContainmentsCache;
+      case 17:
+        if (!this._eAllOperationsCache) this._eAllOperationsCache = new BasicEList<EOperation>(this);
+        return this._eAllOperationsCache;
+      case 18:
+        if (!this._eAllStructuralFeaturesCache) this._eAllStructuralFeaturesCache = new BasicEList<EStructuralFeature>(this);
+        return this._eAllStructuralFeaturesCache;
+      case 19:
+        if (!this._eAllSuperTypesCache) this._eAllSuperTypesCache = new BasicEList<EClass>(this);
+        return this._eAllSuperTypesCache;
+      case 21:
+        if (!this._eStructuralFeaturesCache) this._eStructuralFeaturesCache = new BasicEList<EStructuralFeature>(this);
+        return this._eStructuralFeaturesCache;
+      case 22:
+        if (!this._eGenericSuperTypesCache) this._eGenericSuperTypesCache = new BasicEList<EGenericType>(this);
+        return this._eGenericSuperTypesCache;
+      case 23:
+        if (!this._eAllGenericSuperTypesCache) this._eAllGenericSuperTypesCache = new BasicEList<EGenericType>(this);
+        return this._eAllGenericSuperTypesCache;
+      default:
+        return super.eBootstrapList(featureId);
+    }
+  }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 8: return this._abstract !== false;
       case 9: return this._interface !== false;
-      case 10: return this._eSuperTypes.size() !== 0;
-      case 11: return this._eOperations.size() !== 0;
-      case 12: return this._eAllAttributes.size() !== 0;
-      case 13: return this._eAllReferences.size() !== 0;
-      case 14: return this._eReferences.size() !== 0;
-      case 15: return this._eAttributes.size() !== 0;
-      case 16: return this._eAllContainments.size() !== 0;
-      case 17: return this._eAllOperations.size() !== 0;
-      case 18: return this._eAllStructuralFeatures.size() !== 0;
-      case 19: return this._eAllSuperTypes.size() !== 0;
+      case 10: return this._eSuperTypesCache !== undefined && this._eSuperTypesCache.size() !== 0;
+      case 11: return this._eOperationsCache !== undefined && this._eOperationsCache.size() !== 0;
+      case 12: return this._eAllAttributesCache !== undefined && this._eAllAttributesCache.size() !== 0;
+      case 13: return this._eAllReferencesCache !== undefined && this._eAllReferencesCache.size() !== 0;
+      case 14: return this._eReferencesCache !== undefined && this._eReferencesCache.size() !== 0;
+      case 15: return this._eAttributesCache !== undefined && this._eAttributesCache.size() !== 0;
+      case 16: return this._eAllContainmentsCache !== undefined && this._eAllContainmentsCache.size() !== 0;
+      case 17: return this._eAllOperationsCache !== undefined && this._eAllOperationsCache.size() !== 0;
+      case 18: return this._eAllStructuralFeaturesCache !== undefined && this._eAllStructuralFeaturesCache.size() !== 0;
+      case 19: return this._eAllSuperTypesCache !== undefined && this._eAllSuperTypesCache.size() !== 0;
       case 20: return this._eIDAttribute !== undefined;
-      case 21: return this._eStructuralFeatures.size() !== 0;
-      case 22: return this._eGenericSuperTypes.size() !== 0;
-      case 23: return this._eAllGenericSuperTypes.size() !== 0;
+      case 21: return this._eStructuralFeaturesCache !== undefined && this._eStructuralFeaturesCache.size() !== 0;
+      case 22: return this._eGenericSuperTypesCache !== undefined && this._eGenericSuperTypesCache.size() !== 0;
+      case 23: return this._eAllGenericSuperTypesCache !== undefined && this._eAllGenericSuperTypesCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -321,25 +472,25 @@ export class EClassImpl extends EClassifierImpl implements EClass {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 10: this._eSuperTypes.clear(); return;
-      case 11: this._eOperations.clear(); return;
-      case 12: this._eAllAttributes.clear(); return;
-      case 13: this._eAllReferences.clear(); return;
-      case 14: this._eReferences.clear(); return;
-      case 15: this._eAttributes.clear(); return;
-      case 16: this._eAllContainments.clear(); return;
-      case 17: this._eAllOperations.clear(); return;
-      case 18: this._eAllStructuralFeatures.clear(); return;
-      case 19: this._eAllSuperTypes.clear(); return;
+      case 10: this._eSuperTypesCache?.clear(); return;
+      case 11: this._eOperationsCache?.clear(); return;
+      case 12: this._eAllAttributesCache?.clear(); return;
+      case 13: this._eAllReferencesCache?.clear(); return;
+      case 14: this._eReferencesCache?.clear(); return;
+      case 15: this._eAttributesCache?.clear(); return;
+      case 16: this._eAllContainmentsCache?.clear(); return;
+      case 17: this._eAllOperationsCache?.clear(); return;
+      case 18: this._eAllStructuralFeaturesCache?.clear(); return;
+      case 19: this._eAllSuperTypesCache?.clear(); return;
       case 20: {
         const oldValue = this._eIDAttribute;
         this._eIDAttribute = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 21: this._eStructuralFeatures.clear(); return;
-      case 22: this._eGenericSuperTypes.clear(); return;
-      case 23: this._eAllGenericSuperTypes.clear(); return;
+      case 21: this._eStructuralFeaturesCache?.clear(); return;
+      case 22: this._eGenericSuperTypesCache?.clear(); return;
+      case 23: this._eAllGenericSuperTypesCache?.clear(); return;
       default:
         super.eUnset(feature);
         return;

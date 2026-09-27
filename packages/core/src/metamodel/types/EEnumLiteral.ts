@@ -1,7 +1,6 @@
-import { EEnumerator } from './index.js';
+import { EEnumerator } from './EEnumerator.js';
 import { ENamedElement } from './ENamedElement.js';
 import { EEnum } from './EEnum.js';
-
 
 export interface EEnumLiteral extends ENamedElement {
 

@@ -1,4 +1,5 @@
-import { EObject, EList } from './index.js';
+import { EObject } from './EObject.js';
+import { EList } from './EList.js';
 import { ETypedElement } from './ETypedElement.js';
 import { EClass } from './EClass.js';
 import { ETypeParameter } from './ETypeParameter.js';

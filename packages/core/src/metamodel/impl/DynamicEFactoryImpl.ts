@@ -1,5 +1,7 @@
-import { EClass, EObject } from "../types/index.js";
-import { DynamicEObjectImpl, EFactoryImpl } from "./index.js";
+import { EClass } from "../types/EClass.js";
+import { EObject } from "../types/EObject.js";
+import { DynamicEObjectImpl } from "./DynamicEObjectImpl.js";
+import { EFactoryImpl } from "./EFactoryImpl.js";
 
 /**
  * The generic factory: unlike a generated per-package factory (a hardcoded

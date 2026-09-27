@@ -1,15 +1,18 @@
-import { EClass, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { EObjectImpl } from './EObjectImpl.js';
+import { BasicEList } from './BasicEList.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 
 
 export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {
   private _key: string | undefined;
   private _value: string | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry();
+    return getEcorePackageRef().getEStringToStringMapEntry();
   }
 
   getKey(): string | undefined {
@@ -17,14 +20,14 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   }
 
   setKey(value: string | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry_Key(), value);
+    this.eSet(getEcorePackageRef().getEStringToStringMapEntry_Key(), value);
   }
   getValue(): string | undefined {
     return this._value;
   }
 
   setValue(value: string | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEStringToStringMapEntry_Value(), value);
+    this.eSet(getEcorePackageRef().getEStringToStringMapEntry_Value(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -58,13 +61,19 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 0: this._key = value as string | undefined; return;
       case 1: this._value = value as string | undefined; return;
       default:
-        throw new Error(`Feature ${feature.getFeatureID()} on EStringToStringMapEntry is many-valued or unknown.`);
+        throw new Error(`Feature ${featureId} on EStringToStringMapEntry is many-valued or unknown.`);
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        throw new Error(`Feature ${featureId} on EStringToStringMapEntry is single-valued or unknown.`);
     }
   }
 

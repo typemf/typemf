@@ -1,7 +1,9 @@
-import { EClass, EEnumerator, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EEnumerator } from '../types/EEnumerator.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EEnumLiteral } from '../types/EEnumLiteral.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EEnum } from '../types/EEnum.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
 
@@ -12,8 +14,9 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
   private _literal: string | undefined;
   private _eEnum: EEnum | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEEnumLiteral();
+    return getEcorePackageRef().getEEnumLiteral();
   }
 
   getValue(): number {
@@ -21,28 +24,28 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
   }
 
   setValue(value: number): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEEnumLiteral_Value(), value);
+    this.eSet(getEcorePackageRef().getEEnumLiteral_Value(), value);
   }
   getInstance(): EEnumerator | undefined {
     return this._instance;
   }
 
   setInstance(value: EEnumerator | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEEnumLiteral_Instance(), value);
+    this.eSet(getEcorePackageRef().getEEnumLiteral_Instance(), value);
   }
   getLiteral(): string | undefined {
     return this._literal;
   }
 
   setLiteral(value: string | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEEnumLiteral_Literal(), value);
+    this.eSet(getEcorePackageRef().getEEnumLiteral_Literal(), value);
   }
   getEEnum(): EEnum | undefined {
     return this._eEnum;
   }
 
   setEEnum(value: EEnum | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEEnumLiteral_EEnum(), value);
+    this.eSet(getEcorePackageRef().getEEnumLiteral_EEnum(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -95,9 +98,9 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 2: this._value = value as number; return;
       case 3: this._instance = value as EEnumerator | undefined; return;
       case 4: this._literal = value as string | undefined; return;
@@ -105,6 +108,12 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
       default:
         super.eBasicSetValue(feature, value);
         return;
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        return super.eBootstrapList(featureId);
     }
   }
 

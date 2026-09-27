@@ -1,7 +1,8 @@
-import { EObject, EList, TypeScriptClass } from './index.js';
+import { EList } from './EList.js';
 import { ENamedElement } from './ENamedElement.js';
 import { EPackage } from './EPackage.js';
 import { ETypeParameter } from './ETypeParameter.js';
+import { TypeScriptClass } from './TypeScriptClass.js';
 
 
 export interface EClassifier extends ENamedElement {

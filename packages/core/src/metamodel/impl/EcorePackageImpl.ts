@@ -1,28 +1,22 @@
-import {
-  EClass,
-  EAttribute,
-  EReference,
-  EEnum,
-  EDataType,
-  EList,
-  EStringToStringMapEntry,
-  EAnnotation,
-} from "../types/index.js";
-import {
-  EPackageImpl,
-  EClassImpl,
-  EAttributeImpl,
-  EReferenceImpl,
-  EDataTypeImpl,
-  EEnumImpl,
-  EEnumLiteralImpl,
-  EAnnotationImpl,
-  EFactoryImpl,
-  EStringToStringMapEntryImpl,
-} from "./index.js";
-import { EcorePackage, Ids } from "../EcorePackage.js";
-import { EcoreFactory } from "../EcoreFactory.js";
-import { EcoreFactoryImpl } from "./EcoreFactoryImpl.js";
+import { EClass } from '../types/EClass.js';
+import { EAttribute } from '../types/EAttribute.js';
+import { EReference } from '../types/EReference.js';
+import { EDataType } from '../types/EDataType.js';
+import { EAnnotation } from '../types/EAnnotation.js';
+import { EPackageImpl } from './EPackageImpl.js';
+import { EClassImpl } from './EClassImpl.js';
+import { EAttributeImpl } from './EAttributeImpl.js';
+import { EReferenceImpl } from './EReferenceImpl.js';
+import { EDataTypeImpl } from './EDataTypeImpl.js';
+import { EAnnotationImpl } from './EAnnotationImpl.js';
+import { EStringToStringMapEntryImpl } from './EStringToStringMapEntryImpl.js';
+import { EcorePackage, Ids } from '../EcorePackage.js';
+import { EcoreFactory } from '../EcoreFactory.js';
+import { EcoreFactoryImpl } from './EcoreFactoryImpl.js';
+import { setEcorePackageRef } from './EcorePackageRef.js';
+
+
+
 
 export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private readonly _EAttribute: EClassImpl;
@@ -41,7 +35,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private readonly _EClass_eOperations: EReferenceImpl;
   private readonly _EClass_eAllAttributes: EReferenceImpl;
   private readonly _EClass_eAllReferences: EReferenceImpl;
-  private readonly _EClass_EReferences: EReferenceImpl;
+  private readonly _EClass_eReferences: EReferenceImpl;
   private readonly _EClass_eAttributes: EReferenceImpl;
   private readonly _EClass_eAllContainments: EReferenceImpl;
   private readonly _EClass_eAllOperations: EReferenceImpl;
@@ -88,13 +82,13 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private readonly _EPackage_eSuperPackage: EReferenceImpl;
   private readonly _EParameter: EClassImpl;
   private readonly _EParameter_eOperation: EReferenceImpl;
-  private readonly _EReferenceImpl: EClassImpl;
-  private readonly _EReferenceImpl_containment: EAttributeImpl;
-  private readonly _EReferenceImpl_container: EAttributeImpl;
-  private readonly _EReferenceImpl_resolveProxies: EAttributeImpl;
-  private readonly _EReferenceImpl_eOpposite: EReferenceImpl;
-  private readonly _EReferenceImpl_EReferenceImplType: EReferenceImpl;
-  private readonly _EReferenceImpl_eKeys: EReferenceImpl;
+  private readonly _EReference: EClassImpl;
+  private readonly _EReference_containment: EAttributeImpl;
+  private readonly _EReference_container: EAttributeImpl;
+  private readonly _EReference_resolveProxies: EAttributeImpl;
+  private readonly _EReference_eOpposite: EReferenceImpl;
+  private readonly _EReference_eReferenceType: EReferenceImpl;
+  private readonly _EReference_eKeys: EReferenceImpl;
   private readonly _EStructuralFeature: EClassImpl;
   private readonly _EStructuralFeature_changeable: EAttributeImpl;
   private readonly _EStructuralFeature_volatile: EAttributeImpl;
@@ -174,13 +168,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   static init(factory?: EcoreFactory): EcorePackageImpl {
     if (!EcorePackageImpl._instance) {
       EcorePackageImpl._instance = new EcorePackageImpl();
-      EcorePackageImpl._instance.setEFactoryInstance(
-        factory ?? new EcoreFactoryImpl(),
-      );
+      EcorePackageImpl._instance.setEFactoryInstance(factory ?? new EcoreFactoryImpl());
     } else if (factory) {
       console.warn(
-        "EcorePackageImpl.init() called again with a different factory after the singleton already " +
-          "existed - ignoring the new factory and keeping the existing one.",
+        'EcorePackageImpl.init() called again with a different factory after the singleton already ' +
+          'existed - ignoring the new factory and keeping the existing one.'
       );
     }
     return EcorePackageImpl._instance;
@@ -192,1649 +184,2616 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
   private constructor() {
     super();
-    this.setName("ecore");
-    this.setNsURI("http://www.eclipse.org/emf/2002/Ecore");
-    this.setNsPrefix("ecore");
+    // Set immediately, before Pass 1 constructs any classifier (each of
+    // which may need this reference - see EcorePackageRef.ts's own doc
+    // comment for why this is a late-bound reference rather than a
+    // direct import of EcorePackageImpl.
+    setEcorePackageRef(this);
 
     // Pass 1: create every classifier (empty shell - no features/supertypes
     // yet), so later passes can reference any of them regardless of
     // declaration order.
     this._EAttribute = new EClassImpl();
-    this._EAttribute.setName("EAttribute");
+    this._EAttribute.eBasicSetValue(Ids.ENamedElement.name, "EAttribute");
+
     this._EAttribute.setClassifierID(Ids.EAttribute.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(annotation, "constraints", "ConsistentTransient");
-      this._EAttribute.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ConsistentTransient");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EAttribute.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EAttribute);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EAttribute);
+
     this._EAnnotation = new EClassImpl();
-    this._EAnnotation.setName("EAnnotation");
+this._EAnnotation.eBasicSetValue(Ids.ENamedElement.name, "EAnnotation");
+
     this._EAnnotation.setClassifierID(Ids.EAnnotation.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(annotation, "constraints", "WellFormedSourceURI");
-      this._EAnnotation.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "WellFormedSourceURI");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EAnnotation.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EAnnotation);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EAnnotation);
+
     this._EClass = new EClassImpl();
-    this._EClass.setName("EClass");
+this._EClass.eBasicSetValue(Ids.ENamedElement.name, "EClass");
+
     this._EClass.setClassifierID(Ids.EClass.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "InterfaceIsAbstract AtMostOneID UniqueFeatureNames UniqueOperationSignatures NoCircularSuperTypes WellFormedMapEntryClass ConsistentSuperTypes DisjointFeatureAndOperationSignatures",
-      );
-      this._EClass.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "InterfaceIsAbstract AtMostOneID UniqueFeatureNames UniqueOperationSignatures NoCircularSuperTypes WellFormedMapEntryClass ConsistentSuperTypes DisjointFeatureAndOperationSignatures");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EClass.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EClass);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EClass);
+
     this._EClassifier = new EClassImpl();
-    this._EClassifier.setName("EClassifier");
+this._EClassifier.eBasicSetValue(Ids.ENamedElement.name, "EClassifier");
+
     this._EClassifier.setClassifierID(Ids.EClassifier.self);
-    this._EClassifier.setAbstract(true);
+this._EClassifier.eBasicSetValue(Ids.EClass.abstract, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "WellFormedInstanceTypeName UniqueTypeParameterNames",
-      );
-      this._EClassifier.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "WellFormedInstanceTypeName UniqueTypeParameterNames");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EClassifier.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EClassifier);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EClassifier);
+
     this._EDataType = new EClassImpl();
-    this._EDataType.setName("EDataType");
+this._EDataType.eBasicSetValue(Ids.ENamedElement.name, "EDataType");
+
     this._EDataType.setClassifierID(Ids.EDataType.self);
 
-    this.getEClassifiers().add(this._EDataType);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EDataType);
+
     this._EEnum = new EClassImpl();
-    this._EEnum.setName("EEnum");
+this._EEnum.eBasicSetValue(Ids.ENamedElement.name, "EEnum");
+
     this._EEnum.setClassifierID(Ids.EEnum.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "UniqueEnumeratorNames UniqueEnumeratorLiterals",
-      );
-      this._EEnum.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "UniqueEnumeratorNames UniqueEnumeratorLiterals");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EEnum.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EEnum);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EEnum);
+
     this._EEnumLiteral = new EClassImpl();
-    this._EEnumLiteral.setName("EEnumLiteral");
+this._EEnumLiteral.eBasicSetValue(Ids.ENamedElement.name, "EEnumLiteral");
+
     this._EEnumLiteral.setClassifierID(Ids.EEnumLiteral.self);
 
-    this.getEClassifiers().add(this._EEnumLiteral);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EEnumLiteral);
+
     this._EFactory = new EClassImpl();
-    this._EFactory.setName("EFactory");
+this._EFactory.eBasicSetValue(Ids.ENamedElement.name, "EFactory");
+
     this._EFactory.setClassifierID(Ids.EFactory.self);
 
-    this.getEClassifiers().add(this._EFactory);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EFactory);
+
     this._EModelElement = new EClassImpl();
-    this._EModelElement.setName("EModelElement");
+this._EModelElement.eBasicSetValue(Ids.ENamedElement.name, "EModelElement");
+
     this._EModelElement.setClassifierID(Ids.EModelElement.self);
-    this._EModelElement.setAbstract(true);
+this._EModelElement.eBasicSetValue(Ids.EClass.abstract, true);
 
-    this.getEClassifiers().add(this._EModelElement);
+
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EModelElement);
+
     this._ENamedElement = new EClassImpl();
-    this._ENamedElement.setName("ENamedElement");
+this._ENamedElement.eBasicSetValue(Ids.ENamedElement.name, "ENamedElement");
+
     this._ENamedElement.setClassifierID(Ids.ENamedElement.self);
-    this._ENamedElement.setAbstract(true);
+this._ENamedElement.eBasicSetValue(Ids.EClass.abstract, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(annotation, "constraints", "WellFormedName");
-      this._ENamedElement.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "WellFormedName");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ENamedElement.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._ENamedElement);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ENamedElement);
+
     this._EOperation = new EClassImpl();
-    this._EOperation.setName("EOperation");
+this._EOperation.eBasicSetValue(Ids.ENamedElement.name, "EOperation");
+
     this._EOperation.setClassifierID(Ids.EOperation.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "UniqueParameterNames UniqueTypeParameterNames NoRepeatingVoid",
-      );
-      this._EOperation.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "UniqueParameterNames UniqueTypeParameterNames NoRepeatingVoid");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EOperation.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EOperation);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EOperation);
+
     this._EPackage = new EClassImpl();
-    this._EPackage.setName("EPackage");
+this._EPackage.eBasicSetValue(Ids.ENamedElement.name, "EPackage");
+
     this._EPackage.setClassifierID(Ids.EPackage.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "WellFormedNsURI WellFormedNsPrefix UniqueSubpackageNames UniqueClassifierNames UniqueNsURIs",
-      );
-      this._EPackage.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "WellFormedNsURI WellFormedNsPrefix UniqueSubpackageNames UniqueClassifierNames UniqueNsURIs");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EPackage.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EPackage);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EPackage);
+
     this._EParameter = new EClassImpl();
-    this._EParameter.setName("EParameter");
+this._EParameter.eBasicSetValue(Ids.ENamedElement.name, "EParameter");
+
     this._EParameter.setClassifierID(Ids.EParameter.self);
 
-    this.getEClassifiers().add(this._EParameter);
-    this._EReferenceImpl = new EClassImpl();
-    this._EReferenceImpl.setName("EReferenceImpl");
-    this._EReferenceImpl.setClassifierID(Ids.EReference.self);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EParameter);
+
+    this._EReference = new EClassImpl();
+this._EReference.eBasicSetValue(Ids.ENamedElement.name, "EReference");
+
+    this._EReference.setClassifierID(Ids.EReference.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "ConsistentOpposite SingleContainer ConsistentKeys ConsistentUnique ConsistentContainer",
-      );
-      this._EReferenceImpl.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ConsistentOpposite SingleContainer ConsistentKeys ConsistentUnique ConsistentContainer");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EReference.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EReferenceImpl);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EReference);
+
     this._EStructuralFeature = new EClassImpl();
-    this._EStructuralFeature.setName("EStructuralFeature");
+this._EStructuralFeature.eBasicSetValue(Ids.ENamedElement.name, "EStructuralFeature");
+
     this._EStructuralFeature.setClassifierID(Ids.EStructuralFeature.self);
-    this._EStructuralFeature.setAbstract(true);
+this._EStructuralFeature.eBasicSetValue(Ids.EClass.abstract, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(annotation, "constraints", "ValidDefaultValueLiteral");
-      this._EStructuralFeature.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ValidDefaultValueLiteral");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EStructuralFeature.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EStructuralFeature);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EStructuralFeature);
+
     this._ETypedElement = new EClassImpl();
-    this._ETypedElement.setName("ETypedElement");
+this._ETypedElement.eBasicSetValue(Ids.ENamedElement.name, "ETypedElement");
+
     this._ETypedElement.setClassifierID(Ids.ETypedElement.self);
-    this._ETypedElement.setAbstract(true);
+this._ETypedElement.eBasicSetValue(Ids.EClass.abstract, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "ValidLowerBound ValidUpperBound ConsistentBounds ValidType",
-      );
-      this._ETypedElement.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ValidLowerBound ValidUpperBound ConsistentBounds ValidType");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ETypedElement.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._ETypedElement);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ETypedElement);
+
     this._EBigDecimal = new EDataTypeImpl();
-    this._EBigDecimal.setName("EBigDecimal");
+this._EBigDecimal.eBasicSetValue(Ids.ENamedElement.name, "EBigDecimal");
+
     this._EBigDecimal.setClassifierID(Ids.EBigDecimal.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#decimal",
-      );
-      this._EBigDecimal.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#decimal");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EBigDecimal.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EBigDecimal);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EBigDecimal);
+
     this._EBigInteger = new EDataTypeImpl();
-    this._EBigInteger.setName("EBigInteger");
+this._EBigInteger.eBasicSetValue(Ids.ENamedElement.name, "EBigInteger");
+
     this._EBigInteger.setClassifierID(Ids.EBigInteger.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#integer",
-      );
-      this._EBigInteger.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#integer");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EBigInteger.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EBigInteger);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EBigInteger);
+
     this._EBoolean = new EDataTypeImpl();
-    this._EBoolean.setName("EBoolean");
+this._EBoolean.eBasicSetValue(Ids.ENamedElement.name, "EBoolean");
+
     this._EBoolean.setClassifierID(Ids.EBoolean.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#boolean",
-      );
-      this._EBoolean.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#boolean");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EBoolean.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EBoolean);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EBoolean);
+
     this._EBooleanObject = new EDataTypeImpl();
-    this._EBooleanObject.setName("EBooleanObject");
+this._EBooleanObject.eBasicSetValue(Ids.ENamedElement.name, "EBooleanObject");
+
     this._EBooleanObject.setClassifierID(Ids.EBooleanObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EBoolean");
-      this.add(annotation, "name", "EBoolean:Object");
-      this._EBooleanObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EBoolean");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EBoolean:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EBooleanObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EBooleanObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EBooleanObject);
+
     this._EByte = new EDataTypeImpl();
-    this._EByte.setName("EByte");
+this._EByte.eBasicSetValue(Ids.ENamedElement.name, "EByte");
+
     this._EByte.setClassifierID(Ids.EByte.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "http://www.w3.org/2001/XMLSchema#byte");
-      this._EByte.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#byte");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EByte.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EByte);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EByte);
+
     this._EByteArray = new EDataTypeImpl();
-    this._EByteArray.setName("EByteArray");
+this._EByteArray.eBasicSetValue(Ids.ENamedElement.name, "EByteArray");
+
     this._EByteArray.setClassifierID(Ids.EByteArray.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#hexBinary",
-      );
-      this._EByteArray.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#hexBinary");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EByteArray.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EByteArray);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EByteArray);
+
     this._EByteObject = new EDataTypeImpl();
-    this._EByteObject.setName("EByteObject");
+this._EByteObject.eBasicSetValue(Ids.ENamedElement.name, "EByteObject");
+
     this._EByteObject.setClassifierID(Ids.EByteObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EByte");
-      this.add(annotation, "name", "EByte:Object");
-      this._EByteObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EByte");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EByte:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EByteObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EByteObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EByteObject);
+
     this._EChar = new EDataTypeImpl();
-    this._EChar.setName("EChar");
+this._EChar.eBasicSetValue(Ids.ENamedElement.name, "EChar");
+
     this._EChar.setClassifierID(Ids.EChar.self);
 
-    this.getEClassifiers().add(this._EChar);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EChar);
+
     this._ECharacterObject = new EDataTypeImpl();
-    this._ECharacterObject.setName("ECharacterObject");
+this._ECharacterObject.eBasicSetValue(Ids.ENamedElement.name, "ECharacterObject");
+
     this._ECharacterObject.setClassifierID(Ids.ECharacterObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EChar");
-      this.add(annotation, "name", "EChar:Object");
-      this._ECharacterObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EChar");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EChar:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ECharacterObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._ECharacterObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ECharacterObject);
+
     this._EDate = new EDataTypeImpl();
-    this._EDate.setName("EDate");
+this._EDate.eBasicSetValue(Ids.ENamedElement.name, "EDate");
+
     this._EDate.setClassifierID(Ids.EDate.self);
 
-    this.getEClassifiers().add(this._EDate);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EDate);
+
     this._EDiagnosticChain = new EDataTypeImpl();
-    this._EDiagnosticChain.setName("EDiagnosticChain");
+this._EDiagnosticChain.eBasicSetValue(Ids.ENamedElement.name, "EDiagnosticChain");
+
     this._EDiagnosticChain.setClassifierID(Ids.EDiagnosticChain.self);
 
-    this.getEClassifiers().add(this._EDiagnosticChain);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EDiagnosticChain);
+
     this._EDouble = new EDataTypeImpl();
-    this._EDouble.setName("EDouble");
+this._EDouble.eBasicSetValue(Ids.ENamedElement.name, "EDouble");
+
     this._EDouble.setClassifierID(Ids.EDouble.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#double",
-      );
-      this._EDouble.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#double");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EDouble.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EDouble);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EDouble);
+
     this._EDoubleObject = new EDataTypeImpl();
-    this._EDoubleObject.setName("EDoubleObject");
+this._EDoubleObject.eBasicSetValue(Ids.ENamedElement.name, "EDoubleObject");
+
     this._EDoubleObject.setClassifierID(Ids.EDoubleObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EDouble");
-      this.add(annotation, "name", "EDouble:Object");
-      this._EDoubleObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EDouble");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EDouble:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EDoubleObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EDoubleObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EDoubleObject);
+
     this._EEList = new EDataTypeImpl();
-    this._EEList.setName("EEList");
+this._EEList.eBasicSetValue(Ids.ENamedElement.name, "EEList");
+
     this._EEList.setClassifierID(Ids.EEList.self);
 
-    this.getEClassifiers().add(this._EEList);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EEList);
+
     this._EEnumerator = new EDataTypeImpl();
-    this._EEnumerator.setName("EEnumerator");
+this._EEnumerator.eBasicSetValue(Ids.ENamedElement.name, "EEnumerator");
+
     this._EEnumerator.setClassifierID(Ids.EEnumerator.self);
 
-    this.getEClassifiers().add(this._EEnumerator);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EEnumerator);
+
     this._EFeatureMap = new EDataTypeImpl();
-    this._EFeatureMap.setName("EFeatureMap");
+this._EFeatureMap.eBasicSetValue(Ids.ENamedElement.name, "EFeatureMap");
+
     this._EFeatureMap.setClassifierID(Ids.EFeatureMap.self);
 
-    this.getEClassifiers().add(this._EFeatureMap);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EFeatureMap);
+
     this._EFeatureMapEntry = new EDataTypeImpl();
-    this._EFeatureMapEntry.setName("EFeatureMapEntry");
+this._EFeatureMapEntry.eBasicSetValue(Ids.ENamedElement.name, "EFeatureMapEntry");
+
     this._EFeatureMapEntry.setClassifierID(Ids.EFeatureMapEntry.self);
 
-    this.getEClassifiers().add(this._EFeatureMapEntry);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EFeatureMapEntry);
+
     this._EFloat = new EDataTypeImpl();
-    this._EFloat.setName("EFloat");
+this._EFloat.eBasicSetValue(Ids.ENamedElement.name, "EFloat");
+
     this._EFloat.setClassifierID(Ids.EFloat.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#float",
-      );
-      this._EFloat.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#float");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EFloat.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EFloat);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EFloat);
+
     this._EFloatObject = new EDataTypeImpl();
-    this._EFloatObject.setName("EFloatObject");
+this._EFloatObject.eBasicSetValue(Ids.ENamedElement.name, "EFloatObject");
+
     this._EFloatObject.setClassifierID(Ids.EFloatObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EFloat");
-      this.add(annotation, "name", "EFloat:Object");
-      this._EFloatObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EFloat");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EFloat:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EFloatObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EFloatObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EFloatObject);
+
     this._EInt = new EDataTypeImpl();
-    this._EInt.setName("EInt");
+this._EInt.eBasicSetValue(Ids.ENamedElement.name, "EInt");
+
     this._EInt.setClassifierID(Ids.EInt.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "http://www.w3.org/2001/XMLSchema#int");
-      this._EInt.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#int");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EInt.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EInt);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EInt);
+
     this._EIntegerObject = new EDataTypeImpl();
-    this._EIntegerObject.setName("EIntegerObject");
+this._EIntegerObject.eBasicSetValue(Ids.ENamedElement.name, "EIntegerObject");
+
     this._EIntegerObject.setClassifierID(Ids.EIntegerObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EInt");
-      this.add(annotation, "name", "EInt:Object");
-      this._EIntegerObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EInt");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EInt:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EIntegerObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EIntegerObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EIntegerObject);
+
     this._EJavaClass = new EDataTypeImpl();
-    this._EJavaClass.setName("EJavaClass");
+this._EJavaClass.eBasicSetValue(Ids.ENamedElement.name, "EJavaClass");
+
     this._EJavaClass.setClassifierID(Ids.EJavaClass.self);
 
-    this.getEClassifiers().add(this._EJavaClass);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EJavaClass);
+
     this._EJavaObject = new EDataTypeImpl();
-    this._EJavaObject.setName("EJavaObject");
+this._EJavaObject.eBasicSetValue(Ids.ENamedElement.name, "EJavaObject");
+
     this._EJavaObject.setClassifierID(Ids.EJavaObject.self);
 
-    this.getEClassifiers().add(this._EJavaObject);
+    {
+      const annotation = new EAnnotationImpl();
+annotation.eBasicSetValue(Ids.EAnnotation.source, "https://typemf.dev/generator");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "typescript-type");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "unknown");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EJavaObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
+    }
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EJavaObject);
+
     this._ELong = new EDataTypeImpl();
-    this._ELong.setName("ELong");
+this._ELong.eBasicSetValue(Ids.ENamedElement.name, "ELong");
+
     this._ELong.setClassifierID(Ids.ELong.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "http://www.w3.org/2001/XMLSchema#long");
-      this._ELong.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#long");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ELong.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._ELong);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ELong);
+
     this._ELongObject = new EDataTypeImpl();
-    this._ELongObject.setName("ELongObject");
+this._ELongObject.eBasicSetValue(Ids.ENamedElement.name, "ELongObject");
+
     this._ELongObject.setClassifierID(Ids.ELongObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "ELong");
-      this.add(annotation, "name", "ELong:Object");
-      this._ELongObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ELong");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ELong:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ELongObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._ELongObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ELongObject);
+
     this._EMap = new EDataTypeImpl();
-    this._EMap.setName("EMap");
+this._EMap.eBasicSetValue(Ids.ENamedElement.name, "EMap");
+
     this._EMap.setClassifierID(Ids.EMap.self);
 
-    this.getEClassifiers().add(this._EMap);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EMap);
+
     this._EResource = new EDataTypeImpl();
-    this._EResource.setName("EResource");
+this._EResource.eBasicSetValue(Ids.ENamedElement.name, "EResource");
+
     this._EResource.setClassifierID(Ids.EResource.self);
 
-    this.getEClassifiers().add(this._EResource);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EResource);
+
     this._EResourceSet = new EDataTypeImpl();
-    this._EResourceSet.setName("EResourceSet");
+this._EResourceSet.eBasicSetValue(Ids.ENamedElement.name, "EResourceSet");
+
     this._EResourceSet.setClassifierID(Ids.EResourceSet.self);
 
-    this.getEClassifiers().add(this._EResourceSet);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EResourceSet);
+
     this._EShort = new EDataTypeImpl();
-    this._EShort.setName("EShort");
+this._EShort.eBasicSetValue(Ids.ENamedElement.name, "EShort");
+
     this._EShort.setClassifierID(Ids.EShort.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#short",
-      );
-      this._EShort.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#short");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EShort.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EShort);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EShort);
+
     this._EShortObject = new EDataTypeImpl();
-    this._EShortObject.setName("EShortObject");
+this._EShortObject.eBasicSetValue(Ids.ENamedElement.name, "EShortObject");
+
     this._EShortObject.setClassifierID(Ids.EShortObject.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(annotation, "baseType", "EShort");
-      this.add(annotation, "name", "EShort:Object");
-      this._EShortObject.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EShort");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "name");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "EShort:Object");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EShortObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EShortObject);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EShortObject);
+
     this._EString = new EDataTypeImpl();
-    this._EString.setName("EString");
+this._EString.eBasicSetValue(Ids.ENamedElement.name, "EString");
+
     this._EString.setClassifierID(Ids.EString.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource(
-        "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
-      );
-      this.add(
-        annotation,
-        "baseType",
-        "http://www.w3.org/2001/XMLSchema#string",
-      );
-      this._EString.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http:///org/eclipse/emf/ecore/util/ExtendedMetaData");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "baseType");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "http://www.w3.org/2001/XMLSchema#string");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EString.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EString);
-    this._EStringToStringMapEntry = new EClassImpl();
-    this._EStringToStringMapEntry.setName("EStringToStringMapEntry");
-    this._EStringToStringMapEntry.setClassifierID(
-      Ids.EStringToStringMapEntry.self,
-    );
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EString);
 
-    this.getEClassifiers().add(this._EStringToStringMapEntry);
+    this._EStringToStringMapEntry = new EClassImpl();
+this._EStringToStringMapEntry.eBasicSetValue(Ids.ENamedElement.name, "EStringToStringMapEntry");
+
+    this._EStringToStringMapEntry.setClassifierID(Ids.EStringToStringMapEntry.self);
+
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EStringToStringMapEntry);
+
     this._ETreeIterator = new EDataTypeImpl();
-    this._ETreeIterator.setName("ETreeIterator");
+this._ETreeIterator.eBasicSetValue(Ids.ENamedElement.name, "ETreeIterator");
+
     this._ETreeIterator.setClassifierID(Ids.ETreeIterator.self);
 
-    this.getEClassifiers().add(this._ETreeIterator);
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ETreeIterator);
+
     this._EGenericType = new EClassImpl();
-    this._EGenericType.setName("EGenericType");
+this._EGenericType.eBasicSetValue(Ids.ENamedElement.name, "EGenericType");
+
     this._EGenericType.setClassifierID(Ids.EGenericType.self);
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/Ecore");
-      this.add(
-        annotation,
-        "constraints",
-        "ConsistentType ConsistentBounds ConsistentArguments",
-      );
-      this._EGenericType.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/Ecore");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "constraints");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "ConsistentType ConsistentBounds ConsistentArguments");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EGenericType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this.getEClassifiers().add(this._EGenericType);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EGenericType);
+
     this._ETypeParameter = new EClassImpl();
-    this._ETypeParameter.setName("ETypeParameter");
+this._ETypeParameter.eBasicSetValue(Ids.ENamedElement.name, "ETypeParameter");
+
     this._ETypeParameter.setClassifierID(Ids.ETypeParameter.self);
 
-    this.getEClassifiers().add(this._ETypeParameter);
-    this._EInvocationTargetException = new EDataTypeImpl();
-    this._EInvocationTargetException.setName("EInvocationTargetException");
-    this._EInvocationTargetException.setClassifierID(
-      Ids.EInvocationTargetException.self,
-    );
 
-    this.getEClassifiers().add(this._EInvocationTargetException);
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._ETypeParameter);
+
+    this._EInvocationTargetException = new EDataTypeImpl();
+this._EInvocationTargetException.eBasicSetValue(Ids.ENamedElement.name, "EInvocationTargetException");
+
+    this._EInvocationTargetException.setClassifierID(Ids.EInvocationTargetException.self);
+
+
+this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EInvocationTargetException);
+
 
     // Pass 2: attributes/references, now that every classifier (including
     // ones referenced as a feature's eType) already exists.
     this._EAttribute_iD = new EAttributeImpl();
-    this._EAttribute_iD.setName("iD");
-    this._EAttribute_iD.setEType(this._EBoolean);
-    this._EAttribute_iD.setLowerBound(0);
-    this._EAttribute_iD.setUpperBound(1);
+this._EAttribute_iD.eBasicSetValue(Ids.ENamedElement.name, "iD");
+
+this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EAttribute_iD.setFeatureID(Ids.EAttribute.iD);
-    this._EAttribute_iD.setEContainingClass(this._EAttribute);
+this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAttribute);
 
-    this._EAttribute.getEStructuralFeatures().add(this._EAttribute_iD);
+
+
+this._EAttribute.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAttribute_iD);
+
     this._EAttribute_eAttributeType = new EReferenceImpl();
-    this._EAttribute_eAttributeType.setName("eAttributeType");
-    this._EAttribute_eAttributeType.setEType(this._EDataType);
-    this._EAttribute_eAttributeType.setLowerBound(1);
-    this._EAttribute_eAttributeType.setUpperBound(1);
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.ENamedElement.name, "eAttributeType");
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.eType, this._EDataType);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EAttribute_eAttributeType.setFeatureID(Ids.EAttribute.eAttributeType);
-    this._EAttribute_eAttributeType.setEContainingClass(this._EAttribute);
-    this._EAttribute_eAttributeType.setContainment(false);
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAttribute);
 
-    this._EAttribute
-      .getEStructuralFeatures()
-      .add(this._EAttribute_eAttributeType);
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EAttribute.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAttribute_eAttributeType);
+
     this._EAnnotation_source = new EAttributeImpl();
-    this._EAnnotation_source.setName("source");
-    this._EAnnotation_source.setEType(this._EString);
-    this._EAnnotation_source.setLowerBound(0);
-    this._EAnnotation_source.setUpperBound(1);
+this._EAnnotation_source.eBasicSetValue(Ids.ENamedElement.name, "source");
+
+this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EAnnotation_source.setFeatureID(Ids.EAnnotation.source);
-    this._EAnnotation_source.setEContainingClass(this._EAnnotation);
+this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
 
-    this._EAnnotation.getEStructuralFeatures().add(this._EAnnotation_source);
+
+
+this._EAnnotation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAnnotation_source);
+
     this._EAnnotation_details = new EReferenceImpl();
-    this._EAnnotation_details.setName("details");
-    this._EAnnotation_details.setEType(this._EStringToStringMapEntry);
-    this._EAnnotation_details.setLowerBound(0);
-    this._EAnnotation_details.setUpperBound(-1);
+this._EAnnotation_details.eBasicSetValue(Ids.ENamedElement.name, "details");
+
+this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.eType, this._EStringToStringMapEntry);
+
+this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EAnnotation_details.setFeatureID(Ids.EAnnotation.details);
-    this._EAnnotation_details.setEContainingClass(this._EAnnotation);
-    this._EAnnotation_details.setContainment(true);
+this._EAnnotation_details.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
 
-    this._EAnnotation.getEStructuralFeatures().add(this._EAnnotation_details);
+this._EAnnotation_details.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EAnnotation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAnnotation_details);
+
     this._EAnnotation_eModelElement = new EReferenceImpl();
-    this._EAnnotation_eModelElement.setName("eModelElement");
-    this._EAnnotation_eModelElement.setEType(this._EModelElement);
-    this._EAnnotation_eModelElement.setLowerBound(0);
-    this._EAnnotation_eModelElement.setUpperBound(1);
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.ENamedElement.name, "eModelElement");
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.eType, this._EModelElement);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EAnnotation_eModelElement.setFeatureID(Ids.EAnnotation.eModelElement);
-    this._EAnnotation_eModelElement.setEContainingClass(this._EAnnotation);
-    this._EAnnotation_eModelElement.setContainment(false);
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
 
-    this._EAnnotation
-      .getEStructuralFeatures()
-      .add(this._EAnnotation_eModelElement);
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EAnnotation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAnnotation_eModelElement);
+
     this._EAnnotation_contents = new EReferenceImpl();
-    this._EAnnotation_contents.setName("contents");
-    this._EAnnotation_contents.setLowerBound(0);
-    this._EAnnotation_contents.setUpperBound(-1);
+this._EAnnotation_contents.eBasicSetValue(Ids.ENamedElement.name, "contents");
+
+this._EAnnotation_contents.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EAnnotation_contents.setFeatureID(Ids.EAnnotation.contents);
-    this._EAnnotation_contents.setEContainingClass(this._EAnnotation);
-    this._EAnnotation_contents.setContainment(true);
+this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
 
-    this._EAnnotation.getEStructuralFeatures().add(this._EAnnotation_contents);
+this._EAnnotation_contents.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EAnnotation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAnnotation_contents);
+
     this._EAnnotation_references = new EReferenceImpl();
-    this._EAnnotation_references.setName("references");
-    this._EAnnotation_references.setLowerBound(0);
-    this._EAnnotation_references.setUpperBound(-1);
+this._EAnnotation_references.eBasicSetValue(Ids.ENamedElement.name, "references");
+
+this._EAnnotation_references.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EAnnotation_references.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EAnnotation_references.setFeatureID(Ids.EAnnotation.references);
-    this._EAnnotation_references.setEContainingClass(this._EAnnotation);
-    this._EAnnotation_references.setContainment(false);
+this._EAnnotation_references.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
 
-    this._EAnnotation
-      .getEStructuralFeatures()
-      .add(this._EAnnotation_references);
+this._EAnnotation_references.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EAnnotation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EAnnotation_references);
+
     this._EClass_abstract = new EAttributeImpl();
-    this._EClass_abstract.setName("abstract");
-    this._EClass_abstract.setEType(this._EBoolean);
-    this._EClass_abstract.setLowerBound(0);
-    this._EClass_abstract.setUpperBound(1);
+this._EClass_abstract.eBasicSetValue(Ids.ENamedElement.name, "abstract");
+
+this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EClass_abstract.setFeatureID(Ids.EClass.abstract);
-    this._EClass_abstract.setEContainingClass(this._EClass);
+this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_abstract);
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_abstract);
+
     this._EClass_interface = new EAttributeImpl();
-    this._EClass_interface.setName("interface");
-    this._EClass_interface.setEType(this._EBoolean);
-    this._EClass_interface.setLowerBound(0);
-    this._EClass_interface.setUpperBound(1);
+this._EClass_interface.eBasicSetValue(Ids.ENamedElement.name, "interface");
+
+this._EClass_interface.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EClass_interface.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_interface.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EClass_interface.setFeatureID(Ids.EClass.interface);
-    this._EClass_interface.setEContainingClass(this._EClass);
+this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_interface);
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_interface);
+
     this._EClass_eSuperTypes = new EReferenceImpl();
-    this._EClass_eSuperTypes.setName("eSuperTypes");
-    this._EClass_eSuperTypes.setEType(this._EClass);
-    this._EClass_eSuperTypes.setLowerBound(0);
-    this._EClass_eSuperTypes.setUpperBound(-1);
+this._EClass_eSuperTypes.eBasicSetValue(Ids.ENamedElement.name, "eSuperTypes");
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this._EClass);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eSuperTypes.setFeatureID(Ids.EClass.eSuperTypes);
-    this._EClass_eSuperTypes.setEContainingClass(this._EClass);
-    this._EClass_eSuperTypes.setContainment(false);
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EReference.containment, false);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._EClass_eSuperTypes.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EClass_eSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eSuperTypes);
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eSuperTypes);
+
     this._EClass_eOperations = new EReferenceImpl();
-    this._EClass_eOperations.setName("eOperations");
-    this._EClass_eOperations.setEType(this._EOperation);
-    this._EClass_eOperations.setLowerBound(0);
-    this._EClass_eOperations.setUpperBound(-1);
+this._EClass_eOperations.eBasicSetValue(Ids.ENamedElement.name, "eOperations");
+
+this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.eType, this._EOperation);
+
+this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eOperations.setFeatureID(Ids.EClass.eOperations);
-    this._EClass_eOperations.setEContainingClass(this._EClass);
-    this._EClass_eOperations.setContainment(true);
+this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eOperations);
+this._EClass_eOperations.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eOperations);
+
     this._EClass_eAllAttributes = new EReferenceImpl();
-    this._EClass_eAllAttributes.setName("eAllAttributes");
-    this._EClass_eAllAttributes.setEType(this._EAttribute);
-    this._EClass_eAllAttributes.setLowerBound(0);
-    this._EClass_eAllAttributes.setUpperBound(-1);
+this._EClass_eAllAttributes.eBasicSetValue(Ids.ENamedElement.name, "eAllAttributes");
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.eType, this._EAttribute);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eAllAttributes.setFeatureID(Ids.EClass.eAllAttributes);
-    this._EClass_eAllAttributes.setEContainingClass(this._EClass);
-    this._EClass_eAllAttributes.setContainment(false);
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eAllAttributes);
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllAttributes);
+
     this._EClass_eAllReferences = new EReferenceImpl();
-    this._EClass_eAllReferences.setName("eAllReferences");
-    this._EClass_eAllReferences.setEType(this._EReferenceImpl);
-    this._EClass_eAllReferences.setLowerBound(0);
-    this._EClass_eAllReferences.setUpperBound(-1);
+this._EClass_eAllReferences.eBasicSetValue(Ids.ENamedElement.name, "eAllReferences");
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.eType, this._EReference);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eAllReferences.setFeatureID(Ids.EClass.eAllReferences);
-    this._EClass_eAllReferences.setEContainingClass(this._EClass);
-    this._EClass_eAllReferences.setContainment(false);
+this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eAllReferences);
-    this._EClass_EReferences = new EReferenceImpl();
-    this._EClass_EReferences.setName("EReferenceImpls");
-    this._EClass_EReferences.setEType(this._EReferenceImpl);
-    this._EClass_EReferences.setLowerBound(0);
-    this._EClass_EReferences.setUpperBound(-1);
-    this._EClass_EReferences.setFeatureID(Ids.EClass.eReferences);
-    this._EClass_EReferences.setEContainingClass(this._EClass);
-    this._EClass_EReferences.setContainment(false);
+this._EClass_eAllReferences.eBasicSetValue(Ids.EReference.containment, false);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_EReferences);
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllReferences);
+
+    this._EClass_eReferences = new EReferenceImpl();
+this._EClass_eReferences.eBasicSetValue(Ids.ENamedElement.name, "eReferences");
+
+this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.eType, this._EReference);
+
+this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EClass_eReferences.setFeatureID(Ids.EClass.eReferences);
+this._EClass_eReferences.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
+
+this._EClass_eReferences.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eReferences);
+
     this._EClass_eAttributes = new EReferenceImpl();
-    this._EClass_eAttributes.setName("eAttributes");
-    this._EClass_eAttributes.setEType(this._EAttribute);
-    this._EClass_eAttributes.setLowerBound(0);
-    this._EClass_eAttributes.setUpperBound(-1);
+this._EClass_eAttributes.eBasicSetValue(Ids.ENamedElement.name, "eAttributes");
+
+this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.eType, this._EAttribute);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eAttributes.setFeatureID(Ids.EClass.eAttributes);
-    this._EClass_eAttributes.setEContainingClass(this._EClass);
-    this._EClass_eAttributes.setContainment(false);
+this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eAttributes);
+this._EClass_eAttributes.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAttributes);
+
     this._EClass_eAllContainments = new EReferenceImpl();
-    this._EClass_eAllContainments.setName("eAllContainments");
-    this._EClass_eAllContainments.setEType(this._EReferenceImpl);
-    this._EClass_eAllContainments.setLowerBound(0);
-    this._EClass_eAllContainments.setUpperBound(-1);
+this._EClass_eAllContainments.eBasicSetValue(Ids.ENamedElement.name, "eAllContainments");
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.eType, this._EReference);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eAllContainments.setFeatureID(Ids.EClass.eAllContainments);
-    this._EClass_eAllContainments.setEContainingClass(this._EClass);
-    this._EClass_eAllContainments.setContainment(false);
+this._EClass_eAllContainments.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eAllContainments);
+this._EClass_eAllContainments.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllContainments);
+
     this._EClass_eAllOperations = new EReferenceImpl();
-    this._EClass_eAllOperations.setName("eAllOperations");
-    this._EClass_eAllOperations.setEType(this._EOperation);
-    this._EClass_eAllOperations.setLowerBound(0);
-    this._EClass_eAllOperations.setUpperBound(-1);
+this._EClass_eAllOperations.eBasicSetValue(Ids.ENamedElement.name, "eAllOperations");
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.eType, this._EOperation);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eAllOperations.setFeatureID(Ids.EClass.eAllOperations);
-    this._EClass_eAllOperations.setEContainingClass(this._EClass);
-    this._EClass_eAllOperations.setContainment(false);
+this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eAllOperations);
+this._EClass_eAllOperations.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllOperations);
+
     this._EClass_eAllStructuralFeatures = new EReferenceImpl();
-    this._EClass_eAllStructuralFeatures.setName("eAllStructuralFeatures");
-    this._EClass_eAllStructuralFeatures.setEType(this._EStructuralFeature);
-    this._EClass_eAllStructuralFeatures.setLowerBound(0);
-    this._EClass_eAllStructuralFeatures.setUpperBound(-1);
-    this._EClass_eAllStructuralFeatures.setFeatureID(
-      Ids.EClass.eAllStructuralFeatures,
-    );
-    this._EClass_eAllStructuralFeatures.setEContainingClass(this._EClass);
-    this._EClass_eAllStructuralFeatures.setContainment(false);
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ENamedElement.name, "eAllStructuralFeatures");
 
-    this._EClass
-      .getEStructuralFeatures()
-      .add(this._EClass_eAllStructuralFeatures);
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.eType, this._EStructuralFeature);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EClass_eAllStructuralFeatures.setFeatureID(Ids.EClass.eAllStructuralFeatures);
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllStructuralFeatures);
+
     this._EClass_eAllSuperTypes = new EReferenceImpl();
-    this._EClass_eAllSuperTypes.setName("eAllSuperTypes");
-    this._EClass_eAllSuperTypes.setEType(this._EClass);
-    this._EClass_eAllSuperTypes.setLowerBound(0);
-    this._EClass_eAllSuperTypes.setUpperBound(-1);
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ENamedElement.name, "eAllSuperTypes");
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this._EClass);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eAllSuperTypes.setFeatureID(Ids.EClass.eAllSuperTypes);
-    this._EClass_eAllSuperTypes.setEContainingClass(this._EClass);
-    this._EClass_eAllSuperTypes.setContainment(false);
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eAllSuperTypes);
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllSuperTypes);
+
     this._EClass_eIDAttribute = new EReferenceImpl();
-    this._EClass_eIDAttribute.setName("eIDAttribute");
-    this._EClass_eIDAttribute.setEType(this._EAttribute);
-    this._EClass_eIDAttribute.setLowerBound(0);
-    this._EClass_eIDAttribute.setUpperBound(1);
+this._EClass_eIDAttribute.eBasicSetValue(Ids.ENamedElement.name, "eIDAttribute");
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.eType, this._EAttribute);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EClass_eIDAttribute.setFeatureID(Ids.EClass.eIDAttribute);
-    this._EClass_eIDAttribute.setEContainingClass(this._EClass);
-    this._EClass_eIDAttribute.setContainment(false);
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eIDAttribute);
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eIDAttribute);
+
     this._EClass_eStructuralFeatures = new EReferenceImpl();
-    this._EClass_eStructuralFeatures.setName("eStructuralFeatures");
-    this._EClass_eStructuralFeatures.setEType(this._EStructuralFeature);
-    this._EClass_eStructuralFeatures.setLowerBound(0);
-    this._EClass_eStructuralFeatures.setUpperBound(-1);
-    this._EClass_eStructuralFeatures.setFeatureID(
-      Ids.EClass.eStructuralFeatures,
-    );
-    this._EClass_eStructuralFeatures.setEContainingClass(this._EClass);
-    this._EClass_eStructuralFeatures.setContainment(true);
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ENamedElement.name, "eStructuralFeatures");
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eStructuralFeatures);
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.eType, this._EStructuralFeature);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EClass_eStructuralFeatures.setFeatureID(Ids.EClass.eStructuralFeatures);
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eStructuralFeatures);
+
     this._EClass_eGenericSuperTypes = new EReferenceImpl();
-    this._EClass_eGenericSuperTypes.setName("eGenericSuperTypes");
-    this._EClass_eGenericSuperTypes.setEType(this._EGenericType);
-    this._EClass_eGenericSuperTypes.setLowerBound(0);
-    this._EClass_eGenericSuperTypes.setUpperBound(-1);
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ENamedElement.name, "eGenericSuperTypes");
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EClass_eGenericSuperTypes.setFeatureID(Ids.EClass.eGenericSuperTypes);
-    this._EClass_eGenericSuperTypes.setEContainingClass(this._EClass);
-    this._EClass_eGenericSuperTypes.setContainment(true);
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EReference.containment, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._EClass_eGenericSuperTypes.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EClass_eGenericSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._EClass.getEStructuralFeatures().add(this._EClass_eGenericSuperTypes);
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eGenericSuperTypes);
+
     this._EClass_eAllGenericSuperTypes = new EReferenceImpl();
-    this._EClass_eAllGenericSuperTypes.setName("eAllGenericSuperTypes");
-    this._EClass_eAllGenericSuperTypes.setEType(this._EGenericType);
-    this._EClass_eAllGenericSuperTypes.setLowerBound(0);
-    this._EClass_eAllGenericSuperTypes.setUpperBound(-1);
-    this._EClass_eAllGenericSuperTypes.setFeatureID(
-      Ids.EClass.eAllGenericSuperTypes,
-    );
-    this._EClass_eAllGenericSuperTypes.setEContainingClass(this._EClass);
-    this._EClass_eAllGenericSuperTypes.setContainment(false);
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ENamedElement.name, "eAllGenericSuperTypes");
 
-    this._EClass
-      .getEStructuralFeatures()
-      .add(this._EClass_eAllGenericSuperTypes);
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EClass_eAllGenericSuperTypes.setFeatureID(Ids.EClass.eAllGenericSuperTypes);
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllGenericSuperTypes);
+
     this._EClassifier_instanceClassName = new EAttributeImpl();
-    this._EClassifier_instanceClassName.setName("instanceClassName");
-    this._EClassifier_instanceClassName.setEType(this._EString);
-    this._EClassifier_instanceClassName.setLowerBound(0);
-    this._EClassifier_instanceClassName.setUpperBound(1);
-    this._EClassifier_instanceClassName.setFeatureID(
-      Ids.EClassifier.instanceClassName,
-    );
-    this._EClassifier_instanceClassName.setEContainingClass(this._EClassifier);
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.ENamedElement.name, "instanceClassName");
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EClassifier_instanceClassName.setFeatureID(Ids.EClassifier.instanceClassName);
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._EClassifier_instanceClassName.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EClassifier_instanceClassName.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._EClassifier
-      .getEStructuralFeatures()
-      .add(this._EClassifier_instanceClassName);
+this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_instanceClassName);
+
     this._EClassifier_instanceClass = new EAttributeImpl();
-    this._EClassifier_instanceClass.setName("instanceClass");
-    this._EClassifier_instanceClass.setEType(this._EJavaClass);
-    this._EClassifier_instanceClass.setLowerBound(0);
-    this._EClassifier_instanceClass.setUpperBound(1);
+this._EClassifier_instanceClass.eBasicSetValue(Ids.ENamedElement.name, "instanceClass");
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.eType, this._EJavaClass);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EClassifier_instanceClass.setFeatureID(Ids.EClassifier.instanceClass);
-    this._EClassifier_instanceClass.setEContainingClass(this._EClassifier);
+this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
 
-    this._EClassifier
-      .getEStructuralFeatures()
-      .add(this._EClassifier_instanceClass);
+
+
+this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_instanceClass);
+
     this._EClassifier_defaultValue = new EAttributeImpl();
-    this._EClassifier_defaultValue.setName("defaultValue");
-    this._EClassifier_defaultValue.setEType(this._EJavaObject);
-    this._EClassifier_defaultValue.setLowerBound(0);
-    this._EClassifier_defaultValue.setUpperBound(1);
+this._EClassifier_defaultValue.eBasicSetValue(Ids.ENamedElement.name, "defaultValue");
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.eType, this._EJavaObject);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EClassifier_defaultValue.setFeatureID(Ids.EClassifier.defaultValue);
-    this._EClassifier_defaultValue.setEContainingClass(this._EClassifier);
+this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
 
-    this._EClassifier
-      .getEStructuralFeatures()
-      .add(this._EClassifier_defaultValue);
+
+
+this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_defaultValue);
+
     this._EClassifier_instanceTypeName = new EAttributeImpl();
-    this._EClassifier_instanceTypeName.setName("instanceTypeName");
-    this._EClassifier_instanceTypeName.setEType(this._EString);
-    this._EClassifier_instanceTypeName.setLowerBound(0);
-    this._EClassifier_instanceTypeName.setUpperBound(1);
-    this._EClassifier_instanceTypeName.setFeatureID(
-      Ids.EClassifier.instanceTypeName,
-    );
-    this._EClassifier_instanceTypeName.setEContainingClass(this._EClassifier);
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ENamedElement.name, "instanceTypeName");
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EClassifier_instanceTypeName.setFeatureID(Ids.EClassifier.instanceTypeName);
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._EClassifier_instanceTypeName.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EClassifier_instanceTypeName.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._EClassifier
-      .getEStructuralFeatures()
-      .add(this._EClassifier_instanceTypeName);
+this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_instanceTypeName);
+
     this._EClassifier_ePackage = new EReferenceImpl();
-    this._EClassifier_ePackage.setName("ePackage");
-    this._EClassifier_ePackage.setEType(this._EPackage);
-    this._EClassifier_ePackage.setLowerBound(0);
-    this._EClassifier_ePackage.setUpperBound(1);
+this._EClassifier_ePackage.eBasicSetValue(Ids.ENamedElement.name, "ePackage");
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.eType, this._EPackage);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EClassifier_ePackage.setFeatureID(Ids.EClassifier.ePackage);
-    this._EClassifier_ePackage.setEContainingClass(this._EClassifier);
-    this._EClassifier_ePackage.setContainment(false);
+this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
 
-    this._EClassifier.getEStructuralFeatures().add(this._EClassifier_ePackage);
+this._EClassifier_ePackage.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_ePackage);
+
     this._EClassifier_eTypeParameters = new EReferenceImpl();
-    this._EClassifier_eTypeParameters.setName("eTypeParameters");
-    this._EClassifier_eTypeParameters.setEType(this._ETypeParameter);
-    this._EClassifier_eTypeParameters.setLowerBound(0);
-    this._EClassifier_eTypeParameters.setUpperBound(-1);
-    this._EClassifier_eTypeParameters.setFeatureID(
-      Ids.EClassifier.eTypeParameters,
-    );
-    this._EClassifier_eTypeParameters.setEContainingClass(this._EClassifier);
-    this._EClassifier_eTypeParameters.setContainment(true);
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ENamedElement.name, "eTypeParameters");
 
-    this._EClassifier
-      .getEStructuralFeatures()
-      .add(this._EClassifier_eTypeParameters);
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.eType, this._ETypeParameter);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EClassifier_eTypeParameters.setFeatureID(Ids.EClassifier.eTypeParameters);
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_eTypeParameters);
+
     this._EDataType_serializable = new EAttributeImpl();
-    this._EDataType_serializable.setName("serializable");
-    this._EDataType_serializable.setEType(this._EBoolean);
-    this._EDataType_serializable.setLowerBound(0);
-    this._EDataType_serializable.setUpperBound(1);
+this._EDataType_serializable.eBasicSetValue(Ids.ENamedElement.name, "serializable");
+
+this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EDataType_serializable.setFeatureID(Ids.EDataType.serializable);
-    this._EDataType_serializable.setEContainingClass(this._EDataType);
+this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EDataType);
 
-    this._EDataType.getEStructuralFeatures().add(this._EDataType_serializable);
+
+
+this._EDataType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EDataType_serializable);
+
     this._EEnum_eLiterals = new EReferenceImpl();
-    this._EEnum_eLiterals.setName("eLiterals");
-    this._EEnum_eLiterals.setEType(this._EEnumLiteral);
-    this._EEnum_eLiterals.setLowerBound(0);
-    this._EEnum_eLiterals.setUpperBound(-1);
+this._EEnum_eLiterals.eBasicSetValue(Ids.ENamedElement.name, "eLiterals");
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.eType, this._EEnumLiteral);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EEnum_eLiterals.setFeatureID(Ids.EEnum.eLiterals);
-    this._EEnum_eLiterals.setEContainingClass(this._EEnum);
-    this._EEnum_eLiterals.setContainment(true);
+this._EEnum_eLiterals.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnum);
 
-    this._EEnum.getEStructuralFeatures().add(this._EEnum_eLiterals);
+this._EEnum_eLiterals.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EEnum.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EEnum_eLiterals);
+
     this._EEnumLiteral_value = new EAttributeImpl();
-    this._EEnumLiteral_value.setName("value");
-    this._EEnumLiteral_value.setEType(this._EInt);
-    this._EEnumLiteral_value.setLowerBound(0);
-    this._EEnumLiteral_value.setUpperBound(1);
+this._EEnumLiteral_value.eBasicSetValue(Ids.ENamedElement.name, "value");
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.eType, this._EInt);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EEnumLiteral_value.setFeatureID(Ids.EEnumLiteral.value);
-    this._EEnumLiteral_value.setEContainingClass(this._EEnumLiteral);
+this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
 
-    this._EEnumLiteral.getEStructuralFeatures().add(this._EEnumLiteral_value);
+
+
+this._EEnumLiteral.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EEnumLiteral_value);
+
     this._EEnumLiteral_instance = new EAttributeImpl();
-    this._EEnumLiteral_instance.setName("instance");
-    this._EEnumLiteral_instance.setEType(this._EEnumerator);
-    this._EEnumLiteral_instance.setLowerBound(0);
-    this._EEnumLiteral_instance.setUpperBound(1);
+this._EEnumLiteral_instance.eBasicSetValue(Ids.ENamedElement.name, "instance");
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.eType, this._EEnumerator);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EEnumLiteral_instance.setFeatureID(Ids.EEnumLiteral.instance);
-    this._EEnumLiteral_instance.setEContainingClass(this._EEnumLiteral);
+this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
 
-    this._EEnumLiteral
-      .getEStructuralFeatures()
-      .add(this._EEnumLiteral_instance);
+
+
+this._EEnumLiteral.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EEnumLiteral_instance);
+
     this._EEnumLiteral_literal = new EAttributeImpl();
-    this._EEnumLiteral_literal.setName("literal");
-    this._EEnumLiteral_literal.setEType(this._EString);
-    this._EEnumLiteral_literal.setLowerBound(0);
-    this._EEnumLiteral_literal.setUpperBound(1);
+this._EEnumLiteral_literal.eBasicSetValue(Ids.ENamedElement.name, "literal");
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EEnumLiteral_literal.setFeatureID(Ids.EEnumLiteral.literal);
-    this._EEnumLiteral_literal.setEContainingClass(this._EEnumLiteral);
+this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
 
-    this._EEnumLiteral.getEStructuralFeatures().add(this._EEnumLiteral_literal);
+
+
+this._EEnumLiteral.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EEnumLiteral_literal);
+
     this._EEnumLiteral_eEnum = new EReferenceImpl();
-    this._EEnumLiteral_eEnum.setName("eEnum");
-    this._EEnumLiteral_eEnum.setEType(this._EEnum);
-    this._EEnumLiteral_eEnum.setLowerBound(0);
-    this._EEnumLiteral_eEnum.setUpperBound(1);
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ENamedElement.name, "eEnum");
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.eType, this._EEnum);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EEnumLiteral_eEnum.setFeatureID(Ids.EEnumLiteral.eEnum);
-    this._EEnumLiteral_eEnum.setEContainingClass(this._EEnumLiteral);
-    this._EEnumLiteral_eEnum.setContainment(false);
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
 
-    this._EEnumLiteral.getEStructuralFeatures().add(this._EEnumLiteral_eEnum);
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EEnumLiteral.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EEnumLiteral_eEnum);
+
     this._EFactory_ePackage = new EReferenceImpl();
-    this._EFactory_ePackage.setName("ePackage");
-    this._EFactory_ePackage.setEType(this._EPackage);
-    this._EFactory_ePackage.setLowerBound(1);
-    this._EFactory_ePackage.setUpperBound(1);
+this._EFactory_ePackage.eBasicSetValue(Ids.ENamedElement.name, "ePackage");
+
+this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.eType, this._EPackage);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EFactory_ePackage.setFeatureID(Ids.EFactory.ePackage);
-    this._EFactory_ePackage.setEContainingClass(this._EFactory);
-    this._EFactory_ePackage.setContainment(false);
+this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EFactory);
 
-    this._EFactory.getEStructuralFeatures().add(this._EFactory_ePackage);
+this._EFactory_ePackage.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EFactory.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EFactory_ePackage);
+
     this._EModelElement_eAnnotations = new EReferenceImpl();
-    this._EModelElement_eAnnotations.setName("eAnnotations");
-    this._EModelElement_eAnnotations.setEType(this._EAnnotation);
-    this._EModelElement_eAnnotations.setLowerBound(0);
-    this._EModelElement_eAnnotations.setUpperBound(-1);
-    this._EModelElement_eAnnotations.setFeatureID(
-      Ids.EModelElement.eAnnotations,
-    );
-    this._EModelElement_eAnnotations.setEContainingClass(this._EModelElement);
-    this._EModelElement_eAnnotations.setContainment(true);
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.ENamedElement.name, "eAnnotations");
 
-    this._EModelElement
-      .getEStructuralFeatures()
-      .add(this._EModelElement_eAnnotations);
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.eType, this._EAnnotation);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EModelElement_eAnnotations.setFeatureID(Ids.EModelElement.eAnnotations);
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EModelElement);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EModelElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EModelElement_eAnnotations);
+
     this._ENamedElement_name = new EAttributeImpl();
-    this._ENamedElement_name.setName("name");
-    this._ENamedElement_name.setEType(this._EString);
-    this._ENamedElement_name.setLowerBound(0);
-    this._ENamedElement_name.setUpperBound(1);
+this._ENamedElement_name.eBasicSetValue(Ids.ENamedElement.name, "name");
+
+this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ENamedElement_name.setFeatureID(Ids.ENamedElement.name);
-    this._ENamedElement_name.setEContainingClass(this._ENamedElement);
+this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ENamedElement);
 
-    this._ENamedElement.getEStructuralFeatures().add(this._ENamedElement_name);
+
+
+this._ENamedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ENamedElement_name);
+
     this._EOperation_eContainingClass = new EReferenceImpl();
-    this._EOperation_eContainingClass.setName("eContainingClass");
-    this._EOperation_eContainingClass.setEType(this._EClass);
-    this._EOperation_eContainingClass.setLowerBound(0);
-    this._EOperation_eContainingClass.setUpperBound(1);
-    this._EOperation_eContainingClass.setFeatureID(
-      Ids.EOperation.eContainingClass,
-    );
-    this._EOperation_eContainingClass.setEContainingClass(this._EOperation);
-    this._EOperation_eContainingClass.setContainment(false);
+this._EOperation_eContainingClass.eBasicSetValue(Ids.ENamedElement.name, "eContainingClass");
 
-    this._EOperation
-      .getEStructuralFeatures()
-      .add(this._EOperation_eContainingClass);
+this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.eType, this._EClass);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EOperation_eContainingClass.setFeatureID(Ids.EOperation.eContainingClass);
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eContainingClass);
+
     this._EOperation_eTypeParameters = new EReferenceImpl();
-    this._EOperation_eTypeParameters.setName("eTypeParameters");
-    this._EOperation_eTypeParameters.setEType(this._ETypeParameter);
-    this._EOperation_eTypeParameters.setLowerBound(0);
-    this._EOperation_eTypeParameters.setUpperBound(-1);
-    this._EOperation_eTypeParameters.setFeatureID(
-      Ids.EOperation.eTypeParameters,
-    );
-    this._EOperation_eTypeParameters.setEContainingClass(this._EOperation);
-    this._EOperation_eTypeParameters.setContainment(true);
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.ENamedElement.name, "eTypeParameters");
 
-    this._EOperation
-      .getEStructuralFeatures()
-      .add(this._EOperation_eTypeParameters);
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.eType, this._ETypeParameter);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EOperation_eTypeParameters.setFeatureID(Ids.EOperation.eTypeParameters);
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eTypeParameters);
+
     this._EOperation_eParameters = new EReferenceImpl();
-    this._EOperation_eParameters.setName("eParameters");
-    this._EOperation_eParameters.setEType(this._EParameter);
-    this._EOperation_eParameters.setLowerBound(0);
-    this._EOperation_eParameters.setUpperBound(-1);
+this._EOperation_eParameters.eBasicSetValue(Ids.ENamedElement.name, "eParameters");
+
+this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.eType, this._EParameter);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EOperation_eParameters.setFeatureID(Ids.EOperation.eParameters);
-    this._EOperation_eParameters.setEContainingClass(this._EOperation);
-    this._EOperation_eParameters.setContainment(true);
+this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
 
-    this._EOperation.getEStructuralFeatures().add(this._EOperation_eParameters);
+this._EOperation_eParameters.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eParameters);
+
     this._EOperation_eExceptions = new EReferenceImpl();
-    this._EOperation_eExceptions.setName("eExceptions");
-    this._EOperation_eExceptions.setEType(this._EClassifier);
-    this._EOperation_eExceptions.setLowerBound(0);
-    this._EOperation_eExceptions.setUpperBound(-1);
+this._EOperation_eExceptions.eBasicSetValue(Ids.ENamedElement.name, "eExceptions");
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.eType, this._EClassifier);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EOperation_eExceptions.setFeatureID(Ids.EOperation.eExceptions);
-    this._EOperation_eExceptions.setEContainingClass(this._EOperation);
-    this._EOperation_eExceptions.setContainment(false);
+this._EOperation_eExceptions.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.EReference.containment, false);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._EOperation_eExceptions.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EOperation_eExceptions.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._EOperation.getEStructuralFeatures().add(this._EOperation_eExceptions);
+this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eExceptions);
+
     this._EOperation_eGenericExceptions = new EReferenceImpl();
-    this._EOperation_eGenericExceptions.setName("eGenericExceptions");
-    this._EOperation_eGenericExceptions.setEType(this._EGenericType);
-    this._EOperation_eGenericExceptions.setLowerBound(0);
-    this._EOperation_eGenericExceptions.setUpperBound(-1);
-    this._EOperation_eGenericExceptions.setFeatureID(
-      Ids.EOperation.eGenericExceptions,
-    );
-    this._EOperation_eGenericExceptions.setEContainingClass(this._EOperation);
-    this._EOperation_eGenericExceptions.setContainment(true);
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ENamedElement.name, "eGenericExceptions");
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EOperation_eGenericExceptions.setFeatureID(Ids.EOperation.eGenericExceptions);
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EReference.containment, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._EOperation_eGenericExceptions.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EOperation_eGenericExceptions.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._EOperation
-      .getEStructuralFeatures()
-      .add(this._EOperation_eGenericExceptions);
+this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eGenericExceptions);
+
     this._EPackage_nsURI = new EAttributeImpl();
-    this._EPackage_nsURI.setName("nsURI");
-    this._EPackage_nsURI.setEType(this._EString);
-    this._EPackage_nsURI.setLowerBound(0);
-    this._EPackage_nsURI.setUpperBound(1);
+this._EPackage_nsURI.eBasicSetValue(Ids.ENamedElement.name, "nsURI");
+
+this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EPackage_nsURI.setFeatureID(Ids.EPackage.nsURI);
-    this._EPackage_nsURI.setEContainingClass(this._EPackage);
+this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
 
-    this._EPackage.getEStructuralFeatures().add(this._EPackage_nsURI);
+
+
+this._EPackage.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EPackage_nsURI);
+
     this._EPackage_nsPrefix = new EAttributeImpl();
-    this._EPackage_nsPrefix.setName("nsPrefix");
-    this._EPackage_nsPrefix.setEType(this._EString);
-    this._EPackage_nsPrefix.setLowerBound(0);
-    this._EPackage_nsPrefix.setUpperBound(1);
+this._EPackage_nsPrefix.eBasicSetValue(Ids.ENamedElement.name, "nsPrefix");
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EPackage_nsPrefix.setFeatureID(Ids.EPackage.nsPrefix);
-    this._EPackage_nsPrefix.setEContainingClass(this._EPackage);
+this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
 
-    this._EPackage.getEStructuralFeatures().add(this._EPackage_nsPrefix);
+
+
+this._EPackage.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EPackage_nsPrefix);
+
     this._EPackage_eFactoryInstance = new EReferenceImpl();
-    this._EPackage_eFactoryInstance.setName("eFactoryInstance");
-    this._EPackage_eFactoryInstance.setEType(this._EFactory);
-    this._EPackage_eFactoryInstance.setLowerBound(1);
-    this._EPackage_eFactoryInstance.setUpperBound(1);
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ENamedElement.name, "eFactoryInstance");
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.eType, this._EFactory);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EPackage_eFactoryInstance.setFeatureID(Ids.EPackage.eFactoryInstance);
-    this._EPackage_eFactoryInstance.setEContainingClass(this._EPackage);
-    this._EPackage_eFactoryInstance.setContainment(false);
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
 
-    this._EPackage
-      .getEStructuralFeatures()
-      .add(this._EPackage_eFactoryInstance);
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EPackage.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EPackage_eFactoryInstance);
+
     this._EPackage_eClassifiers = new EReferenceImpl();
-    this._EPackage_eClassifiers.setName("eClassifiers");
-    this._EPackage_eClassifiers.setEType(this._EClassifier);
-    this._EPackage_eClassifiers.setLowerBound(0);
-    this._EPackage_eClassifiers.setUpperBound(-1);
+this._EPackage_eClassifiers.eBasicSetValue(Ids.ENamedElement.name, "eClassifiers");
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.eType, this._EClassifier);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EPackage_eClassifiers.setFeatureID(Ids.EPackage.eClassifiers);
-    this._EPackage_eClassifiers.setEContainingClass(this._EPackage);
-    this._EPackage_eClassifiers.setContainment(true);
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
 
-    this._EPackage.getEStructuralFeatures().add(this._EPackage_eClassifiers);
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EPackage.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EPackage_eClassifiers);
+
     this._EPackage_eSubpackages = new EReferenceImpl();
-    this._EPackage_eSubpackages.setName("eSubpackages");
-    this._EPackage_eSubpackages.setEType(this._EPackage);
-    this._EPackage_eSubpackages.setLowerBound(0);
-    this._EPackage_eSubpackages.setUpperBound(-1);
+this._EPackage_eSubpackages.eBasicSetValue(Ids.ENamedElement.name, "eSubpackages");
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.eType, this._EPackage);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
     this._EPackage_eSubpackages.setFeatureID(Ids.EPackage.eSubpackages);
-    this._EPackage_eSubpackages.setEContainingClass(this._EPackage);
-    this._EPackage_eSubpackages.setContainment(true);
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
 
-    this._EPackage.getEStructuralFeatures().add(this._EPackage_eSubpackages);
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EPackage.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EPackage_eSubpackages);
+
     this._EPackage_eSuperPackage = new EReferenceImpl();
-    this._EPackage_eSuperPackage.setName("eSuperPackage");
-    this._EPackage_eSuperPackage.setEType(this._EPackage);
-    this._EPackage_eSuperPackage.setLowerBound(0);
-    this._EPackage_eSuperPackage.setUpperBound(1);
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.ENamedElement.name, "eSuperPackage");
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.eType, this._EPackage);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EPackage_eSuperPackage.setFeatureID(Ids.EPackage.eSuperPackage);
-    this._EPackage_eSuperPackage.setEContainingClass(this._EPackage);
-    this._EPackage_eSuperPackage.setContainment(false);
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
 
-    this._EPackage.getEStructuralFeatures().add(this._EPackage_eSuperPackage);
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EPackage.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EPackage_eSuperPackage);
+
     this._EParameter_eOperation = new EReferenceImpl();
-    this._EParameter_eOperation.setName("eOperation");
-    this._EParameter_eOperation.setEType(this._EOperation);
-    this._EParameter_eOperation.setLowerBound(0);
-    this._EParameter_eOperation.setUpperBound(1);
+this._EParameter_eOperation.eBasicSetValue(Ids.ENamedElement.name, "eOperation");
+
+this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.eType, this._EOperation);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EParameter_eOperation.setFeatureID(Ids.EParameter.eOperation);
-    this._EParameter_eOperation.setEContainingClass(this._EParameter);
-    this._EParameter_eOperation.setContainment(false);
+this._EParameter_eOperation.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EParameter);
 
-    this._EParameter.getEStructuralFeatures().add(this._EParameter_eOperation);
-    this._EReferenceImpl_containment = new EAttributeImpl();
-    this._EReferenceImpl_containment.setName("containment");
-    this._EReferenceImpl_containment.setEType(this._EBoolean);
-    this._EReferenceImpl_containment.setLowerBound(0);
-    this._EReferenceImpl_containment.setUpperBound(1);
-    this._EReferenceImpl_containment.setFeatureID(Ids.EReference.containment);
-    this._EReferenceImpl_containment.setEContainingClass(this._EReferenceImpl);
+this._EParameter_eOperation.eBasicSetValue(Ids.EReference.containment, false);
 
-    this._EReferenceImpl
-      .getEStructuralFeatures()
-      .add(this._EReferenceImpl_containment);
-    this._EReferenceImpl_container = new EAttributeImpl();
-    this._EReferenceImpl_container.setName("container");
-    this._EReferenceImpl_container.setEType(this._EBoolean);
-    this._EReferenceImpl_container.setLowerBound(0);
-    this._EReferenceImpl_container.setUpperBound(1);
-    this._EReferenceImpl_container.setFeatureID(Ids.EReference.container);
-    this._EReferenceImpl_container.setEContainingClass(this._EReferenceImpl);
 
-    this._EReferenceImpl
-      .getEStructuralFeatures()
-      .add(this._EReferenceImpl_container);
-    this._EReferenceImpl_resolveProxies = new EAttributeImpl();
-    this._EReferenceImpl_resolveProxies.setName("resolveProxies");
-    this._EReferenceImpl_resolveProxies.setEType(this._EBoolean);
-    this._EReferenceImpl_resolveProxies.setLowerBound(0);
-    this._EReferenceImpl_resolveProxies.setUpperBound(1);
-    this._EReferenceImpl_resolveProxies.setFeatureID(
-      Ids.EReference.resolveProxies,
-    );
-    this._EReferenceImpl_resolveProxies.setEContainingClass(
-      this._EReferenceImpl,
-    );
 
-    this._EReferenceImpl
-      .getEStructuralFeatures()
-      .add(this._EReferenceImpl_resolveProxies);
-    this._EReferenceImpl_eOpposite = new EReferenceImpl();
-    this._EReferenceImpl_eOpposite.setName("eOpposite");
-    this._EReferenceImpl_eOpposite.setEType(this._EReferenceImpl);
-    this._EReferenceImpl_eOpposite.setLowerBound(0);
-    this._EReferenceImpl_eOpposite.setUpperBound(1);
-    this._EReferenceImpl_eOpposite.setFeatureID(Ids.EReference.eOpposite);
-    this._EReferenceImpl_eOpposite.setEContainingClass(this._EReferenceImpl);
-    this._EReferenceImpl_eOpposite.setContainment(false);
+this._EParameter.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EParameter_eOperation);
 
-    this._EReferenceImpl
-      .getEStructuralFeatures()
-      .add(this._EReferenceImpl_eOpposite);
-    this._EReferenceImpl_EReferenceImplType = new EReferenceImpl();
-    this._EReferenceImpl_EReferenceImplType.setName("EReferenceImplType");
-    this._EReferenceImpl_EReferenceImplType.setEType(this._EClass);
-    this._EReferenceImpl_EReferenceImplType.setLowerBound(1);
-    this._EReferenceImpl_EReferenceImplType.setUpperBound(1);
-    this._EReferenceImpl_EReferenceImplType.setFeatureID(
-      Ids.EReference.eReferenceType,
-    );
-    this._EReferenceImpl_EReferenceImplType.setEContainingClass(
-      this._EReferenceImpl,
-    );
-    this._EReferenceImpl_EReferenceImplType.setContainment(false);
+    this._EReference_containment = new EAttributeImpl();
+this._EReference_containment.eBasicSetValue(Ids.ENamedElement.name, "containment");
 
-    this._EReferenceImpl
-      .getEStructuralFeatures()
-      .add(this._EReferenceImpl_EReferenceImplType);
-    this._EReferenceImpl_eKeys = new EReferenceImpl();
-    this._EReferenceImpl_eKeys.setName("eKeys");
-    this._EReferenceImpl_eKeys.setEType(this._EAttribute);
-    this._EReferenceImpl_eKeys.setLowerBound(0);
-    this._EReferenceImpl_eKeys.setUpperBound(-1);
-    this._EReferenceImpl_eKeys.setFeatureID(Ids.EReference.eKeys);
-    this._EReferenceImpl_eKeys.setEContainingClass(this._EReferenceImpl);
-    this._EReferenceImpl_eKeys.setContainment(false);
+this._EReference_containment.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
 
-    this._EReferenceImpl
-      .getEStructuralFeatures()
-      .add(this._EReferenceImpl_eKeys);
+this._EReference_containment.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EReference_containment.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EReference_containment.setFeatureID(Ids.EReference.containment);
+this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
+
+
+
+this._EReference.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EReference_containment);
+
+    this._EReference_container = new EAttributeImpl();
+this._EReference_container.eBasicSetValue(Ids.ENamedElement.name, "container");
+
+this._EReference_container.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EReference_container.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EReference_container.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EReference_container.setFeatureID(Ids.EReference.container);
+this._EReference_container.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
+
+
+
+this._EReference.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EReference_container);
+
+    this._EReference_resolveProxies = new EAttributeImpl();
+this._EReference_resolveProxies.eBasicSetValue(Ids.ENamedElement.name, "resolveProxies");
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EReference_resolveProxies.setFeatureID(Ids.EReference.resolveProxies);
+this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
+
+
+
+this._EReference.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EReference_resolveProxies);
+
+    this._EReference_eOpposite = new EReferenceImpl();
+this._EReference_eOpposite.eBasicSetValue(Ids.ENamedElement.name, "eOpposite");
+
+this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.eType, this._EReference);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EReference_eOpposite.setFeatureID(Ids.EReference.eOpposite);
+this._EReference_eOpposite.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EReference.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EReference_eOpposite);
+
+    this._EReference_eReferenceType = new EReferenceImpl();
+this._EReference_eReferenceType.eBasicSetValue(Ids.ENamedElement.name, "eReferenceType");
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.eType, this._EClass);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EReference_eReferenceType.setFeatureID(Ids.EReference.eReferenceType);
+this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EReference.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EReference_eReferenceType);
+
+    this._EReference_eKeys = new EReferenceImpl();
+this._EReference_eKeys.eBasicSetValue(Ids.ENamedElement.name, "eKeys");
+
+this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.eType, this._EAttribute);
+
+this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EReference_eKeys.setFeatureID(Ids.EReference.eKeys);
+this._EReference_eKeys.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
+
+this._EReference_eKeys.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EReference.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EReference_eKeys);
+
     this._EStructuralFeature_changeable = new EAttributeImpl();
-    this._EStructuralFeature_changeable.setName("changeable");
-    this._EStructuralFeature_changeable.setEType(this._EBoolean);
-    this._EStructuralFeature_changeable.setLowerBound(0);
-    this._EStructuralFeature_changeable.setUpperBound(1);
-    this._EStructuralFeature_changeable.setFeatureID(
-      Ids.EStructuralFeature.changeable,
-    );
-    this._EStructuralFeature_changeable.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.ENamedElement.name, "changeable");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_changeable);
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_changeable.setFeatureID(Ids.EStructuralFeature.changeable);
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_changeable);
+
     this._EStructuralFeature_volatile = new EAttributeImpl();
-    this._EStructuralFeature_volatile.setName("volatile");
-    this._EStructuralFeature_volatile.setEType(this._EBoolean);
-    this._EStructuralFeature_volatile.setLowerBound(0);
-    this._EStructuralFeature_volatile.setUpperBound(1);
-    this._EStructuralFeature_volatile.setFeatureID(
-      Ids.EStructuralFeature.volatile,
-    );
-    this._EStructuralFeature_volatile.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.ENamedElement.name, "volatile");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_volatile);
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_volatile.setFeatureID(Ids.EStructuralFeature.volatile);
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_volatile);
+
     this._EStructuralFeature_transient = new EAttributeImpl();
-    this._EStructuralFeature_transient.setName("transient");
-    this._EStructuralFeature_transient.setEType(this._EBoolean);
-    this._EStructuralFeature_transient.setLowerBound(0);
-    this._EStructuralFeature_transient.setUpperBound(1);
-    this._EStructuralFeature_transient.setFeatureID(
-      Ids.EStructuralFeature.transient,
-    );
-    this._EStructuralFeature_transient.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_transient.eBasicSetValue(Ids.ENamedElement.name, "transient");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_transient);
+this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_transient.setFeatureID(Ids.EStructuralFeature.transient);
+this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_transient);
+
     this._EStructuralFeature_defaultValueLiteral = new EAttributeImpl();
-    this._EStructuralFeature_defaultValueLiteral.setName("defaultValueLiteral");
-    this._EStructuralFeature_defaultValueLiteral.setEType(this._EString);
-    this._EStructuralFeature_defaultValueLiteral.setLowerBound(0);
-    this._EStructuralFeature_defaultValueLiteral.setUpperBound(1);
-    this._EStructuralFeature_defaultValueLiteral.setFeatureID(
-      Ids.EStructuralFeature.defaultValueLiteral,
-    );
-    this._EStructuralFeature_defaultValueLiteral.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ENamedElement.name, "defaultValueLiteral");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_defaultValueLiteral);
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_defaultValueLiteral.setFeatureID(Ids.EStructuralFeature.defaultValueLiteral);
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_defaultValueLiteral);
+
     this._EStructuralFeature_defaultValue = new EAttributeImpl();
-    this._EStructuralFeature_defaultValue.setName("defaultValue");
-    this._EStructuralFeature_defaultValue.setEType(this._EJavaObject);
-    this._EStructuralFeature_defaultValue.setLowerBound(0);
-    this._EStructuralFeature_defaultValue.setUpperBound(1);
-    this._EStructuralFeature_defaultValue.setFeatureID(
-      Ids.EStructuralFeature.defaultValue,
-    );
-    this._EStructuralFeature_defaultValue.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ENamedElement.name, "defaultValue");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_defaultValue);
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.eType, this._EJavaObject);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_defaultValue.setFeatureID(Ids.EStructuralFeature.defaultValue);
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_defaultValue);
+
     this._EStructuralFeature_unsettable = new EAttributeImpl();
-    this._EStructuralFeature_unsettable.setName("unsettable");
-    this._EStructuralFeature_unsettable.setEType(this._EBoolean);
-    this._EStructuralFeature_unsettable.setLowerBound(0);
-    this._EStructuralFeature_unsettable.setUpperBound(1);
-    this._EStructuralFeature_unsettable.setFeatureID(
-      Ids.EStructuralFeature.unsettable,
-    );
-    this._EStructuralFeature_unsettable.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ENamedElement.name, "unsettable");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_unsettable);
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_unsettable.setFeatureID(Ids.EStructuralFeature.unsettable);
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_unsettable);
+
     this._EStructuralFeature_derived = new EAttributeImpl();
-    this._EStructuralFeature_derived.setName("derived");
-    this._EStructuralFeature_derived.setEType(this._EBoolean);
-    this._EStructuralFeature_derived.setLowerBound(0);
-    this._EStructuralFeature_derived.setUpperBound(1);
-    this._EStructuralFeature_derived.setFeatureID(
-      Ids.EStructuralFeature.derived,
-    );
-    this._EStructuralFeature_derived.setEContainingClass(
-      this._EStructuralFeature,
-    );
+this._EStructuralFeature_derived.eBasicSetValue(Ids.ENamedElement.name, "derived");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_derived);
+this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_derived.setFeatureID(Ids.EStructuralFeature.derived);
+this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_derived);
+
     this._EStructuralFeature_eContainingClass = new EReferenceImpl();
-    this._EStructuralFeature_eContainingClass.setName("eContainingClass");
-    this._EStructuralFeature_eContainingClass.setEType(this._EClass);
-    this._EStructuralFeature_eContainingClass.setLowerBound(0);
-    this._EStructuralFeature_eContainingClass.setUpperBound(1);
-    this._EStructuralFeature_eContainingClass.setFeatureID(
-      Ids.EStructuralFeature.eContainingClass,
-    );
-    this._EStructuralFeature_eContainingClass.setEContainingClass(
-      this._EStructuralFeature,
-    );
-    this._EStructuralFeature_eContainingClass.setContainment(false);
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ENamedElement.name, "eContainingClass");
 
-    this._EStructuralFeature
-      .getEStructuralFeatures()
-      .add(this._EStructuralFeature_eContainingClass);
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.eType, this._EClass);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStructuralFeature_eContainingClass.setFeatureID(Ids.EStructuralFeature.eContainingClass);
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStructuralFeature_eContainingClass);
+
     this._ETypedElement_ordered = new EAttributeImpl();
-    this._ETypedElement_ordered.setName("ordered");
-    this._ETypedElement_ordered.setEType(this._EBoolean);
-    this._ETypedElement_ordered.setLowerBound(0);
-    this._ETypedElement_ordered.setUpperBound(1);
+this._ETypedElement_ordered.eBasicSetValue(Ids.ENamedElement.name, "ordered");
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_ordered.setFeatureID(Ids.ETypedElement.ordered);
-    this._ETypedElement_ordered.setEContainingClass(this._ETypedElement);
+this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
-    this._ETypedElement
-      .getEStructuralFeatures()
-      .add(this._ETypedElement_ordered);
+
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_ordered);
+
     this._ETypedElement_unique = new EAttributeImpl();
-    this._ETypedElement_unique.setName("unique");
-    this._ETypedElement_unique.setEType(this._EBoolean);
-    this._ETypedElement_unique.setLowerBound(0);
-    this._ETypedElement_unique.setUpperBound(1);
+this._ETypedElement_unique.eBasicSetValue(Ids.ENamedElement.name, "unique");
+
+this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_unique.setFeatureID(Ids.ETypedElement.unique);
-    this._ETypedElement_unique.setEContainingClass(this._ETypedElement);
+this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
-    this._ETypedElement
-      .getEStructuralFeatures()
-      .add(this._ETypedElement_unique);
+
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_unique);
+
     this._ETypedElement_lowerBound = new EAttributeImpl();
-    this._ETypedElement_lowerBound.setName("lowerBound");
-    this._ETypedElement_lowerBound.setEType(this._EInt);
-    this._ETypedElement_lowerBound.setLowerBound(0);
-    this._ETypedElement_lowerBound.setUpperBound(1);
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.ENamedElement.name, "lowerBound");
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.eType, this._EInt);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_lowerBound.setFeatureID(Ids.ETypedElement.lowerBound);
-    this._ETypedElement_lowerBound.setEContainingClass(this._ETypedElement);
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
-    this._ETypedElement
-      .getEStructuralFeatures()
-      .add(this._ETypedElement_lowerBound);
+
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_lowerBound);
+
     this._ETypedElement_upperBound = new EAttributeImpl();
-    this._ETypedElement_upperBound.setName("upperBound");
-    this._ETypedElement_upperBound.setEType(this._EInt);
-    this._ETypedElement_upperBound.setLowerBound(0);
-    this._ETypedElement_upperBound.setUpperBound(1);
+this._ETypedElement_upperBound.eBasicSetValue(Ids.ENamedElement.name, "upperBound");
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.eType, this._EInt);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_upperBound.setFeatureID(Ids.ETypedElement.upperBound);
-    this._ETypedElement_upperBound.setEContainingClass(this._ETypedElement);
+this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
-    this._ETypedElement
-      .getEStructuralFeatures()
-      .add(this._ETypedElement_upperBound);
+
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_upperBound);
+
     this._ETypedElement_many = new EAttributeImpl();
-    this._ETypedElement_many.setName("many");
-    this._ETypedElement_many.setEType(this._EBoolean);
-    this._ETypedElement_many.setLowerBound(0);
-    this._ETypedElement_many.setUpperBound(1);
+this._ETypedElement_many.eBasicSetValue(Ids.ENamedElement.name, "many");
+
+this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_many.setFeatureID(Ids.ETypedElement.many);
-    this._ETypedElement_many.setEContainingClass(this._ETypedElement);
+this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
-    this._ETypedElement.getEStructuralFeatures().add(this._ETypedElement_many);
+
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_many);
+
     this._ETypedElement_required = new EAttributeImpl();
-    this._ETypedElement_required.setName("required");
-    this._ETypedElement_required.setEType(this._EBoolean);
-    this._ETypedElement_required.setLowerBound(0);
-    this._ETypedElement_required.setUpperBound(1);
+this._ETypedElement_required.eBasicSetValue(Ids.ENamedElement.name, "required");
+
+this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolean);
+
+this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_required.setFeatureID(Ids.ETypedElement.required);
-    this._ETypedElement_required.setEContainingClass(this._ETypedElement);
+this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
-    this._ETypedElement
-      .getEStructuralFeatures()
-      .add(this._ETypedElement_required);
+
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_required);
+
     this._ETypedElement_eType = new EReferenceImpl();
-    this._ETypedElement_eType.setName("eType");
-    this._ETypedElement_eType.setEType(this._EClassifier);
-    this._ETypedElement_eType.setLowerBound(0);
-    this._ETypedElement_eType.setUpperBound(1);
+this._ETypedElement_eType.eBasicSetValue(Ids.ENamedElement.name, "eType");
+
+this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.eType, this._EClassifier);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._ETypedElement_eType.setFeatureID(Ids.ETypedElement.eType);
-    this._ETypedElement_eType.setEContainingClass(this._ETypedElement);
-    this._ETypedElement_eType.setContainment(false);
+this._ETypedElement_eType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.EReference.containment, false);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._ETypedElement_eType.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ETypedElement_eType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._ETypedElement.getEStructuralFeatures().add(this._ETypedElement_eType);
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_eType);
+
     this._ETypedElement_eGenericType = new EReferenceImpl();
-    this._ETypedElement_eGenericType.setName("eGenericType");
-    this._ETypedElement_eGenericType.setEType(this._EGenericType);
-    this._ETypedElement_eGenericType.setLowerBound(0);
-    this._ETypedElement_eGenericType.setUpperBound(1);
-    this._ETypedElement_eGenericType.setFeatureID(
-      Ids.ETypedElement.eGenericType,
-    );
-    this._ETypedElement_eGenericType.setEContainingClass(this._ETypedElement);
-    this._ETypedElement_eGenericType.setContainment(true);
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.ENamedElement.name, "eGenericType");
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._ETypedElement_eGenericType.setFeatureID(Ids.ETypedElement.eGenericType);
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EReference.containment, true);
+
+
     {
       const annotation = new EAnnotationImpl();
-      annotation.setSource("http://www.eclipse.org/emf/2002/GenModel");
-      this.add(annotation, "suppressedIsSetVisibility", "true");
-      this.add(annotation, "suppressedUnsetVisibility", "true");
-      this._ETypedElement_eGenericType.getEAnnotations().add(annotation);
+annotation.eBasicSetValue(Ids.EAnnotation.source, "http://www.eclipse.org/emf/2002/GenModel");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedIsSetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "suppressedUnsetVisibility");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "true");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._ETypedElement_eGenericType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
     }
 
-    this._ETypedElement
-      .getEStructuralFeatures()
-      .add(this._ETypedElement_eGenericType);
+this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_eGenericType);
+
     this._EStringToStringMapEntry_key = new EAttributeImpl();
-    this._EStringToStringMapEntry_key.setName("key");
-    this._EStringToStringMapEntry_key.setEType(this._EString);
-    this._EStringToStringMapEntry_key.setLowerBound(0);
-    this._EStringToStringMapEntry_key.setUpperBound(1);
-    this._EStringToStringMapEntry_key.setFeatureID(
-      Ids.EStringToStringMapEntry.key,
-    );
-    this._EStringToStringMapEntry_key.setEContainingClass(
-      this._EStringToStringMapEntry,
-    );
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ENamedElement.name, "key");
 
-    this._EStringToStringMapEntry
-      .getEStructuralFeatures()
-      .add(this._EStringToStringMapEntry_key);
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStringToStringMapEntry_key.setFeatureID(Ids.EStringToStringMapEntry.key);
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStringToStringMapEntry);
+
+
+
+this._EStringToStringMapEntry.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStringToStringMapEntry_key);
+
     this._EStringToStringMapEntry_value = new EAttributeImpl();
-    this._EStringToStringMapEntry_value.setName("value");
-    this._EStringToStringMapEntry_value.setEType(this._EString);
-    this._EStringToStringMapEntry_value.setLowerBound(0);
-    this._EStringToStringMapEntry_value.setUpperBound(1);
-    this._EStringToStringMapEntry_value.setFeatureID(
-      Ids.EStringToStringMapEntry.value,
-    );
-    this._EStringToStringMapEntry_value.setEContainingClass(
-      this._EStringToStringMapEntry,
-    );
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ENamedElement.name, "value");
 
-    this._EStringToStringMapEntry
-      .getEStructuralFeatures()
-      .add(this._EStringToStringMapEntry_value);
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.eType, this._EString);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EStringToStringMapEntry_value.setFeatureID(Ids.EStringToStringMapEntry.value);
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStringToStringMapEntry);
+
+
+
+this._EStringToStringMapEntry.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EStringToStringMapEntry_value);
+
     this._EGenericType_eUpperBound = new EReferenceImpl();
-    this._EGenericType_eUpperBound.setName("eUpperBound");
-    this._EGenericType_eUpperBound.setEType(this._EGenericType);
-    this._EGenericType_eUpperBound.setLowerBound(0);
-    this._EGenericType_eUpperBound.setUpperBound(1);
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.ENamedElement.name, "eUpperBound");
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EGenericType_eUpperBound.setFeatureID(Ids.EGenericType.eUpperBound);
-    this._EGenericType_eUpperBound.setEContainingClass(this._EGenericType);
-    this._EGenericType_eUpperBound.setContainment(true);
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
 
-    this._EGenericType
-      .getEStructuralFeatures()
-      .add(this._EGenericType_eUpperBound);
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eUpperBound);
+
     this._EGenericType_eTypeArguments = new EReferenceImpl();
-    this._EGenericType_eTypeArguments.setName("eTypeArguments");
-    this._EGenericType_eTypeArguments.setEType(this._EGenericType);
-    this._EGenericType_eTypeArguments.setLowerBound(0);
-    this._EGenericType_eTypeArguments.setUpperBound(-1);
-    this._EGenericType_eTypeArguments.setFeatureID(
-      Ids.EGenericType.eTypeArguments,
-    );
-    this._EGenericType_eTypeArguments.setEContainingClass(this._EGenericType);
-    this._EGenericType_eTypeArguments.setContainment(true);
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ENamedElement.name, "eTypeArguments");
 
-    this._EGenericType
-      .getEStructuralFeatures()
-      .add(this._EGenericType_eTypeArguments);
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._EGenericType_eTypeArguments.setFeatureID(Ids.EGenericType.eTypeArguments);
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eTypeArguments);
+
     this._EGenericType_eRawType = new EReferenceImpl();
-    this._EGenericType_eRawType.setName("eRawType");
-    this._EGenericType_eRawType.setEType(this._EClassifier);
-    this._EGenericType_eRawType.setLowerBound(1);
-    this._EGenericType_eRawType.setUpperBound(1);
+this._EGenericType_eRawType.eBasicSetValue(Ids.ENamedElement.name, "eRawType");
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.eType, this._EClassifier);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EGenericType_eRawType.setFeatureID(Ids.EGenericType.eRawType);
-    this._EGenericType_eRawType.setEContainingClass(this._EGenericType);
-    this._EGenericType_eRawType.setContainment(false);
+this._EGenericType_eRawType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
 
-    this._EGenericType
-      .getEStructuralFeatures()
-      .add(this._EGenericType_eRawType);
+this._EGenericType_eRawType.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eRawType);
+
     this._EGenericType_eLowerBound = new EReferenceImpl();
-    this._EGenericType_eLowerBound.setName("eLowerBound");
-    this._EGenericType_eLowerBound.setEType(this._EGenericType);
-    this._EGenericType_eLowerBound.setLowerBound(0);
-    this._EGenericType_eLowerBound.setUpperBound(1);
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.ENamedElement.name, "eLowerBound");
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EGenericType_eLowerBound.setFeatureID(Ids.EGenericType.eLowerBound);
-    this._EGenericType_eLowerBound.setEContainingClass(this._EGenericType);
-    this._EGenericType_eLowerBound.setContainment(true);
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
 
-    this._EGenericType
-      .getEStructuralFeatures()
-      .add(this._EGenericType_eLowerBound);
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eLowerBound);
+
     this._EGenericType_eTypeParameter = new EReferenceImpl();
-    this._EGenericType_eTypeParameter.setName("eTypeParameter");
-    this._EGenericType_eTypeParameter.setEType(this._ETypeParameter);
-    this._EGenericType_eTypeParameter.setLowerBound(0);
-    this._EGenericType_eTypeParameter.setUpperBound(1);
-    this._EGenericType_eTypeParameter.setFeatureID(
-      Ids.EGenericType.eTypeParameter,
-    );
-    this._EGenericType_eTypeParameter.setEContainingClass(this._EGenericType);
-    this._EGenericType_eTypeParameter.setContainment(false);
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ENamedElement.name, "eTypeParameter");
 
-    this._EGenericType
-      .getEStructuralFeatures()
-      .add(this._EGenericType_eTypeParameter);
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.eType, this._ETypeParameter);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+    this._EGenericType_eTypeParameter.setFeatureID(Ids.EGenericType.eTypeParameter);
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eTypeParameter);
+
     this._EGenericType_eClassifier = new EReferenceImpl();
-    this._EGenericType_eClassifier.setName("eClassifier");
-    this._EGenericType_eClassifier.setEType(this._EClassifier);
-    this._EGenericType_eClassifier.setLowerBound(0);
-    this._EGenericType_eClassifier.setUpperBound(1);
+this._EGenericType_eClassifier.eBasicSetValue(Ids.ENamedElement.name, "eClassifier");
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.eType, this._EClassifier);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
     this._EGenericType_eClassifier.setFeatureID(Ids.EGenericType.eClassifier);
-    this._EGenericType_eClassifier.setEContainingClass(this._EGenericType);
-    this._EGenericType_eClassifier.setContainment(false);
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
 
-    this._EGenericType
-      .getEStructuralFeatures()
-      .add(this._EGenericType_eClassifier);
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EReference.containment, false);
+
+
+
+this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eClassifier);
+
     this._ETypeParameter_eBounds = new EReferenceImpl();
-    this._ETypeParameter_eBounds.setName("eBounds");
-    this._ETypeParameter_eBounds.setEType(this._EGenericType);
-    this._ETypeParameter_eBounds.setLowerBound(0);
-    this._ETypeParameter_eBounds.setUpperBound(-1);
-    this._ETypeParameter_eBounds.setFeatureID(Ids.ETypeParameter.eBounds);
-    this._ETypeParameter_eBounds.setEContainingClass(this._ETypeParameter);
-    this._ETypeParameter_eBounds.setContainment(true);
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.ENamedElement.name, "eBounds");
 
-    this._ETypeParameter
-      .getEStructuralFeatures()
-      .add(this._ETypeParameter_eBounds);
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.eType, this._EGenericType);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+    this._ETypeParameter_eBounds.setFeatureID(Ids.ETypeParameter.eBounds);
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypeParameter);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EReference.containment, true);
+
+
+
+this._ETypeParameter.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypeParameter_eBounds);
+
 
     // Pass 3: every classifier's owning package (self-referential, so must
     // come after pass 1 creates them all).
-    this._EAttribute.setEPackage(this);
-    this._EAnnotation.setEPackage(this);
-    this._EClass.setEPackage(this);
-    this._EClassifier.setEPackage(this);
-    this._EDataType.setEPackage(this);
-    this._EEnum.setEPackage(this);
-    this._EEnumLiteral.setEPackage(this);
-    this._EFactory.setEPackage(this);
-    this._EModelElement.setEPackage(this);
-    this._ENamedElement.setEPackage(this);
-    this._EOperation.setEPackage(this);
-    this._EPackage.setEPackage(this);
-    this._EParameter.setEPackage(this);
-    this._EReferenceImpl.setEPackage(this);
-    this._EStructuralFeature.setEPackage(this);
-    this._ETypedElement.setEPackage(this);
-    this._EBigDecimal.setEPackage(this);
-    this._EBigInteger.setEPackage(this);
-    this._EBoolean.setEPackage(this);
-    this._EBooleanObject.setEPackage(this);
-    this._EByte.setEPackage(this);
-    this._EByteArray.setEPackage(this);
-    this._EByteObject.setEPackage(this);
-    this._EChar.setEPackage(this);
-    this._ECharacterObject.setEPackage(this);
-    this._EDate.setEPackage(this);
-    this._EDiagnosticChain.setEPackage(this);
-    this._EDouble.setEPackage(this);
-    this._EDoubleObject.setEPackage(this);
-    this._EEList.setEPackage(this);
-    this._EEnumerator.setEPackage(this);
-    this._EFeatureMap.setEPackage(this);
-    this._EFeatureMapEntry.setEPackage(this);
-    this._EFloat.setEPackage(this);
-    this._EFloatObject.setEPackage(this);
-    this._EInt.setEPackage(this);
-    this._EIntegerObject.setEPackage(this);
-    this._EJavaClass.setEPackage(this);
-    this._EJavaObject.setEPackage(this);
-    this._ELong.setEPackage(this);
-    this._ELongObject.setEPackage(this);
-    this._EMap.setEPackage(this);
-    this._EResource.setEPackage(this);
-    this._EResourceSet.setEPackage(this);
-    this._EShort.setEPackage(this);
-    this._EShortObject.setEPackage(this);
-    this._EString.setEPackage(this);
-    this._EStringToStringMapEntry.setEPackage(this);
-    this._ETreeIterator.setEPackage(this);
-    this._EGenericType.setEPackage(this);
-    this._ETypeParameter.setEPackage(this);
-    this._EInvocationTargetException.setEPackage(this);
+this._EAttribute.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EAnnotation.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EClass.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EClassifier.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EDataType.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EEnum.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EEnumLiteral.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EFactory.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EModelElement.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ENamedElement.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EOperation.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EPackage.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EParameter.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EReference.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EStructuralFeature.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ETypedElement.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EBigDecimal.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EBigInteger.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EBoolean.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EBooleanObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EByte.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EByteArray.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EByteObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EChar.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ECharacterObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EDate.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EDiagnosticChain.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EDouble.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EDoubleObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EEList.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EEnumerator.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EFeatureMap.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EFeatureMapEntry.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EFloat.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EFloatObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EInt.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EIntegerObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EJavaClass.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EJavaObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ELong.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ELongObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EMap.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EResource.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EResourceSet.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EShort.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EShortObject.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EString.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EStringToStringMapEntry.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ETreeIterator.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EGenericType.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._ETypeParameter.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
+this._EInvocationTargetException.eBasicSetValue(Ids.EClassifier.ePackage, this);
+
 
     // Pass 4: supertypes.
-    this._EAttribute.getESuperTypes().add(this._EStructuralFeature);
-    this._EAnnotation.getESuperTypes().add(this._EModelElement);
-    this._EClass.getESuperTypes().add(this._EClassifier);
-    this._EClassifier.getESuperTypes().add(this._ENamedElement);
-    this._EDataType.getESuperTypes().add(this._EClassifier);
-    this._EEnum.getESuperTypes().add(this._EDataType);
-    this._EEnumLiteral.getESuperTypes().add(this._ENamedElement);
-    this._EFactory.getESuperTypes().add(this._EModelElement);
-    this._ENamedElement.getESuperTypes().add(this._EModelElement);
-    this._EOperation.getESuperTypes().add(this._ETypedElement);
-    this._EPackage.getESuperTypes().add(this._ENamedElement);
-    this._EParameter.getESuperTypes().add(this._ETypedElement);
-    this._EReferenceImpl.getESuperTypes().add(this._EStructuralFeature);
-    this._EStructuralFeature.getESuperTypes().add(this._ETypedElement);
-    this._ETypedElement.getESuperTypes().add(this._ENamedElement);
-    this._ETypeParameter.getESuperTypes().add(this._ENamedElement);
+this._EAttribute.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EStructuralFeature);
+
+this._EAnnotation.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EModelElement);
+
+this._EClass.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EClassifier);
+
+this._EClassifier.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElement);
+
+this._EDataType.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EClassifier);
+
+this._EEnum.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EDataType);
+
+this._EEnumLiteral.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElement);
+
+this._EFactory.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EModelElement);
+
+this._ENamedElement.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EModelElement);
+
+this._EOperation.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ETypedElement);
+
+this._EPackage.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElement);
+
+this._EParameter.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ETypedElement);
+
+this._EReference.eBootstrapList(Ids.EClass.eSuperTypes).add(this._EStructuralFeature);
+
+this._EStructuralFeature.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ETypedElement);
+
+this._ETypedElement.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElement);
+
+this._ETypeParameter.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElement);
+
+
+    // Pass 5: recompute EAll* caches now that supertypes/features are
+    // wired. Skipped entirely in generate-ecore mode: the generated
+    // classifier classes never implement recomputeAllLists() at all (a
+    // known, already-documented scope decision - the ~14 traversal-based
+    // derived features like eAllSuperTypes/eAllStructuralFeatures are
+    // stored fields on generated classes, not auto-computed, unlike
+    // @typemf/core's own hand-written EClassImpl, which has real,
+    // working versions of all of them). Calling a method the generated
+    // class doesn't have would always fail regardless of bootstrap
+    // ordering - this isn't a workaround for the ordering problem this
+    // file exists to fix, it's a separate, pre-existing, accepted gap.
+
+    // Pass 6: set the package's own name/nsURI/nsPrefix/annotations last,
+    // deliberately - these go through the ordinary reflective setters
+    // (this.setName(), etc.), which need the "name"/etc. feature's own
+    // metaclass object to already exist (it's built above, in the passes
+    // this follows). Calling them earlier - before those metaclasses
+    // exist - is a genuine bootstrap-ordering bug, confirmed directly by
+    // reproducing it: this line order isn't a style choice, the metaclass
+    // shells and feature wiring above are a real, load-bearing
+    // precondition for the reflective setter calls below to work at all.
+    this.setName("ecore");
+    this.setNsURI("http://www.eclipse.org/emf/2002/Ecore");
+    this.setNsPrefix("ecore");
+
+
   }
 
   getEAttribute(): EClass {
@@ -1843,13 +2802,13 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEAttribute_ID(): EAttribute {
     return this._EAttribute_iD;
   }
-  getEAttribute_EAttributeType(): EReferenceImpl {
+  getEAttribute_EAttributeType(): EReference {
     return this._EAttribute_eAttributeType;
   }
-  getEAnnotation(): EClass;
   getEAnnotation(source: string): EAnnotation | undefined;
-  getEAnnotation(source?: string): EClass | EAnnotation | undefined {
-    if (source === undefined) {
+  getEAnnotation(): EClass;
+  getEAnnotation(source?: string) : EClass | EAnnotation | undefined{
+    if(source === undefined) {
       return this._EAnnotation;
     } else {
       return super.getEAnnotation(source);
@@ -1858,16 +2817,16 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEAnnotation_Source(): EAttribute {
     return this._EAnnotation_source;
   }
-  getEAnnotation_Details(): EReferenceImpl {
+  getEAnnotation_Details(): EReference {
     return this._EAnnotation_details;
   }
-  getEAnnotation_EModelElement(): EReferenceImpl {
+  getEAnnotation_EModelElement(): EReference {
     return this._EAnnotation_eModelElement;
   }
-  getEAnnotation_Contents(): EReferenceImpl {
+  getEAnnotation_Contents(): EReference {
     return this._EAnnotation_contents;
   }
-  getEAnnotation_References(): EReferenceImpl {
+  getEAnnotation_References(): EReference {
     return this._EAnnotation_references;
   }
   getEClass(): EClass {
@@ -1879,46 +2838,46 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEClass_Interface(): EAttribute {
     return this._EClass_interface;
   }
-  getEClass_ESuperTypes(): EReferenceImpl {
+  getEClass_ESuperTypes(): EReference {
     return this._EClass_eSuperTypes;
   }
-  getEClass_EOperations(): EReferenceImpl {
+  getEClass_EOperations(): EReference {
     return this._EClass_eOperations;
   }
-  getEClass_EAllAttributes(): EReferenceImpl {
+  getEClass_EAllAttributes(): EReference {
     return this._EClass_eAllAttributes;
   }
-  getEClass_EAllReferences(): EReferenceImpl {
+  getEClass_EAllReferences(): EReference {
     return this._EClass_eAllReferences;
   }
-  getEClass_EReferences(): EReferenceImpl {
-    return this._EClass_EReferences;
+  getEClass_EReferences(): EReference {
+    return this._EClass_eReferences;
   }
-  getEClass_EAttributes(): EReferenceImpl {
+  getEClass_EAttributes(): EReference {
     return this._EClass_eAttributes;
   }
-  getEClass_EAllContainments(): EReferenceImpl {
+  getEClass_EAllContainments(): EReference {
     return this._EClass_eAllContainments;
   }
-  getEClass_EAllOperations(): EReferenceImpl {
+  getEClass_EAllOperations(): EReference {
     return this._EClass_eAllOperations;
   }
-  getEClass_EAllStructuralFeatures(): EReferenceImpl {
+  getEClass_EAllStructuralFeatures(): EReference {
     return this._EClass_eAllStructuralFeatures;
   }
-  getEClass_EAllSuperTypes(): EReferenceImpl {
+  getEClass_EAllSuperTypes(): EReference {
     return this._EClass_eAllSuperTypes;
   }
-  getEClass_EIDAttribute(): EReferenceImpl {
+  getEClass_EIDAttribute(): EReference {
     return this._EClass_eIDAttribute;
   }
-  getEClass_EStructuralFeatures(): EReferenceImpl {
+  getEClass_EStructuralFeatures(): EReference {
     return this._EClass_eStructuralFeatures;
   }
-  getEClass_EGenericSuperTypes(): EReferenceImpl {
+  getEClass_EGenericSuperTypes(): EReference {
     return this._EClass_eGenericSuperTypes;
   }
-  getEClass_EAllGenericSuperTypes(): EReferenceImpl {
+  getEClass_EAllGenericSuperTypes(): EReference {
     return this._EClass_eAllGenericSuperTypes;
   }
   getEClassifier(): EClass {
@@ -1936,10 +2895,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEClassifier_InstanceTypeName(): EAttribute {
     return this._EClassifier_instanceTypeName;
   }
-  getEClassifier_EPackage(): EReferenceImpl {
+  getEClassifier_EPackage(): EReference {
     return this._EClassifier_ePackage;
   }
-  getEClassifier_ETypeParameters(): EReferenceImpl {
+  getEClassifier_ETypeParameters(): EReference {
     return this._EClassifier_eTypeParameters;
   }
   getEDataType(): EClass {
@@ -1951,7 +2910,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEEnum(): EClass {
     return this._EEnum;
   }
-  getEEnum_ELiterals(): EReferenceImpl {
+  getEEnum_ELiterals(): EReference {
     return this._EEnum_eLiterals;
   }
   getEEnumLiteral(): EClass {
@@ -1966,19 +2925,19 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEEnumLiteral_Literal(): EAttribute {
     return this._EEnumLiteral_literal;
   }
-  getEEnumLiteral_EEnum(): EReferenceImpl {
+  getEEnumLiteral_EEnum(): EReference {
     return this._EEnumLiteral_eEnum;
   }
   getEFactory(): EClass {
     return this._EFactory;
   }
-  getEFactory_EPackage(): EReferenceImpl {
+  getEFactory_EPackage(): EReference {
     return this._EFactory_ePackage;
   }
   getEModelElement(): EClass {
     return this._EModelElement;
   }
-  getEModelElement_EAnnotations(): EReferenceImpl {
+  getEModelElement_EAnnotations(): EReference {
     return this._EModelElement_eAnnotations;
   }
   getENamedElement(): EClass {
@@ -1990,19 +2949,19 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEOperation(): EClass {
     return this._EOperation;
   }
-  getEOperation_EContainingClass(): EReferenceImpl {
+  getEOperation_EContainingClass(): EReference {
     return this._EOperation_eContainingClass;
   }
-  getEOperation_ETypeParameters(): EReferenceImpl {
+  getEOperation_ETypeParameters(): EReference {
     return this._EOperation_eTypeParameters;
   }
-  getEOperation_EParameters(): EReferenceImpl {
+  getEOperation_EParameters(): EReference {
     return this._EOperation_eParameters;
   }
-  getEOperation_EExceptions(): EReferenceImpl {
+  getEOperation_EExceptions(): EReference {
     return this._EOperation_eExceptions;
   }
-  getEOperation_EGenericExceptions(): EReferenceImpl {
+  getEOperation_EGenericExceptions(): EReference {
     return this._EOperation_eGenericExceptions;
   }
   getEPackage(): EClass {
@@ -2014,44 +2973,44 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEPackage_NsPrefix(): EAttribute {
     return this._EPackage_nsPrefix;
   }
-  getEPackage_EFactoryInstance(): EReferenceImpl {
+  getEPackage_EFactoryInstance(): EReference {
     return this._EPackage_eFactoryInstance;
   }
-  getEPackage_EClassifiers(): EReferenceImpl {
+  getEPackage_EClassifiers(): EReference {
     return this._EPackage_eClassifiers;
   }
-  getEPackage_ESubpackages(): EReferenceImpl {
+  getEPackage_ESubpackages(): EReference {
     return this._EPackage_eSubpackages;
   }
-  getEPackage_ESuperPackage(): EReferenceImpl {
+  getEPackage_ESuperPackage(): EReference {
     return this._EPackage_eSuperPackage;
   }
   getEParameter(): EClass {
     return this._EParameter;
   }
-  getEParameter_EOperation(): EReferenceImpl {
+  getEParameter_EOperation(): EReference {
     return this._EParameter_eOperation;
   }
   getEReference(): EClass {
-    return this._EReferenceImpl;
+    return this._EReference;
   }
   getEReference_Containment(): EAttribute {
-    return this._EReferenceImpl_containment;
+    return this._EReference_containment;
   }
   getEReference_Container(): EAttribute {
-    return this._EReferenceImpl_container;
+    return this._EReference_container;
   }
   getEReference_ResolveProxies(): EAttribute {
-    return this._EReferenceImpl_resolveProxies;
+    return this._EReference_resolveProxies;
   }
-  getEReference_EOpposite(): EReferenceImpl {
-    return this._EReferenceImpl_eOpposite;
+  getEReference_EOpposite(): EReference {
+    return this._EReference_eOpposite;
   }
-  getEReference_EReferenceType(): EReferenceImpl {
-    return this._EReferenceImpl_EReferenceImplType;
+  getEReference_EReferenceType(): EReference {
+    return this._EReference_eReferenceType;
   }
-  getEReference_EKeys(): EReferenceImpl {
-    return this._EReferenceImpl_eKeys;
+  getEReference_EKeys(): EReference {
+    return this._EReference_eKeys;
   }
   getEStructuralFeature(): EClass {
     return this._EStructuralFeature;
@@ -2077,7 +3036,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEStructuralFeature_Derived(): EAttribute {
     return this._EStructuralFeature_derived;
   }
-  getEStructuralFeature_EContainingClass(): EReferenceImpl {
+  getEStructuralFeature_EContainingClass(): EReference {
     return this._EStructuralFeature_eContainingClass;
   }
   getETypedElement(): EClass {
@@ -2101,10 +3060,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getETypedElement_Required(): EAttribute {
     return this._ETypedElement_required;
   }
-  getETypedElement_EType(): EReferenceImpl {
+  getETypedElement_EType(): EReference {
     return this._ETypedElement_eType;
   }
-  getETypedElement_EGenericType(): EReferenceImpl {
+  getETypedElement_EGenericType(): EReference {
     return this._ETypedElement_eGenericType;
   }
   getEBigDecimal(): EDataType {
@@ -2215,39 +3174,31 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   getEGenericType(): EClass {
     return this._EGenericType;
   }
-  getEGenericType_EUpperBound(): EReferenceImpl {
+  getEGenericType_EUpperBound(): EReference {
     return this._EGenericType_eUpperBound;
   }
-  getEGenericType_ETypeArguments(): EReferenceImpl {
+  getEGenericType_ETypeArguments(): EReference {
     return this._EGenericType_eTypeArguments;
   }
-  getEGenericType_ERawType(): EReferenceImpl {
+  getEGenericType_ERawType(): EReference {
     return this._EGenericType_eRawType;
   }
-  getEGenericType_ELowerBound(): EReferenceImpl {
+  getEGenericType_ELowerBound(): EReference {
     return this._EGenericType_eLowerBound;
   }
-  getEGenericType_ETypeParameter(): EReferenceImpl {
+  getEGenericType_ETypeParameter(): EReference {
     return this._EGenericType_eTypeParameter;
   }
-  getEGenericType_EClassifier(): EReferenceImpl {
+  getEGenericType_EClassifier(): EReference {
     return this._EGenericType_eClassifier;
   }
   getETypeParameter(): EClass {
     return this._ETypeParameter;
   }
-  getETypeParameter_EBounds(): EReferenceImpl {
+  getETypeParameter_EBounds(): EReference {
     return this._ETypeParameter_eBounds;
   }
   getEInvocationTargetException(): EDataType {
     return this._EInvocationTargetException;
-  }
-
-  private add(annotation: EAnnotationImpl, key: string, value: string) {
-    const details = new EStringToStringMapEntryImpl();
-    details.setKey(key);
-    details.setValue(value);
-
-    annotation.getDetails().add(details);
   }
 }

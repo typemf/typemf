@@ -1,4 +1,5 @@
-import { EObject, EList } from './index.js';
+import { EObject } from './EObject.js';
+import { EList } from './EList.js';
 import { EDataType } from './EDataType.js';
 import { EEnumLiteral } from './EEnumLiteral.js';
 

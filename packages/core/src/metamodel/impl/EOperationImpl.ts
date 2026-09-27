@@ -1,7 +1,9 @@
-import { EClass, EList, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EList } from '../types/EList.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EOperation } from '../types/EOperation.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 import { EParameter } from '../types/EParameter.js';
 import { EClassifier } from '../types/EClassifier.js';
@@ -11,13 +13,46 @@ import { ETypedElementImpl } from './ETypedElementImpl.js';
 
 export class EOperationImpl extends ETypedElementImpl implements EOperation {
   private _eContainingClass: EClass | undefined;
-  private readonly _eTypeParameters = new BasicEList<ETypeParameter>(this, EcorePackageImpl.eINSTANCE.getEOperation_ETypeParameters());
-  private readonly _eParameters = new BasicEList<EParameter>(this, EcorePackageImpl.eINSTANCE.getEOperation_EParameters());
-  private readonly _eExceptions = new BasicEList<EClassifier>(this, EcorePackageImpl.eINSTANCE.getEOperation_EExceptions());
-  private readonly _eGenericExceptions = new BasicEList<EGenericType>(this, EcorePackageImpl.eINSTANCE.getEOperation_EGenericExceptions());
+
+  private _eTypeParametersCache: BasicEList<ETypeParameter> | undefined;
+
+  private get _eTypeParameters(): BasicEList<ETypeParameter> {
+    if (!this._eTypeParametersCache) {
+      this._eTypeParametersCache = new BasicEList<ETypeParameter>(this, getEcorePackageRef().getEOperation_ETypeParameters());
+    }
+    return this._eTypeParametersCache;
+  }
+
+  private _eParametersCache: BasicEList<EParameter> | undefined;
+
+  private get _eParameters(): BasicEList<EParameter> {
+    if (!this._eParametersCache) {
+      this._eParametersCache = new BasicEList<EParameter>(this, getEcorePackageRef().getEOperation_EParameters());
+    }
+    return this._eParametersCache;
+  }
+
+  private _eExceptionsCache: BasicEList<EClassifier> | undefined;
+
+  private get _eExceptions(): BasicEList<EClassifier> {
+    if (!this._eExceptionsCache) {
+      this._eExceptionsCache = new BasicEList<EClassifier>(this, getEcorePackageRef().getEOperation_EExceptions());
+    }
+    return this._eExceptionsCache;
+  }
+
+  private _eGenericExceptionsCache: BasicEList<EGenericType> | undefined;
+
+  private get _eGenericExceptions(): BasicEList<EGenericType> {
+    if (!this._eGenericExceptionsCache) {
+      this._eGenericExceptionsCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getEOperation_EGenericExceptions());
+    }
+    return this._eGenericExceptionsCache;
+  }
+
 
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEOperation();
+    return getEcorePackageRef().getEOperation();
   }
 
   getEContainingClass(): EClass | undefined {
@@ -25,7 +60,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
   setEContainingClass(value: EClass | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEOperation_EContainingClass(), value);
+    this.eSet(getEcorePackageRef().getEOperation_EContainingClass(), value);
   }
   getETypeParameters(): EList<ETypeParameter> {
     return this._eTypeParameters;
@@ -103,23 +138,41 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 10: this._eContainingClass = value as EClass | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
     }
   }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 11:
+        if (!this._eTypeParametersCache) this._eTypeParametersCache = new BasicEList<ETypeParameter>(this);
+        return this._eTypeParametersCache;
+      case 12:
+        if (!this._eParametersCache) this._eParametersCache = new BasicEList<EParameter>(this);
+        return this._eParametersCache;
+      case 13:
+        if (!this._eExceptionsCache) this._eExceptionsCache = new BasicEList<EClassifier>(this);
+        return this._eExceptionsCache;
+      case 14:
+        if (!this._eGenericExceptionsCache) this._eGenericExceptionsCache = new BasicEList<EGenericType>(this);
+        return this._eGenericExceptionsCache;
+      default:
+        return super.eBootstrapList(featureId);
+    }
+  }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 10: return this._eContainingClass !== undefined;
-      case 11: return this._eTypeParameters.size() !== 0;
-      case 12: return this._eParameters.size() !== 0;
-      case 13: return this._eExceptions.size() !== 0;
-      case 14: return this._eGenericExceptions.size() !== 0;
+      case 11: return this._eTypeParametersCache !== undefined && this._eTypeParametersCache.size() !== 0;
+      case 12: return this._eParametersCache !== undefined && this._eParametersCache.size() !== 0;
+      case 13: return this._eExceptionsCache !== undefined && this._eExceptionsCache.size() !== 0;
+      case 14: return this._eGenericExceptionsCache !== undefined && this._eGenericExceptionsCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -133,10 +186,10 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 11: this._eTypeParameters.clear(); return;
-      case 12: this._eParameters.clear(); return;
-      case 13: this._eExceptions.clear(); return;
-      case 14: this._eGenericExceptions.clear(); return;
+      case 11: this._eTypeParametersCache?.clear(); return;
+      case 12: this._eParametersCache?.clear(); return;
+      case 13: this._eExceptionsCache?.clear(); return;
+      case 14: this._eGenericExceptionsCache?.clear(); return;
       default:
         super.eUnset(feature);
         return;

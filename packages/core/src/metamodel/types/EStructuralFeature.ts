@@ -1,8 +1,10 @@
-import { TypeScriptClass } from "./index.js";
-import { ETypedElement } from "./ETypedElement.js";
-import { EClass } from "./EClass.js";
+import { ETypedElement } from './ETypedElement.js';
+import { EClass } from './EClass.js';
+import { TypeScriptClass } from './TypeScriptClass.js';
+
 
 export interface EStructuralFeature extends ETypedElement {
+
   isChangeable(): boolean;
   setChangeable(value: boolean): void;
 

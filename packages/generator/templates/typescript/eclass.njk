@@ -32,7 +32,7 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 {{ coreImportLine(["EClass", "EList", "EObject", "EStructuralFeature"], "impl", "types", options, package) }}
 {{ coreImportLine(["EObjectImpl", "BasicEList"], "impl", "impl", options, package) }}
 import { {{ eClass.getName() }} } from '../types/{{ eClass.getName() }}.js';
-import { {{ packageClassName(package) }}Impl } from './{{ packageClassName(package) }}Impl.js';
+import { get{{ packageClassName(package) }}Ref } from './{{ packageClassName(package) }}Ref.js';
 {% for typeName in referencedApiTypes(ownFeatures, eClass.getName()) %}
 import { {{ typeName }} } from '../types/{{ typeName }}.js';
 {% endfor %}
@@ -44,14 +44,77 @@ import { {{ superClass.getName() }}Impl } from './{{ superClass.getName() }}Impl
 export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl") if superClass else "EObjectImpl" }} implements {{ eClass.getName() }} {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
-  private readonly _{{ feature.getName() }} = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this, {{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
+  {#- Lazy: the eager form ("private readonly _{name} = new BasicEList(this,
+      {Pkg}Impl.eINSTANCE.get{Class}_{Feature}())") looks up its own feature
+      the moment ANY instance of this class is constructed - including
+      instances built as part of {Pkg}PackageImpl's OWN construction (every
+      generated class's ancestor chain runs through EModelElementImpl,
+      whose own such field is built this way). For ordinary generated
+      packages this is harmless (the package singleton already exists by
+      the time anything else is constructed) - but for a self-hosted
+      package describing its own metamodel, the singleton doesn't exist
+      yet while it's still constructing itself, and eagerly resolving a
+      feature during that construction is a genuine bootstrap deadlock,
+      not merely wasted work. Deferring the lookup to first real access
+      (add/remove, iteration, non-empty check) means it's simply never
+      triggered during construction, self-hosted or not - fixing the
+      deadlock as a side effect of being correct about when the feature
+      is actually needed, rather than special-casing self-hosting. #}
+  private _{{ feature.getName() }}Cache: BasicEList<{{ tsScalarType(feature.getEType()) }}> | undefined;
+
+  private get _{{ feature.getName() }}(): BasicEList<{{ tsScalarType(feature.getEType()) }}> {
+    if (!this._{{ feature.getName() }}Cache) {
+      this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this, get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
+    }
+    return this._{{ feature.getName() }}Cache;
+  }
 {% else %}
   private _{{ feature.getName() }}: {{ tsOptionalScalarType(feature.getEType()) }}{% if isPrimitiveValueType(feature.getEType()) %} = {{ primitiveDefaultValue(feature.getEType()) }}{% endif %};
 {% endif %}
 {% endfor %}
 
+{% if eClass.getName() == "EClassifier" %}
+  {#- classifierID is real, internal dispatch bookkeeping (matching
+      @typemf/core's own hand-written EClassifierImpl), not a modeled
+      Ecore feature - so it's declared here, once, on EClassifier itself
+      (inherited by every descendant: EClass, EDataType, EEnum, ...)
+      rather than emitted by the ordinary feature-driven generation
+      above, which has no feature to generate it from. Confirmed
+      necessary by actually running self-hosted bootstrap code (which
+      constructs real EClassifier-derived metaclass shells and needs to
+      set their classifierID), not assumed - see NOTES.md. #}
+  private classifierId = -1;
+
+  getClassifierID(): number {
+    return this.classifierId;
+  }
+
+  setClassifierID(id: number): void {
+    this.classifierId = id;
+  }
+{% endif %}
+{% if eClass.getName() == "EStructuralFeature" %}
+  {#- featureID: the exact same real gap as classifierID above, one level
+      down the hierarchy - internal dispatch bookkeeping (matching
+      @typemf/core's own hand-written EStructuralFeatureImpl), not a
+      modeled Ecore feature, declared once here on EStructuralFeature
+      itself (inherited by EAttribute, EReference, ...). Found the same
+      way: running self-hosted bootstrap code, which constructs real
+      EStructuralFeature-derived metaclass shells (EAttributeImpl,
+      EReferenceImpl) and needs to set their featureID - see NOTES.md. #}
+  private featureId = -1;
+
+  getFeatureID(): number {
+    return this.featureId;
+  }
+
+  setFeatureID(id: number): void {
+    this.featureId = id;
+  }
+{% endif %}
+
   eClass(): EClass {
-    return {{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}();
+    return get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}();
   }
 
 {% for feature in ownFeatures %}
@@ -71,14 +134,22 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   }
 
   set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature.getEType()) }}): void {
-    this.eSet({{ packageClassName(package) }}Impl.eINSTANCE.get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}(), value);
+    this.eSet(get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}(), value);
   }
 {% endif %}
 {% endif %}
 {% endfor %}
 {% for group in groupOperationsByName(eClass.getEOperations()) %}
 {% set op = group[0] %}
-{% if group.length > 1 %}
+{% if group.length == 1 and isBookkeepingOperation(op, eClass) %}
+{#- Skip entirely: real Ecore.ecore declares this operation for real
+    (getClassifierID/getFeatureID), but it collides by name with the
+    hand-added bookkeeping method above (needed for the self-hosting
+    bootstrap fix - see isBookkeepingOperation's own doc comment), which
+    already provides a correct, real implementation. Generating a second,
+    throwing-stub method of the same name here would just be the last
+    declaration silently winning at runtime, shadowing the real one. #}
+{% elif group.length > 1 %}
 {#- Overloaded (2+ EOperations sharing this name - real Ecore.ecore has
     this, e.g. EEnum.getEEnumLiteral by name vs by value). Scoped to
     same-arity overloads only (see NOTES.md): every overload signature is
@@ -163,8 +234,20 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     }
   }
 
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  {#- Accepts a plain feature-ID number as well as a real EStructuralFeature
+      - needed so bootstrap code (setting a classifier shell's own name
+      during self-hosted Ecore.ecore's Pass 1, before the "name" feature's
+      own metaclass object exists in Pass 2 - a real, confirmed chicken-
+      and-egg problem, not a hypothetical one) can bypass the metaclass
+      lookup entirely and dispatch on the feature ID directly, which the
+      generator already knows at codegen time (it's the literal case
+      label below) and never actually needed the feature OBJECT for in
+      the first place - only its ID. Ordinary callers (eSet, generated
+      bean setters) are unaffected; they still pass a real feature and
+      get identical behavior. #}
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
 {% for feature in singleValuedFeatures(ownFeatures) %}
       case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsOptionalScalarType(feature.getEType()) }}; return;
 {% endfor %}
@@ -173,7 +256,37 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
         super.eBasicSetValue(feature, value);
         return;
 {% else %}
-        throw new Error(`Feature ${feature.getFeatureID()} on {{ eClass.getName() }} is many-valued or unknown.`);
+        throw new Error(`Feature ${featureId} on {{ eClass.getName() }} is many-valued or unknown.`);
+{% endif %}
+    }
+  }
+
+  {#- The many-valued analog of eBasicSetValue, for the identical reason:
+      bootstrap code needs to add to a list (eStructuralFeatures,
+      eAnnotations, eSuperTypes, ...) before the feature's own metaclass
+      exists to back the ordinary getter's lazy construction. Constructs
+      the cache with no feature reference when called this way - a real,
+      narrow, deliberate limitation: containment/opposite maintenance on
+      a list built this way is unavailable, since there's no feature to
+      derive it from. Acceptable specifically because only the metamodel's
+      own self-describing bootstrap instances (EClassImpl, EAttributeImpl,
+      etc., as constructed by {Pkg}PackageImpl) ever take this path -
+      ordinary domain instances always go through the normal, fully-
+      wired getter instead, never this one. #}
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+      case {{ feature.getFeatureID() }}:
+        if (!this._{{ feature.getName() }}Cache) this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this);
+        return this._{{ feature.getName() }}Cache;
+{% endif %}
+{% endfor %}
+      default:
+{% if superClass %}
+        return super.eBootstrapList(featureId);
+{% else %}
+        throw new Error(`Feature ${featureId} on {{ eClass.getName() }} is single-valued or unknown.`);
 {% endif %}
     }
   }
@@ -182,7 +295,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
-      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }}.size() !== 0;
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }}Cache !== undefined && this._{{ feature.getName() }}Cache.size() !== 0;
 {% else %}
 {% if isPrimitiveValueType(feature.getEType()) %}
       case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== {{ primitiveDefaultValue(feature.getEType()) }};
@@ -204,7 +317,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
-      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }}.clear(); return;
+      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }}Cache?.clear(); return;
 {% else %}
       case {{ feature.getFeatureID() }}: {
         const oldValue = this._{{ feature.getName() }};

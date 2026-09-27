@@ -30,6 +30,7 @@ export function assignFreshIds(pkg: EPackage): void {
   }
   for (const classifier of pkg.getEClassifiers()) {
     if (!isEClass(classifier)) continue;
+//    classifier.recomputeAllLists();
     classifier.getEAllStructuralFeatures().forEach((feature, index) => (feature as EStructuralFeatureImpl).setFeatureID(index));
   }
 }

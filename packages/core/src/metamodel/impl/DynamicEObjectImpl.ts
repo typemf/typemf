@@ -1,5 +1,7 @@
-import { EClass, EStructuralFeature } from "../../index.js";
-import { BasicEList, EObjectImpl } from "./index.js";
+import { EClass } from "../types/EClass.js";
+import { EStructuralFeature } from "../types/EStructuralFeature.js";
+import { BasicEList } from "./BasicEList.js";
+import { EObjectImpl } from "./EObjectImpl.js";
 
 /**
  * Generic, map-backed EObject that works for any EClass with no generated

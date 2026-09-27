@@ -1,4 +1,9 @@
-import { EAnnotation, EAttribute, EClass, EClassifier, EDataType, EEnum, EPackage, EReference } from './types/index.js';
+import { EAnnotation } from './types/EAnnotation.js';
+import { EAttribute } from './types/EAttribute.js';
+import { EClass } from './types/EClass.js';
+import { EDataType } from './types/EDataType.js';
+import { EPackage } from './types/EPackage.js';
+import { EReference } from './types/EReference.js';
 
 /**
  * Classifier/feature IDs, as pure numeric literals - safe to import from

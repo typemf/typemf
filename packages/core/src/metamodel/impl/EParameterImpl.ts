@@ -1,7 +1,8 @@
-import { EClass, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EParameter } from '../types/EParameter.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EOperation } from '../types/EOperation.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
 
@@ -9,8 +10,9 @@ import { ETypedElementImpl } from './ETypedElementImpl.js';
 export class EParameterImpl extends ETypedElementImpl implements EParameter {
   private _eOperation: EOperation | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEParameter();
+    return getEcorePackageRef().getEParameter();
   }
 
   getEOperation(): EOperation | undefined {
@@ -18,7 +20,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
   }
 
   setEOperation(value: EOperation | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEParameter_EOperation(), value);
+    this.eSet(getEcorePackageRef().getEParameter_EOperation(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -44,13 +46,19 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 10: this._eOperation = value as EOperation | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        return super.eBootstrapList(featureId);
     }
   }
 

@@ -1,7 +1,8 @@
-import { EClass, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EAttribute } from '../types/EAttribute.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EDataType } from '../types/EDataType.js';
 import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
 
@@ -10,8 +11,9 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   private _iD: boolean = false;
   private _eAttributeType: EDataType | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEAttribute();
+    return getEcorePackageRef().getEAttribute();
   }
 
   isID(): boolean {
@@ -19,14 +21,14 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   }
 
   setID(value: boolean): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEAttribute_ID(), value);
+    this.eSet(getEcorePackageRef().getEAttribute_ID(), value);
   }
   getEAttributeType(): EDataType | undefined {
     return this._eAttributeType;
   }
 
   setEAttributeType(value: EDataType | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEAttribute_EAttributeType(), value);
+    this.eSet(getEcorePackageRef().getEAttribute_EAttributeType(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -61,14 +63,20 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 18: this._iD = value as boolean; return;
       case 19: this._eAttributeType = value as EDataType | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        return super.eBootstrapList(featureId);
     }
   }
 

@@ -1,15 +1,17 @@
-import { EClass, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EDataType } from '../types/EDataType.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClassifierImpl } from './EClassifierImpl.js';
 
 
 export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   private _serializable: boolean = false;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEDataType();
+    return getEcorePackageRef().getEDataType();
   }
 
   isSerializable(): boolean {
@@ -17,7 +19,7 @@ export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   }
 
   setSerializable(value: boolean): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEDataType_Serializable(), value);
+    this.eSet(getEcorePackageRef().getEDataType_Serializable(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -43,13 +45,19 @@ export class EDataTypeImpl extends EClassifierImpl implements EDataType {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 8: this._serializable = value as boolean; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        return super.eBootstrapList(featureId);
     }
   }
 

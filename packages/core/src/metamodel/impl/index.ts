@@ -2,6 +2,7 @@ export * from "./BasicEList.js";
 export * from "./DynamicEFactoryImpl.js";
 export * from "./DynamicEObjectImpl.js";
 export * from "./EcorePackageImpl.js";
+export * from "./EcorePackageRef.js";
 export * from "./EcoreFactoryImpl.js";
 export * from "./EAttributeImpl.js";
 export * from "./EAnnotationImpl.js";

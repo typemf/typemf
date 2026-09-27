@@ -1,4 +1,5 @@
-import { EObject, EList } from './index.js';
+import { EObject } from './EObject.js';
+import { EList } from './EList.js';
 import { EAnnotation } from './EAnnotation.js';
 
 

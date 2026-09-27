@@ -1,16 +1,27 @@
-import { EClass, EList, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EList } from '../types/EList.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EGenericType } from '../types/EGenericType.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
 
 
 export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParameter {
-  private readonly _eBounds = new BasicEList<EGenericType>(this, EcorePackageImpl.eINSTANCE.getETypeParameter_EBounds());
+
+  private _eBoundsCache: BasicEList<EGenericType> | undefined;
+
+  private get _eBounds(): BasicEList<EGenericType> {
+    if (!this._eBoundsCache) {
+      this._eBoundsCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getETypeParameter_EBounds());
+    }
+    return this._eBoundsCache;
+  }
+
 
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getETypeParameter();
+    return getEcorePackageRef().getETypeParameter();
   }
 
   getEBounds(): EList<EGenericType> {
@@ -39,18 +50,27 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       default:
         super.eBasicSetValue(feature, value);
         return;
     }
   }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 2:
+        if (!this._eBoundsCache) this._eBoundsCache = new BasicEList<EGenericType>(this);
+        return this._eBoundsCache;
+      default:
+        return super.eBootstrapList(featureId);
+    }
+  }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2: return this._eBounds.size() !== 0;
+      case 2: return this._eBoundsCache !== undefined && this._eBoundsCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -58,7 +78,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-      case 2: this._eBounds.clear(); return;
+      case 2: this._eBoundsCache?.clear(); return;
       default:
         super.eUnset(feature);
         return;

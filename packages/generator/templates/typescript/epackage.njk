@@ -33,20 +33,14 @@ export interface {{ pkgClass }} extends EPackage {
 {% endfile %}
 {% file "impl/" + pkgClass + "Impl.ts" %}
 import { EClass, EAttribute, EReference, EEnum, EDataType } from '{{ coreImportSpecifier("impl", "types", options) }}';
-import {
-  EPackageImpl,
-  EClassImpl,
-  EAttributeImpl,
-  EReferenceImpl,
-  EDataTypeImpl,
-  EEnumImpl,
-  EEnumLiteralImpl,
-  EAnnotationImpl,
-  EFactoryImpl,
-} from '{{ coreImportSpecifier("impl", "impl", options) }}';
+{{ coreImportLine(["EPackageImpl", "EClassImpl", "EAttributeImpl", "EReferenceImpl", "EDataTypeImpl", "EEnumImpl", "EEnumLiteralImpl", "EAnnotationImpl", "EFactoryImpl"], "impl", "impl", options, package) }}
+{% if options['generate-ecore'] %}
+{{ coreImportLine(["EStringToStringMapEntryImpl"], "impl", "impl", options, package) }}
+{% endif %}
 import { {{ pkgClass }}, Ids } from '../{{ pkgClass }}.js';
 import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
 import { {{ factoryClassName(package) }}Impl } from './{{ factoryClassName(package) }}Impl.js';
+import { set{{ pkgClass }}Ref } from './{{ pkgClass }}Ref.js';
 
 {#-
   Emits code reconstructing `element`'s real EAnnotations (source +
@@ -55,17 +49,68 @@ import { {{ factoryClassName(package) }}Impl } from './{{ factoryClassName(packa
   runtime representation in the converted metamodel yet, so there's
   nowhere for an operation-level annotation to attach (see NOTES.md).
 #}
+{#-
+ Both macros exist for one reason: this template is shared between
+ ordinary metamodel generation and self-hosting Ecore.ecore, and only
+ self-hosting has the bootstrap-ordering hazard (a real, confirmed one,
+ not hypothetical - see NOTES.md) that eBasicSetValue/eBootstrapList exist to
+ route around. For an ordinary metamodel, the runtime metaclasses are
+ @typemf/core's own hand-written classes (which don't have
+ eBasicSetValue/eBootstrapList, and don't need to - they're not self-
+ describing), and Ids has no entry for foundational names like
+ "EClassifier"/"EClass" at all unless the metamodel genuinely declares
+ classifiers with those names. So the ordinary, reflective bean setter
+ call is correct and necessary there, and the bypass is correct and
+ necessary here - never both from the same call site.
+#}
+{% macro bootstrapSet(targetExpr, beanSetterName, idsExpr, valueExpr) %}
+{% if options['generate-ecore'] %}
+{{ targetExpr }}.eBasicSetValue({{ idsExpr }}, {{ valueExpr }});
+{% else %}
+{{ targetExpr }}.{{ beanSetterName }}({{ valueExpr }});
+{% endif %}
+{% endmacro %}
+
+{% macro bootstrapAdd(targetExpr, beanGetterName, idsExpr, itemExpr) %}
+{% if options['generate-ecore'] %}
+{{ targetExpr }}.eBootstrapList({{ idsExpr }}).add({{ itemExpr }});
+{% else %}
+{{ targetExpr }}.{{ beanGetterName }}().add({{ itemExpr }});
+{% endif %}
+{% endmacro %}
+
 {% macro emitAnnotations(targetExpr, element) %}
+{#- Mode-conditional for a real, structural reason, not just a different
+    method name: @typemf/core's own hand-written EAnnotationImpl (used
+    for ordinary metamodels) stores "details" as a plain Map<string,
+    string> - but self-hosting's GENERATED EAnnotationImpl.ts treats
+    "details" as the real, modeled Ecore feature it is
+    (EList<EStringToStringMapEntry>, a containment list of real entry
+    objects) - confirmed directly against the actual generated type
+    before fixing, not assumed. Also bypasses the reflective path
+    entirely in generate-ecore mode (eBasicSetValue/eBootstrapList), for the
+    same bootstrap-ordering reason as everywhere else in this file. #}
 {% for annotation in element.getEAnnotations() %}
     {
       const annotation = new EAnnotationImpl();
 {% if annotation.getSource() %}
-      annotation.setSource({{ jsString(annotation.getSource()) }});
+{{ bootstrapSet("annotation", "setSource", "Ids.EAnnotation.source", jsString(annotation.getSource())) }}
 {% endif %}
+{% if options['generate-ecore'] %}
+{% for entry in detailsEntries(annotation) %}
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, {{ jsString(entry.key) }});
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, {{ jsString(entry.value) }});
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+{% endfor %}
+{% else %}
 {% for entry in detailsEntries(annotation) %}
       annotation.getDetails().set({{ jsString(entry.key) }}, {{ jsString(entry.value) }});
 {% endfor %}
-      {{ targetExpr }}.getEAnnotations().add(annotation);
+{% endif %}
+{{ bootstrapAdd(targetExpr, "getEAnnotations", "Ids.EModelElement.eAnnotations", "annotation") }}
     }
 {% endfor %}
 {% endmacro %}
@@ -116,10 +161,11 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 
   private constructor() {
     super();
-    this.setName({{ jsString(package.getName()) }});
-    this.setNsURI({{ jsString(package.getNsURI()) }});
-    this.setNsPrefix({{ jsString(package.getNsPrefix()) }});
-{{ emitAnnotations("this", package) }}
+    // Set immediately, before Pass 1 constructs any classifier (each of
+    // which may need this reference - see {{ pkgClass }}Ref.ts's own doc
+    // comment for why this is a late-bound reference rather than a
+    // direct import of {{ pkgClass }}Impl.
+    set{{ pkgClass }}Ref(this);
 
     // Pass 1: create every classifier (empty shell - no features/supertypes
     // yet), so later passes can reference any of them regardless of
@@ -127,35 +173,44 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% for classifier in package.getEClassifiers() %}
 {% if isEClass(classifier) %}
     this._{{ classifier.getName() }} = new EClassImpl();
-    this._{{ classifier.getName() }}.setName({{ jsString(classifier.getName()) }});
+{{ bootstrapSet("this._" + classifier.getName(), "setName", "Ids.ENamedElement.name", jsString(classifier.getName())) }}
     this._{{ classifier.getName() }}.setClassifierID(Ids.{{ classifier.getName() }}.self);
 {% if classifier.isAbstract() %}
-    this._{{ classifier.getName() }}.setAbstract(true);
+{{ bootstrapSet("this._" + classifier.getName(), "setAbstract", "Ids.EClass.abstract", "true") }}
 {% endif %}
 {{ emitAnnotations("this._" + classifier.getName(), classifier) }}
-    this.getEClassifiers().add(this._{{ classifier.getName() }});
+{{ bootstrapAdd("this", "getEClassifiers", "Ids.EPackage.eClassifiers", "this._" + classifier.getName()) }}
 {% elif isEEnum(classifier) %}
     this._{{ classifier.getName() }} = new EEnumImpl();
-    this._{{ classifier.getName() }}.setName({{ jsString(classifier.getName()) }});
+{{ bootstrapSet("this._" + classifier.getName(), "setName", "Ids.ENamedElement.name", jsString(classifier.getName())) }}
     this._{{ classifier.getName() }}.setClassifierID(Ids.{{ classifier.getName() }}.self);
 {% for literal in classifier.getELiterals() %}
     {
       const literal = new EEnumLiteralImpl();
-      literal.setName({{ jsString(literal.getName()) }});
-      literal.setValue({{ literal.getValue() }});
-      literal.setLiteral({{ jsString(literal.getLiteral()) }});
+{{ bootstrapSet("literal", "setName", "Ids.ENamedElement.name", jsString(literal.getName())) }}
+{{ bootstrapSet("literal", "setValue", "Ids.EEnumLiteral.value", literal.getValue()) }}
+{{ bootstrapSet("literal", "setLiteral", "Ids.EEnumLiteral.literal", jsString(literal.getLiteral())) }}
 {{ emitAnnotations("literal", literal) }}
+{% if options['generate-ecore'] %}
+      // No addLiteral() here - this generated EEnumImpl doesn't have that
+      // hand-written convenience method (it's not a reflective feature),
+      // so the list-add and the eEnum backpointer (a real, modeled,
+      // non-changeable opposite - see NOTES.md) are wired manually.
+      this._{{ classifier.getName() }}.eBootstrapList(Ids.EEnum.eLiterals).add(literal);
+      literal.eBasicSetValue(Ids.EEnumLiteral.eEnum, this._{{ classifier.getName() }});
+{% else %}
       this._{{ classifier.getName() }}.addLiteral(literal);
+{% endif %}
     }
 {% endfor %}
 {{ emitAnnotations("this._" + classifier.getName(), classifier) }}
-    this.getEClassifiers().add(this._{{ classifier.getName() }});
+{{ bootstrapAdd("this", "getEClassifiers", "Ids.EPackage.eClassifiers", "this._" + classifier.getName()) }}
 {% else %}
     this._{{ classifier.getName() }} = new EDataTypeImpl();
-    this._{{ classifier.getName() }}.setName({{ jsString(classifier.getName()) }});
+{{ bootstrapSet("this._" + classifier.getName(), "setName", "Ids.ENamedElement.name", jsString(classifier.getName())) }}
     this._{{ classifier.getName() }}.setClassifierID(Ids.{{ classifier.getName() }}.self);
 {{ emitAnnotations("this._" + classifier.getName(), classifier) }}
-    this.getEClassifiers().add(this._{{ classifier.getName() }});
+{{ bootstrapAdd("this", "getEClassifiers", "Ids.EPackage.eClassifiers", "this._" + classifier.getName()) }}
 {% endif %}
 {% endfor %}
 
@@ -164,44 +219,71 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% for classifier in eClassesOf(package) %}
 {% for feature in classifier.getEStructuralFeatures() %}
     this._{{ classifier.getName() }}_{{ feature.getName() }} = new {{ "EReferenceImpl" if isEReference(feature) else "EAttributeImpl" }}();
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setName({{ jsString(feature.getName()) }});
+{% set fieldExpr = "this._" + classifier.getName() + "_" + feature.getName() %}
+{{ bootstrapSet(fieldExpr, "setName", "Ids.ENamedElement.name", jsString(feature.getName())) }}
 {% if feature.getEType() %}
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setEType(this._{{ feature.getEType().getName() }});
+{{ bootstrapSet(fieldExpr, "setEType", "Ids.ETypedElement.eType", "this._" + feature.getEType().getName()) }}
 {% endif %}
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setLowerBound({{ feature.getLowerBound() }});
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setUpperBound({{ feature.getUpperBound() }});
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setEContainingClass(this._{{ classifier.getName() }});
+{{ bootstrapSet(fieldExpr, "setLowerBound", "Ids.ETypedElement.lowerBound", feature.getLowerBound()) }}
+{{ bootstrapSet(fieldExpr, "setUpperBound", "Ids.ETypedElement.upperBound", feature.getUpperBound()) }}
+    {{ fieldExpr }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
+{{ bootstrapSet(fieldExpr, "setEContainingClass", "Ids.EStructuralFeature.eContainingClass", "this._" + classifier.getName()) }}
 {% if isEReference(feature) %}
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setContainment({{ 'true' if feature.isContainment() else 'false' }});
+{{ bootstrapSet(fieldExpr, "setContainment", "Ids.EReference.containment", 'true' if feature.isContainment() else 'false') }}
 {% else %}
 {% if feature.isID() %}
-    this._{{ classifier.getName() }}_{{ feature.getName() }}.setID(true);
+{{ bootstrapSet(fieldExpr, "setID", "Ids.EAttribute.iD", "true") }}
 {% endif %}
 {% endif %}
-{{ emitAnnotations("this._" + classifier.getName() + "_" + feature.getName(), feature) }}
-    this._{{ classifier.getName() }}.getEStructuralFeatures().add(this._{{ classifier.getName() }}_{{ feature.getName() }});
+{{ emitAnnotations(fieldExpr, feature) }}
+{{ bootstrapAdd("this._" + classifier.getName(), "getEStructuralFeatures", "Ids.EClass.eStructuralFeatures", fieldExpr) }}
 {% endfor %}
 {% endfor %}
 
     // Pass 3: every classifier's owning package (self-referential, so must
     // come after pass 1 creates them all).
 {% for classifier in package.getEClassifiers() %}
-    this._{{ classifier.getName() }}.setEPackage(this);
+{{ bootstrapSet("this._" + classifier.getName(), "setEPackage", "Ids.EClassifier.ePackage", "this") }}
 {% endfor %}
 
     // Pass 4: supertypes.
 {% for classifier in eClassesOf(package) %}
 {% set parent = superType(classifier) %}
 {% if parent %}
-    this._{{ classifier.getName() }}.getESuperTypes().add(this._{{ parent.getName() }});
+{{ bootstrapAdd("this._" + classifier.getName(), "getESuperTypes", "Ids.EClass.eSuperTypes", "this._" + parent.getName()) }}
 {% endif %}
 {% endfor %}
 
-    // Pass 5: recompute EAll* caches now that supertypes/features are wired.
+    // Pass 5: recompute EAll* caches now that supertypes/features are
+    // wired. Skipped entirely in generate-ecore mode: the generated
+    // classifier classes never implement recomputeAllLists() at all (a
+    // known, already-documented scope decision - the ~14 traversal-based
+    // derived features like eAllSuperTypes/eAllStructuralFeatures are
+    // stored fields on generated classes, not auto-computed, unlike
+    // @typemf/core's own hand-written EClassImpl, which has real,
+    // working versions of all of them). Calling a method the generated
+    // class doesn't have would always fail regardless of bootstrap
+    // ordering - this isn't a workaround for the ordering problem this
+    // file exists to fix, it's a separate, pre-existing, accepted gap.
+{% if not options['generate-ecore'] %}
 {% for classifier in eClassesOf(package) %}
     this._{{ classifier.getName() }}.recomputeAllLists();
 {% endfor %}
+{% endif %}
+
+    // Pass 6: set the package's own name/nsURI/nsPrefix/annotations last,
+    // deliberately - these go through the ordinary reflective setters
+    // (this.setName(), etc.), which need the "name"/etc. feature's own
+    // metaclass object to already exist (it's built above, in the passes
+    // this follows). Calling them earlier - before those metaclasses
+    // exist - is a genuine bootstrap-ordering bug, confirmed directly by
+    // reproducing it: this line order isn't a style choice, the metaclass
+    // shells and feature wiring above are a real, load-bearing
+    // precondition for the reflective setter calls below to work at all.
+    this.setName({{ jsString(package.getName()) }});
+    this.setNsURI({{ jsString(package.getNsURI()) }});
+    this.setNsPrefix({{ jsString(package.getNsPrefix()) }});
+{{ emitAnnotations("this", package) }}
   }
 
 {% for classifier in package.getEClassifiers() %}

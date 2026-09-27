@@ -1,11 +1,9 @@
-import {
-  EClass,
-  EList,
-  EObject,
-  EReference,
-  EStructuralFeature,
-} from "../../index.js";
-import { BasicEList } from "./index.js";
+import { EClass } from "../types/EClass.js";
+import { EList } from "../types/EList.js";
+import { EObject } from "../types/EObject.js";
+import { EReference } from "../types/EReference.js";
+import { EStructuralFeature } from "../types/EStructuralFeature.js";
+import { BasicEList } from "./BasicEList.js";
 
 let fallbackIdCounter = 0;
 

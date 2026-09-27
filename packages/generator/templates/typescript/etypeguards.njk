@@ -1,7 +1,7 @@
 {% file "util/" + typeGuardsClassName(package) + ".ts" %}
 import { EObject } from '{{ coreImportSpecifier("util", "types", options) }}';
 import { {% for classifier in eClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from '../types/index.js';
-import { {{ packageClassName(package) }}Impl } from '../impl/{{ packageClassName(package) }}Impl.js';
+import { get{{ packageClassName(package) }}Ref } from '../impl/{{ packageClassName(package) }}Ref.js';
 
 /**
  * Runtime type guards, one per classifier declared in types/ - the
@@ -28,7 +28,7 @@ function hasEClass(obj: unknown): obj is EObject {
 
 {% for classifier in eClassesOf(package) %}
 export function is{{ classifier.getName() }}(obj: unknown): obj is {{ classifier.getName() }} {
-  return hasEClass(obj) && {{ packageClassName(package) }}Impl.eINSTANCE.get{{ classifier.getName() }}().isSuperTypeOf(obj.eClass());
+  return hasEClass(obj) && get{{ packageClassName(package) }}Ref().get{{ classifier.getName() }}().isSuperTypeOf(obj.eClass());
 }
 {% endfor %}
 {% endfile %}

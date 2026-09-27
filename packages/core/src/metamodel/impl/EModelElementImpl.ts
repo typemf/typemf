@@ -1,15 +1,27 @@
-import { EClass, EList, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { EList } from '../types/EList.js';
+import { EObjectImpl } from './EObjectImpl.js';
+import { BasicEList } from './BasicEList.js';
 import { EModelElement } from '../types/EModelElement.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EAnnotation } from '../types/EAnnotation.js';
 
 
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
-  private readonly _eAnnotations = new BasicEList<EAnnotation>(this, EcorePackageImpl.eINSTANCE.getEModelElement_EAnnotations());
+
+  private _eAnnotationsCache: BasicEList<EAnnotation> | undefined;
+
+  private get _eAnnotations(): BasicEList<EAnnotation> {
+    if (!this._eAnnotationsCache) {
+      this._eAnnotationsCache = new BasicEList<EAnnotation>(this, getEcorePackageRef().getEModelElement_EAnnotations());
+    }
+    return this._eAnnotationsCache;
+  }
+
 
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEModelElement();
+    return getEcorePackageRef().getEModelElement();
   }
 
   getEAnnotations(): EList<EAnnotation> {
@@ -41,17 +53,26 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       default:
-        throw new Error(`Feature ${feature.getFeatureID()} on EModelElement is many-valued or unknown.`);
+        throw new Error(`Feature ${featureId} on EModelElement is many-valued or unknown.`);
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 0:
+        if (!this._eAnnotationsCache) this._eAnnotationsCache = new BasicEList<EAnnotation>(this);
+        return this._eAnnotationsCache;
+      default:
+        throw new Error(`Feature ${featureId} on EModelElement is single-valued or unknown.`);
     }
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 0: return this._eAnnotations.size() !== 0;
+      case 0: return this._eAnnotationsCache !== undefined && this._eAnnotationsCache.size() !== 0;
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }
@@ -59,7 +80,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-      case 0: this._eAnnotations.clear(); return;
+      case 0: this._eAnnotationsCache?.clear(); return;
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }

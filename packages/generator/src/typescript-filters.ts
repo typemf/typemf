@@ -17,8 +17,8 @@ export function documentationOf(element: EModelElement): string | undefined {
   return element
     .getEAnnotation(GENMODEL_ANNOTATION_SOURCE)
     ?.getDetails()
-    .filter(details => details.getKey() === "documentation")
-    .map(details => details.getValue())
+    .filter((details) => details.getKey() === "documentation")
+    .map((details) => details.getValue())
     .at(0);
 }
 
@@ -51,7 +51,7 @@ export function operationBody(
   templateSetName: string,
 ): string | undefined {
   return operation
-    .getEAnnotation(TYPEMF_GENERATOR_ANNOTATION_SOURCE)
+    .getEAnnotation(GENMODEL_ANNOTATION_SOURCE)
     ?.getDetails()
     .filter((details) => details.getKey() === "body")
     .map((details) => details.getValue())
@@ -436,6 +436,27 @@ export function coreImportLine(
 ): string {
   const filtered = excludeCollidingCoreNames(names, pkg);
   if (filtered.length === 0) return "";
+  // Same-folder case in generate-ecore mode (location === kind: impl importing
+  // from impl/index.js, or types importing from types/index.js) - a real,
+  // confirmed hazard, not a theoretical one: importing from your OWN folder's
+  // barrel, which re-exports every sibling file including yourself, puts
+  // every file in that folder into one strongly-connected component. For an
+  // ordinary generated package that's harmless in practice, but self-hosting
+  // Ecore.ecore has real classes at the root of the hierarchy (EObjectImpl,
+  // BasicEList) imported this way by every one of ~20 classifier impls,
+  // several of which are ALSO extended by something else the package
+  // singleton constructs - and esbuild's single-file bundle has no reliable
+  // way to linearize a component that large, confirmed directly by
+  // reproducing the exact "Class extends value undefined" failure this
+  // caused, then confirming it's gone once every same-folder barrel import
+  // was replaced with direct, per-file ones. Each name's own file is always
+  // just `./{name}.js` by this generator's own naming convention, so this
+  // needs no separate lookup table.
+  if (options["generate-ecore"] && location === kind) {
+    return filtered
+      .map((name) => `import { ${name} } from './${name}.js';`)
+      .join("\n");
+  }
   return `import { ${filtered.join(", ")} } from '${coreImportSpecifier(location, kind, options)}';`;
 }
 
@@ -485,6 +506,58 @@ export function superTypeChain(eClass: EClass): EClass[] {
 }
 
 /**
+ * Whether this class descends from (or is) "EClassifier" - needed
+ * specifically for self-hosting Ecore.ecore: classifierID is internal
+ * dispatch bookkeeping, not a real modeled Ecore feature, so it's never
+ * emitted by the ordinary feature-driven getter/setter generation - but
+ * bootstrap code constructing the metamodel's own classifier shells
+ * (which ARE real EClassifier-derived instances, e.g. EClassImpl,
+ * EDataTypeImpl) genuinely needs to set it. Confirmed as a real,
+ * necessary gap by actually running self-hosted bootstrap code, not
+ * assumed - see NOTES.md.
+ */
+export function isClassifierDerived(eClass: EClass): boolean {
+  return superTypeChain(eClass).some((c) => c.getName() === "EClassifier");
+}
+
+/** The featureID analog of isClassifierDerived() - same reasoning, same real gap found the same way (see NOTES.md). */
+export function isStructuralFeatureDerived(eClass: EClass): boolean {
+  return superTypeChain(eClass).some(
+    (c) => c.getName() === "EStructuralFeature",
+  );
+}
+
+/**
+ * Whether a real EOperation's name collides with a hand-added bookkeeping
+ * method (classifierID/featureID - see isClassifierDerived/
+ * isStructuralFeatureDerived's own doc comments). Real Ecore.ecore
+ * genuinely declares both "EClassifier.getClassifierID(): EInt" and
+ * "EStructuralFeature.getFeatureID(): EInt" as real, zero-arg operations
+ * - colliding, by name, with exactly the bookkeeping getters added for
+ * the self-hosting bootstrap fix. Confirmed directly against the real
+ * file before excluding these operations from the generic,
+ * throwing-stub-generating operation loop, not assumed - see NOTES.md.
+ */
+export function isBookkeepingOperation(
+  op: EOperation,
+  eClass: EClass,
+): boolean {
+  if (
+    op.getName() === "getClassifierID" &&
+    op.getEParameters().isEmpty() &&
+    isClassifierDerived(eClass)
+  )
+    return true;
+  if (
+    op.getName() === "getFeatureID" &&
+    op.getEParameters().isEmpty() &&
+    isStructuralFeatureDerived(eClass)
+  )
+    return true;
+  return false;
+}
+
+/**
  * Distinct EClass/EEnum type names referenced by `features` (an EClass or
  * EEnum's own attribute/reference types) that need their own import
  * statement - EDataType primitives (string/number/boolean/Date) never do.
@@ -503,7 +576,8 @@ export function referencedApiTypes(
     const type = feature.getEType();
     if (!type) continue;
     if (isEReference(feature) || isEEnum(type)) {
-      if (!exclude.has(type.getName() as string)) names.add(type.getName() as string);
+      if (!exclude.has(type.getName() as string))
+        names.add(type.getName() as string);
     }
   }
   return [...names];

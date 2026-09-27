@@ -14,6 +14,7 @@ export * from './{{ classifier.getName() }}.js';
 {% endfile %}
 {% file "impl/index.ts" %}
 export * from './{{ packageClassName(package) }}Impl.js';
+export * from './{{ packageClassName(package) }}Ref.js';
 export * from './{{ factoryClassName(package) }}Impl.js';
 {% for classifier in eClassesOf(package) %}
 export * from './{{ classifier.getName() }}Impl.js';

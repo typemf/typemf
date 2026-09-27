@@ -1,4 +1,6 @@
-import { EClass, EDataType, EObject } from './index.js';
+import { EClass } from './EClass.js';
+import { EDataType } from './EDataType.js';
+import { EObject } from './EObject.js';
 import { EModelElement } from './EModelElement.js';
 import { EPackage } from './EPackage.js';
 

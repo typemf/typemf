@@ -1,21 +1,33 @@
-import { EClass, EList, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EList } from '../types/EList.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { EObjectImpl } from './EObjectImpl.js';
+import { BasicEList } from './BasicEList.js';
 import { EGenericType } from '../types/EGenericType.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
 
 export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   private _eUpperBound: EGenericType | undefined;
-  private readonly _eTypeArguments = new BasicEList<EGenericType>(this, EcorePackageImpl.eINSTANCE.getEGenericType_ETypeArguments());
+
+  private _eTypeArgumentsCache: BasicEList<EGenericType> | undefined;
+
+  private get _eTypeArguments(): BasicEList<EGenericType> {
+    if (!this._eTypeArgumentsCache) {
+      this._eTypeArgumentsCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getEGenericType_ETypeArguments());
+    }
+    return this._eTypeArgumentsCache;
+  }
   private _eRawType: EClassifier | undefined;
   private _eLowerBound: EGenericType | undefined;
   private _eTypeParameter: ETypeParameter | undefined;
   private _eClassifier: EClassifier | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEGenericType();
+    return getEcorePackageRef().getEGenericType();
   }
 
   getEUpperBound(): EGenericType | undefined {
@@ -23,7 +35,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   }
 
   setEUpperBound(value: EGenericType | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEGenericType_EUpperBound(), value);
+    this.eSet(getEcorePackageRef().getEGenericType_EUpperBound(), value);
   }
   getETypeArguments(): EList<EGenericType> {
     return this._eTypeArguments;
@@ -33,28 +45,28 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   }
 
   setERawType(value: EClassifier | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEGenericType_ERawType(), value);
+    this.eSet(getEcorePackageRef().getEGenericType_ERawType(), value);
   }
   getELowerBound(): EGenericType | undefined {
     return this._eLowerBound;
   }
 
   setELowerBound(value: EGenericType | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEGenericType_ELowerBound(), value);
+    this.eSet(getEcorePackageRef().getEGenericType_ELowerBound(), value);
   }
   getETypeParameter(): ETypeParameter | undefined {
     return this._eTypeParameter;
   }
 
   setETypeParameter(value: ETypeParameter | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEGenericType_ETypeParameter(), value);
+    this.eSet(getEcorePackageRef().getEGenericType_ETypeParameter(), value);
   }
   getEClassifier(): EClassifier | undefined {
     return this._eClassifier;
   }
 
   setEClassifier(value: EClassifier | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEGenericType_EClassifier(), value);
+    this.eSet(getEcorePackageRef().getEGenericType_EClassifier(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -123,23 +135,32 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
         throw new Error(`EGenericType has no feature with id ${feature.getFeatureID()}`);
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 0: this._eUpperBound = value as EGenericType | undefined; return;
       case 2: this._eRawType = value as EClassifier | undefined; return;
       case 3: this._eLowerBound = value as EGenericType | undefined; return;
       case 4: this._eTypeParameter = value as ETypeParameter | undefined; return;
       case 5: this._eClassifier = value as EClassifier | undefined; return;
       default:
-        throw new Error(`Feature ${feature.getFeatureID()} on EGenericType is many-valued or unknown.`);
+        throw new Error(`Feature ${featureId} on EGenericType is many-valued or unknown.`);
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 1:
+        if (!this._eTypeArgumentsCache) this._eTypeArgumentsCache = new BasicEList<EGenericType>(this);
+        return this._eTypeArgumentsCache;
+      default:
+        throw new Error(`Feature ${featureId} on EGenericType is single-valued or unknown.`);
     }
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 0: return this._eUpperBound !== undefined;
-      case 1: return this._eTypeArguments.size() !== 0;
+      case 1: return this._eTypeArgumentsCache !== undefined && this._eTypeArgumentsCache.size() !== 0;
       case 2: return this._eRawType !== undefined;
       case 3: return this._eLowerBound !== undefined;
       case 4: return this._eTypeParameter !== undefined;
@@ -157,7 +178,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 1: this._eTypeArguments.clear(); return;
+      case 1: this._eTypeArgumentsCache?.clear(); return;
       case 2: {
         const oldValue = this._eRawType;
         this._eRawType = undefined;

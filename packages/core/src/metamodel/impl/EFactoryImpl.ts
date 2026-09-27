@@ -1,7 +1,10 @@
-import { EClass, EDataType, EObject, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EObject } from '../types/EObject.js';
+import { EDataType } from '../types/EDataType.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EFactory } from '../types/EFactory.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EPackage } from '../types/EPackage.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
 
@@ -9,8 +12,9 @@ import { EModelElementImpl } from './EModelElementImpl.js';
 export class EFactoryImpl extends EModelElementImpl implements EFactory {
   private _ePackage: EPackage | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEFactory();
+    return getEcorePackageRef().getEFactory();
   }
 
   getEPackage(): EPackage | undefined {
@@ -18,7 +22,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   }
 
   setEPackage(value: EPackage | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEFactory_EPackage(), value);
+    this.eSet(getEcorePackageRef().getEFactory_EPackage(), value);
   }
 
   create(eClass: EClass): EObject | undefined {
@@ -56,13 +60,19 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 1: this._ePackage = value as EPackage | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
         return;
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        return super.eBootstrapList(featureId);
     }
   }
 

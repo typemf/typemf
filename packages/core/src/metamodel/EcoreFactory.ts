@@ -1,5 +1,18 @@
-import { EObject } from './types/index.js';
-import { EAttribute, EAnnotation, EClass, EDataType, EEnum, EEnumLiteral, EFactory, EOperation, EPackage, EParameter, EReference, EStringToStringMapEntry, EGenericType, ETypeParameter } from './types/index.js';
+import { EObject } from "./types/EObject.js";
+import { EAttribute } from "./types/EAttribute.js";
+import { EAnnotation } from "./types/EAnnotation.js";
+import { EClass } from "./types/EClass.js";
+import { EDataType } from "./types/EDataType.js";
+import { EEnum } from "./types/EEnum.js";
+import { EEnumLiteral } from "./types/EEnumLiteral.js";
+import { EFactory } from "./types/EFactory.js";
+import { EOperation } from "./types/EOperation.js";
+import { EPackage } from "./types/EPackage.js";
+import { EParameter } from "./types/EParameter.js";
+import { EReference } from "./types/EReference.js";
+import { EStringToStringMapEntry } from "./types/EStringToStringMapEntry.js";
+import { EGenericType } from "./types/EGenericType.js";
+import { ETypeParameter } from "./types/ETypeParameter.js";
 
 export interface EcoreFactory extends EFactory {
   createEAttribute(): EAttribute;

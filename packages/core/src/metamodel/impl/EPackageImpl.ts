@@ -1,7 +1,9 @@
-import { EClass, EList, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EList } from '../types/EList.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EPackage } from '../types/EPackage.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EFactory } from '../types/EFactory.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
@@ -11,12 +13,29 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   private _nsURI: string | undefined;
   private _nsPrefix: string | undefined;
   private _eFactoryInstance: EFactory | undefined;
-  private readonly _eClassifiers = new BasicEList<EClassifier>(this, EcorePackageImpl.eINSTANCE.getEPackage_EClassifiers());
-  private readonly _eSubpackages = new BasicEList<EPackage>(this, EcorePackageImpl.eINSTANCE.getEPackage_ESubpackages());
+
+  private _eClassifiersCache: BasicEList<EClassifier> | undefined;
+
+  private get _eClassifiers(): BasicEList<EClassifier> {
+    if (!this._eClassifiersCache) {
+      this._eClassifiersCache = new BasicEList<EClassifier>(this, getEcorePackageRef().getEPackage_EClassifiers());
+    }
+    return this._eClassifiersCache;
+  }
+
+  private _eSubpackagesCache: BasicEList<EPackage> | undefined;
+
+  private get _eSubpackages(): BasicEList<EPackage> {
+    if (!this._eSubpackagesCache) {
+      this._eSubpackagesCache = new BasicEList<EPackage>(this, getEcorePackageRef().getEPackage_ESubpackages());
+    }
+    return this._eSubpackagesCache;
+  }
   private _eSuperPackage: EPackage | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEPackage();
+    return getEcorePackageRef().getEPackage();
   }
 
   getNsURI(): string | undefined {
@@ -24,21 +43,21 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   setNsURI(value: string | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEPackage_NsURI(), value);
+    this.eSet(getEcorePackageRef().getEPackage_NsURI(), value);
   }
   getNsPrefix(): string | undefined {
     return this._nsPrefix;
   }
 
   setNsPrefix(value: string | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEPackage_NsPrefix(), value);
+    this.eSet(getEcorePackageRef().getEPackage_NsPrefix(), value);
   }
   getEFactoryInstance(): EFactory | undefined {
     return this._eFactoryInstance;
   }
 
   setEFactoryInstance(value: EFactory | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEPackage_EFactoryInstance(), value);
+    this.eSet(getEcorePackageRef().getEPackage_EFactoryInstance(), value);
   }
   getEClassifiers(): EList<EClassifier> {
     return this._eClassifiers;
@@ -51,7 +70,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   setESuperPackage(value: EPackage | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEPackage_ESuperPackage(), value);
+    this.eSet(getEcorePackageRef().getEPackage_ESuperPackage(), value);
   }
 
   getEClassifier(name: string): EClassifier | undefined {
@@ -124,9 +143,9 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 2: this._nsURI = value as string | undefined; return;
       case 3: this._nsPrefix = value as string | undefined; return;
       case 4: this._eFactoryInstance = value as EFactory | undefined; return;
@@ -136,14 +155,26 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         return;
     }
   }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 5:
+        if (!this._eClassifiersCache) this._eClassifiersCache = new BasicEList<EClassifier>(this);
+        return this._eClassifiersCache;
+      case 6:
+        if (!this._eSubpackagesCache) this._eSubpackagesCache = new BasicEList<EPackage>(this);
+        return this._eSubpackagesCache;
+      default:
+        return super.eBootstrapList(featureId);
+    }
+  }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 2: return this._nsURI !== undefined;
       case 3: return this._nsPrefix !== undefined;
       case 4: return this._eFactoryInstance !== undefined;
-      case 5: return this._eClassifiers.size() !== 0;
-      case 6: return this._eSubpackages.size() !== 0;
+      case 5: return this._eClassifiersCache !== undefined && this._eClassifiersCache.size() !== 0;
+      case 6: return this._eSubpackagesCache !== undefined && this._eSubpackagesCache.size() !== 0;
       case 7: return this._eSuperPackage !== undefined;
       default:
         return super.eIsSet(feature);
@@ -170,8 +201,8 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 5: this._eClassifiers.clear(); return;
-      case 6: this._eSubpackages.clear(); return;
+      case 5: this._eClassifiersCache?.clear(); return;
+      case 6: this._eSubpackagesCache?.clear(); return;
       case 7: {
         const oldValue = this._eSuperPackage;
         this._eSuperPackage = undefined;

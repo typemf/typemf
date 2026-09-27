@@ -1,5 +1,7 @@
-import { EList, EReference, EStructuralFeature } from "../types/index.js";
-import { EObjectImpl } from "./index.js";
+import { EList } from "../types/EList.js";
+import { EReference } from "../types/EReference.js";
+import { EStructuralFeature } from "../types/EStructuralFeature.js";
+import { EObjectImpl } from "./EObjectImpl.js";
 
 /**
  * Array-backed EList. When constructed with an owner + feature, add/remove

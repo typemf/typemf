@@ -1,7 +1,8 @@
-import { EClass, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { ETypedElement } from '../types/ETypedElement.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { EGenericType } from '../types/EGenericType.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
@@ -17,8 +18,9 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   private _eType: EClassifier | undefined;
   private _eGenericType: EGenericType | undefined;
 
+
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getETypedElement();
+    return getEcorePackageRef().getETypedElement();
   }
 
   isOrdered(): boolean {
@@ -26,28 +28,28 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   }
 
   setOrdered(value: boolean): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_Ordered(), value);
+    this.eSet(getEcorePackageRef().getETypedElement_Ordered(), value);
   }
   isUnique(): boolean {
     return this._unique;
   }
 
   setUnique(value: boolean): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_Unique(), value);
+    this.eSet(getEcorePackageRef().getETypedElement_Unique(), value);
   }
   getLowerBound(): number {
     return this._lowerBound;
   }
 
   setLowerBound(value: number): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_LowerBound(), value);
+    this.eSet(getEcorePackageRef().getETypedElement_LowerBound(), value);
   }
   getUpperBound(): number {
     return this._upperBound;
   }
 
   setUpperBound(value: number): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_UpperBound(), value);
+    this.eSet(getEcorePackageRef().getETypedElement_UpperBound(), value);
   }
   isMany(): boolean {
     return this.getUpperBound() === -1 || this.getUpperBound() > 1;
@@ -60,14 +62,14 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   }
 
   setEType(value: EClassifier | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_EType(), value);
+    this.eSet(getEcorePackageRef().getETypedElement_EType(), value);
   }
   getEGenericType(): EGenericType | undefined {
     return this._eGenericType;
   }
 
   setEGenericType(value: EGenericType | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getETypedElement_EGenericType(), value);
+    this.eSet(getEcorePackageRef().getETypedElement_EGenericType(), value);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -156,9 +158,9 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 2: this._ordered = value as boolean; return;
       case 3: this._unique = value as boolean; return;
       case 4: this._lowerBound = value as number; return;
@@ -170,6 +172,12 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
       default:
         super.eBasicSetValue(feature, value);
         return;
+    }
+  }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      default:
+        return super.eBootstrapList(featureId);
     }
   }
 

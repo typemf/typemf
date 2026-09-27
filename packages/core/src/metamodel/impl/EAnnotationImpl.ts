@@ -1,7 +1,10 @@
-import { EClass, EList, EObject, EStructuralFeature } from '../types/index.js';
-import { EObjectImpl, BasicEList } from './index.js';
+import { EClass } from '../types/EClass.js';
+import { EList } from '../types/EList.js';
+import { EObject } from '../types/EObject.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 import { EAnnotation } from '../types/EAnnotation.js';
-import { EcorePackageImpl } from './EcorePackageImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
@@ -9,13 +12,38 @@ import { EModelElementImpl } from './EModelElementImpl.js';
 
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   private _source: string | undefined;
-  private readonly _details = new BasicEList<EStringToStringMapEntry>(this, EcorePackageImpl.eINSTANCE.getEAnnotation_Details());
+
+  private _detailsCache: BasicEList<EStringToStringMapEntry> | undefined;
+
+  private get _details(): BasicEList<EStringToStringMapEntry> {
+    if (!this._detailsCache) {
+      this._detailsCache = new BasicEList<EStringToStringMapEntry>(this, getEcorePackageRef().getEAnnotation_Details());
+    }
+    return this._detailsCache;
+  }
   private _eModelElement: EModelElement | undefined;
-  private readonly _contents = new BasicEList<EObject>(this, EcorePackageImpl.eINSTANCE.getEAnnotation_Contents());
-  private readonly _references = new BasicEList<EObject>(this, EcorePackageImpl.eINSTANCE.getEAnnotation_References());
+
+  private _contentsCache: BasicEList<EObject> | undefined;
+
+  private get _contents(): BasicEList<EObject> {
+    if (!this._contentsCache) {
+      this._contentsCache = new BasicEList<EObject>(this, getEcorePackageRef().getEAnnotation_Contents());
+    }
+    return this._contentsCache;
+  }
+
+  private _referencesCache: BasicEList<EObject> | undefined;
+
+  private get _references(): BasicEList<EObject> {
+    if (!this._referencesCache) {
+      this._referencesCache = new BasicEList<EObject>(this, getEcorePackageRef().getEAnnotation_References());
+    }
+    return this._referencesCache;
+  }
+
 
   eClass(): EClass {
-    return EcorePackageImpl.eINSTANCE.getEAnnotation();
+    return getEcorePackageRef().getEAnnotation();
   }
 
   getSource(): string | undefined {
@@ -23,7 +51,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   }
 
   setSource(value: string | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEAnnotation_Source(), value);
+    this.eSet(getEcorePackageRef().getEAnnotation_Source(), value);
   }
   getDetails(): EList<EStringToStringMapEntry> {
     return this._details;
@@ -33,7 +61,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   }
 
   setEModelElement(value: EModelElement | undefined): void {
-    this.eSet(EcorePackageImpl.eINSTANCE.getEAnnotation_EModelElement(), value);
+    this.eSet(getEcorePackageRef().getEAnnotation_EModelElement(), value);
   }
   getContents(): EList<EObject> {
     return this._contents;
@@ -98,9 +126,9 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         return;
     }
   }
-
-  eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
-    switch (feature.getFeatureID()) {
+  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+    const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
+    switch (featureId) {
       case 1: this._source = value as string | undefined; return;
       case 3: this._eModelElement = value as EModelElement | undefined; return;
       default:
@@ -108,14 +136,29 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         return;
     }
   }
+  eBootstrapList(featureId: number): BasicEList<unknown> {
+    switch (featureId) {
+      case 2:
+        if (!this._detailsCache) this._detailsCache = new BasicEList<EStringToStringMapEntry>(this);
+        return this._detailsCache;
+      case 4:
+        if (!this._contentsCache) this._contentsCache = new BasicEList<EObject>(this);
+        return this._contentsCache;
+      case 5:
+        if (!this._referencesCache) this._referencesCache = new BasicEList<EObject>(this);
+        return this._referencesCache;
+      default:
+        return super.eBootstrapList(featureId);
+    }
+  }
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
       case 1: return this._source !== undefined;
-      case 2: return this._details.size() !== 0;
+      case 2: return this._detailsCache !== undefined && this._detailsCache.size() !== 0;
       case 3: return this._eModelElement !== undefined;
-      case 4: return this._contents.size() !== 0;
-      case 5: return this._references.size() !== 0;
+      case 4: return this._contentsCache !== undefined && this._contentsCache.size() !== 0;
+      case 5: return this._referencesCache !== undefined && this._referencesCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -129,15 +172,15 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 2: this._details.clear(); return;
+      case 2: this._detailsCache?.clear(); return;
       case 3: {
         const oldValue = this._eModelElement;
         this._eModelElement = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
-      case 4: this._contents.clear(); return;
-      case 5: this._references.clear(); return;
+      case 4: this._contentsCache?.clear(); return;
+      case 5: this._referencesCache?.clear(); return;
       default:
         super.eUnset(feature);
         return;
