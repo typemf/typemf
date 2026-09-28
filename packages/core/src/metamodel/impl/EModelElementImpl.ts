@@ -1,11 +1,11 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EList } from '../types/EList.js';
 import { EObjectImpl } from './EObjectImpl.js';
 import { BasicEList } from './BasicEList.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EAnnotation } from '../types/EAnnotation.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
@@ -29,7 +29,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   }
 
   getEAnnotation(source: string): EAnnotation | undefined {
-    throw new Error('EModelElement.getEAnnotation() has no body:typescript annotation - nothing to generate.');
+    return this.getEAnnotations().filter(ann => ann.getSource() === source).at(0);
   }
 
   eGet(feature: EStructuralFeature): unknown {

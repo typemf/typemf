@@ -1,5 +1,3 @@
-import { EObject } from './EObject.js';
-import { EList } from './EList.js';
 import { EModelElement } from './EModelElement.js';
 
 

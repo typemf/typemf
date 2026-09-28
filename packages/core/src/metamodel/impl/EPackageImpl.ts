@@ -1,12 +1,12 @@
 import { EList } from '../types/EList.js';
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EPackage } from '../types/EPackage.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EFactory } from '../types/EFactory.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EPackageImpl extends ENamedElementImpl implements EPackage {
@@ -74,7 +74,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   getEClassifier(name: string): EClassifier | undefined {
-    throw new Error('EPackage.getEClassifier() has no body:typescript annotation - nothing to generate.');
+    return this.getEClassifiers().filter(cl => cl.getName() === name).at(0);
   }
 
   eGet(feature: EStructuralFeature): unknown {

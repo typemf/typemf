@@ -1,9 +1,9 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EObjectImpl } from './EObjectImpl.js';
 import { BasicEList } from './BasicEList.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {

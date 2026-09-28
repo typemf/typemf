@@ -1,12 +1,12 @@
-import { EClass } from '../types/EClass.js';
 import { EList } from '../types/EList.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EPackage } from '../types/EPackage.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { TypeScriptClass } from '../types/TypeScriptClass.js';
 
 

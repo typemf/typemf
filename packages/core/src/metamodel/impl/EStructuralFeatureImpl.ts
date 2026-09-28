@@ -1,9 +1,9 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
-import { TypeScriptClass } from '../types/TypeScriptClass.js';
 import { BasicEList } from './BasicEList.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
+import { EClass } from '../types/EClass.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
+import { TypeScriptClass } from '../types/TypeScriptClass.js';
 
 
 export class EStructuralFeatureImpl extends ETypedElementImpl implements EStructuralFeature {
@@ -186,7 +186,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
       case 11: this._volatile = value as boolean; return;
       case 12: this._transient = value as boolean; return;
       case 13: this._defaultValueLiteral = value as string | undefined; return;
-      case 14: this._defaultValue = value as TypeScriptClass<unknown> | undefined; return;
+      case 14: this._defaultValue = value as unknown | undefined; return;
       case 15: this._unsettable = value as boolean; return;
       case 16: this._derived = value as boolean; return;
       case 17: this._eContainingClass = value as EClass | undefined; return;

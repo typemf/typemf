@@ -1,4 +1,35 @@
-import { EObject, EStructuralFeature } from '@typemf/core';
+import { EObject, EStructuralFeature, EClass, EAttribute } from '@typemf/core';
+
+/**
+ * Own + inherited structural features/attributes, computed manually by
+ * walking getEStructuralFeatures() (own-only) up through getESuperTypes()
+ * (single-level, direct supertypes) - not eClass.getEAllStructuralFeatures()/
+ * getEAllAttributes() directly. Shared with xmi-serializer.ts, which has
+ * the full explanation in its own doc comment: those methods are empty
+ * on self-hosted, generated classifier metaclasses (one of the "~14
+ * traversal-based derived features" that are stored fields on generated
+ * classes, never auto-computed, since Pass 5/recomputeAllLists() is
+ * deliberately skipped for them - see the generator's own NOTES.md).
+ * getEStructuralFeatures() and getESuperTypes() are both real, populated
+ * fields regardless of whether the metamodel in use is self-hosted or
+ * hand-written, so this works correctly either way.
+ */
+export function allStructuralFeaturesOf(eClass: EClass): EStructuralFeature[] {
+  const seen = new Set<EClass>();
+  const result: EStructuralFeature[] = [];
+  function visit(c: EClass): void {
+    if (seen.has(c)) return;
+    seen.add(c);
+    for (const parent of c.getESuperTypes()) visit(parent);
+    result.push(...c.getEStructuralFeatures());
+  }
+  visit(eClass);
+  return result;
+}
+
+export function allAttributesOf(eClass: EClass): EAttribute[] {
+  return allStructuralFeaturesOf(eClass).filter((f): f is EAttribute => !('isContainment' in f));
+}
 
 /**
  * EMF's actual default fragment grammar - deliberately a separate
@@ -22,10 +53,7 @@ import { EObject, EStructuralFeature } from '@typemf/core';
  * ID attribute is preferred whenever the target EClass has one.
  */
 export function computeEmfFragment(target: EObject, roots: EObject[]): string {
-  const idAttribute = target
-    .eClass()
-    .getEAllAttributes()
-    .find((attr) => attr.isID());
+  const idAttribute = allAttributesOf(target.eClass()).find((attr) => attr.isID());
   if (idAttribute && target.eIsSet(idAttribute)) {
     return String(target.eGet(idAttribute));
   }
@@ -124,7 +152,7 @@ function walkNamedSegments(path: string, start: EObject): EObject | undefined {
     // current is (structurally) an EPackage: look up a classifier IT
     // declares by name - via current's own "eClassifiers" feature VALUE,
     // not via a feature named "eClassifiers" found some other way.
-    const eClassifiersFeature = currentClass.getEStructuralFeatures().filter(feature => feature.getName() === 'eClassifiers').at(0);
+    const eClassifiersFeature = allStructuralFeaturesOf(currentClass).filter(feature => feature.getName() === 'eClassifiers').at(0);
     if (eClassifiersFeature) {
       current = findNamedChild(current, eClassifiersFeature, name);
       continue;
@@ -135,7 +163,7 @@ function walkNamedSegments(path: string, start: EObject): EObject | undefined {
     // on currentClass itself would instead search the shared reflective
     // shape every EClass-instance has - abstract/eSuperTypes/etc - which
     // is not what a "ClassName/featureName" fragment means.)
-    const eStructuralFeaturesFeature = currentClass.getEStructuralFeatures().filter(feature => feature.getName() === 'eStructuralFeatures').at(0);
+    const eStructuralFeaturesFeature = allStructuralFeaturesOf(currentClass).filter(feature => feature.getName() === 'eStructuralFeatures').at(0);
     if (eStructuralFeaturesFeature) {
       current = findNamedChild(current, eStructuralFeaturesFeature, name);
       continue;
@@ -149,7 +177,7 @@ function walkNamedSegments(path: string, start: EObject): EObject | undefined {
 function findNamedChild(container: EObject, listFeature: EStructuralFeature, name: string): EObject | undefined {
   const children: EObject[] = [...(container.eGet(listFeature) as Iterable<EObject>)];
   return children.find((child: EObject) => {
-    const nameFeature = child.eClass().getEStructuralFeatures().filter(feature => feature.getName() === 'name').at(0);
+    const nameFeature = allStructuralFeaturesOf(child.eClass()).filter(feature => feature.getName() === 'name').at(0);
     return nameFeature !== undefined && child.eGet(nameFeature) === name;
   });
 }
@@ -160,7 +188,7 @@ function walkSegments(path: string, start: EObject): EObject | undefined {
     if (!segment.startsWith('@')) return undefined;
     const dotIndex = segment.indexOf('.');
     const featureName = dotIndex === -1 ? segment.slice(1) : segment.slice(1, dotIndex);
-    const feature = current.eClass().getEStructuralFeatures().filter(feature => feature.getName() === featureName).at(0);
+    const feature = allStructuralFeaturesOf(current.eClass()).filter(feature => feature.getName() === featureName).at(0);
     if (!feature) return undefined;
 
     if (feature.isMany()) {
@@ -187,10 +215,7 @@ function findByIdValue(idValue: string, roots: EObject[]): EObject | undefined {
 }
 
 function findByIdValueIn(obj: EObject, idValue: string): EObject | undefined {
-  const idAttribute = obj
-    .eClass()
-    .getEAllAttributes()
-    .find((attr) => attr.isID());
+  const idAttribute = allAttributesOf(obj.eClass()).find((attr) => attr.isID());
   if (idAttribute && obj.eIsSet(idAttribute) && String(obj.eGet(idAttribute)) === idValue) {
     return obj;
   }

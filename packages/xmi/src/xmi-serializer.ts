@@ -11,7 +11,7 @@ import {
   getResourceOf,
   type EObjectSerializer,
 } from '@typemf/core';
-import { computeEmfFragment, resolveEmfFragment } from './emf-fragment.js';
+import { allStructuralFeaturesOf, computeEmfFragment, resolveEmfFragment } from './emf-fragment.js';
 import { NamespaceCollector } from './namespace-collector.js';
 import { escapeAttributeValue, escapeText } from './xml-text.js';
 import { parseXmlDocument } from './xml-dom.js';
@@ -99,11 +99,39 @@ export class XmiSerializer implements EObjectSerializer {
       );
     }
 
-    const ctx: DeserializeContext = { packageRegistry, pendingRefs: [] };
+    const ctx: DeserializeContext = { packageRegistry };
+    const elementToObj = new Map<Element, EObject>();
+
+    // Pass 1: construct every object in the document (via its own
+    // containment structure - classifiers, features, operations,
+    // parameters, annotations, ... - recursively) and set only its
+    // "name" (when its EClass has one), wiring each into its parent's
+    // containment feature immediately. This establishes the complete
+    // object graph and its full name/position-addressable structure
+    // before anything tries to resolve a same-document reference.
+    //
+    // Pass 2 (completeObject, below) then re-walks the same tree - using
+    // elementToObj to find the shell pass 1 already built for each
+    // element, rather than constructing a new one - and fills in every
+    // remaining attribute and reference.
+    //
+    // Necessary because real, externally-authored .ecore files contain
+    // genuine FORWARD same-document references - e.g. real Ecore.ecore's
+    // own "EAttribute" (declared first) has eSuperTypes="#//EStructuralFeature"
+    // (declared much later) - and resolving references inline, during
+    // the same single pass that constructs objects, fails outright for
+    // any such forward reference: the target simply doesn't exist yet.
+    // Confirmed directly against the real file, not assumed - see
+    // NOTES.md. A prior version deferred only same-document REFERENCES
+    // via a pendingRefs callback queue, resolved once after the (single)
+    // construction pass finished - but that doesn't help here, since the
+    // reference target's shell doesn't exist during pass 1 at all in
+    // that design; pass 1 here exists specifically to guarantee it does.
     const rootEClass = resolveElementEClass(root, packageRegistry);
-    const rootObj = constructObject(root, rootEClass, ctx);
+    const rootObj = constructShell(root, rootEClass, ctx, elementToObj);
     const roots = [rootObj];
-    for (const wire of ctx.pendingRefs) wire(roots);
+
+    completeObject(root, rootObj, ctx, elementToObj, roots);
 
     return roots;
   }
@@ -284,7 +312,6 @@ function encodeAttributeValue(value: unknown, feature: EStructuralFeature): stri
 
 interface DeserializeContext {
   packageRegistry: EPackageRegistry;
-  pendingRefs: Array<(roots: EObject[]) => void>;
 }
 
 function resolveElementEClass(element: Element, packageRegistry: EPackageRegistry): EClass {
@@ -345,16 +372,104 @@ function resolvePrefixedName(token: string, contextElement: Element, packageRegi
   return classifier as EClass;
 }
 
-function constructObject(element: Element, eClass: EClass, ctx: DeserializeContext): EObject {
+/**
+ * Pass 1. Constructs an object for `element`, sets only its "name"
+ * feature (when its EClass has one and the element has a "name" XML
+ * attribute), records it in `elementToObj` for pass 2 to find again, and
+ * recurses into every CONTAINMENT child - wiring each into this object's
+ * containment feature immediately, so the full tree (not just this one
+ * object) is name/position-navigable by the time pass 1 as a whole
+ * finishes. Deliberately does not touch any other attribute or
+ * non-containment reference - completeObject does that, in pass 2, once
+ * every object in the document is guaranteed to already exist.
+ *
+ * Only "name" specifically, not a general "ID attribute" lookup
+ * (EClass.getEIDAttribute(), which requires isID()) - confirmed by
+ * reading resolveEmfFragment's own name-based path (walkNamedSegments /
+ * findNamedChild in emf-fragment.ts): it matches by literally looking up
+ * a feature named "name" and comparing its value, regardless of whether
+ * that feature happens to be marked isID() - real Ecore.ecore's own
+ * ENamedElement.name is not marked iD="true" at all, yet "#//EClassName"
+ * fragments throughout the file depend on exactly this lookup succeeding.
+ */
+function constructShell(element: Element, eClass: EClass, ctx: DeserializeContext, elementToObj: Map<Element, EObject>): EObject {
   const obj = eClass.getEPackage()?.getEFactoryInstance()?.create(eClass);
-  if(!obj) throw new Error("Could not create object");
+  if (!obj) throw new Error('Could not create object');
+  elementToObj.set(element, obj);
+
+  // Two different fragment-resolution paths need two different early
+  // fields set, confirmed by actually running the existing test suite
+  // against this, not assumed:
+  //  - real Ecore.ecore's own "#//ClassName" fragments resolve via
+  //    walkNamedSegments/findNamedChild (emf-fragment.ts), which matches
+  //    literally on a feature named "name" - regardless of isID().
+  //  - an arbitrary user metamodel's bare-token ID fragments (e.g.
+  //    "Dune") resolve via findByIdValueIn, which matches on whichever
+  //    attribute IS marked isID() - which need not be named "name" at
+  //    all (the sample metamodel's own ID attribute is "title").
+  // Both need to already hold their real value before any reference to
+  // this object is resolved, so pass 1 sets both here, whichever exist.
+  const nameFeature = allStructuralFeaturesOf(eClass).filter((f) => f.getName() === 'name').at(0);
+  if (nameFeature) {
+    const nameAttrValue = element.getAttribute('name');
+    if (nameAttrValue !== null) {
+      obj.eSet(nameFeature, decodeAttributeValue(nameAttrValue, nameFeature));
+    }
+  }
+  const idFeature = eClass.getEIDAttribute();
+  const idFeatureName = idFeature?.getName();
+  if (idFeature && idFeatureName && idFeature !== nameFeature) {
+    const idAttrValue = element.getAttribute(idFeatureName);
+    if (idAttrValue !== null) {
+      obj.eSet(idFeature, decodeAttributeValue(idAttrValue, idFeature));
+    }
+  }
+
+  for (let i = 0; i < element.childNodes.length; i++) {
+    const node = element.childNodes.item(i);
+    if (!node || node.nodeType !== 1 /* ELEMENT_NODE */) continue;
+    const child = node as unknown as Element;
+
+    const feature = allStructuralFeaturesOf(eClass)
+                          .filter(feature => feature.getName() === child.localName)
+                          .at(0);
+    if (!feature || !isReferenceFeature(feature)) continue; // many-valued attribute or unrecognized: completeObject's job
+    const refFeature = feature as EReference;
+    if (!refFeature.isContainment()) continue; // cross-document href reference: completeObject's job
+
+    const declaredEClass = refFeature.getEType() as EClass;
+    const childEClass = resolveContainmentChildEClass(child, declaredEClass, ctx.packageRegistry);
+    const childObj = constructShell(child, childEClass, ctx, elementToObj);
+    if (feature.isMany()) {
+      const list = obj.eGet(feature) as { add(v: EObject): void };
+      list.add(childObj);
+    } else {
+      obj.eSet(feature, childObj);
+    }
+  }
+
+  return obj;
+}
+
+/**
+ * Pass 2. Fills in every attribute and reference `constructShell` (pass
+ * 1) deliberately left untouched, for the object it already built for
+ * `element` (looked up via `elementToObj`, or `obj` directly for the
+ * element currently being completed - never constructs anything new).
+ * Same-document references now resolve unconditionally inline: by the
+ * time this pass runs at all, pass 1 has already finished for the WHOLE
+ * document, so every possible reference target - forward or backward -
+ * already exists and is already wired into the containment tree.
+ */
+function completeObject(element: Element, obj: EObject, ctx: DeserializeContext, elementToObj: Map<Element, EObject>, roots: EObject[]): void {
+  const eClass = obj.eClass();
 
   for (let i = 0; i < element.attributes.length; i++) {
     const attr = element.attributes.item(i)!;
     if (attr.namespaceURI === XMI_NS || attr.namespaceURI === XSI_NS) continue;
     if (attr.name.startsWith('xmlns')) continue;
 
-    const feature = eClass.getEStructuralFeatures()
+    const feature = allStructuralFeaturesOf(eClass)
                           .filter(feature => feature.getName() === attr.localName)
                           .at(0);
     if (!feature) continue;
@@ -371,18 +486,17 @@ function constructObject(element: Element, eClass: EClass, ctx: DeserializeConte
       continue;
     }
 
-    // Same-document reference(s), written as an attribute regardless of cardinality.
+    // Same-document reference(s), written as an attribute regardless of
+    // cardinality - resolved immediately now, not deferred: every
+    // possible target already exists (see this function's doc comment).
     const refFeature = feature as EReference;
-    const capturedValue = attr.value;
-    ctx.pendingRefs.push((roots) => {
-      const resolved = decodeSameDocumentReference(capturedValue, refFeature, element, roots, ctx.packageRegistry);
-      if (refFeature.isMany()) {
-        const list = obj.eGet(refFeature) as { add(v: EObject): void };
-        for (const r of resolved) list.add(r);
-      } else {
-        obj.eSet(refFeature, resolved[0]);
-      }
-    });
+    const resolved = decodeSameDocumentReference(attr.value, refFeature, element, roots, ctx.packageRegistry);
+    if (refFeature.isMany()) {
+      const list = obj.eGet(refFeature) as { add(v: EObject): void };
+      for (const r of resolved) list.add(r);
+    } else {
+      obj.eSet(refFeature, resolved[0]);
+    }
   }
 
   for (let i = 0; i < element.childNodes.length; i++) {
@@ -390,7 +504,7 @@ function constructObject(element: Element, eClass: EClass, ctx: DeserializeConte
     if (!node || node.nodeType !== 1 /* ELEMENT_NODE */) continue;
     const child = node as unknown as Element;
 
-    const feature = eClass.getEStructuralFeatures()
+    const feature = allStructuralFeaturesOf(eClass)
                           .filter(feature => feature.getName() === child.localName)
                           .at(0);
     if (!feature) continue;
@@ -409,15 +523,16 @@ function constructObject(element: Element, eClass: EClass, ctx: DeserializeConte
 
     const refFeature = feature as EReference;
     if (refFeature.isContainment()) {
-      const declaredEClass = refFeature.getEType() as EClass;
-      const childEClass = resolveContainmentChildEClass(child, declaredEClass, ctx.packageRegistry);
-      const childObj = constructObject(child, childEClass, ctx);
-      if (feature.isMany()) {
-        const list = obj.eGet(feature) as { add(v: EObject): void };
-        list.add(childObj);
-      } else {
-        obj.eSet(feature, childObj);
+      // Already constructed and wired onto obj by pass 1 - just recurse
+      // to fill in ITS attributes/references too.
+      const childObj = elementToObj.get(child);
+      if (!childObj) {
+        throw new Error(
+          `Internal error: no shell was constructed for <${child.tagName}> during pass 1 - ` +
+            'constructShell and completeObject have diverged on which children count as containment.'
+        );
       }
+      completeObject(child, childObj, ctx, elementToObj, roots);
       continue;
     }
 
@@ -437,8 +552,6 @@ function constructObject(element: Element, eClass: EClass, ctx: DeserializeConte
       obj.eSet(feature, proxy);
     }
   }
-
-  return obj;
 }
 
 function decodeSameDocumentReference(

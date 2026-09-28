@@ -1,12 +1,12 @@
 import { EList } from '../types/EList.js';
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EObjectImpl } from './EObjectImpl.js';
 import { BasicEList } from './BasicEList.js';
 import { EGenericType } from '../types/EGenericType.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EGenericTypeImpl extends EObjectImpl implements EGenericType {

@@ -1,7 +1,10 @@
-import { EClass, EList, EObject, EStructuralFeature } from "../index";
-import { BasicEList, EObjectImpl } from "../metamodel/impl/index";
-
-import { URI } from "./uri.js";
+import { EClass } from '../metamodel/types/EClass.js';
+import { EList } from '../metamodel/types/EList.js';
+import { EObject } from '../metamodel/types/EObject.js';
+import { EStructuralFeature } from '../metamodel/types/EStructuralFeature.js';
+import { BasicEList } from '../metamodel/impl/BasicEList.js';
+import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
+import { URI } from './uri.js';
 
 /**
  * A stand-in for "I know this is an instance of `eClass`, identified by
@@ -18,7 +21,7 @@ import { URI } from "./uri.js";
 export class ProxyEObjectImpl extends EObjectImpl {
   constructor(
     private readonly proxyEClass: EClass,
-    private readonly proxyURI: URI,
+    private readonly proxyURI: URI
   ) {
     super();
   }
@@ -50,31 +53,31 @@ export class ProxyEObjectImpl extends EObjectImpl {
 
   eGet(_feature: EStructuralFeature): never {
     throw new Error(
-      `Cannot read a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`,
+      `Cannot read a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`
     );
   }
 
   eSet(_feature: EStructuralFeature, _value: unknown): never {
     throw new Error(
-      `Cannot set a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`,
+      `Cannot set a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`
     );
   }
 
   eBasicSetValue(_feature: EStructuralFeature, _value: unknown): never {
     throw new Error(
-      `Cannot set a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`,
+      `Cannot set a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`
     );
   }
 
   eIsSet(_feature: EStructuralFeature): never {
     throw new Error(
-      `Cannot check a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`,
+      `Cannot check a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`
     );
   }
 
   eUnset(_feature: EStructuralFeature): never {
     throw new Error(
-      `Cannot unset a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`,
+      `Cannot unset a feature of an unresolved proxy (${this.fullId()}) - resolve it via ResourceSet.resolve() first.`
     );
   }
 }

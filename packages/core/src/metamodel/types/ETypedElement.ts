@@ -1,5 +1,3 @@
-import { EObject } from './EObject.js';
-import { EList } from './EList.js';
 import { ENamedElement } from './ENamedElement.js';
 import { EClassifier } from './EClassifier.js';
 import { EGenericType } from './EGenericType.js';

@@ -1,13 +1,13 @@
-import { EClass } from '../types/EClass.js';
 import { EList } from '../types/EList.js';
 import { EObject } from '../types/EObject.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EAnnotation } from '../types/EAnnotation.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {

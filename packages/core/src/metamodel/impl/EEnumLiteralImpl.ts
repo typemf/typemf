@@ -1,11 +1,11 @@
-import { EEnumerator } from '../types/EEnumerator.js';
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EEnum } from '../types/EEnum.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
+import { EEnumerator } from '../types/EEnumerator.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral {

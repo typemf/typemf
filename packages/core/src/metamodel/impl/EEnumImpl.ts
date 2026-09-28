@@ -1,11 +1,11 @@
 import { EList } from '../types/EList.js';
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EEnum } from '../types/EEnum.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EDataTypeImpl } from './EDataTypeImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EEnumImpl extends EDataTypeImpl implements EEnum {

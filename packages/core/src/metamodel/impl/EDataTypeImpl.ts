@@ -1,9 +1,9 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EDataType } from '../types/EDataType.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClassifierImpl } from './EClassifierImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EDataTypeImpl extends EClassifierImpl implements EDataType {

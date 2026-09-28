@@ -1,6 +1,6 @@
-import { URI, UriConverter } from "@typemf/core";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { URI, UriConverter } from '@typemf/core';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 /**
  * The Node-only, fs-backed UriConverter discussed back when @typemf/core's
@@ -16,7 +16,7 @@ import { dirname } from "node:path";
  */
 export class NodeFileUriConverter implements UriConverter {
   canHandle(uri: URI): boolean {
-    return uri.getScheme() === "file";
+    return uri.getScheme() === 'file';
   }
 
   async readBinary(uri: URI): Promise<Uint8Array> {
@@ -41,10 +41,8 @@ export class NodeFileUriConverter implements UriConverter {
   }
 
   private pathFor(uri: URI): string {
-    if (uri.getScheme() !== "file") {
-      throw new Error(
-        `NodeFileUriConverter cannot handle scheme '${uri.getScheme()}' (only 'file').`,
-      );
+    if (uri.getScheme() !== 'file') {
+      throw new Error(`NodeFileUriConverter cannot handle scheme '${uri.getScheme()}' (only 'file').`);
     }
     return uri.trimFragment().getPath();
   }

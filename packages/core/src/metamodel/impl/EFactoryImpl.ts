@@ -1,12 +1,12 @@
 import { EObject } from '../types/EObject.js';
-import { EDataType } from '../types/EDataType.js';
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EFactory } from '../types/EFactory.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EPackage } from '../types/EPackage.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EDataType } from '../types/EDataType.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EFactoryImpl extends EModelElementImpl implements EFactory {

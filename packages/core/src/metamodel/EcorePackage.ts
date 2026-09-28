@@ -73,7 +73,7 @@ export interface EcorePackage extends EPackage {
   getEAttribute_ID(): EAttribute;
   getEAttribute_EAttributeType(): EReference;
   getEAnnotation(): EClass;
-  getEAnnotation(source: string): EAnnotation | undefined;
+  getEAnnotation(name : string): EAnnotation | undefined;
   getEAnnotation_Source(): EAttribute;
   getEAnnotation_Details(): EReference;
   getEAnnotation_EModelElement(): EReference;

@@ -1,5 +1,5 @@
-import { EObject } from "../metamodel/types/EObject.js";
-import { Resource } from "./resource.js";
+import { EObject } from '../metamodel/types/EObject.js';
+import { Resource } from './resource.js';
 
 /**
  * A pluggable persistence format. @typemf/json and @typemf/xmi each ship

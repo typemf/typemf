@@ -1,9 +1,9 @@
-import { EList } from "../metamodel/types/EList.js";
-import { EObject } from "../metamodel/types/EObject.js";
-import { Diagnostic } from "./diagnostic.js";
-import { EObjectSerializer } from "./serializer.js";
-import { ResourceSet } from "./resource-set.js";
-import { URI } from "./uri.js";
+import { EList } from '../metamodel/types/EList.js';
+import { EObject } from '../metamodel/types/EObject.js';
+import { Diagnostic } from './diagnostic.js';
+import { EObjectSerializer } from './serializer.js';
+import { ResourceSet } from './resource-set.js';
+import { URI } from './uri.js';
 
 /**
  * A loaded (or loadable) document: a URI, its root EObject(s), and

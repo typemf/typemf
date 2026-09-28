@@ -8,29 +8,24 @@ import {
   EPackage,
   EStructuralFeature,
   ETypedElement,
-} from "@typemf/core";
+} from '@typemf/core';
 
-const GENMODEL_ANNOTATION_SOURCE = "http://www.eclipse.org/emf/2002/GenModel";
+const GENMODEL_ANNOTATION_SOURCE = 'http://www.eclipse.org/emf/2002/GenModel';
 
 /** Real EMF's own convention for embedded doc comments in a .ecore file - see NOTES.md. */
 export function documentationOf(element: EModelElement): string | undefined {
-  return element
-    .getEAnnotation(GENMODEL_ANNOTATION_SOURCE)
-    ?.getDetails()
-    .filter((details) => details.getKey() === "documentation")
-    .map((details) => details.getValue())
-    .at(0);
+  return element.getEAnnotation(GENMODEL_ANNOTATION_SOURCE)?.getDetails()?.filter(details => details.getKey() == 'documentation').map(details => details.getValue()).at(0);
 }
 
 /** Renders a JSDoc block from documentationOf(), or '' if there is none. */
-export function docComment(element: EModelElement, indent = ""): string {
+export function docComment(element: EModelElement, indent = ''): string {
   const doc = documentationOf(element);
-  if (!doc) return "";
-  const lines = doc.trim().split("\n");
+  if (!doc) return '';
+  const lines = doc.trim().split('\n');
   if (lines.length === 1) {
     return `${indent}/** ${lines[0]} */\n`;
   }
-  const body = lines.map((line) => `${indent} * ${line}`).join("\n");
+  const body = lines.map((line) => `${indent} * ${line}`).join('\n');
   return `${indent}/**\n${body}\n${indent} */\n`;
 }
 
@@ -44,18 +39,10 @@ export function docComment(element: EModelElement, indent = ""): string {
  * scoped per target template set instead. See NOTES.md for the full
  * reasoning.
  */
-const TYPEMF_GENERATOR_ANNOTATION_SOURCE = "https://typemf.dev/generator";
+const TYPEMF_GENERATOR_ANNOTATION_SOURCE = 'https://typemf.dev/generator';
 
-export function operationBody(
-  operation: EOperation,
-  templateSetName: string,
-): string | undefined {
-  return operation
-    .getEAnnotation(GENMODEL_ANNOTATION_SOURCE)
-    ?.getDetails()
-    .filter((details) => details.getKey() === "body")
-    .map((details) => details.getValue())
-    .at(0);
+export function operationBody(operation: EOperation, templateSetName: string): string | undefined {
+  return operation.getEAnnotation(GENMODEL_ANNOTATION_SOURCE)?.getDetails()?.filter(details => details.getKey() == 'body').map(details => details.getValue()).at(0);
 }
 
 /**
@@ -72,7 +59,7 @@ export function operationBody(
  * paths for just these four features, not a general pattern.
  */
 const TRIVIAL_DERIVED_FORMULAS: Record<string, string> = {
-  many: "this.getUpperBound() === -1 || this.getUpperBound() > 1",
+  many: 'this.getUpperBound() === -1 || this.getUpperBound() > 1',
   // Verified directly against real EMF's own ETypedElementImpl.isRequired()
   // source (org.eclipse.emf.ecore.impl) while implementing the equivalent
   // reflective dispatch in @typemf/core: it is exactly `lowerBound >= 1`,
@@ -80,15 +67,13 @@ const TRIVIAL_DERIVED_FORMULAS: Record<string, string> = {
   // added one; caught only because the hand-written @typemf/core port
   // (built independently, then checked against the same source) disagreed
   // with this file.
-  required: "this.getLowerBound() >= 1",
-  container: "(this.getEOpposite()?.isContainment() ?? false)",
-  eReferenceType: "(this.getEType() as EClass | undefined)",
+  required: 'this.getLowerBound() >= 1',
+  container: '(this.getEOpposite()?.isContainment() ?? false)',
+  eReferenceType: '(this.getEType() as EClass | undefined)',
 };
 
 /** The real formula body for a trivially-computable derived feature, or undefined if `feature` isn't one of the four. */
-export function trivialDerivedFormula(
-  feature: EStructuralFeature,
-): string | undefined {
+export function trivialDerivedFormula(feature: EStructuralFeature): string | undefined {
   if (!feature.isDerived()) return undefined;
   return TRIVIAL_DERIVED_FORMULAS[feature.getName() as string];
 }
@@ -106,7 +91,7 @@ export function trivialDerivedFormula(
  * reason, so `undefined` reaching here always means EObject.
  */
 export function tsScalarType(classifier: EClassifier | undefined): string {
-  if (!classifier) return "EObject";
+  if (!classifier) return 'EObject';
   if (isEDataType(classifier)) return tsPrimitiveType(classifier);
   // EClass or EEnum: the generated api-layer type shares the classifier's own name.
   return classifier.getName() as string;
@@ -114,19 +99,19 @@ export function tsScalarType(classifier: EClassifier | undefined): string {
 
 function tsPrimitiveType(dataType: EDataType): string {
   switch (dataType.getName()) {
-    case "EString":
-      return "string";
-    case "EInt":
-    case "ELong":
-    case "EDouble":
-    case "EFloat":
-    case "EShort":
-    case "EByte":
-      return "number";
-    case "EBoolean":
-      return "boolean";
-    case "EDate":
-      return "Date";
+    case 'EString':
+      return 'string';
+    case 'EInt':
+    case 'ELong':
+    case 'EDouble':
+    case 'EFloat':
+    case 'EShort':
+    case 'EByte':
+      return 'number';
+    case 'EBoolean':
+      return 'boolean';
+    case 'EDate':
+      return 'Date';
     default:
       // An unrecognized/custom EDataType: fall back to its own name as a
       // nominal type, same convention generated EClass/EEnum types use.
@@ -149,29 +134,15 @@ function tsPrimitiveType(dataType: EDataType): string {
  * with the same underlying Java primitive-vs-wrapper reasoning - flagged
  * as an interpretive extension, not a literal instruction.
  */
-const PRIMITIVE_VALUE_DATATYPE_NAMES = new Set([
-  "EBoolean",
-  "EInt",
-  "ELong",
-  "EFloat",
-  "EDouble",
-  "EShort",
-  "EByte",
-]);
+const PRIMITIVE_VALUE_DATATYPE_NAMES = new Set(['EBoolean', 'EInt', 'ELong', 'EFloat', 'EDouble', 'EShort', 'EByte']);
 
-export function isPrimitiveValueType(
-  classifier: EClassifier | undefined,
-): boolean {
-  return (
-    classifier !== undefined &&
-    isEDataType(classifier) &&
-    PRIMITIVE_VALUE_DATATYPE_NAMES.has(classifier.getName() as string)
-  );
+export function isPrimitiveValueType(classifier: EClassifier | undefined): boolean {
+  return classifier !== undefined && isEDataType(classifier) && PRIMITIVE_VALUE_DATATYPE_NAMES.has(classifier.getName() as string);
 }
 
 /** 'false' for EBoolean, '0' for every other primitive numeric EDataType - the real Java-primitive zero-default, used as a stored field's initial value instead of `undefined`. */
 export function primitiveDefaultValue(classifier: EClassifier): string {
-  return classifier.getName() === "EBoolean" ? "false" : "0";
+  return classifier.getName() === 'EBoolean' ? 'false' : '0';
 }
 
 /**
@@ -183,9 +154,7 @@ export function primitiveDefaultValue(classifier: EClassifier): string {
  * " | undefined" to tsScalarType()'s result in a template, so the
  * primitive-type exception lives in one place.
  */
-export function tsOptionalScalarType(
-  classifier: EClassifier | undefined,
-): string {
+export function tsOptionalScalarType(classifier: EClassifier | undefined): string {
   const scalar = tsScalarType(classifier);
   if (classifier && isPrimitiveValueType(classifier)) return scalar;
   return `${scalar} | undefined`;
@@ -201,7 +170,7 @@ export function tsOptionalScalarType(
  */
 export function beanGetterName(feature: EStructuralFeature): string {
   const type = feature.getEType();
-  if (!feature.isMany() && type && type.getName() === "EBoolean") {
+  if (!feature.isMany() && type && type.getName() === 'EBoolean') {
     return `is${ucfirst(feature.getName() as string)}`;
   }
   return `get${ucfirst(feature.getName() as string)}`;
@@ -210,7 +179,7 @@ export function beanGetterName(feature: EStructuralFeature): string {
 /** The full TypeScript type for a feature's getter/setter, including EList<T> for many-valued features. */
 export function tsFeatureType(feature: ETypedElement): string {
   const scalar = tsScalarType(feature.getEType());
-  if ("isMany" in feature && (feature as { isMany(): boolean }).isMany()) {
+  if ('isMany' in feature && (feature as { isMany(): boolean }).isMany()) {
     return `EList<${scalar}>`;
   }
   return scalar;
@@ -222,11 +191,11 @@ export function isOptional(feature: EStructuralFeature): boolean {
 }
 
 export function isEClass(classifier: EClassifier): classifier is EClass {
-  return "getEStructuralFeatures" in classifier;
+  return 'getEStructuralFeatures' in classifier;
 }
 
 export function isEEnum(classifier: EClassifier): classifier is EEnum {
-  return "getELiterals" in classifier;
+  return 'getELiterals' in classifier;
 }
 
 export function isEDataType(classifier: EClassifier): classifier is EDataType {
@@ -234,7 +203,7 @@ export function isEDataType(classifier: EClassifier): classifier is EDataType {
 }
 
 export function isEReference(feature: EStructuralFeature): boolean {
-  return "isContainment" in feature;
+  return 'isContainment' in feature;
 }
 
 /** "name: Type, name2: Type2" for an operation's parameter list. */
@@ -243,7 +212,7 @@ export function paramList(operation: EOperation): string {
     .getEParameters()
     .toArray()
     .map((p) => `${p.getName()}: ${tsFeatureType(p)}`)
-    .join(", ");
+    .join(', ');
 }
 
 /** "name, name2" - just the argument names, e.g. for a super-call passthrough. */
@@ -252,7 +221,7 @@ export function argList(operation: EOperation): string {
     .getEParameters()
     .toArray()
     .map((p) => p.getName())
-    .join(", ");
+    .join(', ');
 }
 
 /**
@@ -266,9 +235,7 @@ export function argList(operation: EOperation): string {
  * has - a genuine arity mismatch within one name is not handled (see
  * NOTES.md).
  */
-export function groupOperationsByName(
-  operations: Iterable<EOperation>,
-): EOperation[][] {
+export function groupOperationsByName(operations: Iterable<EOperation>): EOperation[][] {
   const groups = new Map<string, EOperation[]>();
   for (const op of operations) {
     const list = groups.get(op.getName() as string);
@@ -281,13 +248,7 @@ export function groupOperationsByName(
 /** "name" if every name in `names` is identical, otherwise "nameOrValueOrEtc" - used to synthesize a merged parameter name for an overload group. */
 function mergeNames(names: string[]): string {
   const unique = [...new Set(names)];
-  return (
-    unique[0] +
-    unique
-      .slice(1)
-      .map((n) => `Or${ucfirst(n)}`)
-      .join("")
-  );
+  return unique[0] + unique.slice(1).map((n) => `Or${ucfirst(n)}`).join('');
 }
 
 /**
@@ -305,15 +266,11 @@ export function mergedParamList(group: EOperation[]): string {
   const arity = first.getEParameters().size();
   const parts: string[] = [];
   for (let i = 0; i < arity; i++) {
-    const paramName = mergeNames(
-      group.map((op) => op.getEParameters().get(i)!.getName() as string),
-    );
-    const paramType = [
-      ...new Set(group.map((op) => tsFeatureType(op.getEParameters().get(i)!))),
-    ].join(" | ");
+    const paramName = mergeNames(group.map((op) => op.getEParameters().get(i)!.getName() as string));
+    const paramType = [...new Set(group.map((op) => tsFeatureType(op.getEParameters().get(i)!)))].join(' | ');
     parts.push(`${paramName}: ${paramType}`);
   }
-  return parts.join(", ");
+  return parts.join(', ');
 }
 
 /**
@@ -345,7 +302,7 @@ export function tsOperationReturnType(op: EOperation): string {
 
 /** The merged implementation signature's return type for a group - the union of every overload's OWN (possibly optional) return type via tsOperationReturnType(), deduplicated (so an all-identical group collapses to just that one type, not a redundant self-union). */
 export function mergedReturnType(group: EOperation[]): string {
-  return [...new Set(group.map((op) => tsOperationReturnType(op)))].join(" | ");
+  return [...new Set(group.map((op) => tsOperationReturnType(op)))].join(' | ');
 }
 
 /**
@@ -363,19 +320,16 @@ export function mergedReturnType(group: EOperation[]): string {
  * integrated structure, not assumed (see NOTES.md).
  */
 export function coreImportSpecifier(
-  location: "root" | "types" | "impl" | "util",
-  kind: "types" | "impl",
-  options: Record<string, unknown>,
+  location: 'root' | 'types' | 'impl' | 'util',
+  kind: 'types' | 'impl',
+  options: Record<string, unknown>
 ): string {
-  if (!options["generate-ecore"]) return "@typemf/core";
-  const depth: Record<
-    "root" | "types" | "impl" | "util",
-    Record<"types" | "impl", string>
-  > = {
-    root: { types: "./types", impl: "./impl" },
-    types: { types: ".", impl: "../impl" },
-    impl: { types: "../types", impl: "." },
-    util: { types: "../types", impl: "../impl" },
+  if (!options['generate-ecore']) return '@typemf/core';
+  const depth: Record<'root' | 'types' | 'impl' | 'util', Record<'types' | 'impl', string>> = {
+    root: { types: './types', impl: './impl' },
+    types: { types: '.', impl: '../impl' },
+    impl: { types: '../types', impl: '.' },
+    util: { types: '../types', impl: '../impl' },
   };
   return `${depth[location][kind]}/index.js`;
 }
@@ -408,16 +362,8 @@ export function coreImportSpecifier(
  * "EClass" now resolves to) - see NOTES.md for that separate, deeper
  * finding.
  */
-export function excludeCollidingCoreNames(
-  names: string[],
-  pkg: EPackage,
-): string[] {
-  const classifierNames = new Set(
-    pkg
-      .getEClassifiers()
-      .toArray()
-      .map((c) => c.getName()),
-  );
+export function excludeCollidingCoreNames(names: string[], pkg: EPackage): string[] {
+  const classifierNames = new Set(pkg.getEClassifiers().toArray().map((c) => c.getName()));
   return names.filter((n) => !classifierNames.has(n));
 }
 
@@ -429,13 +375,13 @@ export function excludeCollidingCoreNames(
  */
 export function coreImportLine(
   names: string[],
-  location: "root" | "types" | "impl" | "util",
-  kind: "types" | "impl",
+  location: 'root' | 'types' | 'impl' | 'util',
+  kind: 'types' | 'impl',
   options: Record<string, unknown>,
-  pkg: EPackage,
+  pkg: EPackage
 ): string {
   const filtered = excludeCollidingCoreNames(names, pkg);
-  if (filtered.length === 0) return "";
+  if (filtered.length === 0) return '';
   // Same-folder case in generate-ecore mode (location === kind: impl importing
   // from impl/index.js, or types importing from types/index.js) - a real,
   // confirmed hazard, not a theoretical one: importing from your OWN folder's
@@ -452,12 +398,10 @@ export function coreImportLine(
   // was replaced with direct, per-file ones. Each name's own file is always
   // just `./{name}.js` by this generator's own naming convention, so this
   // needs no separate lookup table.
-  if (options["generate-ecore"] && location === kind) {
-    return filtered
-      .map((name) => `import { ${name} } from './${name}.js';`)
-      .join("\n");
+  if (options['generate-ecore'] && location === kind) {
+    return filtered.map((name) => `import { ${name} } from './${name}.js';`).join('\n');
   }
-  return `import { ${filtered.join(", ")} } from '${coreImportSpecifier(location, kind, options)}';`;
+  return `import { ${filtered.join(', ')} } from '${coreImportSpecifier(location, kind, options)}';`;
 }
 
 /**
@@ -517,14 +461,12 @@ export function superTypeChain(eClass: EClass): EClass[] {
  * assumed - see NOTES.md.
  */
 export function isClassifierDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === "EClassifier");
+  return superTypeChain(eClass).some((c) => c.getName() === 'EClassifier');
 }
 
 /** The featureID analog of isClassifierDerived() - same reasoning, same real gap found the same way (see NOTES.md). */
 export function isStructuralFeatureDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some(
-    (c) => c.getName() === "EStructuralFeature",
-  );
+  return superTypeChain(eClass).some((c) => c.getName() === 'EStructuralFeature');
 }
 
 /**
@@ -538,22 +480,9 @@ export function isStructuralFeatureDerived(eClass: EClass): boolean {
  * file before excluding these operations from the generic,
  * throwing-stub-generating operation loop, not assumed - see NOTES.md.
  */
-export function isBookkeepingOperation(
-  op: EOperation,
-  eClass: EClass,
-): boolean {
-  if (
-    op.getName() === "getClassifierID" &&
-    op.getEParameters().isEmpty() &&
-    isClassifierDerived(eClass)
-  )
-    return true;
-  if (
-    op.getName() === "getFeatureID" &&
-    op.getEParameters().isEmpty() &&
-    isStructuralFeatureDerived(eClass)
-  )
-    return true;
+export function isBookkeepingOperation(op: EOperation, eClass: EClass): boolean {
+  if (op.getName() === 'getClassifierID' && op.getEParameters().isEmpty() && isClassifierDerived(eClass)) return true;
+  if (op.getName() === 'getFeatureID' && op.getEParameters().isEmpty() && isStructuralFeatureDerived(eClass)) return true;
   return false;
 }
 
@@ -566,18 +495,14 @@ export function isBookkeepingOperation(
  * extensions - matches the "templates handle structure, TS computes"
  * principle.
  */
-export function referencedApiTypes(
-  features: Iterable<EStructuralFeature>,
-  ...excludeTypeNames: string[]
-): string[] {
+export function referencedApiTypes(features: Iterable<EStructuralFeature>, ...excludeTypeNames: string[]): string[] {
   const exclude = new Set(excludeTypeNames);
   const names = new Set<string>();
   for (const feature of features) {
     const type = feature.getEType();
     if (!type) continue;
     if (isEReference(feature) || isEEnum(type)) {
-      if (!exclude.has(type.getName() as string))
-        names.add(type.getName() as string);
+      if (!exclude.has(type.getName() as string)) names.add(type.getName() as string);
     }
   }
   return [...names];
@@ -603,10 +528,10 @@ export function referencedApiTypes(
 export function jsString(value: string | undefined): string {
   if (value === undefined) {
     throw new Error(
-      "jsString() received undefined - this means required metamodel data (a name, nsURI, nsPrefix, or " +
-        "annotation value) is missing on the source EPackage. JSON.stringify(undefined) is not a string, so " +
-        "this would otherwise silently emit an empty/malformed argument into generated code rather than " +
-        "failing clearly at generation time.",
+      'jsString() received undefined - this means required metamodel data (a name, nsURI, nsPrefix, or ' +
+        'annotation value) is missing on the source EPackage. JSON.stringify(undefined) is not a string, so ' +
+        'this would otherwise silently emit an empty/malformed argument into generated code rather than ' +
+        'failing clearly at generation time.'
     );
   }
   return JSON.stringify(value);
@@ -620,20 +545,15 @@ export function jsString(value: string | undefined): string {
  * properties). Converting to a plain array here avoids relying on
  * behavior that was never actually verified.
  */
-export function detailsEntries(annotation: {
-  getDetails(): Map<string, string>;
-}): { key: string; value: string }[] {
-  return [...annotation.getDetails().entries()].map(([key, value]) => ({
-    key,
-    value,
-  }));
+export function detailsEntries(annotation: { getDetails(): Map<string, string> }): { key: string; value: string }[] {
+  return [...annotation.getDetails().entries()].map(([key, value]) => ({ key, value }));
 }
 
 export function eClassesOf(pkg: EPackage): EClass[] {
   return pkg
     .getEClassifiers()
     .toArray()
-    .filter((c): c is EClass => isEClass(c) && c.getName() !== "EObject");
+    .filter((c): c is EClass => isEClass(c) && c.getName() !== 'EObject');
 }
 
 export function concreteEClassesOf(pkg: EPackage): EClass[] {
@@ -650,15 +570,10 @@ export function concreteEClassesOf(pkg: EPackage): EClass[] {
  * EcoreFactoryImpl-extends-EFactoryImpl design. Ordinary metamodels (no
  * "EFactory" classifier) are unaffected.
  */
-export function findEClassByName(
-  pkg: EPackage,
-  name: string,
-): EClass | undefined {
+export function findEClassByName(pkg: EPackage, name: string): EClass | undefined {
   return eClassesOf(pkg).find((c) => c.getName() === name);
 }
 
-export function singleValuedFeatures(
-  features: Iterable<EStructuralFeature>,
-): EStructuralFeature[] {
+export function singleValuedFeatures(features: Iterable<EStructuralFeature>): EStructuralFeature[] {
   return [...features].filter((f) => !f.isMany());
 }

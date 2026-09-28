@@ -2,7 +2,6 @@ import { EClass } from '../types/EClass.js';
 import { EAttribute } from '../types/EAttribute.js';
 import { EReference } from '../types/EReference.js';
 import { EDataType } from '../types/EDataType.js';
-import { EAnnotation } from '../types/EAnnotation.js';
 import { EPackageImpl } from './EPackageImpl.js';
 import { EClassImpl } from './EClassImpl.js';
 import { EAttributeImpl } from './EAttributeImpl.js';
@@ -14,6 +13,7 @@ import { EcorePackage, Ids } from '../EcorePackage.js';
 import { EcoreFactory } from '../EcoreFactory.js';
 import { EcoreFactoryImpl } from './EcoreFactoryImpl.js';
 import { setEcorePackageRef } from './EcorePackageRef.js';
+import { EAnnotation } from '../types/EAnnotation.js';
 
 
 
@@ -194,7 +194,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     // yet), so later passes can reference any of them regardless of
     // declaration order.
     this._EAttribute = new EClassImpl();
-    this._EAttribute.eBasicSetValue(Ids.ENamedElement.name, "EAttribute");
+this._EAttribute.eBasicSetValue(Ids.ENamedElement.name, "EAttribute");
 
     this._EAttribute.setClassifierID(Ids.EAttribute.self);
 
@@ -865,6 +865,25 @@ this._EJavaClass.eBasicSetValue(Ids.ENamedElement.name, "EJavaClass");
 
     this._EJavaClass.setClassifierID(Ids.EJavaClass.self);
 
+    {
+      const annotation = new EAnnotationImpl();
+annotation.eBasicSetValue(Ids.EAnnotation.source, "https://typemf.dev/generator");
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "typescript-type");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "TypeScriptClass");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "typescript-import-from");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "./types/TypeScriptClass.js");
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+this._EJavaClass.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+
+    }
 
 this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EJavaClass);
 
@@ -2805,13 +2824,13 @@ this._ETypeParameter.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElem
   getEAttribute_EAttributeType(): EReference {
     return this._EAttribute_eAttributeType;
   }
-  getEAnnotation(source: string): EAnnotation | undefined;
   getEAnnotation(): EClass;
-  getEAnnotation(source?: string) : EClass | EAnnotation | undefined{
+  getEAnnotation(source: string): EAnnotation | undefined;
+  getEAnnotation(source ?: string): EAnnotation | EClass | undefined {
     if(source === undefined) {
       return this._EAnnotation;
     } else {
-      return super.getEAnnotation(source);
+      super.getEAnnotation(source);
     }
   }
   getEAnnotation_Source(): EAttribute {

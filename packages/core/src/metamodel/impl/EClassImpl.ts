@@ -1,5 +1,4 @@
 import { EList } from '../types/EList.js';
-import { EObjectImpl } from './EObjectImpl.js';
 import { BasicEList } from './BasicEList.js';
 import { EClass } from '../types/EClass.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';

@@ -1,9 +1,9 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { ENamedElement } from '../types/ENamedElement.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class ENamedElementImpl extends EModelElementImpl implements ENamedElement {

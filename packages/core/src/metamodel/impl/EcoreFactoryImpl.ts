@@ -18,7 +18,6 @@ import { EGenericType } from '../types/EGenericType.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
 import { EAttributeImpl } from './EAttributeImpl.js';
-import { EAnnotationImpl } from './EAnnotationImpl.js';
 import { EClassImpl } from './EClassImpl.js';
 import { EDataTypeImpl } from './EDataTypeImpl.js';
 import { EEnumImpl } from './EEnumImpl.js';
@@ -28,8 +27,9 @@ import { EPackageImpl } from './EPackageImpl.js';
 import { EParameterImpl } from './EParameterImpl.js';
 import { EReferenceImpl } from './EReferenceImpl.js';
 import { EStringToStringMapEntryImpl } from './EStringToStringMapEntryImpl.js';
-import { ETypeParameterImpl } from './ETypeParameterImpl.js';
 import { EGenericTypeImpl } from './EGenericTypeImpl.js';
+import { ETypeParameterImpl } from './ETypeParameterImpl.js';
+import { EAnnotationImpl } from './EAnnotationImpl.js';
 
 
 export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {

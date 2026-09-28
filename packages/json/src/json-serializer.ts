@@ -4,9 +4,6 @@ import {
   EPackageRegistry,
   EReference,
   EStructuralFeature,
-  EcoreFactoryImpl,
-  EcorePackage,
-  EcorePackageImpl,
   ProxyEObjectImpl,
   Resource,
   URI,
@@ -219,16 +216,13 @@ interface DeserializeContext {
 function constructObject(json: Record<string, unknown>, roots: EObject[], ctx: DeserializeContext): EObject {
   const eClass = refToEClass(json.$eClass as EClassRef, ctx.namespaces, ctx.packageRegistry);
   const obj = eClass.getEPackage()?.getEFactoryInstance()?.create(eClass);
-
-  if(obj === undefined) {
-    throw Error("Could not create object");
-  }
+  if(obj === undefined) { throw new Error("Something is wrong"); }
 
   for (const feature of eClass.getEAllStructuralFeatures()) {
-    const name = feature.getName();
-    if (!(name as string in json)) continue;
-    const raw = json[name as string];
-    
+    const name = feature.getName() as string;
+    if (!(name in json)) continue;
+    const raw = json[name];
+
     if (!isReferenceFeature(feature)) {
       if (feature.isMany()) {
         const list = obj.eGet(feature) as { add(v: unknown): void };

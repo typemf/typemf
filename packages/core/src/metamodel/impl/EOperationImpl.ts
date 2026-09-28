@@ -1,14 +1,14 @@
 import { EList } from '../types/EList.js';
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EOperation } from '../types/EOperation.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
+import { EClass } from '../types/EClass.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 import { EParameter } from '../types/EParameter.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { EGenericType } from '../types/EGenericType.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EOperationImpl extends ETypedElementImpl implements EOperation {

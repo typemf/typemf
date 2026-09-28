@@ -1,10 +1,10 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EAttribute } from '../types/EAttribute.js';
+import { EClass } from '../types/EClass.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EDataType } from '../types/EDataType.js';
 import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute {

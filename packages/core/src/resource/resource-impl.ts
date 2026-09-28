@@ -1,13 +1,13 @@
-import { EList } from "../metamodel/types/EList.js";
-import { EObject } from "../metamodel/types/EObject.js";
-import { BasicEList } from "../metamodel/impl/BasicEList.js";
-import { Diagnostic } from "./diagnostic.js";
-import { EObjectSerializer } from "./serializer.js";
-import { Resource } from "./resource.js";
-import { ResourceSet } from "./resource-set.js";
-import { associateRoot, dissociateRoot } from "./resource-utils.js";
-import { URI } from "./uri.js";
-import { UriConverter } from "./uri-converter.js";
+import { EList } from '../metamodel/types/EList.js';
+import { EObject } from '../metamodel/types/EObject.js';
+import { BasicEList } from '../metamodel/impl/BasicEList.js';
+import { Diagnostic } from './diagnostic.js';
+import { EObjectSerializer } from './serializer.js';
+import { Resource } from './resource.js';
+import { ResourceSet } from './resource-set.js';
+import { associateRoot, dissociateRoot } from './resource-utils.js';
+import { URI } from './uri.js';
+import { UriConverter } from './uri-converter.js';
 
 /** getContents() as a live list that keeps resource-utils.ts's side-table in sync. */
 class ResourceContentsList extends BasicEList<EObject> {
@@ -48,9 +48,7 @@ class ResourceContentsList extends BasicEList<EObject> {
 }
 
 export class ResourceImpl implements Resource {
-  private readonly contents: ResourceContentsList = new ResourceContentsList(
-    this,
-  );
+  private readonly contents: ResourceContentsList = new ResourceContentsList(this);
   private loaded = false;
   private readonly errorList: Diagnostic[] = [];
   private readonly warningList: Diagnostic[] = [];
@@ -59,7 +57,7 @@ export class ResourceImpl implements Resource {
   constructor(
     private uri: URI,
     private readonly serializer: EObjectSerializer,
-    private readonly uriConverter?: UriConverter,
+    private readonly uriConverter?: UriConverter
   ) {}
 
   getURI(): URI {
@@ -111,10 +109,7 @@ export class ResourceImpl implements Resource {
 
   async save(): Promise<void> {
     const converter = this.resolveUriConverter();
-    const bytes = await this.serializer.serialize(
-      this.contents.toArray(),
-      this,
-    );
+    const bytes = await this.serializer.serialize(this.contents.toArray(), this);
     await converter.writeBinary(this.uri, bytes);
   }
 
@@ -124,14 +119,12 @@ export class ResourceImpl implements Resource {
   }
 
   private resolveUriConverter(): UriConverter {
-    const converter =
-      this.uriConverter ??
-      this.resourceSet?.getUriConverterRegistry().getConverter(this.uri);
+    const converter = this.uriConverter ?? this.resourceSet?.getUriConverterRegistry().getConverter(this.uri);
     if (!converter) {
       throw new Error(
         `Resource '${this.uri.toString()}' has no UriConverter available. Either construct it with one ` +
           "explicitly, or register one that handles this URI's scheme via the owning ResourceSet's " +
-          "getUriConverterRegistry().register(...) (e.g. with @typemf/node's NodeFileUriConverter).",
+          "getUriConverterRegistry().register(...) (e.g. with @typemf/node's NodeFileUriConverter)."
       );
     }
     return converter;

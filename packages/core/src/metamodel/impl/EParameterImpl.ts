@@ -1,10 +1,10 @@
-import { EClass } from '../types/EClass.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { BasicEList } from './BasicEList.js';
 import { EParameter } from '../types/EParameter.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EOperation } from '../types/EOperation.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
 export class EParameterImpl extends ETypedElementImpl implements EParameter {
