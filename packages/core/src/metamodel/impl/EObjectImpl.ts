@@ -1,9 +1,9 @@
-import { EClass } from "../types/EClass.js";
-import { EList } from "../types/EList.js";
-import { EObject } from "../types/EObject.js";
-import { EReference } from "../types/EReference.js";
-import { EStructuralFeature } from "../types/EStructuralFeature.js";
-import { BasicEList } from "./BasicEList.js";
+import { EClass } from '../types/EClass.js';
+import { EList } from '../types/EList.js';
+import { EObject } from '../types/EObject.js';
+import { EReference } from '../types/EReference.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
 
 let fallbackIdCounter = 0;
 
@@ -17,6 +17,47 @@ let fallbackIdCounter = 0;
 export abstract class EObjectImpl implements EObject {
   private _eContainer: EObject | undefined;
   private _eContainingFeature: EStructuralFeature | undefined;
+  private frozen = false;
+
+  /**
+   * Marks this object (and, recursively, everything it contains) as no longer intended to be
+   * mutated. Matches real EMF's own design precisely: a queryable flag, not enforced in every
+   * setter. Real EMF's own enforcement is a single `assert !isFrozen()` in one place
+   * (eSetDirectResource) - a mechanism that is itself frequently inactive in production Java
+   * (assertions are off by default unless -ea is passed). Given that, invasively guarding every
+   * setter here would be enforcing something more strictly than the system being ported actually
+   * does.
+   *
+   * Lives here, on EObjectImpl - the one foundational file the self-hosted swap never overwrites
+   * - rather than as per-class overrides on EClassImpl/EEnumImpl/EPackageImpl the way hand-written
+   * core originally had it (those files are generated now). The cascade itself is generic and
+   * reflective (every containment reference this object's own metaclass declares, via
+   * getEAllContainments()), not a hardcoded list of "this class's own children" per subclass -
+   * genuinely more complete than the old per-class version (which only ever froze the specific
+   * containment features each override happened to name, missing e.g. eAnnotations), and cascades
+   * transitively for free (a contained child's own freeze() call reaches its own children in
+   * turn), needing no override anywhere.
+   */
+  freeze(): void {
+    for (const feature of this.eClass().getEAllContainments()) {
+      const value = this.eGet(feature);
+      if (feature.isMany()) {
+        for (const child of value as Iterable<unknown>) this.freezeChild(child);
+      } else {
+        this.freezeChild(value);
+      }
+    }
+    this.frozen = true;
+  }
+
+  isFrozen(): boolean {
+    return this.frozen;
+  }
+
+  /** Freezes `child` if it is itself an EObjectImpl - real EMF's own conditional cascade helper. */
+  private freezeChild(child: unknown): void {
+    if (child instanceof EObjectImpl) child.freeze();
+  }
 
   abstract eClass(): EClass;
   abstract eGet(feature: EStructuralFeature): unknown;
@@ -37,10 +78,7 @@ export abstract class EObjectImpl implements EObject {
    * and by single-valued containment setters to update the backpointer.
    * Not part of the public EObject API.
    */
-  eBasicSetContainer(
-    container: EObject | undefined,
-    feature: EStructuralFeature | undefined,
-  ): void {
+  eBasicSetContainer(container: EObject | undefined, feature: EStructuralFeature | undefined): void {
     this._eContainer = container;
     this._eContainingFeature = feature;
   }
@@ -60,10 +98,50 @@ export abstract class EObjectImpl implements EObject {
    * if `feature` is a containment, and update the opposite end if it has
    * one. Called by BasicEList and by single-valued setters.
    */
-  eDidAdd(feature: EStructuralFeature, value: unknown): void {
-    if (!isReference(feature) || !(value instanceof EObjectImpl)) return;
-    if (isReference(feature) && feature.isContainment())
-      value.eBasicMoveInto(this, feature);
+  /**
+   * A single, global counter bumped on every eDidAdd/eDidRemove ANYWHERE in
+   * the loaded model - i.e. every feature mutation, of any kind (reference
+   * or attribute, many- or single-valued), on any object, not only the
+   * metamodel-structural features (eStructuralFeatures/eOperations/
+   * eSuperTypes/eGenericSuperTypes) a first version of this scoped the
+   * bump to. That narrower scope was WRONG, found by a real, failing test:
+   * a custom `get` body is free to read ANY feature (a feature computed
+   * from another ordinary attribute, say - not only structural
+   * relationships), so a change to that OTHER feature must ALSO invalidate
+   * the cache, and a name-based allowlist can never anticipate every such
+   * dependency a body might have. Bumping on every mutation is the only
+   * scope that's correct for an arbitrary `get` body, not just the
+   * specific eAll*-style ones that motivated this - see eclass.njk's
+   * getter-caching shape, which stores the generation a cache was computed
+   * at and recomputes once the current one has moved past it.
+   *
+   * Deliberately GLOBAL, not scoped to the specific object that changed:
+   * pinpointing exactly which caches an edit could affect would need
+   * either tracking each cache's real dependencies (not attempted) or a
+   * reverse (subtypes) graph for the structural case specifically (this
+   * project has neither). Bumping globally invalidates more than strictly
+   * necessary on every edit, but never leaves anything stale - correct,
+   * simple, and still a good fit for the motivating usage pattern: model
+   * edits cluster at construction/load time, reads cluster at
+   * serialization time, and the two rarely interleave, so in practice
+   * caches stay warm for exactly the read-heavy phase this exists for.
+   */
+  private static modelGeneration = 0;
+
+  static getModelGeneration(): number {
+    return EObjectImpl.modelGeneration;
+  }
+
+  eDidAdd(feature: EStructuralFeature | undefined, value: unknown): void {
+    EObjectImpl.modelGeneration++;
+    // `feature` can genuinely be undefined here - eBootstrapList()'s lists (see EClassImpl.ts etc.)
+    // are deliberately constructed with an owner but no feature, since a real feature object isn't
+    // always safely resolvable this early in self-hosted bootstrap. The generation-counter bump above
+    // must still happen regardless (found the hard way: a cache primed empty before eBootstrapList's
+    // eSuperTypes.add() ran was never invalidated, since that add() used to never reach this method at
+    // all) - only the containment/opposite logic below genuinely needs a real feature to do anything.
+    if (!feature || !isReference(feature) || !(value instanceof EObjectImpl)) return;
+    if (feature.isContainment()) value.eBasicMoveInto(this, feature);
     const opposite = feature.getEOpposite();
     if (opposite) value.eInverseAdd(this, opposite);
   }
@@ -73,8 +151,9 @@ export abstract class EObjectImpl implements EObject {
    * `this.feature` (the store itself has already happened): release
    * containment and update the opposite end.
    */
-  eDidRemove(feature: EStructuralFeature, value: unknown): void {
-    if (!isReference(feature) || !(value instanceof EObjectImpl)) return;
+  eDidRemove(feature: EStructuralFeature | undefined, value: unknown): void {
+    EObjectImpl.modelGeneration++;
+    if (!feature || !isReference(feature) || !(value instanceof EObjectImpl)) return;
     if (feature.isContainment()) value.eBasicReleaseFrom(this, feature);
     const opposite = feature.getEOpposite();
     if (opposite) value.eInverseRemove(this, opposite);
@@ -117,11 +196,7 @@ export abstract class EObjectImpl implements EObject {
     const oldContainer = this._eContainer;
     const oldFeature = this._eContainingFeature;
     if (oldContainer === container && oldFeature === feature) return;
-    if (
-      oldContainer instanceof EObjectImpl &&
-      oldFeature &&
-      isReference(oldFeature)
-    ) {
+    if (oldContainer instanceof EObjectImpl && oldFeature && isReference(oldFeature)) {
       oldContainer.eBasicRemoveValue(oldFeature, this);
       const oldOpposite = oldFeature.getEOpposite();
       if (oldOpposite) this.eBasicRemoveValue(oldOpposite, oldContainer);
@@ -130,18 +205,12 @@ export abstract class EObjectImpl implements EObject {
   }
 
   private eBasicReleaseFrom(container: EObjectImpl, feature: EReference): void {
-    if (
-      this._eContainer === container &&
-      this._eContainingFeature === feature
-    ) {
+    if (this._eContainer === container && this._eContainingFeature === feature) {
       this.eBasicSetContainer(undefined, undefined);
     }
   }
 
-  private eBasicRemoveValue(
-    feature: EStructuralFeature,
-    value: EObjectImpl,
-  ): void {
+  private eBasicRemoveValue(feature: EStructuralFeature, value: EObjectImpl): void {
     if (feature.isMany()) {
       this.eBasicList(feature).basicRemove(value);
     } else if (this.eGet(feature) === value) {
@@ -152,9 +221,7 @@ export abstract class EObjectImpl implements EObject {
   private eBasicList(feature: EStructuralFeature): BasicEList<unknown> {
     const list = this.eGet(feature);
     if (!(list instanceof BasicEList)) {
-      throw new Error(
-        `Feature '${feature.getName()}' is many-valued but has no backing BasicEList.`,
-      );
+      throw new Error(`Feature '${feature.getName()}' is many-valued but has no backing BasicEList.`);
     }
     return list;
   }
@@ -201,27 +268,25 @@ export abstract class EObjectImpl implements EObject {
 }
 
 function isReference(feature: EStructuralFeature): feature is EReference {
-  return "isContainment" in feature;
+  return 'isContainment' in feature;
 }
 
-function isContainmentReference(
-  feature: EStructuralFeature,
-): feature is EReference {
+function isContainmentReference(feature: EStructuralFeature): feature is EReference {
   return isReference(feature) && feature.isContainment();
 }
 
 function isEObject(value: unknown): value is EObject {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    typeof (value as EObject).eClass === "function"
+    typeof (value as EObject).eClass === 'function'
   );
 }
 
 function isEListOfEObject(value: unknown): value is EList<EObject> {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    typeof (value as EList<EObject>)[Symbol.iterator] === "function"
+    typeof (value as EList<EObject>)[Symbol.iterator] === 'function'
   );
 }

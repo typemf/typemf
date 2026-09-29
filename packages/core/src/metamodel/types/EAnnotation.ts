@@ -1,7 +1,8 @@
-import { EObject } from './EObject.js';
 import { EList } from './EList.js';
 import { EModelElement } from './EModelElement.js';
+import { EObject } from './EObject.js';
 import { EStringToStringMapEntry } from './EStringToStringMapEntry.js';
+
 
 
 export interface EAnnotation extends EModelElement {

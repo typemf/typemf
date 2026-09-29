@@ -1,8 +1,4 @@
 {% file "util/" + typeGuardsClassName(package) + ".ts" %}
-import { EObject } from '{{ coreImportSpecifier("util", "types", options) }}';
-import { {% for classifier in eClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from '../types/index.js';
-import { get{{ packageClassName(package) }}Ref } from '../impl/{{ packageClassName(package) }}Ref.js';
-
 /**
  * Runtime type guards, one per classifier declared in types/ - the
  * reflective counterpart to a hand-written structural guard like
@@ -22,13 +18,13 @@ import { get{{ packageClassName(package) }}Ref } from '../impl/{{ packageClassNa
  * instances (no dependency on the object's actual JS class/prototype at
  * all, unlike `instanceof`).
  */
-function hasEClass(obj: unknown): obj is EObject {
+function hasEClass(obj: unknown): obj is {{ useImport("EObject", "types", {foundational: true}) }} {
   return obj !== null && typeof obj === 'object' && typeof (obj as { eClass?: unknown }).eClass === 'function';
 }
 
 {% for classifier in eClassesOf(package) %}
-export function is{{ classifier.getName() }}(obj: unknown): obj is {{ classifier.getName() }} {
-  return hasEClass(obj) && get{{ packageClassName(package) }}Ref().get{{ classifier.getName() }}().isSuperTypeOf(obj.eClass());
+export function is{{ classifier.getName() }}(obj: unknown): obj is {{ useImport(classifier.getName(), "types", {foundational: false}) }} {
+  return hasEClass(obj) && {{ useImport("get" + packageClassName(package) + "Ref", "impl", {file: packageClassName(package) + "Ref", foundational: false}) }}().get{{ classifier.getName() }}().isSuperTypeOf(obj.eClass());
 }
 {% endfor %}
 {% endfile %}

@@ -1,6 +1,8 @@
 {% set pkgClass = packageClassName(package) %}
 {% file pkgClass + ".ts" %}
-import { EAttribute, EClass, EClassifier, EDataType, EEnum, EPackage, EReference } from '{{ coreImportSpecifier("root", "types", options) }}';
+{% for name in metaclassAccessorCollisionTypeNames(package) %}
+{% set _ = useImport(name, "types", {foundational: true}) %}
+{% endfor %}
 
 /**
  * Classifier/feature IDs, as pure numeric literals - safe to import from
@@ -11,36 +13,56 @@ import { EAttribute, EClass, EClassifier, EDataType, EEnum, EPackage, EReference
  */
 export const Ids = {
 {% for classifier in package.getEClassifiers() %}
-  {{ classifier.getName() }}: { self: {{ classifier.getClassifierID() }}{% if isEClass(classifier) %}{% for feature in classifier.getEStructuralFeatures() %}, {{ feature.getName() }}: {{ feature.getFeatureID() }}{% endfor %}{% endif %} },
+  {{ classifier.getName() }}: { self: {{ classifier.getClassifierID() }}{% if isEClass(classifier) %}{% for feature in classifier.getEStructuralFeatures() %}, {{ feature.getName() }}: {{ feature.getFeatureID() }}{% endfor %}{% for op in classifier.getEOperations() %}, op{{ loop.index0 }}: {{ op.getOperationID() }}{% endfor %}{% endif %} },
 {% endfor %}
 } as const;
 
 {{ docComment(package) }}
-export interface {{ pkgClass }} extends EPackage {
+export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {foundational: true}) }} {
 {% for classifier in package.getEClassifiers() %}
+{% set collision = metaclassAccessorCollision(classifier.getName(), package) %}
 {% if isEClass(classifier) %}
-  get{{ classifier.getName() }}(): EClass;
+  get{{ classifier.getName() }}(): {{ useImport("EClass", "types", {foundational: true}) }};
+{% if collision %}
+  get{{ classifier.getName() }}({{ paramList(collision) }}): {{ tsOperationReturnType(collision) }};
+{% endif %}
 {% for feature in classifier.getEStructuralFeatures() %}
-  get{{ classifier.getName() }}_{{ ucfirst(feature.getName()) }}(): {{ "EReference" if isEReference(feature) else "EAttribute" }};
+  get{{ classifier.getName() }}_{{ ucfirst(feature.getName()) }}(): {{ useImport("EReference", "types", {foundational: true}) if isEReference(feature) else useImport("EAttribute", "types", {foundational: true}) }};
 {% endfor %}
 {% elif isEEnum(classifier) %}
-  get{{ classifier.getName() }}(): EEnum;
+  get{{ classifier.getName() }}(): {{ useImport("EEnum", "types", {foundational: true}) }};
+{% if collision %}
+  get{{ classifier.getName() }}({{ paramList(collision) }}): {{ tsOperationReturnType(collision) }};
+{% endif %}
 {% else %}
-  get{{ classifier.getName() }}(): EDataType;
+  get{{ classifier.getName() }}(): {{ useImport("EDataType", "types", {foundational: true}) }};
+{% if collision %}
+  get{{ classifier.getName() }}({{ paramList(collision) }}): {{ tsOperationReturnType(collision) }};
+{% endif %}
 {% endif %}
 {% endfor %}
 }
 {% endfile %}
 {% file "impl/" + pkgClass + "Impl.ts" %}
-import { EClass, EAttribute, EReference, EEnum, EDataType } from '{{ coreImportSpecifier("impl", "types", options) }}';
-{{ coreImportLine(["EPackageImpl", "EClassImpl", "EAttributeImpl", "EReferenceImpl", "EDataTypeImpl", "EEnumImpl", "EEnumLiteralImpl", "EAnnotationImpl", "EFactoryImpl"], "impl", "impl", options, package) }}
-{% if options['generate-ecore'] %}
-{{ coreImportLine(["EStringToStringMapEntryImpl"], "impl", "impl", options, package) }}
-{% endif %}
-import { {{ pkgClass }}, Ids } from '../{{ pkgClass }}.js';
-import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
-import { {{ factoryClassName(package) }}Impl } from './{{ factoryClassName(package) }}Impl.js';
-import { set{{ pkgClass }}Ref } from './{{ pkgClass }}Ref.js';
+{% for name in metaclassAccessorCollisionTypeNames(package) %}
+{% set _ = useImport(name, "types", {foundational: true}) %}
+{% endfor %}
+{% set _ = useImport("EPackageImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EClassImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EAttributeImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EReferenceImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EOperationImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EParameterImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EDataTypeImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EEnumImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EEnumLiteralImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EAnnotationImpl", "impl", {foundational: true}) %}
+{% set _ = useImport("EFactoryImpl", "impl", {foundational: true}) %}
+{% set _ = useImport(pkgClass, "root", {foundational: false}) %}
+{% set _ = useImport("Ids", "root", {file: pkgClass, foundational: false}) %}
+{% set _ = useImport(factoryClassName(package), "root", {foundational: false}) %}
+{% set _ = useImport(factoryClassName(package) + "Impl", "impl", {foundational: false}) %}
+{% set _ = useImport("set" + pkgClass + "Ref", "impl", {file: pkgClass + "Ref", foundational: false}) %}
 
 {#-
   Emits code reconstructing `element`'s real EAnnotations (source +
@@ -80,16 +102,14 @@ import { set{{ pkgClass }}Ref } from './{{ pkgClass }}Ref.js';
 {% endmacro %}
 
 {% macro emitAnnotations(targetExpr, element) %}
-{#- Mode-conditional for a real, structural reason, not just a different
-    method name: @typemf/core's own hand-written EAnnotationImpl (used
-    for ordinary metamodels) stores "details" as a plain Map<string,
-    string> - but self-hosting's GENERATED EAnnotationImpl.ts treats
-    "details" as the real, modeled Ecore feature it is
-    (EList<EStringToStringMapEntry>, a containment list of real entry
-    objects) - confirmed directly against the actual generated type
-    before fixing, not assumed. Also bypasses the reflective path
-    entirely in generate-ecore mode (eBasicSetValue/eBootstrapList), for the
-    same bootstrap-ordering reason as everywhere else in this file. #}
+{#- Mode-conditional for a real, structural reason, not just a different method name: self-hosting's
+    generated EAnnotationImpl.ts (and, since the getDetails() migration, @typemf/core's own hand-written
+    one too - both now genuinely EList<EStringToStringMapEntry>, matching real EMF) still differ in HOW
+    a detail gets constructed during BOOTSTRAP specifically - the self-hosting branch bypasses the
+    reflective path entirely (eBasicSetValue/eBootstrapList), for the same bootstrap-ordering reason as
+    everywhere else in this file (the metaclass for EStringToStringMapEntry doesn't exist yet at the
+    point this code runs during self-construction); the ordinary branch has no such ordering problem and
+    uses the real, public API (setDetailValue) directly. #}
 {% for annotation in element.getEAnnotations() %}
     {
       const annotation = new EAnnotationImpl();
@@ -99,7 +119,7 @@ import { set{{ pkgClass }}Ref } from './{{ pkgClass }}Ref.js';
 {% if options['generate-ecore'] %}
 {% for entry in detailsEntries(annotation) %}
       {
-        const entry = new EStringToStringMapEntryImpl();
+        const entry = new {{ useImport("EStringToStringMapEntryImpl", "impl", {foundational: true}) }}();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, {{ jsString(entry.key) }});
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, {{ jsString(entry.value) }});
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
@@ -107,7 +127,7 @@ import { set{{ pkgClass }}Ref } from './{{ pkgClass }}Ref.js';
 {% endfor %}
 {% else %}
 {% for entry in detailsEntries(annotation) %}
-      annotation.getDetails().set({{ jsString(entry.key) }}, {{ jsString(entry.value) }});
+      {{ useImport("setDetailValue", "root", {foundational: true}) }}(annotation.getDetails(), {{ jsString(entry.key) }}, {{ jsString(entry.value) }});
 {% endfor %}
 {% endif %}
 {{ bootstrapAdd(targetExpr, "getEAnnotations", "Ids.EModelElement.eAnnotations", "annotation") }}
@@ -119,14 +139,23 @@ import { set{{ pkgClass }}Ref } from './{{ pkgClass }}Ref.js';
 export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% for classifier in package.getEClassifiers() %}
 {% if isEClass(classifier) %}
-  private readonly _{{ classifier.getName() }}: EClass;
+  private readonly _{{ classifier.getName() }}: EClassImpl;
 {% for feature in classifier.getEStructuralFeatures() %}
-  private readonly _{{ classifier.getName() }}_{{ feature.getName() }}: {{ "EReference" if isEReference(feature) else "EAttribute" }};
+  private readonly _{{ classifier.getName() }}_{{ feature.getName() }}: {{ "EReferenceImpl" if isEReference(feature) else "EAttributeImpl" }};
+{% endfor %}
+{% for op in classifier.getEOperations() %}
+{% set opIndex = loop.index0 %}
+  {#- Indexed by position, not name - operations can be overloaded (the same name, several signatures),
+      so a name alone would collide; position is always unique. #}
+  private readonly _{{ classifier.getName() }}_op{{ opIndex }}: EOperationImpl;
+{% for param in op.getEParameters() %}
+  private readonly _{{ classifier.getName() }}_op{{ opIndex }}_p{{ loop.index0 }}: EParameterImpl;
+{% endfor %}
 {% endfor %}
 {% elif isEEnum(classifier) %}
   private readonly _{{ classifier.getName() }}: EEnumImpl;
 {% else %}
-  private readonly _{{ classifier.getName() }}: EDataType;
+  private readonly _{{ classifier.getName() }}: EDataTypeImpl;
 {% endif %}
 {% endfor %}
 
@@ -199,7 +228,13 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
       this._{{ classifier.getName() }}.eBootstrapList(Ids.EEnum.eLiterals).add(literal);
       literal.eBasicSetValue(Ids.EEnumLiteral.eEnum, this._{{ classifier.getName() }});
 {% else %}
-      this._{{ classifier.getName() }}.addLiteral(literal);
+      {#- addLiteral() no longer exists - @typemf/core's own EEnumImpl/EEnumLiteralImpl are
+          themselves now generated (self-hosted) classes, properly extending EObjectImpl, so the
+          ordinary getELiterals().add() path correctly wires the eEnum opposite automatically now
+          (the same standard mechanism every other generated opposite-maintained containment
+          reference already relies on) - the old convenience existed specifically to work around
+          hand-written EEnumLiteralImpl NOT extending EObjectImpl, which is no longer true. #}
+      this._{{ classifier.getName() }}.getELiterals().add(literal);
 {% endif %}
     }
 {% endfor %}
@@ -227,6 +262,12 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {{ bootstrapSet(fieldExpr, "setLowerBound", "Ids.ETypedElement.lowerBound", feature.getLowerBound()) }}
 {{ bootstrapSet(fieldExpr, "setUpperBound", "Ids.ETypedElement.upperBound", feature.getUpperBound()) }}
     {{ fieldExpr }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
+    {#- containerClass: the concrete implementation class the feature is declared on - the closest
+        TypeScript has to Java's own containerClass semantics (Class<?>, e.g. EClassifier.class in the
+        real EMF bootstrap this mirrors). Real EMF uses the DECLARED INTERFACE's class object; TypeScript
+        interfaces don't exist as runtime values at all, so the concrete Impl class - the only thing
+        actually inspectable at runtime here - is the deliberate, disclosed adaptation. #}
+    {{ fieldExpr }}.setContainerClass({{ useImport(classifier.getName() + "Impl", "impl", {foundational: false}) }});
 {{ bootstrapSet(fieldExpr, "setEContainingClass", "Ids.EStructuralFeature.eContainingClass", "this._" + classifier.getName()) }}
 {% if isEReference(feature) %}
 {{ bootstrapSet(fieldExpr, "setContainment", "Ids.EReference.containment", 'true' if feature.isContainment() else 'false') }}
@@ -237,6 +278,42 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endif %}
 {{ emitAnnotations(fieldExpr, feature) }}
 {{ bootstrapAdd("this._" + classifier.getName(), "getEStructuralFeatures", "Ids.EClass.eStructuralFeatures", fieldExpr) }}
+{% endfor %}
+{% endfor %}
+
+    // Pass 2.5: operations and their parameters - real EOperation/EParameter objects, not just the
+    // generated METHODS (which already existed) - eOperations used to be permanently empty at runtime;
+    // this is what actually populates it, the same way pass 2 populates eStructuralFeatures. Kept as
+    // its own pass, after every classifier and feature exists (an operation's return type or a
+    // parameter's type can reference either), rather than folded into the loop above.
+{% for classifier in eClassesOf(package) %}
+{% for op in classifier.getEOperations() %}
+{% set opIndex = loop.index0 %}
+{% set opFieldExpr = "this._" + classifier.getName() + "_op" + opIndex %}
+    {{ opFieldExpr }} = new EOperationImpl();
+{{ bootstrapSet(opFieldExpr, "setName", "Ids.ENamedElement.name", jsString(op.getName())) }}
+{% if op.getEType() %}
+{{ bootstrapSet(opFieldExpr, "setEType", "Ids.ETypedElement.eType", "this._" + op.getEType().getName()) }}
+{% endif %}
+{{ bootstrapSet(opFieldExpr, "setEContainingClass", "Ids.EOperation.eContainingClass", "this._" + classifier.getName()) }}
+    {{ opFieldExpr }}.setOperationID(Ids.{{ classifier.getName() }}.op{{ opIndex }});
+{% for param in op.getEParameters() %}
+{% set paramFieldExpr = opFieldExpr + "_p" + loop.index0 %}
+    {{ paramFieldExpr }} = new EParameterImpl();
+{{ bootstrapSet(paramFieldExpr, "setName", "Ids.ENamedElement.name", jsString(param.getName())) }}
+{% if param.getEType() %}
+{{ bootstrapSet(paramFieldExpr, "setEType", "Ids.ETypedElement.eType", "this._" + param.getEType().getName()) }}
+{% endif %}
+{{ bootstrapSet(paramFieldExpr, "setLowerBound", "Ids.ETypedElement.lowerBound", param.getLowerBound()) }}
+{{ bootstrapSet(paramFieldExpr, "setUpperBound", "Ids.ETypedElement.upperBound", param.getUpperBound()) }}
+{{ bootstrapSet(paramFieldExpr, "setEOperation", "Ids.EParameter.eOperation", opFieldExpr) }}
+{{ bootstrapAdd(opFieldExpr, "getEParameters", "Ids.EOperation.eParameters", paramFieldExpr) }}
+{% endfor %}
+{% for exception in op.getEExceptions() %}
+{{ bootstrapAdd(opFieldExpr, "getEExceptions", "Ids.EOperation.eExceptions", "this._" + exception.getName()) }}
+{% endfor %}
+{{ emitAnnotations(opFieldExpr, op) }}
+{{ bootstrapAdd("this._" + classifier.getName(), "getEOperations", "Ids.EClass.eOperations", opFieldExpr) }}
 {% endfor %}
 {% endfor %}
 
@@ -254,22 +331,11 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endif %}
 {% endfor %}
 
-    // Pass 5: recompute EAll* caches now that supertypes/features are
-    // wired. Skipped entirely in generate-ecore mode: the generated
-    // classifier classes never implement recomputeAllLists() at all (a
-    // known, already-documented scope decision - the ~14 traversal-based
-    // derived features like eAllSuperTypes/eAllStructuralFeatures are
-    // stored fields on generated classes, not auto-computed, unlike
-    // @typemf/core's own hand-written EClassImpl, which has real,
-    // working versions of all of them). Calling a method the generated
-    // class doesn't have would always fail regardless of bootstrap
-    // ordering - this isn't a workaround for the ordering problem this
-    // file exists to fix, it's a separate, pre-existing, accepted gap.
-{% if not options['generate-ecore'] %}
-{% for classifier in eClassesOf(package) %}
-    this._{{ classifier.getName() }}.recomputeAllLists();
-{% endfor %}
-{% endif %}
+    // Pass 5 (recompute EAll* caches, ordinary mode only) removed - stale post-swap.
+    // @typemf/core's own EClassImpl is now itself generated code (see NOTES.md's point 6/7
+    // write-ups), using the same automatic, get-bodied caching (EObjectImpl.getModelGeneration(),
+    // point 1) as self-hosted output always did - there is no recomputeAllLists() method to call
+    // anymore, in either mode, and none is needed.
 
     // Pass 6: set the package's own name/nsURI/nsPrefix/annotations last,
     // deliberately - these go through the ordinary reflective setters
@@ -287,23 +353,51 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
   }
 
 {% for classifier in package.getEClassifiers() %}
+{% set collision = metaclassAccessorCollision(classifier.getName(), package) %}
 {% if isEClass(classifier) %}
-  get{{ classifier.getName() }}(): EClass {
+{% if collision %}
+  get{{ classifier.getName() }}(): {{ useImport("EClass", "types", {foundational: true}) }};
+  get{{ classifier.getName() }}({{ paramList(collision) }}): {{ tsOperationReturnType(collision) }};
+  get{{ classifier.getName() }}({{ optionalParamList(collision) }}): EClass | {{ tsOperationReturnType(collision) }} {
+    if ({{ collision.getEParameters().get(0).getName() }} === undefined) return this._{{ classifier.getName() }};
+    return super.get{{ classifier.getName() }}({{ argList(collision) }});
+  }
+{% else %}
+  get{{ classifier.getName() }}(): {{ useImport("EClass", "types", {foundational: true}) }} {
     return this._{{ classifier.getName() }};
   }
+{% endif %}
 {% for feature in classifier.getEStructuralFeatures() %}
-  get{{ classifier.getName() }}_{{ ucfirst(feature.getName()) }}(): {{ "EReference" if isEReference(feature) else "EAttribute" }} {
+  get{{ classifier.getName() }}_{{ ucfirst(feature.getName()) }}(): {{ useImport("EReference", "types", {foundational: true}) if isEReference(feature) else useImport("EAttribute", "types", {foundational: true}) }} {
     return this._{{ classifier.getName() }}_{{ feature.getName() }};
   }
 {% endfor %}
 {% elif isEEnum(classifier) %}
-  get{{ classifier.getName() }}(): EEnum {
-    return this._{{ classifier.getName() }};
+{% if collision %}
+  get{{ classifier.getName() }}(): {{ useImport("EEnum", "types", {foundational: true}) }};
+  get{{ classifier.getName() }}({{ paramList(collision) }}): {{ tsOperationReturnType(collision) }};
+  get{{ classifier.getName() }}({{ optionalParamList(collision) }}): EEnum | {{ tsOperationReturnType(collision) }} {
+    if ({{ collision.getEParameters().get(0).getName() }} === undefined) return this._{{ classifier.getName() }};
+    return super.get{{ classifier.getName() }}({{ argList(collision) }});
   }
 {% else %}
-  get{{ classifier.getName() }}(): EDataType {
+  get{{ classifier.getName() }}(): {{ useImport("EEnum", "types", {foundational: true}) }} {
     return this._{{ classifier.getName() }};
   }
+{% endif %}
+{% else %}
+{% if collision %}
+  get{{ classifier.getName() }}(): {{ useImport("EDataType", "types", {foundational: true}) }};
+  get{{ classifier.getName() }}({{ paramList(collision) }}): {{ tsOperationReturnType(collision) }};
+  get{{ classifier.getName() }}({{ optionalParamList(collision) }}): EDataType | {{ tsOperationReturnType(collision) }} {
+    if ({{ collision.getEParameters().get(0).getName() }} === undefined) return this._{{ classifier.getName() }};
+    return super.get{{ classifier.getName() }}({{ argList(collision) }});
+  }
+{% else %}
+  get{{ classifier.getName() }}(): {{ useImport("EDataType", "types", {foundational: true}) }} {
+    return this._{{ classifier.getName() }};
+  }
+{% endif %}
 {% endif %}
 {% endfor %}
 }

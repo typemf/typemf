@@ -1,11 +1,12 @@
-import { EList } from '../types/EList.js';
-import { EObjectImpl } from './EObjectImpl.js';
 import { BasicEList } from './BasicEList.js';
-import { EModelElement } from '../types/EModelElement.js';
+import { EObjectImpl } from './EObjectImpl.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EAnnotation } from '../types/EAnnotation.js';
 import { EClass } from '../types/EClass.js';
+import { EList } from '../types/EList.js';
+import { EModelElement } from '../types/EModelElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
+
 
 
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
@@ -27,7 +28,6 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   getEAnnotations(): EList<EAnnotation> {
     return this._eAnnotations;
   }
-
   getEAnnotation(source: string): EAnnotation | undefined {
     return this.getEAnnotations().filter(ann => ann.getSource() === source).at(0);
   }
@@ -49,6 +49,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
         for (const item of items) list.add(item as EAnnotation);
         return;
       }
+
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }
@@ -81,6 +82,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
       case 0: this._eAnnotationsCache?.clear(); return;
+
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }

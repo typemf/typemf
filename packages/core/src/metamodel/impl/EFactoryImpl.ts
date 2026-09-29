@@ -1,15 +1,18 @@
-import { EObject } from '../types/EObject.js';
 import { BasicEList } from './BasicEList.js';
-import { EFactory } from '../types/EFactory.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EPackage } from '../types/EPackage.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
 import { EDataType } from '../types/EDataType.js';
+import { EFactory } from '../types/EFactory.js';
+import { EObject } from '../types/EObject.js';
+import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { DynamicEObjectImpl } from './DynamicEObjectImpl.js';
+
 
 
 export class EFactoryImpl extends EModelElementImpl implements EFactory {
+
   private _ePackage: EPackage | undefined;
 
 
@@ -20,21 +23,61 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   getEPackage(): EPackage | undefined {
     return this._ePackage;
   }
-
   setEPackage(value: EPackage | undefined): void {
     this.eSet(getEcorePackageRef().getEFactory_EPackage(), value);
   }
-
-  create(eClass: EClass): EObject | undefined {
-    throw new Error('EFactory.create() has no body:typescript annotation - nothing to generate.');
+  create(eClass: EClass): EObject {
+    if (eClass.isAbstract() || eClass.isInterface()) {
+      throw new Error(`Cannot create an instance of '${eClass.getName()}': it is abstract or an interface.`);
+    }
+    console.warn(
+      `No factory recognizes classifier id ${eClass.getClassifierID()} (${eClass.getName()}) - falling back to a DynamicEObjectImpl. ` +
+        'Add a concrete factory for it to avoid this.'
+    );
+    return new DynamicEObjectImpl(eClass);
   }
-
-  createFromString(eDataType: EDataType, literalValue: string): unknown | undefined {
-    throw new Error('EFactory.createFromString() has no body:typescript annotation - nothing to generate.');
+  createFromString(eDataType: EDataType, literalValue: string): unknown {
+    if (this.getEPackage() !== undefined && eDataType.getEPackage() !== this.getEPackage()) {
+      throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);
+    }
+    switch (eDataType.getName()) {
+      case 'EString':
+        return literalValue;
+      case 'EInt':
+      case 'EIntegerObject':
+      case 'ELong':
+      case 'ELongObject':
+      case 'EDouble':
+      case 'EDoubleObject':
+      case 'EFloat':
+      case 'EFloatObject':
+      case 'EShort':
+      case 'EShortObject':
+      case 'EByte':
+      case 'EByteObject':
+        return Number(literalValue);
+      case 'EBigInteger':
+        return BigInt(literalValue);
+      case 'EBoolean':
+      case 'EBooleanObject':
+        return literalValue === 'true';
+      case 'EChar':
+      case 'ECharacterObject':
+        return literalValue.charAt(0);
+      case 'EDate':
+        return new Date(literalValue);
+      default:
+        return literalValue;
+    }
   }
-
   convertToString(eDataType: EDataType, instanceValue: unknown): string | undefined {
-    throw new Error('EFactory.convertToString() has no body:typescript annotation - nothing to generate.');
+    if (this.getEPackage() !== undefined && eDataType.getEPackage() !== this.getEPackage()) {
+      throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);
+    }
+    if (eDataType.getName() === 'EDate' && instanceValue instanceof Date) {
+      return instanceValue.toISOString();
+    }
+    return String(instanceValue);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -86,12 +129,14 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 1: {
         const oldValue = this._ePackage;
         this._ePackage = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       default:
         super.eUnset(feature);
         return;

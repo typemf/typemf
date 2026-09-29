@@ -1,17 +1,19 @@
-import { EList } from '../types/EList.js';
 import { BasicEList } from './BasicEList.js';
-import { EOperation } from '../types/EOperation.js';
+import { ETypedElementImpl } from './ETypedElementImpl.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
-import { ETypeParameter } from '../types/ETypeParameter.js';
-import { EParameter } from '../types/EParameter.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { EGenericType } from '../types/EGenericType.js';
-import { ETypedElementImpl } from './ETypedElementImpl.js';
+import { EList } from '../types/EList.js';
+import { EOperation } from '../types/EOperation.js';
+import { EParameter } from '../types/EParameter.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { ETypeParameter } from '../types/ETypeParameter.js';
+
 
 
 export class EOperationImpl extends ETypedElementImpl implements EOperation {
+
   private _eContainingClass: EClass | undefined;
 
   private _eTypeParametersCache: BasicEList<ETypeParameter> | undefined;
@@ -51,6 +53,16 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
 
+  private operationId = -1;
+
+  getOperationID(): number {
+    return this.operationId;
+  }
+
+  setOperationID(id: number): void {
+    this.operationId = id;
+  }
+
   eClass(): EClass {
     return getEcorePackageRef().getEOperation();
   }
@@ -60,7 +72,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
   setEContainingClass(value: EClass | undefined): void {
-    this.eSet(getEcorePackageRef().getEOperation_EContainingClass(), value);
+    this._eContainingClass = value;
   }
   getETypeParameters(): EList<ETypeParameter> {
     return this._eTypeParameters;
@@ -75,12 +87,21 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
     return this._eGenericExceptions;
   }
 
-  getOperationID(): number {
-    throw new Error('EOperation.getOperationID() has no body:typescript annotation - nothing to generate.');
-  }
-
   isOverrideOf(someOperation: EOperation): boolean {
-    throw new Error('EOperation.isOverrideOf() has no body:typescript annotation - nothing to generate.');
+    if (someOperation === this) return false;
+    const thisClass = this.getEContainingClass();
+    const otherClass = someOperation.getEContainingClass();
+    if (thisClass === undefined || otherClass === undefined) return false;
+    if (thisClass === otherClass) return false;
+    if (!otherClass.isSuperTypeOf(thisClass)) return false;
+    if (this.getName() !== someOperation.getName()) return false;
+    const params = this.getEParameters();
+    const otherParams = someOperation.getEParameters();
+    if (params.size() !== otherParams.size()) return false;
+    for (let i = 0; i < params.size(); i++) {
+      if (params.get(i)!.getEType() !== otherParams.get(i)!.getEType()) return false;
+    }
+    return true;
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -97,14 +118,6 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
 
   eSet(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
-      case 10: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
       case 11: {
         const list = this._eTypeParameters;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -112,6 +125,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         for (const item of items) list.add(item as ETypeParameter);
         return;
       }
+
       case 12: {
         const list = this._eParameters;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -119,6 +133,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         for (const item of items) list.add(item as EParameter);
         return;
       }
+
       case 13: {
         const list = this._eExceptions;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -126,6 +141,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         for (const item of items) list.add(item as EClassifier);
         return;
       }
+
       case 14: {
         const list = this._eGenericExceptions;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -133,6 +149,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         for (const item of items) list.add(item as EGenericType);
         return;
       }
+
       default:
         super.eSet(feature, value);
         return;
@@ -180,16 +197,22 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 10: {
         const oldValue = this._eContainingClass;
         this._eContainingClass = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       case 11: this._eTypeParametersCache?.clear(); return;
+
       case 12: this._eParametersCache?.clear(); return;
+
       case 13: this._eExceptionsCache?.clear(); return;
+
       case 14: this._eGenericExceptionsCache?.clear(); return;
+
       default:
         super.eUnset(feature);
         return;

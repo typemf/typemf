@@ -1,6 +1,7 @@
-import { EClass } from "./EClass";
-import { EList } from "./EList";
-import { EStructuralFeature } from "./EStructuralFeature";
+import { EClass } from './EClass.js';
+import { EList } from './EList.js';
+import { EStructuralFeature } from './EStructuralFeature.js';
+
 /**
  * The universal reflective base type. Every model instance - whether it was
  * produced by generated code or by DynamicEObjectImpl against a parsed-only
@@ -8,45 +9,45 @@ import { EStructuralFeature } from "./EStructuralFeature";
  * generic (reflection-driven) tooling, such as an instance editor, is
  * written against.
  */
-export abstract class EObject {
+export interface EObject {
   /** The metaclass describing this object's structure. */
-  abstract eClass(): EClass;
+  eClass(): EClass;
 
   /** The object containing this one, if this object is someone's child. */
-  abstract eContainer(): EObject | undefined;
+  eContainer(): EObject | undefined;
 
   /** The containment feature this object was set/added into, if any. */
-  abstract eContainingFeature(): EStructuralFeature | undefined;
+  eContainingFeature(): EStructuralFeature | undefined;
 
   /** Direct containment children, across every containment feature. */
-  abstract eContents(): EList<EObject>;
+  eContents(): EList<EObject>;
 
   /** Every containment descendant, depth-first. */
-  abstract eAllContents(): EObject[];
+  eAllContents(): EObject[];
 
   /** Generic getter, dispatched by feature. */
-  abstract eGet(feature: EStructuralFeature): unknown;
+  eGet(feature: EStructuralFeature): unknown;
 
   /** Generic setter, dispatched by feature. */
-  abstract eSet(feature: EStructuralFeature, value: unknown): void;
+  eSet(feature: EStructuralFeature, value: unknown): void;
 
   /** Whether the feature currently holds a non-default value. */
-  abstract eIsSet(feature: EStructuralFeature): boolean;
+  eIsSet(feature: EStructuralFeature): boolean;
 
   /** Reset the feature to its default/unset state. */
-  abstract eUnset(feature: EStructuralFeature): void;
+  eUnset(feature: EStructuralFeature): void;
 
   /**
    * Whether this object is an unresolved placeholder for an object that
    * lives in another document (see docs/dynamic-instantiation-notes.md for
    * the current, deliberately minimal, proxy story).
    */
-  abstract eIsProxy(): boolean;
+  eIsProxy(): boolean;
 
   /**
    * A stable, human-readable identity string (className_idValue when an ID
    * attribute is set, otherwise a generated fallback), used as the default
    * cross-reference key during serialization.
    */
-  abstract fullId(): string;
+  fullId(): string;
 }

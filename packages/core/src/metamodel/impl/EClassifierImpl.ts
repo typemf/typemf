@@ -1,20 +1,27 @@
-import { EList } from '../types/EList.js';
 import { BasicEList } from './BasicEList.js';
-import { EClassifier } from '../types/EClassifier.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EPackage } from '../types/EPackage.js';
-import { ETypeParameter } from '../types/ETypeParameter.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
+import { EClassifier } from '../types/EClassifier.js';
+import { EList } from '../types/EList.js';
+import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
-import { TypeScriptClass } from '../types/TypeScriptClass.js';
+import { ETypeParameter } from '../types/ETypeParameter.js';
+import { TypeScriptClass } from '../types/TypeScriptClass';
+import { EObjectImpl } from './EObjectImpl';
+
 
 
 export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
+
   private _instanceClassName: string | undefined;
+
   private _instanceClass: TypeScriptClass<unknown> | undefined;
-  private _defaultValue: unknown | undefined;
+
+  private _defaultValue: unknown;
+
   private _instanceTypeName: string | undefined;
+
   private _ePackage: EPackage | undefined;
 
   private _eTypeParametersCache: BasicEList<ETypeParameter> | undefined;
@@ -44,7 +51,6 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   getInstanceClassName(): string | undefined {
     return this._instanceClassName;
   }
-
   setInstanceClassName(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEClassifier_InstanceClassName(), value);
   }
@@ -53,19 +59,18 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   }
 
   setInstanceClass(value: TypeScriptClass<unknown> | undefined): void {
-    this.eSet(getEcorePackageRef().getEClassifier_InstanceClass(), value);
+    this._instanceClass = value;
   }
-  getDefaultValue(): unknown | undefined {
+  getDefaultValue(): unknown {
     return this._defaultValue;
   }
 
-  setDefaultValue(value: unknown | undefined): void {
-    this.eSet(getEcorePackageRef().getEClassifier_DefaultValue(), value);
+  setDefaultValue(value: unknown): void {
+    this._defaultValue = value;
   }
   getInstanceTypeName(): string | undefined {
     return this._instanceTypeName;
   }
-
   setInstanceTypeName(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEClassifier_InstanceTypeName(), value);
   }
@@ -74,14 +79,13 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   }
 
   setEPackage(value: EPackage | undefined): void {
-    this.eSet(getEcorePackageRef().getEClassifier_EPackage(), value);
+    this._ePackage = value;
   }
   getETypeParameters(): EList<ETypeParameter> {
     return this._eTypeParameters;
   }
-
   isInstance(object: unknown): boolean {
-    throw new Error('EClassifier.isInstance() has no body:typescript annotation - nothing to generate.');
+    return object instanceof EObjectImpl;
   }
 
 
@@ -108,31 +112,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         this.eDidAdd(feature, value);
         return;
       }
-      case 3: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
-      case 4: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
       case 5: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
-      case 6: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
         this.eBasicSetValue(feature, value);
@@ -147,6 +127,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         for (const item of items) list.add(item as ETypeParameter);
         return;
       }
+
       default:
         super.eSet(feature, value);
         return;
@@ -157,7 +138,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     switch (featureId) {
       case 2: this._instanceClassName = value as string | undefined; return;
       case 3: this._instanceClass = value as TypeScriptClass<unknown> | undefined; return;
-      case 4: this._defaultValue = value as unknown | undefined; return;
+      case 4: this._defaultValue = value as unknown; return;
       case 5: this._instanceTypeName = value as string | undefined; return;
       case 6: this._ePackage = value as EPackage | undefined; return;
       default:
@@ -190,37 +171,48 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 2: {
         const oldValue = this._instanceClassName;
         this._instanceClassName = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 3: {
         const oldValue = this._instanceClass;
         this._instanceClass = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 4: {
         const oldValue = this._defaultValue;
         this._defaultValue = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 5: {
         const oldValue = this._instanceTypeName;
         this._instanceTypeName = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 6: {
         const oldValue = this._ePackage;
         this._ePackage = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       case 7: this._eTypeParametersCache?.clear(); return;
+
       default:
         super.eUnset(feature);
         return;

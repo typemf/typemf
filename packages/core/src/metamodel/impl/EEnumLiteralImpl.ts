@@ -1,17 +1,22 @@
 import { BasicEList } from './BasicEList.js';
-import { EEnumLiteral } from '../types/EEnumLiteral.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EEnum } from '../types/EEnum.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
-import { EEnumerator } from '../types/EEnumerator.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
+import { EEnum } from '../types/EEnum.js';
+import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { EEnumerator } from '../types/EEnumerator';
+
 
 
 export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral {
+
   private _value: number = 0;
+
   private _instance: EEnumerator | undefined;
+
   private _literal: string | undefined;
+
   private _eEnum: EEnum | undefined;
 
 
@@ -22,37 +27,37 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
   getValue(): number {
     return this._value;
   }
-
   setValue(value: number): void {
     this.eSet(getEcorePackageRef().getEEnumLiteral_Value(), value);
   }
   getInstance(): EEnumerator | undefined {
     return this._instance;
   }
-
   setInstance(value: EEnumerator | undefined): void {
     this.eSet(getEcorePackageRef().getEEnumLiteral_Instance(), value);
   }
+
   getLiteral(): string | undefined {
-    return this._literal;
+    return this._literal ?? this.getName();
   }
 
   setLiteral(value: string | undefined): void {
-    this.eSet(getEcorePackageRef().getEEnumLiteral_Literal(), value);
+    const oldValue = this._literal; if (oldValue === value) return; this._literal = value; this.eDidRemove(undefined, oldValue); this.eDidAdd(undefined, value);
   }
   getEEnum(): EEnum | undefined {
     return this._eEnum;
   }
 
   setEEnum(value: EEnum | undefined): void {
-    this.eSet(getEcorePackageRef().getEEnumLiteral_EEnum(), value);
+    this._eEnum = value;
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
       case 2: return this._value;
       case 3: return this._instance;
-      case 4: return this._literal;
+
+      case 4: return this.getLiteral();
       case 5: return this._eEnum;
       default:
         return super.eGet(feature);
@@ -78,19 +83,7 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
         return;
       }
       case 4: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
-      case 5: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
+        this.setLiteral(value as string | undefined);
         return;
       }
       default:
@@ -103,7 +96,6 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
     switch (featureId) {
       case 2: this._value = value as number; return;
       case 3: this._instance = value as EEnumerator | undefined; return;
-      case 4: this._literal = value as string | undefined; return;
       case 5: this._eEnum = value as EEnum | undefined; return;
       default:
         super.eBasicSetValue(feature, value);
@@ -121,6 +113,7 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
     switch (feature.getFeatureID()) {
       case 2: return this._value !== 0;
       case 3: return this._instance !== undefined;
+
       case 4: return this._literal !== undefined;
       case 5: return this._eEnum !== undefined;
       default:
@@ -130,30 +123,38 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 2: {
         const oldValue = this._value;
         this._value = 0;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 3: {
         const oldValue = this._instance;
         this._instance = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 4: {
         const oldValue = this._literal;
         this._literal = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 5: {
         const oldValue = this._eEnum;
         this._eEnum = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       default:
         super.eUnset(feature);
         return;

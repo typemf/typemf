@@ -1,24 +1,24 @@
-import { EObject } from '../types/EObject.js';
-import { EAttribute } from '../types/EAttribute.js';
+import { getEcorePackageRef } from '../impl/EcorePackageRef.js';
 import { EAnnotation } from '../types/EAnnotation.js';
+import { EAttribute } from '../types/EAttribute.js';
 import { EClass } from '../types/EClass.js';
 import { EClassifier } from '../types/EClassifier.js';
 import { EDataType } from '../types/EDataType.js';
 import { EEnum } from '../types/EEnum.js';
 import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EFactory } from '../types/EFactory.js';
+import { EGenericType } from '../types/EGenericType.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { ENamedElement } from '../types/ENamedElement.js';
+import { EObject } from '../types/EObject.js';
 import { EOperation } from '../types/EOperation.js';
 import { EPackage } from '../types/EPackage.js';
 import { EParameter } from '../types/EParameter.js';
 import { EReference } from '../types/EReference.js';
-import { EStructuralFeature } from '../types/EStructuralFeature.js';
-import { ETypedElement } from '../types/ETypedElement.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
-import { EGenericType } from '../types/EGenericType.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
-import { getEcorePackageRef } from '../impl/EcorePackageRef.js';
+import { ETypedElement } from '../types/ETypedElement.js';
 
 /**
  * Runtime type guards, one per classifier declared in types/ - the

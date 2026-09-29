@@ -1,24 +1,24 @@
 {% set superClass = superType(eClass) %}
 {% set ownFeatures = eClass.getEStructuralFeatures() %}
 {% file "types/" + eClass.getName() + ".ts" %}
-{{ coreImportLine(["EObject", "EList"], "types", "types", options, package) }}
-{% if superClass %}
-import { {{ superClass.getName() }} } from './{{ superClass.getName() }}.js';
-{% endif %}
+{% if superClass %}{% set _ = useImport(superClass.getName(), "types", {foundational: false}) %}{% endif %}
 {% for typeName in referencedApiTypes(ownFeatures, eClass.getName(), superClass.getName() if superClass else '') %}
-import { {{ typeName }} } from './{{ typeName }}.js';
+{% set _ = useImport(typeName, "types", {foundational: false}) %}
+{% endfor %}
+{% for typeName in referencedOperationTypes(eClass.getEOperations(), eClass.getName(), superClass.getName() if superClass else '') %}
+{% set _ = useImport(typeName, "types", {foundational: false}) %}
 {% endfor %}
 
 {{ docComment(eClass) }}
-export interface {{ eClass.getName() }} extends {{ superClass.getName() if superClass else "EObject" }} {
+export interface {{ eClass.getName() }} extends {{ superClass.getName() if superClass else useImport("EObject", "types", {foundational: true}) }} {
 {% for feature in ownFeatures %}
 {{ docComment(feature, "  ") }}
 {% if feature.isMany() %}
-  get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature.getEType()) }}>;
+  get{{ ucfirst(feature.getName()) }}(): {{ useImport("EList", "types", {foundational: true}) }}<{{ tsScalarType(feature) }}>;
 {% else %}
-  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature.getEType()) }};
-{% if not trivialDerivedFormula(feature) %}
-  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature.getEType()) }}): void;
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature) }};
+{% if not isReadOnlyFeature(feature) and not needsImplOnlySetter(feature) %}
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature) }}): void;
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -29,16 +29,26 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 }
 {% endfile %}
 {% file "impl/" + eClass.getName() + "Impl.ts" %}
-{{ coreImportLine(["EClass", "EList", "EObject", "EStructuralFeature"], "impl", "types", options, package) }}
-{{ coreImportLine(["EObjectImpl", "BasicEList"], "impl", "impl", options, package) }}
-import { {{ eClass.getName() }} } from '../types/{{ eClass.getName() }}.js';
-import { get{{ packageClassName(package) }}Ref } from './{{ packageClassName(package) }}Ref.js';
+{% set _ = useImport("EStructuralFeature", "types", {foundational: true}) %}
+{% set _ = useImport(eClass.getName(), "types", {foundational: false}) %}
+{% set _ = useImport("get" + packageClassName(package) + "Ref", "impl", {file: packageClassName(package) + "Ref", foundational: false}) %}
 {% for typeName in referencedApiTypes(ownFeatures, eClass.getName()) %}
-import { {{ typeName }} } from '../types/{{ typeName }}.js';
+{% set _ = useImport(typeName, "types", {foundational: false}) %}
+{% endfor %}
+{% for typeName in referencedOperationTypes(eClass.getEOperations(), eClass.getName()) %}
+{% set _ = useImport(typeName, "types", {foundational: false}) %}
 {% endfor %}
 {% if superClass %}
-import { {{ superClass.getName() }}Impl } from './{{ superClass.getName() }}Impl.js';
+{% set _ = useImport(superClass.getName() + "Impl", "impl", {foundational: false}) %}
+{% else %}
+{% set _ = useImport("EObjectImpl", "impl", {foundational: true}) %}
 {% endif %}
+{% set _ = useImport("BasicEList", "impl", {foundational: true}) %}
+{% for feature in ownFeatures %}
+{% if feature.isMany() %}
+{% set _ = useImport("EList", "types", {foundational: true}) %}
+{% endif %}
+{% endfor %}
 
 {{ docComment(eClass) }}
 export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl") if superClass else "EObjectImpl" }} implements {{ eClass.getName() }} {
@@ -60,16 +70,50 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
       triggered during construction, self-hosted or not - fixing the
       deadlock as a side effect of being correct about when the feature
       is actually needed, rather than special-casing self-hosting. #}
-  private _{{ feature.getName() }}Cache: BasicEList<{{ tsScalarType(feature.getEType()) }}> | undefined;
+{% if not featureGetter(feature) %}
+  private _{{ feature.getName() }}Cache: BasicEList<{{ tsScalarType(feature) }}> | undefined;
 
-  private get _{{ feature.getName() }}(): BasicEList<{{ tsScalarType(feature.getEType()) }}> {
+  private get _{{ feature.getName() }}(): BasicEList<{{ tsScalarType(feature) }}> {
     if (!this._{{ feature.getName() }}Cache) {
-      this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this, get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
+      this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature) }}>(this, get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
     }
     return this._{{ feature.getName() }}Cache;
   }
 {% else %}
-  private _{{ feature.getName() }}: {{ tsOptionalScalarType(feature.getEType()) }}{% if isPrimitiveValueType(feature.getEType()) %} = {{ primitiveDefaultValue(feature.getEType()) }}{% endif %};
+  {#- A many-valued feature with a custom getter is computed, not stored - but recomputing its
+      full body on every call is wasteful for a traversal (eAllStructuralFeatures and kin), so
+      this caches the result, keyed by EObjectImpl.getModelGeneration() (see there for the
+      invalidation design: global, bumped whenever eStructuralFeatures/eOperations/eSuperTypes/
+      eGenericSuperTypes change anywhere) rather than never invalidating or requiring an explicit
+      recompute call. #}
+  private _{{ feature.getName() }}Cache: EList<{{ tsScalarType(feature) }}> | undefined;
+  private _{{ feature.getName() }}CacheGeneration = -1;
+{% set _ = useImport("EObjectImpl", "impl", {foundational: true}) %}
+{% endif %}
+{% else %}
+{% if not featureGetter(feature) or customBodyNeedsOwnField(feature) %}
+  {#- A feature with a custom getter whose body doesn't reference its own field (either no
+      setter at all, or a getter/setter pair that delegates entirely to a DIFFERENT feature -
+      see customBodyNeedsOwnField) is purely computed - there is nothing to declare a field FOR.
+      But a feature with a getter AND setter that DOES reference its own field (e.g.
+      EEnumLiteral.literal, whose getter falls back to getName() but whose setter writes a real,
+      explicit value to "this._literal" - found by running the swap, not predicted) needs a real
+      backing field: the setter has somewhere to write, and the getter reads it as part of its
+      own logic. A trivialDerivedFormula feature still gets one too
+      (pre-existing, unchanged shape); the field is unused by its getter but kept for
+      minimal change to that older mechanism. #}
+  private _{{ feature.getName() }}: {{ tsOptionalScalarType(feature) }}{% if isPrimitiveValueType(feature.getEType()) %} = {{ primitiveDefaultValue(feature) }}{% endif %};
+{% else %}
+  {#- Same generation-keyed caching as the many-valued case above, for a single-valued custom getter.
+      Always "| undefined", regardless of whether the feature's OWN type already is - a required
+      feature's cache field is still genuinely undefined until first computed (this is a cache slot,
+      not the feature's own nullability); tsScalarType(feature) alone would leave "not yet computed"
+      with no way to represent, and TypeScript correctly refuses a field with no initializer and no
+      way to hold one at all - a real `tsc` error found this, not predicted. #}
+  private _{{ feature.getName() }}Cache: {{ tsScalarType(feature) }} | undefined;
+  private _{{ feature.getName() }}CacheGeneration = -1;
+{% set _ = useImport("EObjectImpl", "impl", {foundational: true}) %}
+{% endif %}
 {% endif %}
 {% endfor %}
 
@@ -111,31 +155,123 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   setFeatureID(id: number): void {
     this.featureId = id;
   }
+  {#- containerClass: real EMF's own asymmetric design (see EStructuralFeature.getContainerClass()'s
+      doc comment in @typemf/core) - PUBLIC getter (a real, modeled, reflectively-callable operation),
+      IMPL-ONLY setter (never on the interface, set once during bootstrap - see epackage.njk). Not
+      internal bookkeeping like featureID (it IS a real declared operation), but shares the same
+      "special-cased field the normal per-operation loop must skip" shape, so isBookkeepingOperation
+      treats it the same way (see typescript-filters.ts). #}
+  private containerClass: {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined;
+
+  getContainerClass(): {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined {
+    return this.containerClass;
+  }
+
+  setContainerClass(cls: {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined): void {
+    this.containerClass = cls;
+  }
+{% endif %}
+{% if eClass.getName() == "EOperation" %}
+  {#- operationID: the exact same real gap as classifierID/featureID above - internal dispatch
+      bookkeeping (matching @typemf/core's own hand-written EOperationImpl), not a modeled Ecore
+      feature, declared once here on EOperation itself. Same discovery path: self-hosted bootstrap
+      code constructs real EOperationImpl instances and needs to set their operationID - see NOTES.md
+      (point 4). #}
+  private operationId = -1;
+
+  getOperationID(): number {
+    return this.operationId;
+  }
+
+  setOperationID(id: number): void {
+    this.operationId = id;
+  }
 {% endif %}
 
-  eClass(): EClass {
+  eClass(): {{ useImport("EClass", "types", {foundational: true}) }} {
     return get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}();
   }
 
 {% for feature in ownFeatures %}
+{% set getter = featureGetter(feature) %}
+{% set setter = featureSetter(feature) %}
 {% if feature.isMany() %}
-  get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature.getEType()) }}> {
-    return this._{{ feature.getName() }};
+{% if getter %}
+{% set _featureImports = registerBodyImports(feature) %}
+  get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature) }}> {
+    if (this._{{ feature.getName() }}CacheGeneration !== EObjectImpl.getModelGeneration()) {
+      this._{{ feature.getName() }}Cache = (() => {
+        {{ getter | indent(8) }}
+      })();
+      this._{{ feature.getName() }}CacheGeneration = EObjectImpl.getModelGeneration();
+    }
+    return this._{{ feature.getName() }}Cache!;
   }
 {% else %}
+  get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature) }}> {
+    return this._{{ feature.getName() }};
+  }
+{% endif %}
+{% else %}
 {% set formula = trivialDerivedFormula(feature) %}
-{% if formula %}
-  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature.getEType()) }} {
+{% if getter and setter %}
+{% set _featureImports = registerBodyImports(feature) %}
+  {#- A feature with BOTH a custom getter and a custom setter (e.g. EEnumLiteral.literal) has a
+      real backing field (see the field-declaration block above) that the setter writes to
+      directly - the getter's own body is cheap (reads that field, maybe augments it, as
+      literal's fallback-to-name does), not an expensive computation worth caching. Found by
+      running the swap: this used to always take the cached-computation branch below,
+      referencing a _{{ feature.getName() }}Cache field that was never declared for this case. #}
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature) }} {
+    {{ getter | indent(4) }}
+  }
+{% elif getter %}
+{% set _featureImports = registerBodyImports(feature) %}
+  {#- A feature's own custom getter (see FEATURE_ANNOTATION_SOURCE) with no custom setter - it has
+      no stored field to read from (see the field-declaration block above), only a
+      generation-keyed cache of its own last-computed result (same design as the many-valued
+      case). #}
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature) }} {
+    if (this._{{ feature.getName() }}CacheGeneration !== EObjectImpl.getModelGeneration()) {
+      this._{{ feature.getName() }}Cache = (() => {
+        {{ getter | indent(8) }}
+      })();
+      this._{{ feature.getName() }}CacheGeneration = EObjectImpl.getModelGeneration();
+    }
+    return this._{{ feature.getName() }}Cache!;
+  }
+{% elif formula %}
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature) }} {
     return {{ formula }};
   }
 {% else %}
-  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature.getEType()) }} {
+  {{ beanGetterName(feature) }}(): {{ tsOptionalScalarType(feature) }} {
     return this._{{ feature.getName() }};
   }
-
-  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature.getEType()) }}): void {
+{% endif %}
+{% if not isReadOnlyFeature(feature) %}
+{% if needsImplOnlySetter(feature) %}
+  {#- changeable=false, but not otherwise read-only (not derived, no custom getter) - real EMF's own
+      convention: a real setter still exists (bootstrap code and the loader both need one), but it's
+      impl-only (not on the public interface - see above) and bypasses eSet/eDidAdd/eDidRemove
+      entirely, a plain, unnotified field assignment. Matches this session's earlier containerClass
+      work exactly. #}
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature) }}): void {
+    this._{{ feature.getName() }} = value;
+  }
+{% elif setter %}
+{% set _featureImports = registerBodyImports(feature) %}
+  {#- A feature's own custom setter - replaces the default eSet(...) delegation entirely, since
+      the custom body defines the feature's real write semantics (including any notification -
+      that is the body author's responsibility, same as an operation body's is). #}
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature) }}): void {
+    {{ setter | indent(4) }}
+  }
+{% else %}
+  set{{ ucfirst(feature.getName()) }}(value: {{ tsOptionalScalarType(feature) }}): void {
     this.eSet(get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}(), value);
   }
+{% endif %}
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -150,31 +286,47 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     throwing-stub method of the same name here would just be the last
     declaration silently winning at runtime, shadowing the real one. #}
 {% elif group.length > 1 %}
-{#- Overloaded (2+ EOperations sharing this name - real Ecore.ecore has
-    this, e.g. EEnum.getEEnumLiteral by name vs by value). Scoped to
-    same-arity overloads only (see NOTES.md): every overload signature is
-    emitted with no body (a TS class can only have one), followed by ONE
-    implementation signature whose parameter list is the union of every
-    overload's types at each position (see mergedParamList). Always
-    throws regardless of any individual overload's own body:typescript
-    annotation - dispatching to a specific overload's real body based on
-    the merged, runtime-typeof'd arguments is a bigger feature this scope
-    does not attempt; every overload real Ecore.ecore actually has is
-    bodyless anyway. #}
+{#- Overloaded (2+ EOperations sharing this name - real Ecore.ecore has this, e.g. EClass.getEStructuralFeature
+    by ID vs by name). Every overload signature is emitted with no body (a TS class can only have one),
+    followed by ONE implementation signature (see mergedParamList: the union of every overload's types at
+    each position, later positions optional when arities differ). Its body dispatches on the runtime
+    arguments to the overload's own body (see overloadDispatch), or, when that is not possible or no
+    overload has a body, is a single throwing stub saying why. #}
+{% set dispatch = overloadDispatch(group, eClass.getName()) %}
 {% for o in group %}
   {{ o.getName() }}({{ paramList(o) }}): {{ tsOperationReturnType(o) }};
 {% endfor %}
   {{ op.getName() }}({{ mergedParamList(group) }}): {{ mergedReturnType(group) }} {
-    throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() is overloaded with no body:typescript annotation - nothing to generate.');
+{% if dispatch.stubMessage %}
+    throw new Error('{{ dispatch.stubMessage }}');
+{% else %}
+{% for branch in dispatch.branches %}
+{% if branch.body %}
+{% set _bodyImports = registerBodyImports(branch.operation) %}
+{% endif %}
+    if ({{ branch.condition }}) {
+{% for alias in branch.aliases %}
+      {{ alias }}
+{% endfor %}
+{% if branch.body %}
+      {{ branch.body | indent(6) }}
+{% else %}
+      throw new Error('{{ branch.label }} has no `body` annotation - nothing to generate.');
+{% endif %}
+    }
+{% endfor %}
+    throw new Error('{{ eClass.getName() }}.{{ op.getName() }}(): no overload matches the given arguments.');
+{% endif %}
   }
 {% else %}
 {% set body = operationBody(op) %}
 {% if body %}
+{% set _bodyImports = registerBodyImports(op) %}
   {{ op.getName() }}({{ paramList(op) }}): {{ tsOperationReturnType(op) }} {
-    {{ body }}
+    {{ body | indent(4) }}
   }
 {% else %}
-  {#- No body:typescript annotation - there is no further hand-editable
+  {#- No `body` annotation (typemf generator or GenModel) - there is no further hand-editable
       layer to fill this in anymore (Gen/Impl merged: this class is
       instantiated directly via `new X Impl()` in the Factory, so it
       cannot have any abstract members). A clear throwing stub is the
@@ -182,7 +334,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
       real implementation on, rather than silently failing to compile or
       silently doing nothing. #}
   {{ op.getName() }}({{ paramList(op) }}): {{ tsOperationReturnType(op) }} {
-    throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() has no body:typescript annotation - nothing to generate.');
+    throw new Error('{{ eClass.getName() }}.{{ op.getName() }}() has no `body` annotation - nothing to generate.');
   }
 {% endif %}
 {% endif %}
@@ -191,7 +343,17 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
+{% if featureGetter(feature) or trivialDerivedFormula(feature) %}
+      {#- Delegates to the real getter (custom body, or the pre-existing hard-coded formula)
+          rather than reading the stored field directly - the field is either absent (a
+          custom getter, computed, no backing store) or simply not what the getter itself
+          returns (a formula feature): reading it directly here was the exact bug found and
+          fixed for EClass.getEAllStructuralFeatures (getter said one thing, eGet said
+          another) - fixed uniformly for every computed feature, not just that one. #}
+      case {{ feature.getFeatureID() }}: return this.{{ beanGetterName(feature) if not feature.isMany() else 'get' + ucfirst(feature.getName()) }}();
+{% else %}
       case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }};
+{% endif %}
 {% endfor %}
       default:
 {% if superClass %}
@@ -206,14 +368,25 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
+{% if not featureGetter(feature) %}
       case {{ feature.getFeatureID() }}: {
         const list = this._{{ feature.getName() }};
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
         list.clear();
-        for (const item of items) list.add(item as {{ tsScalarType(feature.getEType()) }});
+        for (const item of items) list.add(item as {{ tsScalarType(feature) }});
         return;
       }
-{% else %}
+{% endif %}
+{#- A many-valued feature with a custom getter has no field to list-replace into (see the
+    field-declaration block above) - omitted here entirely, falls to super/throw, same as
+    any other unknown feature id. A `set` annotation on one is flagged separately (see
+    findFeatureAnnotationProblems) since many-valued features never have a setter anyway. #}
+{% elif featureSetter(feature) %}
+      case {{ feature.getFeatureID() }}: {
+        this.set{{ ucfirst(feature.getName()) }}(value as {{ tsOptionalScalarType(feature) }});
+        return;
+      }
+{% elif not isReadOnlyFeature(feature) and not needsImplOnlySetter(feature) %}
       case {{ feature.getFeatureID() }}: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
@@ -249,7 +422,9 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
 {% for feature in singleValuedFeatures(ownFeatures) %}
-      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsOptionalScalarType(feature.getEType()) }}; return;
+{% if not featureGetter(feature) %}
+      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsOptionalScalarType(feature) }}; return;
+{% endif %}
 {% endfor %}
       default:
 {% if superClass %}
@@ -276,9 +451,9 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
 {% for feature in ownFeatures %}
-{% if feature.isMany() %}
+{% if feature.isMany() and not featureGetter(feature) %}
       case {{ feature.getFeatureID() }}:
-        if (!this._{{ feature.getName() }}Cache) this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature.getEType()) }}>(this);
+        if (!this._{{ feature.getName() }}Cache) this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature) }}>(this);
         return this._{{ feature.getName() }}Cache;
 {% endif %}
 {% endfor %}
@@ -295,10 +470,38 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
+{% if featureGetter(feature) %}
+      {#- No cache field to check (see the field-declaration block above) - call the getter
+          and apply the SAME "not empty" test the field-backed shape below uses. #}
+      case {{ feature.getFeatureID() }}: return this.get{{ ucfirst(feature.getName()) }}().size() !== 0;
+{% else %}
       case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }}Cache !== undefined && this._{{ feature.getName() }}Cache.size() !== 0;
+{% endif %}
+{% elif customBodyNeedsOwnField(feature) %}
+      {#- A real backing field exists (see the field-declaration block above), but the getter may
+          augment it (literal's fallback-to-name) - "is set" means "explicitly given a value",
+          checked against the RAW field directly, not the getter's own (possibly fallback-masked)
+          result. Found by running the swap: EEnumLiteral.literal used to fall into the
+          no-field/call-the-getter branch below, where getLiteral()'s own fallback made eIsSet
+          always true, never false. Deliberately NOT "getter and setter" alone - a getter/setter
+          pair that delegates entirely to a DIFFERENT feature (no reference to its own field at
+          all) has no field here to check, and belongs in the call-the-getter branch below
+          instead; conflating the two broke exactly that case, found by running it. #}
+{% if isPrimitiveValueType(feature.getEType()) %}
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== {{ primitiveDefaultValue(feature) }};
+{% else %}
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== undefined;
+{% endif %}
+{% elif featureGetter(feature) %}
+      {#- No field to check - call the getter and apply the same default-value test below. #}
+{% if isPrimitiveValueType(feature.getEType()) %}
+      case {{ feature.getFeatureID() }}: return this.{{ beanGetterName(feature) }}() !== {{ primitiveDefaultValue(feature) }};
+{% else %}
+      case {{ feature.getFeatureID() }}: return this.{{ beanGetterName(feature) }}() !== undefined;
+{% endif %}
 {% else %}
 {% if isPrimitiveValueType(feature.getEType()) %}
-      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== {{ primitiveDefaultValue(feature.getEType()) }};
+      case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== {{ primitiveDefaultValue(feature) }};
 {% else %}
       case {{ feature.getFeatureID() }}: return this._{{ feature.getName() }} !== undefined;
 {% endif %}
@@ -316,13 +519,18 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
-{% if feature.isMany() %}
+{% if feature.isMany() and not featureGetter(feature) %}
       case {{ feature.getFeatureID() }}: this._{{ feature.getName() }}Cache?.clear(); return;
-{% else %}
+{% elif not feature.isMany() and (not featureGetter(feature) or customBodyNeedsOwnField(feature)) %}
+      {#- A feature with a getter+setter pair that references its own field (see the
+          field-declaration block above and customBodyNeedsOwnField) - unsettable the same way an
+          ordinary field-backed feature is, resetting the raw field. A getter+setter pair that
+          delegates entirely to a DIFFERENT feature has no field of its own here to reset - falls
+          through to super/throw below instead, same as a getter-only feature. #}
       case {{ feature.getFeatureID() }}: {
         const oldValue = this._{{ feature.getName() }};
 {% if isPrimitiveValueType(feature.getEType()) %}
-        this._{{ feature.getName() }} = {{ primitiveDefaultValue(feature.getEType()) }};
+        this._{{ feature.getName() }} = {{ primitiveDefaultValue(feature) }};
 {% else %}
         this._{{ feature.getName() }} = undefined;
 {% endif %}
@@ -330,6 +538,8 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
         return;
       }
 {% endif %}
+{#- A feature with ONLY a custom getter (no custom setter) has no field to reset - omitted
+    entirely, falls to super/throw. There is no `unset` key (only `get`/`set` were asked for). #}
 {% endfor %}
       default:
 {% if superClass %}

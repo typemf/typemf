@@ -1,7 +1,7 @@
-import { EClass } from "../types/EClass.js";
-import { EObject } from "../types/EObject.js";
-import { DynamicEObjectImpl } from "./DynamicEObjectImpl.js";
-import { EFactoryImpl } from "./EFactoryImpl.js";
+import { EClass } from '../types/EClass.js';
+import { EObject } from '../types/EObject.js';
+import { DynamicEObjectImpl } from './DynamicEObjectImpl.js';
+import { EFactoryImpl } from './EFactoryImpl.js';
 
 /**
  * The generic factory: unlike a generated per-package factory (a hardcoded
@@ -14,9 +14,7 @@ import { EFactoryImpl } from "./EFactoryImpl.js";
 export class DynamicEFactoryImpl extends EFactoryImpl {
   create(eClass: EClass): EObject {
     if (eClass.isAbstract() || eClass.isInterface()) {
-      throw new Error(
-        `Cannot instantiate '${eClass.getName()}': it is abstract or an interface.`,
-      );
+      throw new Error(`Cannot instantiate '${eClass.getName()}': it is abstract or an interface.`);
     }
     return new DynamicEObjectImpl(eClass);
   }

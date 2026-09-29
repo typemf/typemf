@@ -23,6 +23,8 @@ export class FileExtension {
   tags = ['file'];
   private readonly collected: GeneratedFile[] = [];
 
+  constructor(private readonly postProcess?: (path: string, content: string) => string) {}
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parse(parser: any, nodes: any): any {
     const tok = parser.nextToken();
@@ -46,7 +48,7 @@ export class FileExtension {
         callback(err, '');
         return;
       }
-      this.collected.push({ path, content });
+      this.collected.push({ path, content: this.postProcess ? this.postProcess(path, content) : content });
       callback(null, '');
     });
   }

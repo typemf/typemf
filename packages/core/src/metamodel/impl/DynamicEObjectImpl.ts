@@ -1,7 +1,7 @@
-import { EClass } from "../types/EClass.js";
-import { EStructuralFeature } from "../types/EStructuralFeature.js";
-import { BasicEList } from "./BasicEList.js";
-import { EObjectImpl } from "./EObjectImpl.js";
+import { EClass } from '../types/EClass.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { BasicEList } from './BasicEList.js';
+import { EObjectImpl } from './EObjectImpl.js';
 
 /**
  * Generic, map-backed EObject that works for any EClass with no generated
@@ -39,10 +39,7 @@ export class DynamicEObjectImpl extends EObjectImpl {
     if (feature.isMany()) {
       const list = this.requireList(feature);
       // Snapshot first: `value` may be this very list (eSet(f, eGet(f))).
-      const items =
-        value === undefined || value === null
-          ? []
-          : [...(value as Iterable<unknown>)];
+      const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
       list.clear();
       for (const item of items) list.add(item);
       return;
@@ -58,9 +55,7 @@ export class DynamicEObjectImpl extends EObjectImpl {
   eIsSet(feature: EStructuralFeature): boolean {
     const id = feature.getFeatureID();
     if (feature.isMany()) {
-      return (
-        (this.values.get(id) as BasicEList<unknown> | undefined)?.size() !== 0
-      );
+      return (this.values.get(id) as BasicEList<unknown> | undefined)?.size() !== 0;
     }
     return this.values.has(id) && this.values.get(id) !== undefined;
   }
@@ -88,7 +83,7 @@ export class DynamicEObjectImpl extends EObjectImpl {
     const list = this.values.get(feature.getFeatureID());
     if (!(list instanceof BasicEList)) {
       throw new Error(
-        `Feature '${feature.getName()}' is many-valued but has no backing EList - this DynamicEObjectImpl may have been constructed against a stale EClass (its structural features changed after construction).`,
+        `Feature '${feature.getName()}' is many-valued but has no backing EList - this DynamicEObjectImpl may have been constructed against a stale EClass (its structural features changed after construction).`
       );
     }
     return list;

@@ -1,4 +1,4 @@
-import { DynamicEFactoryImpl, EAttributeImpl, EClassImpl, EDataTypeImpl, EPackageImpl, EReferenceImpl, type EClass } from '@typemf/core';
+import { DynamicEFactoryImpl, EAttributeImpl, EClassImpl, EClassifierImpl, EDataTypeImpl, EPackageImpl, EReferenceImpl, type EClass } from '@typemf/core';
 import { assignFreshIds } from './id-assignment.js';
 
 /**
@@ -326,7 +326,7 @@ export function buildEcoreMetaSchema() {
   pkg.setNsPrefix('ecore');
   for (const d of primitives.values()) pkg.getEClassifiers().add(d);
   for (const c of allClasses) pkg.getEClassifiers().add(c);
-  for (const classifier of pkg.getEClassifiers()) classifier.setEPackage(pkg);
+  for (const classifier of pkg.getEClassifiers()) (classifier as EClassifierImpl).setEPackage(pkg);
   pkg.setEFactoryInstance(new DynamicEFactoryImpl());
 
   // Pass 5: assign real, unique featureIDs to every feature (also

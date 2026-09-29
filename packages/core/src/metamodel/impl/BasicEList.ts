@@ -1,7 +1,8 @@
-import { EList } from "../types/EList.js";
-import { EReference } from "../types/EReference.js";
-import { EStructuralFeature } from "../types/EStructuralFeature.js";
-import { EObjectImpl } from "./EObjectImpl.js";
+import { EList } from '../types/EList.js';
+import { EObject } from '../types/EObject.js';
+import { EReference } from '../types/EReference.js';
+import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { EObjectImpl } from './EObjectImpl.js';
 
 /**
  * Array-backed EList. When constructed with an owner + feature, add/remove
@@ -19,7 +20,7 @@ export class BasicEList<T> implements EList<T> {
   constructor(
     private readonly owner?: EObjectImpl,
     private readonly feature?: EStructuralFeature,
-    initial?: Iterable<T>,
+    initial?: Iterable<T>
   ) {
     if (initial) {
       for (const item of initial) this.add(item);
@@ -37,9 +38,7 @@ export class BasicEList<T> implements EList<T> {
   get(index: number): T {
     const item = this.items[index];
     if (item === undefined && (index < 0 || index >= this.items.length)) {
-      throw new RangeError(
-        `EList index ${index} out of bounds (size ${this.items.length})`,
-      );
+      throw new RangeError(`EList index ${index} out of bounds (size ${this.items.length})`);
     }
     return item as T;
   }
@@ -143,20 +142,22 @@ export class BasicEList<T> implements EList<T> {
    * inverse-add from double-inserting.
    */
   private rejectsDuplicate(item: T): boolean {
-    return (
-      !!this.feature && isReference(this.feature) && this.items.includes(item)
-    );
+    return !!this.feature && isReference(this.feature) && this.items.includes(item);
   }
 
   private onAdded(item: T): void {
-    if (this.owner && this.feature) this.owner.eDidAdd(this.feature, item);
+    if (this.owner) this.owner.eDidAdd(this.feature, item);
   }
 
   private onRemoved(item: T): void {
-    if (this.owner && this.feature) this.owner.eDidRemove(this.feature, item);
+    if (this.owner) this.owner.eDidRemove(this.feature, item);
   }
 }
 
 function isReference(feature: EStructuralFeature): feature is EReference {
-  return "isContainment" in feature;
+  return 'isContainment' in feature;
 }
+
+// Re-exported so callers can type-annotate against the interface without a
+// second import.
+export type { EObject };

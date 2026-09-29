@@ -1,17 +1,13 @@
 {% file "util/" + switchClassName(package) + ".ts" %}
-import { EObject } from '{{ coreImportSpecifier("util", "types", options) }}';
-import { Ids } from '../{{ packageClassName(package) }}.js';
-import { {% for classifier in eClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from '../types/index.js';
-
 export abstract class {{ switchClassName(package) }}<T> {
-  doSwitch(eObject: EObject): T | undefined {
+  doSwitch(eObject: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
     switch (eObject.eClass().getClassifierID()) {
 {% for classifier in concreteEClassesOf(package) %}
-      case Ids.{{ classifier.getName() }}.self: {
+      case {{ useImport("Ids", "root", {file: packageClassName(package), foundational: false}) }}.{{ classifier.getName() }}.self: {
         // {{ classifier.getName() }}
         let result: T | undefined;
 {% for c in superTypeChain(classifier) %}
-        result = this.case{{ c.getName() }}(eObject as {{ c.getName() }});
+        result = this.case{{ c.getName() }}(eObject as {{ useImport(c.getName(), "types", {foundational: false}) }});
         if (result !== undefined) return result;
 {% endfor %}
         return this.defaultCase(eObject);
@@ -23,13 +19,13 @@ export abstract class {{ switchClassName(package) }}<T> {
   }
 
 {% for classifier in eClassesOf(package) %}
-  case{{ classifier.getName() }}(object: {{ classifier.getName() }}): T | undefined {
+  case{{ classifier.getName() }}(object: {{ useImport(classifier.getName(), "types", {foundational: false}) }}): T | undefined {
     void object;
     return undefined;
   }
 {% endfor %}
 
-  defaultCase(object: EObject): T | undefined {
+  defaultCase(object: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
     void object;
     return undefined;
   }

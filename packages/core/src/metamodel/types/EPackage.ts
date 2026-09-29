@@ -1,8 +1,8 @@
-import { EObject } from './EObject.js';
+import { EClassifier } from './EClassifier.js';
+import { EFactory } from './EFactory.js';
 import { EList } from './EList.js';
 import { ENamedElement } from './ENamedElement.js';
-import { EFactory } from './EFactory.js';
-import { EClassifier } from './EClassifier.js';
+
 
 
 export interface EPackage extends ENamedElement {
@@ -21,7 +21,6 @@ export interface EPackage extends ENamedElement {
   getESubpackages(): EList<EPackage>;
 
   getESuperPackage(): EPackage | undefined;
-  setESuperPackage(value: EPackage | undefined): void;
 
   getEClassifier(name: string): EClassifier | undefined;
 }

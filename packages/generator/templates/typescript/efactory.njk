@@ -1,64 +1,51 @@
 {% set eFactoryClassifier = findEClassByName(package, "EFactory") %}
 {% file factoryClassName(package) + ".ts" %}
-{{ coreImportLine(["EClass", "EFactory", "EObject"], "root", "types", options, package) }}
-import { {% for classifier in concreteEClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from './types/index.js';
-
-export interface {{ factoryClassName(package) }} extends EFactory {
+export interface {{ factoryClassName(package) }} extends {{ useImport("EFactory", "types", {foundational: true}) }} {
 {% for classifier in concreteEClassesOf(package) %}
-  create{{ classifier.getName() }}(): {{ classifier.getName() }};
+  create{{ classifier.getName() }}(): {{ useImport(classifier.getName(), "types", {foundational: false}) }};
 {% endfor %}
-  create(eClass: EClass): EObject;
+  create(eClass: {{ useImport("EClass", "types", {foundational: true}) }}): {{ useImport("EObject", "types", {foundational: true}) }};
 }
 {% endfile %}
 {% file "impl/" + factoryClassName(package) + "Impl.ts" %}
-{{ coreImportLine(["EClass", "EObject"], "impl", "types", options, package) }}
-{% if not eFactoryClassifier %}
-import { EFactoryImpl } from '{{ coreImportSpecifier("impl", "impl", options) }}';
-{% endif %}
-import { {{ factoryClassName(package) }} } from '../{{ factoryClassName(package) }}.js';
-import { Ids } from '../{{ packageClassName(package) }}.js';
-{% if eFactoryClassifier %}
-import { EFactoryImpl } from './EFactoryImpl.js';
-{% endif %}
-import { {% for classifier in concreteEClassesOf(package) %}{{ classifier.getName() }}{% if not loop.last %}, {% endif %}{% endfor %} } from '../types/index.js';
-{#- EFactory's own Impl is deliberately excluded from this loop when the
-    EFactory-unification special case applies (see above) - it's already
-    imported directly there (`from './EFactoryImpl.js'`), and importing it
-    a second time here too (`from './index.js'`, which re-exports the same
-    file) would be a duplicate binding for the same name. #}
-import { {% for classifier in concreteEClassesOf(package) %}{% if not (eFactoryClassifier and classifier.getName() == "EFactory") %}{{ classifier.getName() }}Impl{% if not loop.last %}, {% endif %}{% endif %}{% endfor %} } from './index.js';
-
-{% if eFactoryClassifier %}
-{#- real Ecore's own EFactoryImpl-extends-EFactoryImpl design: this
-    package models a classifier literally named "EFactory" (see
-    findEClassByName), so the package-level FactoryImpl extends ITS
-    generated impl (now living at impl/EFactoryImpl.ts, same folder as
-    this file, since Gen/Impl merged) instead of the generic @typemf/core
-    base - matching real EMF's EcoreFactoryImpl extends EFactoryImpl
-    exactly. This is Ecore-specific template logic, not a general pattern:
-    ordinary metamodels never hit this branch. Note this deliberately
-    reuses the name "EFactoryImpl" for both the generated and the
-    @typemf/core base class - a real, known, accepted naming collision for
-    the untested real-named Ecore.ecore output (see NOTES.md), not
-    something this template works around. #}
-{% endif %}
-export class {{ factoryClassName(package) }}Impl extends EFactoryImpl implements {{ factoryClassName(package) }} {
+{#-
+  EFactoryImpl is requested with foundational: true unconditionally, even
+  in the real Ecore.ecore self-hosting case where a classifier literally
+  named "EFactory" also exists (see findEClassByName above, matching real
+  EMF's own EcoreFactoryImpl extends EFactoryImpl design) - this is
+  deliberate, not an oversight: when that's true, it can only be because
+  generate-ecore is also true (a metamodel only ever declares a
+  classifier named "EFactory" when it IS Ecore.ecore), so foundational's
+  own generate-ecore-based resolution already produces the correct
+  relative import to this same run's own generated impl/EFactoryImpl.ts
+  - no separate branch needed. And since every concrete classifier
+  (including "EFactory" itself, when present) is requested under the
+  same name/location/file via the loop below, ImportCollector's own
+  deduplication - not a hand-written exclusion - is what prevents the
+  double-import the old, pre-refactor version of this template had to
+  guard against explicitly. #}
+export class {{ factoryClassName(package) }}Impl extends {{ useImport("EFactoryImpl", "impl", {foundational: true}) }} implements {{ useImport(factoryClassName(package), "root", {foundational: false}) }} {
 {% for classifier in concreteEClassesOf(package) %}
-  create{{ classifier.getName() }}(): {{ classifier.getName() }} {
-    return new {{ classifier.getName() }}Impl();
+  create{{ classifier.getName() }}(): {{ useImport(classifier.getName(), "types", {foundational: false}) }} {
+    return new {{ useImport(classifier.getName() + "Impl", "impl", {foundational: false}) }}();
   }
 {% endfor %}
 
-  create(eClass: EClass): EObject {
+  create(eClass: {{ useImport("EClass", "types", {foundational: true}) }}): {{ useImport("EObject", "types", {foundational: true}) }} {
     switch (eClass.getClassifierID()) {
 {% for classifier in concreteEClassesOf(package) %}
-      case Ids.{{ classifier.getName() }}.self:
+      case {{ useImport("Ids", "root", {file: packageClassName(package), foundational: false}) }}.{{ classifier.getName() }}.self:
         return this.create{{ classifier.getName() }}();
 {% endfor %}
       default:
-        throw new Error(
-          `Cannot create an instance of classifier id ${eClass.getClassifierID()}: not a known, concrete classifier of this package.`
-        );
+        {#- Not a locally-thrown error: delegates to whatever this factory's own
+            superclass considers unrecognized-classifier behavior (see
+            EFactoryImpl.create() in @typemf/core, or, when self-hosting, the
+            EFactory classifier's own `create` body in Ecore.ecore) - the base
+            EFactoryImpl.create() is the actual end of this chain, so the
+            "unknown classifier" error is thrown exactly once, in one place,
+            not duplicated per generated package. #}
+        return super.create(eClass);
     }
   }
 }

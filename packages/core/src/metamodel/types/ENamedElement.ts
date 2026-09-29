@@ -1,6 +1,7 @@
 import { EModelElement } from './EModelElement.js';
 
 
+
 export interface ENamedElement extends EModelElement {
 
   getName(): string | undefined;

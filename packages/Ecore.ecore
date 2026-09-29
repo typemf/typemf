@@ -31,26 +31,69 @@
     </eAnnotations>
     <eOperations name="isSuperTypeOf" eType="#//EBoolean">
       <eParameters name="someClass" eType="#//EClass"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="const visited = new Set&lt;EClass&gt;();&#10;const pending: EClass[] = [someClass];&#10;while (pending.length &gt; 0) {&#10;  const current = pending.pop()!;&#10;  if (current === this) return true;&#10;  if (visited.has(current)) continue;&#10;  visited.add(current);&#10;  pending.push(...current.getESuperTypes());&#10;  for (const generic of current.getEGenericSuperTypes()) {&#10;    const raw = generic.getEClassifier();&#10;    if (raw !== undefined &amp;&amp; isEClass(raw)) pending.push(raw);&#10;  }&#10;}&#10;return false;"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEClass"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
     </eOperations>
-    <eOperations name="getFeatureCount" eType="#//EInt"/>
+    <eOperations name="getFeatureCount" eType="#//EInt">
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getEAllStructuralFeatures().size();"/>
+      </eAnnotations>
+    </eOperations>
     <eOperations name="getEStructuralFeature" eType="#//EStructuralFeature">
       <eParameters name="featureID" eType="#//EInt"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getEAllStructuralFeatures().filter(feature => this.getFeatureID(feature) === featureIDOrFeatureName).at(0);"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="getFeatureID" eType="#//EInt">
       <eParameters name="feature" eType="#//EStructuralFeature"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return (feature as EStructuralFeatureImpl).getFeatureID();"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="EStructuralFeatureImpl"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/EStructuralFeatureImpl"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="getEStructuralFeature" eType="#//EStructuralFeature">
       <eParameters name="featureName" eType="#//EString"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getEAllStructuralFeatures().filter(feature => feature.getName() === featureIDOrFeatureName).at(0);"/>
+      </eAnnotations>
     </eOperations>
-    <eOperations name="getOperationCount" eType="#//EInt"/>
+    <eOperations name="getOperationCount" eType="#//EInt">
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getEAllOperations().size();"/>
+      </eAnnotations>
+    </eOperations>
     <eOperations name="getEOperation" eType="#//EOperation">
       <eParameters name="operationID" eType="#//EInt"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getEAllOperations().filter(op => this.getOperationID(op) === operationID).at(0);"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="getOperationID" eType="#//EInt">
       <eParameters name="operation" eType="#//EOperation"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return (operation as EOperationImpl).getOperationID();"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="EOperationImpl"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/EOperationImpl"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="getOverride" eType="#//EOperation">
       <eParameters name="operation" eType="#//EOperation"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="if (operation.getEContainingClass() === this) return undefined;&#10;for (const candidate of this.getEAllOperations()) {&#10;  if (candidate.isOverrideOf(operation)) return candidate;&#10;}&#10;return undefined;"/>
+      </eAnnotations>
     </eOperations>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="abstract" eType="#//EBoolean"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="interface" eType="#//EBoolean"/>
@@ -65,29 +108,137 @@
         eType="#//EOperation" containment="true" resolveProxies="false" eOpposite="#//EOperation/eContainingClass"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllAttributes" upperBound="-1"
         eType="#//EAttribute" changeable="false" volatile="true" transient="true"
-        derived="true"/>
+        derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="return new BasicEList&lt;EAttribute&gt;(undefined, undefined, this.getEAllStructuralFeatures().filter(isEAttribute) as EAttribute[]);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEAttribute"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllReferences" upperBound="-1"
         eType="#//EReference" changeable="false" volatile="true" transient="true"
-        derived="true"/>
+        derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="return new BasicEList&lt;EReference&gt;(undefined, undefined, this.getEAllStructuralFeatures().filter(isEReference) as EReference[]);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEReference"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eReferences" upperBound="-1"
         eType="#//EReference" changeable="false" volatile="true" transient="true"
-        derived="true"/>
+        derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="return new BasicEList&lt;EReference&gt;(undefined, undefined, this.getEStructuralFeatures().filter(isEReference) as EReference[]);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEReference"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAttributes" upperBound="-1"
         eType="#//EAttribute" changeable="false" volatile="true" transient="true"
-        derived="true"/>
+        derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="return new BasicEList&lt;EAttribute&gt;(undefined, undefined, this.getEStructuralFeatures().filter(isEAttribute) as EAttribute[]);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEAttribute"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllContainments" upperBound="-1"
         eType="#//EReference" changeable="false" volatile="true" transient="true"
-        derived="true"/>
+        derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="const references = this.getEAllStructuralFeatures().filter(isEReference) as EReference[];&#10;return new BasicEList&lt;EReference&gt;(undefined, undefined, references.filter(reference =&gt; reference.isContainment()));"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEReference"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllOperations" upperBound="-1"
         eType="#//EOperation" changeable="false" volatile="true" transient="true"
-        derived="true"/>
+        derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="const operations = new Set&lt;EOperation&gt;();&#10;const visited = new Set&lt;EClass&gt;();&#10;const visit = (eClass: EClass): void =&gt; {&#10;  if (visited.has(eClass)) return;&#10;  visited.add(eClass);&#10;  eClass.getESuperTypes().forEach(visit);&#10;  for (const generic of eClass.getEGenericSuperTypes()) {&#10;    const raw = generic.getEClassifier();&#10;    if (raw !== undefined &amp;&amp; isEClass(raw)) visit(raw);&#10;  }&#10;  eClass.getEOperations().forEach(operation =&gt; operations.add(operation));&#10;};&#10;visit(this);&#10;return new BasicEList&lt;EOperation&gt;(undefined, undefined, operations);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEClass"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllStructuralFeatures"
         upperBound="-1" eType="#//EStructuralFeature" changeable="false" volatile="true"
-        transient="true" derived="true"/>
+        transient="true" derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="const features = new Set&lt;EStructuralFeature&gt;();&#10;const visited = new Set&lt;EClass&gt;();&#10;const visit = (eClass: EClass): void =&gt; {&#10;  if (visited.has(eClass)) return;&#10;  visited.add(eClass);&#10;  eClass.getESuperTypes().forEach(visit);&#10;  for (const generic of eClass.getEGenericSuperTypes()) {&#10;    const raw = generic.getEClassifier();&#10;    if (raw !== undefined &amp;&amp; isEClass(raw)) visit(raw);&#10;  }&#10;  eClass.getEStructuralFeatures().forEach(feature =&gt; features.add(feature));&#10;};&#10;visit(this);&#10;return new BasicEList&lt;EStructuralFeature&gt;(undefined, undefined, features);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEClass"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllSuperTypes" upperBound="-1"
-        eType="#//EClass" changeable="false" volatile="true" transient="true" derived="true"/>
+        eType="#//EClass" changeable="false" volatile="true" transient="true" derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="const superTypes = new Set&lt;EClass&gt;();&#10;const visited = new Set&lt;EClass&gt;();&#10;const visit = (eClass: EClass): void =&gt; {&#10;  if (visited.has(eClass)) return;&#10;  visited.add(eClass);&#10;  for (const sup of eClass.getESuperTypes()) {&#10;    visit(sup);&#10;    superTypes.add(sup);&#10;  }&#10;  for (const generic of eClass.getEGenericSuperTypes()) {&#10;    const raw = generic.getEClassifier();&#10;    if (raw !== undefined &amp;&amp; isEClass(raw)) {&#10;      visit(raw);&#10;      superTypes.add(raw);&#10;    }&#10;  }&#10;};&#10;visit(this);&#10;return new BasicEList&lt;EClass&gt;(undefined, undefined, superTypes);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEClass"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eIDAttribute" eType="#//EAttribute"
-        changeable="false" volatile="true" transient="true" derived="true" resolveProxies="false"/>
+        changeable="false" volatile="true" transient="true" derived="true" resolveProxies="false">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="return this.getEAllAttributes().find(a =&gt; a.isID());"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eStructuralFeatures" upperBound="-1"
         eType="#//EStructuralFeature" containment="true" resolveProxies="false" eOpposite="#//EStructuralFeature/eContainingClass"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eGenericSuperTypes" upperBound="-1"
@@ -99,7 +250,25 @@
     </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eAllGenericSuperTypes"
         upperBound="-1" eType="#//EGenericType" changeable="false" volatile="true"
-        transient="true" derived="true"/>
+        transient="true" derived="true">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="const genericSuperTypes = new Set&lt;EGenericType&gt;();&#10;const visited = new Set&lt;EClass&gt;();&#10;const visit = (eClass: EClass): void =&gt; {&#10;  if (visited.has(eClass)) return;&#10;  visited.add(eClass);&#10;  for (const sup of eClass.getESuperTypes()) {&#10;    visit(sup);&#10;    const implicit = new EGenericTypeImpl();&#10;    implicit.setEClassifier(sup);&#10;    genericSuperTypes.add(implicit);&#10;  }&#10;  for (const generic of eClass.getEGenericSuperTypes()) {&#10;    const raw = generic.getEClassifier();&#10;    if (raw !== undefined &amp;&amp; isEClass(raw)) {&#10;      visit(raw);&#10;      genericSuperTypes.add(generic);&#10;    }&#10;  }&#10;};&#10;visit(this);&#10;return new BasicEList&lt;EGenericType&gt;(undefined, undefined, genericSuperTypes);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="BasicEList"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/BasicEList.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEClass"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="EGenericTypeImpl"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/EGenericTypeImpl.js"/>
+      </eAnnotations>
+    </eStructuralFeatures>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="EClassifier" abstract="true" eSuperTypes="#//ENamedElement">
     <eAnnotations source="http://www.eclipse.org/emf/2002/Ecore">
@@ -107,7 +276,16 @@
     </eAnnotations>
     <eOperations name="isInstance" eType="#//EBoolean">
       <eParameters name="object" eType="#//EJavaObject"/>
-    </eOperations>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return object instanceof EObjectImpl;"/>
+        <details key="use-type-name" value="EObjectImpl"/>
+      </eAnnotations>
+        <eAnnotations source="https://typemf.dev/generator/import">
+          <details key="type" value="EObjectImpl"/>
+          <details key="from" value="@typemf/core"/>
+          <details key="internal-from" value="./impl/EObjectImpl"/>
+        </eAnnotations>
+      </eOperations>
     <eOperations name="getClassifierID" eType="#//EInt"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="instanceClassName" eType="#//EString"
         volatile="true" unsettable="true">
@@ -146,12 +324,21 @@
     </eAnnotations>
     <eOperations name="getEEnumLiteral" eType="#//EEnumLiteral">
       <eParameters name="name" eType="#//EString"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getELiterals().find(literal =&gt; literal.getName() === name);"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="getEEnumLiteral" eType="#//EEnumLiteral">
       <eParameters name="value" eType="#//EInt"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getELiterals().find(literal =&gt; literal.getValue() === value);"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="getEEnumLiteralByLiteral" eType="#//EEnumLiteral">
       <eParameters name="literal" eType="#//EString"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="return this.getELiterals().find(candidate =&gt; candidate.getLiteral() === literal);"/>
+      </eAnnotations>
     </eOperations>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eLiterals" upperBound="-1"
         eType="#//EEnumLiteral" containment="true" resolveProxies="false" eOpposite="#//EEnumLiteral/eEnum"/>
@@ -160,21 +347,40 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="#//EInt"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="instance" eType="#//EEnumerator"
         transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="literal" eType="#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="literal" eType="#//EString">
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="return this._literal ?? this.getName();"/>
+        <details key="set" value="const oldValue = this._literal; if (oldValue === value) return; this._literal = value; this.eDidRemove(undefined, oldValue); this.eDidAdd(undefined, value);"/>
+      </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eEnum" eType="#//EEnum"
         changeable="false" transient="true" resolveProxies="false" eOpposite="#//EEnum/eLiterals"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="EFactory" eSuperTypes="#//EModelElement">
-    <eOperations name="create" eType="#//EObject">
+    <eOperations name="create" eType="#//EObject" lowerBound="1">
       <eParameters name="eClass" eType="#//EClass"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="if (eClass.isAbstract() || eClass.isInterface()) {&#10;  throw new Error(`Cannot create an instance of '${eClass.getName()}': it is abstract or an interface.`);&#10;}&#10;console.warn(&#10;  `No factory recognizes classifier id ${eClass.getClassifierID()} (${eClass.getName()}) - falling back to a DynamicEObjectImpl. ` +&#10;    'Add a concrete factory for it to avoid this.'&#10;);&#10;return new DynamicEObjectImpl(eClass);"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="DynamicEObjectImpl"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./impl/DynamicEObjectImpl.js"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="createFromString" eType="#//EJavaObject">
       <eParameters name="eDataType" eType="#//EDataType"/>
       <eParameters name="literalValue" eType="#//EString"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="if (this.getEPackage() !== undefined &amp;&amp; eDataType.getEPackage() !== this.getEPackage()) {&#10;  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);&#10;}&#10;switch (eDataType.getName()) {&#10;  case 'EString':&#10;    return literalValue;&#10;  case 'EInt':&#10;  case 'EIntegerObject':&#10;  case 'ELong':&#10;  case 'ELongObject':&#10;  case 'EDouble':&#10;  case 'EDoubleObject':&#10;  case 'EFloat':&#10;  case 'EFloatObject':&#10;  case 'EShort':&#10;  case 'EShortObject':&#10;  case 'EByte':&#10;  case 'EByteObject':&#10;    return Number(literalValue);&#10;  case 'EBigInteger':&#10;    return BigInt(literalValue);&#10;  case 'EBoolean':&#10;  case 'EBooleanObject':&#10;    return literalValue === 'true';&#10;  case 'EChar':&#10;  case 'ECharacterObject':&#10;    return literalValue.charAt(0);&#10;  case 'EDate':&#10;    return new Date(literalValue);&#10;  default:&#10;    return literalValue;&#10;}"/>
+      </eAnnotations>
     </eOperations>
     <eOperations name="convertToString" eType="#//EString">
       <eParameters name="eDataType" eType="#//EDataType"/>
       <eParameters name="instanceValue" eType="#//EJavaObject"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="if (this.getEPackage() !== undefined &amp;&amp; eDataType.getEPackage() !== this.getEPackage()) {&#10;  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);&#10;}&#10;if (eDataType.getName() === 'EDate' &amp;&amp; instanceValue instanceof Date) {&#10;  return instanceValue.toISOString();&#10;}&#10;return String(instanceValue);"/>
+      </eAnnotations>
     </eOperations>
     <eStructuralFeatures xsi:type="ecore:EReference" name="ePackage" lowerBound="1"
         eType="#//EPackage" transient="true" resolveProxies="false" eOpposite="#//EPackage/eFactoryInstance"/>
@@ -250,6 +456,9 @@
     <eOperations name="getOperationID" eType="#//EInt"/>
     <eOperations name="isOverrideOf" eType="#//EBoolean">
       <eParameters name="someOperation" eType="#//EOperation"/>
+      <eAnnotations source="https://typemf.dev/generator">
+        <details key="body" value="if (someOperation === this) return false;&#10;const thisClass = this.getEContainingClass();&#10;const otherClass = someOperation.getEContainingClass();&#10;if (thisClass === undefined || otherClass === undefined) return false;&#10;if (thisClass === otherClass) return false;&#10;if (!otherClass.isSuperTypeOf(thisClass)) return false;&#10;if (this.getName() !== someOperation.getName()) return false;&#10;const params = this.getEParameters();&#10;const otherParams = someOperation.getEParameters();&#10;if (params.size() !== otherParams.size()) return false;&#10;for (let i = 0; i &lt; params.size(); i++) {&#10;  if (params.get(i)!.getEType() !== otherParams.get(i)!.getEType()) return false;&#10;}&#10;return true;"/>
+      </eAnnotations>
     </eOperations>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eContainingClass" eType="#//EClass"
         changeable="false" transient="true" resolveProxies="false" eOpposite="#//EClass/eOperations"/>
@@ -356,12 +565,18 @@
         <details key="suppressedIsSetVisibility" value="true"/>
         <details key="suppressedUnsetVisibility" value="true"/>
       </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="set" value="this._eType = value; this._eGenericType = undefined; this.eDidAdd(undefined, value);"/>
+      </eAnnotations>
     </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eGenericType" eType="#//EGenericType"
         volatile="true" unsettable="true" containment="true" resolveProxies="false">
       <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
         <details key="suppressedIsSetVisibility" value="true"/>
         <details key="suppressedUnsetVisibility" value="true"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="set" value="const feature = getEcorePackageRef().getETypedElement_EGenericType();&#10;const oldValue = this.eGet(feature);&#10;this.eBasicSetValue(feature, value);&#10;this.eDidRemove(feature, oldValue);&#10;this.eDidAdd(feature, value);&#10;this._eType = value?.getERawType();"/>
       </eAnnotations>
     </eStructuralFeatures>
   </eClassifiers>
@@ -370,7 +585,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#decimal"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EBigInteger" instanceClassName="java.math.BigInteger">
@@ -378,7 +593,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#integer"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EBoolean" instanceClassName="boolean">
@@ -386,7 +601,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#boolean"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="boolean"/>
+      <details key="type" value="boolean"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EBooleanObject" instanceClassName="java.lang.Boolean">
@@ -395,7 +610,7 @@
       <details key="name" value="EBoolean:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="boolean | undefined"/>
+      <details key="type" value="boolean | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EByte" instanceClassName="byte">
@@ -403,7 +618,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#byte"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EByteArray" instanceClassName="byte[]">
@@ -411,7 +626,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#hexBinary"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number []"/>
+      <details key="type" value="number []"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EByteObject" instanceClassName="java.lang.Byte">
@@ -420,12 +635,12 @@
       <details key="name" value="EByte:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number | undefined"/>
+      <details key="type" value="number | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EChar" instanceClassName="char">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="string"/>
+      <details key="type" value="string"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="ECharacterObject" instanceClassName="java.lang.Character">
@@ -434,12 +649,12 @@
       <details key="name" value="EChar:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="string []"/>
+      <details key="type" value="string []"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EDate" instanceClassName="java.util.Date">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="unknown"/>
+      <details key="type" value="unknown"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EDiagnosticChain" instanceClassName="org.eclipse.emf.common.util.DiagnosticChain"
@@ -449,7 +664,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#double"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EDoubleObject" instanceClassName="java.lang.Double">
@@ -458,22 +673,30 @@
       <details key="name" value="EDouble:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number | undefined"/>
+      <details key="type" value="number | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EEList" instanceClassName="org.eclipse.emf.common.util.EList"
       serializable="false">
     <eTypeParameters name="E"/>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="EList"/>
-      <details key="typescript-import-from" value="./types/EList"/>
+      <details key="type" value="EList"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="EList"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="./types/EList"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EEnumerator" instanceClassName="org.eclipse.emf.common.util.Enumerator"
       serializable="false">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="EEnumerator"/>
-      <details key="typescript-import-from" value="./types/EEnumerator"/>
+      <details key="type" value="EEnumerator"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="EEnumerator"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="./types/EEnumerator"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EFeatureMap" instanceClassName="org.eclipse.emf.ecore.util.FeatureMap"
@@ -485,7 +708,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#float"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EFloatObject" instanceClassName="java.lang.Float">
@@ -494,7 +717,7 @@
       <details key="name" value="EFloat:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number | undefined"/>
+      <details key="type" value="number | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EInt" instanceClassName="int">
@@ -502,7 +725,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#int"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EIntegerObject" instanceClassName="java.lang.Integer">
@@ -511,19 +734,23 @@
       <details key="name" value="EInt:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number | undefined"/>
+      <details key="type" value="number | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EJavaClass" instanceClassName="java.lang.Class">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="TypeScriptClass"/>
-      <details key="typescript-import-from" value="./types/TypeScriptClass"/>
+      <details key="type" value="TypeScriptClass"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="TypeScriptClass"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="./types/TypeScriptClass"/>
     </eAnnotations>
     <eTypeParameters name="T"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EJavaObject" instanceClassName="java.lang.Object">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="unknown"/>
+      <details key="type" value="unknown"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="ELong" instanceClassName="long">
@@ -531,7 +758,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#long"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="ELongObject" instanceClassName="java.lang.Long">
@@ -540,7 +767,7 @@
       <details key="name" value="ELong:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number | undefined"/>
+      <details key="type" value="number | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EMap" instanceClassName="java.util.Map"
@@ -548,22 +775,34 @@
     <eTypeParameters name="K"/>
     <eTypeParameters name="V"/>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="EMap"/>
-      <details key="typescript-import-from" value="./types/EMap"/>
+      <details key="type" value="EMap"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="EMap"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="./types/EMap"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EResource" instanceClassName="org.eclipse.emf.ecore.resource.Resource"
       serializable="false">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="Resource"/>
-      <details key="typescript-import-from" value="../resource/Resource"/>
+      <details key="type" value="Resource"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="Resource"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="../resource/Resource"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EResourceSet" instanceClassName="org.eclipse.emf.ecore.resource.ResourceSet"
       serializable="false">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="ResourceSet"/>
-      <details key="typescript-import-from" value="../resource/ResourceSet"/>
+      <details key="type" value="ResourceSet"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="ResourceSet"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="../resource/ResourceSet"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EShort" instanceClassName="short">
@@ -571,7 +810,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#short"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number"/>
+      <details key="type" value="number"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EShortObject" instanceClassName="java.lang.Short">
@@ -580,7 +819,7 @@
       <details key="name" value="EShort:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="number | undefined"/>
+      <details key="type" value="number | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EString" instanceClassName="java.lang.String">
@@ -588,15 +827,19 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#string"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="string"/>
+      <details key="type" value="string"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="EStringToStringMapEntry" instanceClassName="java.util.Map$Entry">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="key" eType="#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="#//EString"/>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="typescript-type" value="EStringToStringMapEntry"/>
-      <details key="typescript-import-from" value="./types/EStringToStringMapEntry"/>
+      <details key="type" value="EStringToStringMapEntry"/>
+    </eAnnotations>
+    <eAnnotations source="https://typemf.dev/generator/import">
+      <details key="type" value="EStringToStringMapEntry"/>
+      <details key="from" value="@typemf/core"/>
+      <details key="internal-from" value="./types/EStringToStringMapEntry"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="ETreeIterator" instanceClassName="org.eclipse.emf.common.util.TreeIterator"
@@ -612,7 +855,11 @@
     <eStructuralFeatures xsi:type="ecore:EReference" name="eTypeArguments" upperBound="-1"
         eType="#//EGenericType" containment="true" resolveProxies="false"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eRawType" lowerBound="1"
-        eType="#//EClassifier" changeable="false" transient="true" derived="true"/>
+        eType="#//EClassifier" changeable="false" transient="true" derived="true">
+        <eAnnotations source="https://typemf.dev/generator/feature">
+          <details key="get" value="if (this.getEClassifier() !== undefined) return this.getEClassifier();&#10;const typeParameter = this.getETypeParameter();&#10;if (typeParameter !== undefined &amp;&amp; !typeParameter.getEBounds().isEmpty()) {&#10;  const bound = typeParameter.getEBounds().get(0);&#10;  return bound.getERawType();&#10;}&#10;const upperBound = this.getEUpperBound();&#10;if (upperBound !== undefined) return upperBound.getERawType();&#10;return getEcorePackageRef().getEJavaObject();"/>
+        </eAnnotations>
+    </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eLowerBound" eType="#//EGenericType"
         containment="true" resolveProxies="false"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eTypeParameter" eType="#//ETypeParameter"

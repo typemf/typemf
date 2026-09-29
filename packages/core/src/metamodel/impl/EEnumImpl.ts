@@ -1,11 +1,12 @@
-import { EList } from '../types/EList.js';
 import { BasicEList } from './BasicEList.js';
-import { EEnum } from '../types/EEnum.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EDataTypeImpl } from './EDataTypeImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
+import { EEnum } from '../types/EEnum.js';
+import { EEnumLiteral } from '../types/EEnumLiteral.js';
+import { EList } from '../types/EList.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
+
 
 
 export class EEnumImpl extends EDataTypeImpl implements EEnum {
@@ -31,11 +32,18 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   getEEnumLiteral(name: string): EEnumLiteral | undefined;
   getEEnumLiteral(value: number): EEnumLiteral | undefined;
   getEEnumLiteral(nameOrValue: string | number): EEnumLiteral | undefined {
-    throw new Error('EEnum.getEEnumLiteral() is overloaded with no body:typescript annotation - nothing to generate.');
+    if (typeof nameOrValue === 'string') {
+      const name = nameOrValue as string;
+      return this.getELiterals().find(literal => literal.getName() === name);
+    }
+    if (typeof nameOrValue === 'number') {
+      const value = nameOrValue as number;
+      return this.getELiterals().find(literal => literal.getValue() === value);
+    }
+    throw new Error('EEnum.getEEnumLiteral(): no overload matches the given arguments.');
   }
-
   getEEnumLiteralByLiteral(literal: string): EEnumLiteral | undefined {
-    throw new Error('EEnum.getEEnumLiteralByLiteral() has no body:typescript annotation - nothing to generate.');
+    return this.getELiterals().find(candidate => candidate.getLiteral() === literal);
   }
 
   eGet(feature: EStructuralFeature): unknown {
@@ -55,6 +63,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
         for (const item of items) list.add(item as EEnumLiteral);
         return;
       }
+
       default:
         super.eSet(feature, value);
         return;
@@ -89,6 +98,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
       case 9: this._eLiteralsCache?.clear(); return;
+
       default:
         super.eUnset(feature);
         return;

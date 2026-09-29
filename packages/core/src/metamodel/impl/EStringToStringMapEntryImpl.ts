@@ -1,13 +1,16 @@
-import { EObjectImpl } from './EObjectImpl.js';
 import { BasicEList } from './BasicEList.js';
-import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
+import { EObjectImpl } from './EObjectImpl.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
+import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
+
 export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {
+
   private _key: string | undefined;
+
   private _value: string | undefined;
 
 
@@ -18,14 +21,12 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   getKey(): string | undefined {
     return this._key;
   }
-
   setKey(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEStringToStringMapEntry_Key(), value);
   }
   getValue(): string | undefined {
     return this._value;
   }
-
   setValue(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEStringToStringMapEntry_Value(), value);
   }
@@ -88,18 +89,22 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 0: {
         const oldValue = this._key;
         this._key = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 1: {
         const oldValue = this._value;
         this._value = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       default:
         throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }

@@ -1,17 +1,16 @@
-import { EObject } from './EObject.js';
-import { EList } from './EList.js';
-import { ETypedElement } from './ETypedElement.js';
 import { EClass } from './EClass.js';
-import { ETypeParameter } from './ETypeParameter.js';
-import { EParameter } from './EParameter.js';
 import { EClassifier } from './EClassifier.js';
 import { EGenericType } from './EGenericType.js';
+import { EList } from './EList.js';
+import { EParameter } from './EParameter.js';
+import { ETypeParameter } from './ETypeParameter.js';
+import { ETypedElement } from './ETypedElement.js';
+
 
 
 export interface EOperation extends ETypedElement {
 
   getEContainingClass(): EClass | undefined;
-  setEContainingClass(value: EClass | undefined): void;
 
   getETypeParameters(): EList<ETypeParameter>;
 

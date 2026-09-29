@@ -1,6 +1,7 @@
-import { EObject } from './EObject.js';
-import { EList } from './EList.js';
 import { EAnnotation } from './EAnnotation.js';
+import { EList } from './EList.js';
+import { EObject } from './EObject.js';
+
 
 
 export interface EModelElement extends EObject {

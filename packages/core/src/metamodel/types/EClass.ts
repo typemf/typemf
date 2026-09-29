@@ -1,11 +1,11 @@
-import { EObject } from './EObject.js';
-import { EList } from './EList.js';
-import { EClassifier } from './EClassifier.js';
-import { EOperation } from './EOperation.js';
 import { EAttribute } from './EAttribute.js';
+import { EClassifier } from './EClassifier.js';
+import { EGenericType } from './EGenericType.js';
+import { EList } from './EList.js';
+import { EOperation } from './EOperation.js';
 import { EReference } from './EReference.js';
 import { EStructuralFeature } from './EStructuralFeature.js';
-import { EGenericType } from './EGenericType.js';
+
 
 
 export interface EClass extends EClassifier {
@@ -37,7 +37,6 @@ export interface EClass extends EClassifier {
   getEAllSuperTypes(): EList<EClass>;
 
   getEIDAttribute(): EAttribute | undefined;
-  setEIDAttribute(value: EAttribute | undefined): void;
 
   getEStructuralFeatures(): EList<EStructuralFeature>;
 

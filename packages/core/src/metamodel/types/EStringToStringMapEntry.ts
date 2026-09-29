@@ -1,5 +1,5 @@
 import { EObject } from './EObject.js';
-import { EList } from './EList.js';
+
 
 
 export interface EStringToStringMapEntry extends EObject {

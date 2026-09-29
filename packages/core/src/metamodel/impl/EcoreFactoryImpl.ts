@@ -1,35 +1,34 @@
-import { EObject } from '../types/EObject.js';
-import { EcoreFactory } from '../EcoreFactory.js';
-import { Ids } from '../EcorePackage.js';
-import { EFactoryImpl } from './EFactoryImpl.js';
-import { EAttribute } from '../types/EAttribute.js';
-import { EAnnotation } from '../types/EAnnotation.js';
-import { EClass } from '../types/EClass.js';
-import { EDataType } from '../types/EDataType.js';
-import { EEnum } from '../types/EEnum.js';
-import { EEnumLiteral } from '../types/EEnumLiteral.js';
-import { EFactory } from '../types/EFactory.js';
-import { EOperation } from '../types/EOperation.js';
-import { EPackage } from '../types/EPackage.js';
-import { EParameter } from '../types/EParameter.js';
-import { EReference } from '../types/EReference.js';
-import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
-import { EGenericType } from '../types/EGenericType.js';
-import { ETypeParameter } from '../types/ETypeParameter.js';
-
+import { EAnnotationImpl } from './EAnnotationImpl.js';
 import { EAttributeImpl } from './EAttributeImpl.js';
 import { EClassImpl } from './EClassImpl.js';
 import { EDataTypeImpl } from './EDataTypeImpl.js';
 import { EEnumImpl } from './EEnumImpl.js';
 import { EEnumLiteralImpl } from './EEnumLiteralImpl.js';
+import { EFactoryImpl } from './EFactoryImpl.js';
+import { EGenericTypeImpl } from './EGenericTypeImpl.js';
 import { EOperationImpl } from './EOperationImpl.js';
 import { EPackageImpl } from './EPackageImpl.js';
 import { EParameterImpl } from './EParameterImpl.js';
 import { EReferenceImpl } from './EReferenceImpl.js';
 import { EStringToStringMapEntryImpl } from './EStringToStringMapEntryImpl.js';
-import { EGenericTypeImpl } from './EGenericTypeImpl.js';
 import { ETypeParameterImpl } from './ETypeParameterImpl.js';
-import { EAnnotationImpl } from './EAnnotationImpl.js';
+import { EcoreFactory } from '../EcoreFactory.js';
+import { Ids } from '../EcorePackage.js';
+import { EAnnotation } from '../types/EAnnotation.js';
+import { EAttribute } from '../types/EAttribute.js';
+import { EClass } from '../types/EClass.js';
+import { EDataType } from '../types/EDataType.js';
+import { EEnum } from '../types/EEnum.js';
+import { EEnumLiteral } from '../types/EEnumLiteral.js';
+import { EFactory } from '../types/EFactory.js';
+import { EGenericType } from '../types/EGenericType.js';
+import { EObject } from '../types/EObject.js';
+import { EOperation } from '../types/EOperation.js';
+import { EPackage } from '../types/EPackage.js';
+import { EParameter } from '../types/EParameter.js';
+import { EReference } from '../types/EReference.js';
+import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
+import { ETypeParameter } from '../types/ETypeParameter.js';
 
 
 export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
@@ -107,9 +106,7 @@ export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
       case Ids.ETypeParameter.self:
         return this.createETypeParameter();
       default:
-        throw new Error(
-          `Cannot create an instance of classifier id ${eClass.getClassifierID()}: not a known, concrete classifier of this package.`
-        );
+        return super.create(eClass);
     }
   }
 }

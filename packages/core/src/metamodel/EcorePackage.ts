@@ -1,9 +1,11 @@
 import { EAnnotation } from './types/EAnnotation.js';
 import { EAttribute } from './types/EAttribute.js';
 import { EClass } from './types/EClass.js';
+import { EClassifier } from './types/EClassifier.js';
 import { EDataType } from './types/EDataType.js';
 import { EPackage } from './types/EPackage.js';
 import { EReference } from './types/EReference.js';
+
 
 /**
  * Classifier/feature IDs, as pure numeric literals - safe to import from
@@ -15,19 +17,19 @@ import { EReference } from './types/EReference.js';
 export const Ids = {
   EAttribute: { self: 0, iD: 18, eAttributeType: 19 },
   EAnnotation: { self: 1, source: 1, details: 2, eModelElement: 3, contents: 4, references: 5 },
-  EClass: { self: 2, abstract: 8, interface: 9, eSuperTypes: 10, eOperations: 11, eAllAttributes: 12, eAllReferences: 13, eReferences: 14, eAttributes: 15, eAllContainments: 16, eAllOperations: 17, eAllStructuralFeatures: 18, eAllSuperTypes: 19, eIDAttribute: 20, eStructuralFeatures: 21, eGenericSuperTypes: 22, eAllGenericSuperTypes: 23 },
-  EClassifier: { self: 3, instanceClassName: 2, instanceClass: 3, defaultValue: 4, instanceTypeName: 5, ePackage: 6, eTypeParameters: 7 },
+  EClass: { self: 2, abstract: 8, interface: 9, eSuperTypes: 10, eOperations: 11, eAllAttributes: 12, eAllReferences: 13, eReferences: 14, eAttributes: 15, eAllContainments: 16, eAllOperations: 17, eAllStructuralFeatures: 18, eAllSuperTypes: 19, eIDAttribute: 20, eStructuralFeatures: 21, eGenericSuperTypes: 22, eAllGenericSuperTypes: 23, op0: 3, op1: 4, op2: 5, op3: 6, op4: 7, op5: 8, op6: 9, op7: 10, op8: 11 },
+  EClassifier: { self: 3, instanceClassName: 2, instanceClass: 3, defaultValue: 4, instanceTypeName: 5, ePackage: 6, eTypeParameters: 7, op0: 1, op1: 2 },
   EDataType: { self: 4, serializable: 8 },
-  EEnum: { self: 5, eLiterals: 9 },
+  EEnum: { self: 5, eLiterals: 9, op0: 3, op1: 4, op2: 5 },
   EEnumLiteral: { self: 6, value: 2, instance: 3, literal: 4, eEnum: 5 },
-  EFactory: { self: 7, ePackage: 1 },
-  EModelElement: { self: 8, eAnnotations: 0 },
+  EFactory: { self: 7, ePackage: 1, op0: 1, op1: 2, op2: 3 },
+  EModelElement: { self: 8, eAnnotations: 0, op0: 0 },
   ENamedElement: { self: 9, name: 1 },
-  EOperation: { self: 10, eContainingClass: 10, eTypeParameters: 11, eParameters: 12, eExceptions: 13, eGenericExceptions: 14 },
-  EPackage: { self: 11, nsURI: 2, nsPrefix: 3, eFactoryInstance: 4, eClassifiers: 5, eSubpackages: 6, eSuperPackage: 7 },
+  EOperation: { self: 10, eContainingClass: 10, eTypeParameters: 11, eParameters: 12, eExceptions: 13, eGenericExceptions: 14, op0: 1, op1: 2 },
+  EPackage: { self: 11, nsURI: 2, nsPrefix: 3, eFactoryInstance: 4, eClassifiers: 5, eSubpackages: 6, eSuperPackage: 7, op0: 1 },
   EParameter: { self: 12, eOperation: 10 },
   EReference: { self: 13, containment: 18, container: 19, resolveProxies: 20, eOpposite: 21, eReferenceType: 22, eKeys: 23 },
-  EStructuralFeature: { self: 14, changeable: 10, volatile: 11, transient: 12, defaultValueLiteral: 13, defaultValue: 14, unsettable: 15, derived: 16, eContainingClass: 17 },
+  EStructuralFeature: { self: 14, changeable: 10, volatile: 11, transient: 12, defaultValueLiteral: 13, defaultValue: 14, unsettable: 15, derived: 16, eContainingClass: 17, op0: 1, op1: 2 },
   ETypedElement: { self: 15, ordered: 2, unique: 3, lowerBound: 4, upperBound: 5, many: 6, required: 7, eType: 8, eGenericType: 9 },
   EBigDecimal: { self: 16 },
   EBigInteger: { self: 17 },
@@ -73,7 +75,7 @@ export interface EcorePackage extends EPackage {
   getEAttribute_ID(): EAttribute;
   getEAttribute_EAttributeType(): EReference;
   getEAnnotation(): EClass;
-  getEAnnotation(name : string): EAnnotation | undefined;
+  getEAnnotation(source: string): EAnnotation | undefined;
   getEAnnotation_Source(): EAttribute;
   getEAnnotation_Details(): EReference;
   getEAnnotation_EModelElement(): EReference;
@@ -97,6 +99,7 @@ export interface EcorePackage extends EPackage {
   getEClass_EGenericSuperTypes(): EReference;
   getEClass_EAllGenericSuperTypes(): EReference;
   getEClassifier(): EClass;
+  getEClassifier(name: string): EClassifier | undefined;
   getEClassifier_InstanceClassName(): EAttribute;
   getEClassifier_InstanceClass(): EAttribute;
   getEClassifier_DefaultValue(): EAttribute;

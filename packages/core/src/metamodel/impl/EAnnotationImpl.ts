@@ -1,16 +1,18 @@
-import { EList } from '../types/EList.js';
-import { EObject } from '../types/EObject.js';
 import { BasicEList } from './BasicEList.js';
-import { EAnnotation } from '../types/EAnnotation.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
-import { EModelElement } from '../types/EModelElement.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
+import { EAnnotation } from '../types/EAnnotation.js';
 import { EClass } from '../types/EClass.js';
+import { EList } from '../types/EList.js';
+import { EModelElement } from '../types/EModelElement.js';
+import { EObject } from '../types/EObject.js';
+import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
+
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
+
   private _source: string | undefined;
 
   private _detailsCache: BasicEList<EStringToStringMapEntry> | undefined;
@@ -21,6 +23,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
     }
     return this._detailsCache;
   }
+
   private _eModelElement: EModelElement | undefined;
 
   private _contentsCache: BasicEList<EObject> | undefined;
@@ -49,7 +52,6 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   getSource(): string | undefined {
     return this._source;
   }
-
   setSource(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEAnnotation_Source(), value);
   }
@@ -59,7 +61,6 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   getEModelElement(): EModelElement | undefined {
     return this._eModelElement;
   }
-
   setEModelElement(value: EModelElement | undefined): void {
     this.eSet(getEcorePackageRef().getEAnnotation_EModelElement(), value);
   }
@@ -99,6 +100,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         for (const item of items) list.add(item as EStringToStringMapEntry);
         return;
       }
+
       case 3: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
@@ -114,6 +116,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         for (const item of items) list.add(item as EObject);
         return;
       }
+
       case 5: {
         const list = this._references;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -121,6 +124,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         for (const item of items) list.add(item as EObject);
         return;
       }
+
       default:
         super.eSet(feature, value);
         return;
@@ -166,21 +170,28 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 1: {
         const oldValue = this._source;
         this._source = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       case 2: this._detailsCache?.clear(); return;
+
+
       case 3: {
         const oldValue = this._eModelElement;
         this._eModelElement = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       case 4: this._contentsCache?.clear(); return;
+
       case 5: this._referencesCache?.clear(); return;
+
       default:
         super.eUnset(feature);
         return;

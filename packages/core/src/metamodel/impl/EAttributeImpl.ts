@@ -1,14 +1,17 @@
 import { BasicEList } from './BasicEList.js';
+import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EAttribute } from '../types/EAttribute.js';
 import { EClass } from '../types/EClass.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EDataType } from '../types/EDataType.js';
-import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
+
 export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute {
+
   private _iD: boolean = false;
+
   private _eAttributeType: EDataType | undefined;
 
 
@@ -19,22 +22,18 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   isID(): boolean {
     return this._iD;
   }
-
   setID(value: boolean): void {
     this.eSet(getEcorePackageRef().getEAttribute_ID(), value);
   }
   getEAttributeType(): EDataType | undefined {
-    return this._eAttributeType;
-  }
-
-  setEAttributeType(value: EDataType | undefined): void {
-    this.eSet(getEcorePackageRef().getEAttribute_EAttributeType(), value);
+    return (this.getEType() as EDataType | undefined);
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
       case 18: return this._iD;
-      case 19: return this._eAttributeType;
+
+      case 19: return this.getEAttributeType();
       default:
         return super.eGet(feature);
     }
@@ -43,14 +42,6 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   eSet(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 18: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
-      case 19: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
         this.eBasicSetValue(feature, value);
@@ -91,18 +82,22 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 18: {
         const oldValue = this._iD;
         this._iD = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 19: {
         const oldValue = this._eAttributeType;
         this._eAttributeType = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       default:
         super.eUnset(feature);
         return;

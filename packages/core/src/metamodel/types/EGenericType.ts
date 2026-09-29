@@ -1,7 +1,8 @@
-import { EObject } from './EObject.js';
-import { EList } from './EList.js';
 import { EClassifier } from './EClassifier.js';
+import { EList } from './EList.js';
+import { EObject } from './EObject.js';
 import { ETypeParameter } from './ETypeParameter.js';
+
 
 
 export interface EGenericType extends EObject {
@@ -12,7 +13,6 @@ export interface EGenericType extends EObject {
   getETypeArguments(): EList<EGenericType>;
 
   getERawType(): EClassifier | undefined;
-  setERawType(value: EClassifier | undefined): void;
 
   getELowerBound(): EGenericType | undefined;
   setELowerBound(value: EGenericType | undefined): void;

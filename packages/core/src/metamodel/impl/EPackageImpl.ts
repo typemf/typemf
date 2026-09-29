@@ -1,17 +1,21 @@
-import { EList } from '../types/EList.js';
 import { BasicEList } from './BasicEList.js';
-import { EPackage } from '../types/EPackage.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EFactory } from '../types/EFactory.js';
-import { EClassifier } from '../types/EClassifier.js';
 import { ENamedElementImpl } from './ENamedElementImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
+import { EClassifier } from '../types/EClassifier.js';
+import { EFactory } from '../types/EFactory.js';
+import { EList } from '../types/EList.js';
+import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
+
 export class EPackageImpl extends ENamedElementImpl implements EPackage {
+
   private _nsURI: string | undefined;
+
   private _nsPrefix: string | undefined;
+
   private _eFactoryInstance: EFactory | undefined;
 
   private _eClassifiersCache: BasicEList<EClassifier> | undefined;
@@ -31,6 +35,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
     }
     return this._eSubpackagesCache;
   }
+
   private _eSuperPackage: EPackage | undefined;
 
 
@@ -41,21 +46,18 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   getNsURI(): string | undefined {
     return this._nsURI;
   }
-
   setNsURI(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEPackage_NsURI(), value);
   }
   getNsPrefix(): string | undefined {
     return this._nsPrefix;
   }
-
   setNsPrefix(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEPackage_NsPrefix(), value);
   }
   getEFactoryInstance(): EFactory | undefined {
     return this._eFactoryInstance;
   }
-
   setEFactoryInstance(value: EFactory | undefined): void {
     this.eSet(getEcorePackageRef().getEPackage_EFactoryInstance(), value);
   }
@@ -70,9 +72,8 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   setESuperPackage(value: EPackage | undefined): void {
-    this.eSet(getEcorePackageRef().getEPackage_ESuperPackage(), value);
+    this._eSuperPackage = value;
   }
-
   getEClassifier(name: string): EClassifier | undefined {
     return this.getEClassifiers().filter(cl => cl.getName() === name).at(0);
   }
@@ -123,6 +124,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         for (const item of items) list.add(item as EClassifier);
         return;
       }
+
       case 6: {
         const list = this._eSubpackages;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -130,14 +132,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         for (const item of items) list.add(item as EPackage);
         return;
       }
-      case 7: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
+
       default:
         super.eSet(feature, value);
         return;
@@ -183,32 +178,42 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 2: {
         const oldValue = this._nsURI;
         this._nsURI = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 3: {
         const oldValue = this._nsPrefix;
         this._nsPrefix = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 4: {
         const oldValue = this._eFactoryInstance;
         this._eFactoryInstance = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       case 5: this._eClassifiersCache?.clear(); return;
+
       case 6: this._eSubpackagesCache?.clear(); return;
+
+
       case 7: {
         const oldValue = this._eSuperPackage;
         this._eSuperPackage = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       default:
         super.eUnset(feature);
         return;

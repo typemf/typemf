@@ -1,6 +1,7 @@
-import { ETypedElement } from './ETypedElement.js';
 import { EClass } from './EClass.js';
-import { TypeScriptClass } from './TypeScriptClass.js';
+import { ETypedElement } from './ETypedElement.js';
+import { TypeScriptClass } from './TypeScriptClass';
+
 
 
 export interface EStructuralFeature extends ETypedElement {
@@ -17,8 +18,7 @@ export interface EStructuralFeature extends ETypedElement {
   getDefaultValueLiteral(): string | undefined;
   setDefaultValueLiteral(value: string | undefined): void;
 
-  getDefaultValue(): unknown | undefined;
-  setDefaultValue(value: unknown | undefined): void;
+  getDefaultValue(): unknown;
 
   isUnsettable(): boolean;
   setUnsettable(value: boolean): void;
@@ -27,7 +27,6 @@ export interface EStructuralFeature extends ETypedElement {
   setDerived(value: boolean): void;
 
   getEContainingClass(): EClass | undefined;
-  setEContainingClass(value: EClass | undefined): void;
 
   getFeatureID(): number;
 

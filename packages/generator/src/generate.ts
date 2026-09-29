@@ -17,15 +17,25 @@ import { TemplateSet } from './template-set.js';
 export function generate(pkg: EPackage, templateSet: TemplateSet, options: Record<string, unknown> = {}): GeneratedFile[] {
   assignFreshIds(pkg);
 
+  const problems = templateSet.validate?.(pkg) ?? [];
+  if (problems.length > 0) {
+    throw new Error(
+      `Cannot generate from this package - ${templateSet.name} found ${problems.length} unresolved problem(s):\n` +
+        problems.map((p) => `  - ${p}`).join('\n')
+    );
+  }
+
   const loader = new nunjucks.FileSystemLoader(templateSet.baseFolder, { noCache: true });
   const env = new nunjucks.Environment(loader, { autoescape: false, trimBlocks: true, lstripBlocks: true });
 
-  const fileExtension = new FileExtension();
+  const fileExtension = new FileExtension(
+    templateSet.postProcessFile ? (path, content) => templateSet.postProcessFile!(path, content, options) : undefined
+  );
   env.addExtension('file', fileExtension);
   env.addGlobal('package', pkg);
   env.addGlobal('options', options);
 
-  templateSet.configureEnvironment?.(env);
+  templateSet.configureEnvironment?.(env, { pkg, options });
 
   env.render('main.njk');
 

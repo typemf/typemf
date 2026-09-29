@@ -1,12 +1,14 @@
 import { BasicEList } from './BasicEList.js';
-import { ENamedElement } from '../types/ENamedElement.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EModelElementImpl } from './EModelElementImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
+import { ENamedElement } from '../types/ENamedElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
+
 export class ENamedElementImpl extends EModelElementImpl implements ENamedElement {
+
   private _name: string | undefined;
 
 
@@ -17,7 +19,6 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
   getName(): string | undefined {
     return this._name;
   }
-
   setName(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getENamedElement_Name(), value);
   }
@@ -71,12 +72,14 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 1: {
         const oldValue = this._name;
         this._name = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       default:
         super.eUnset(feature);
         return;

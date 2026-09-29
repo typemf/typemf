@@ -1,4 +1,4 @@
-import { EClass, EClassifier, EClassifierImpl, EPackage, EStructuralFeatureImpl } from '@typemf/core';
+import { EClass, EClassifier, EClassifierImpl, EOperationImpl, EPackage, EStructuralFeatureImpl } from '@typemf/core';
 
 /**
  * Assigns classifierID/featureID freshly, in declaration order, mutating
@@ -22,16 +22,29 @@ import { EClass, EClassifier, EClassifierImpl, EPackage, EStructuralFeatureImpl 
  * the computed index is the same regardless of which class's perspective
  * computes it, since supertype features always come first in the same
  * relative order.
+ *
+ * operationID follows the exact same shape and rationale, over
+ * getEAllOperations() instead - added for point 4 (EOperation.
+ * getOperationID(), which just exposes this).
  */
 export function assignFreshIds(pkg: EPackage): void {
   let classifierId = 0;
   for (const classifier of pkg.getEClassifiers()) {
+    // classifierID/featureID/operationID are deliberately impl-only - not on the public interfaces at
+    // all, matching real EMF's own design (see EStructuralFeature.getContainerClass()'s doc comment
+    // for the fullest version of this reasoning). assignFreshIds() IS the legitimate "set once during
+    // bootstrap" caller these setters exist for, so casting to the concrete impl here is correct, not
+    // a workaround - the same pattern the generated getOperationID(operation)/getFeatureID(feature)
+    // convenience methods themselves use internally.
     (classifier as EClassifierImpl).setClassifierID(classifierId++);
   }
   for (const classifier of pkg.getEClassifiers()) {
     if (!isEClass(classifier)) continue;
-    //(classifier as EClassifierImpl).recomputeAllLists();
+    // No recomputeAllLists() call needed anymore - generated get-bodied features cache automatically
+    // (see EObjectImpl.getModelGeneration()), unlike hand-written core's old manual-recompute pattern
+    // this used to rely on.
     classifier.getEAllStructuralFeatures().forEach((feature, index) => (feature as EStructuralFeatureImpl).setFeatureID(index));
+    classifier.getEAllOperations().forEach((op, index) => (op as EOperationImpl).setOperationID(index));
   }
 }
 

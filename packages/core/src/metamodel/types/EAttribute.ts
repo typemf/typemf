@@ -1,5 +1,6 @@
-import { EStructuralFeature } from './EStructuralFeature.js';
 import { EDataType } from './EDataType.js';
+import { EStructuralFeature } from './EStructuralFeature.js';
+
 
 
 export interface EAttribute extends EStructuralFeature {
@@ -8,5 +9,4 @@ export interface EAttribute extends EStructuralFeature {
   setID(value: boolean): void;
 
   getEAttributeType(): EDataType | undefined;
-  setEAttributeType(value: EDataType | undefined): void;
 }

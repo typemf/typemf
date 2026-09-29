@@ -1,0 +1,272 @@
+import { DynamicEFactoryImpl, EAnnotationImpl, EAttributeImpl, EClassImpl, EPackageImpl, EReferenceImpl, setDetailValue, type EClassifier } from '@typemf/core';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { generate } from '../generate.js';
+import { typescriptTemplateSet } from '../typescript-template-set.js';
+import { annotatedDataType } from './sample-metamodel.js';
+
+const GET_SOURCE = 'https://typemf.dev/generator/feature';
+const IMPORT_SOURCE = 'https://typemf.dev/generator/import';
+
+function annotate(target: EReferenceImpl | EAttributeImpl, source: string, details: Record<string, string>): void {
+  const existing = [...target.getEAnnotations()].find((a) => a.getSource() === source);
+  const a = existing ?? new EAnnotationImpl();
+  a.setSource(source);
+  for (const [k, v] of Object.entries(details)) setDetailValue(a.getDetails(), k, v);
+  if (!existing) target.getEAnnotations().add(a);
+}
+
+/**
+ * A genuinely SELF-REFERENTIAL toy metamodel: MetaClass has `superTypes: MetaClass[]` and
+ * `operations: MetaOperation[]` (both ordinary, non-derived - the "own" data), plus a derived
+ * `allOperations` feature whose `get` body is the SAME shape (traversal, visited-set, Set-based
+ * dedup, supertypes-then-own order) as the real eAllOperations body delivered into Ecore.ecore -
+ * this is the only way to test it with `this` genuinely being self-typed AND real, non-zero,
+ * runtime-populated operations - an ordinary domain class hierarchy's `this` is never an instance
+ * of itself the way EClass's `this` is, so that (my first attempt) cannot exercise this body at all.
+ */
+function buildMetaModel() {
+  const str = annotatedDataType('EString', 'string');
+  const metaOperation = new EClassImpl();
+  metaOperation.setName('MetaOperation');
+  const opName = new EAttributeImpl();
+  opName.setName('name');
+  opName.setEType(str);
+  opName.setFeatureID(0);
+  opName.setEContainingClass(metaOperation);
+  metaOperation.getEStructuralFeatures().add(opName);
+
+  const metaClass = new EClassImpl();
+  metaClass.setName('MetaClass');
+
+  const superTypes = new EReferenceImpl();
+  superTypes.setName('superTypes');
+  superTypes.setEType(metaClass);
+  superTypes.setUpperBound(-1);
+  superTypes.setFeatureID(0);
+  superTypes.setEContainingClass(metaClass);
+  metaClass.getEStructuralFeatures().add(superTypes);
+
+  const operations = new EReferenceImpl();
+  operations.setName('operations');
+  operations.setEType(metaOperation);
+  operations.setUpperBound(-1);
+  operations.setContainment(true);
+  operations.setFeatureID(1);
+  operations.setEContainingClass(metaClass);
+  metaClass.getEStructuralFeatures().add(operations);
+
+  const allOperations = new EReferenceImpl();
+  allOperations.setName('allOperations');
+  allOperations.setEType(metaOperation);
+  allOperations.setUpperBound(-1);
+  allOperations.setChangeable(false);
+  allOperations.setFeatureID(2);
+  allOperations.setEContainingClass(metaClass);
+  annotate(
+    allOperations,
+    GET_SOURCE,
+    {
+      get: `const collected = new Set<MetaOperation>();
+const visited = new Set<MetaClass>();
+const visit = (metaClass: MetaClass): void => {
+  if (visited.has(metaClass)) return;
+  visited.add(metaClass);
+  metaClass.getSuperTypes().forEach(visit);
+  metaClass.getOperations().forEach(operation => collected.add(operation));
+};
+visit(this);
+return new BasicEList<MetaOperation>(undefined, undefined, collected);`,
+    }
+  );
+  annotate(allOperations, IMPORT_SOURCE, { type: 'BasicEList', from: '@typemf/core' });
+  metaClass.getEStructuralFeatures().add(allOperations);
+
+  const pkg = new EPackageImpl();
+  pkg.setName('meta');
+  pkg.setNsURI('https://typemf.dev/test/meta');
+  pkg.setNsPrefix('meta');
+  for (const c of [str, metaOperation, metaClass] as EClassifier[]) {
+    pkg.getEClassifiers().add(c);
+    (c as EClassImpl).setEPackage(pkg);
+  }
+  pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+  return pkg;
+}
+
+describe('eAllOperations: correctness against a genuinely self-referential hierarchy (the shape EClass itself has)', () => {
+  it('is cycle-safe: an (invalid) cyclic hierarchy terminates instead of recursing forever', async () => {
+    // THIS is what the `visited` guard actually protects against (confirmed by mutation: removing it
+    // entirely does not fail the diamond test above at all, since BasicEList's own uniqueness check
+    // independently prevents visible duplicates there - only a genuine cycle exposes the guard's real
+    // job, unbounded recursion / a stack overflow).
+    const files = generate(buildMetaModel(), typescriptTemplateSet, {});
+    const jsPaths = new Map<string, string>();
+    for (const file of files) {
+      const jsPath = join(dir, file.path.replace(/\.ts$/, '.js'));
+      await mkdir(dirname(jsPath), { recursive: true });
+      const { outputText } = ts.transpileModule(file.content, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
+      await writeFile(jsPath, outputText, 'utf-8');
+      jsPaths.set(file.path, jsPath);
+    }
+    const { MetaFactoryImpl } = (await import(jsPaths.get('impl/MetaFactoryImpl.ts')!)) as { MetaFactoryImpl: new () => { create(c: unknown): unknown } };
+    const { MetaPackageImpl } = (await import(jsPaths.get('impl/MetaPackageImpl.ts')!)) as { MetaPackageImpl: { eINSTANCE: { getMetaClass(): unknown } } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factory: any = new MetaFactoryImpl();
+    const pkg = MetaPackageImpl.eINSTANCE;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const a: any = factory.create(pkg.getMetaClass());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const b: any = factory.create(pkg.getMetaClass());
+    a.getSuperTypes().add(b);
+    b.getSuperTypes().add(a); // a genuine cycle
+    expect(() => [...a.getAllOperations()]).not.toThrow();
+    expect([...a.getAllOperations()]).toEqual([]);
+  });
+
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(join(dirname(dirname(dirname(fileURLToPath(import.meta.url)))), '.tmp-eall-'));
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('type-checks with zero errors', async () => {
+    const files = generate(buildMetaModel(), typescriptTemplateSet, {});
+    for (const file of files) {
+      const tsPath = join(dir, file.path);
+      await mkdir(dirname(tsPath), { recursive: true });
+      await writeFile(tsPath, file.content, 'utf-8');
+    }
+    const program = ts.createProgram(files.map((f) => join(dir, f.path)), {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      strict: true,
+      esModuleInterop: true,
+      skipLibCheck: true,
+      noEmit: true,
+    });
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    const formatted = ts.formatDiagnosticsWithColorAndContext(diagnostics, {
+      getCurrentDirectory: () => dir,
+      getCanonicalFileName: (f) => f,
+      getNewLine: () => '\n',
+    });
+    expect(diagnostics, formatted).toHaveLength(0);
+  });
+
+  it('ACTUALLY RUNS: three levels, own+inherited operations, no duplicates, correct order', async () => {
+    const files = generate(buildMetaModel(), typescriptTemplateSet, {});
+    const jsPaths = new Map<string, string>();
+    for (const file of files) {
+      const jsPath = join(dir, file.path.replace(/\.ts$/, '.js'));
+      await mkdir(dirname(jsPath), { recursive: true });
+      const { outputText } = ts.transpileModule(file.content, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
+      await writeFile(jsPath, outputText, 'utf-8');
+      jsPaths.set(file.path, jsPath);
+    }
+    const { MetaFactoryImpl } = (await import(jsPaths.get('impl/MetaFactoryImpl.ts')!)) as { MetaFactoryImpl: new () => { create(c: unknown): unknown } };
+    const { MetaPackageImpl } = (await import(jsPaths.get('impl/MetaPackageImpl.ts')!)) as {
+      MetaPackageImpl: { eINSTANCE: { getMetaClass(): unknown; getMetaOperation(): unknown } };
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factory: any = new MetaFactoryImpl();
+    const pkg = MetaPackageImpl.eINSTANCE;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const base: any = factory.create(pkg.getMetaClass());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const middle: any = factory.create(pkg.getMetaClass());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const leaf: any = factory.create(pkg.getMetaClass());
+    middle.getSuperTypes().add(base);
+    leaf.getSuperTypes().add(middle);
+
+    const mkOp = (name: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const op: any = factory.create(pkg.getMetaOperation());
+      op.setName(name);
+      return op;
+    };
+    base.getOperations().add(mkOp('baseOp'));
+    middle.getOperations().add(mkOp('middleOp'));
+    leaf.getOperations().add(mkOp('leafOp'));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const names = (metaClass: any) => [...metaClass.getAllOperations()].map((op: any) => op.getName());
+    expect(names(base)).toEqual(['baseOp']);
+    expect(names(middle)).toEqual(['baseOp', 'middleOp']); // inherited before own - matches eAllStructuralFeatures' verified order convention
+    expect(names(leaf)).toEqual(['baseOp', 'middleOp', 'leafOp']);
+
+    // A GENUINE diamond: two distinct classes both extend base, and diamond extends both - base's
+    // single operation must still appear exactly once (reached via two different paths). Note: this is
+    // actually guaranteed by BasicEList.add() itself (it silently rejects a duplicate on construction -
+    // confirmed by reading its source), not by the `Set` in the body, which is redundant with it; kept
+    // for the same reason eAllStructuralFeatures' body already does the same thing - consistency, and
+    // defense in depth if a future EList implementation ever drops that guarantee.
+    const leftMiddle: any = factory.create(pkg.getMetaClass()); // eslint-disable-line @typescript-eslint/no-explicit-any
+    const rightMiddle: any = factory.create(pkg.getMetaClass()); // eslint-disable-line @typescript-eslint/no-explicit-any
+    leftMiddle.getSuperTypes().add(base);
+    rightMiddle.getSuperTypes().add(base);
+    leftMiddle.getOperations().add(mkOp('leftOp'));
+    rightMiddle.getOperations().add(mkOp('rightOp'));
+    const diamond: any = factory.create(pkg.getMetaClass()); // eslint-disable-line @typescript-eslint/no-explicit-any
+    diamond.getSuperTypes().add(leftMiddle);
+    diamond.getSuperTypes().add(rightMiddle);
+    expect(names(diamond)).toEqual(['baseOp', 'leftOp', 'rightOp']); // baseOp exactly once, not twice
+  });
+
+  it('the cache is genuinely REUSED (same object across repeated calls with no changes in between), and correctly invalidated by a structural edit', async () => {
+    const files = generate(buildMetaModel(), typescriptTemplateSet, {});
+    const jsPaths = new Map<string, string>();
+    for (const file of files) {
+      const jsPath = join(dir, file.path.replace(/\.ts$/, '.js'));
+      await mkdir(dirname(jsPath), { recursive: true });
+      const { outputText } = ts.transpileModule(file.content, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
+      await writeFile(jsPath, outputText, 'utf-8');
+      jsPaths.set(file.path, jsPath);
+    }
+    const { MetaFactoryImpl } = (await import(jsPaths.get('impl/MetaFactoryImpl.ts')!)) as { MetaFactoryImpl: new () => { create(c: unknown): unknown } };
+    const { MetaPackageImpl } = (await import(jsPaths.get('impl/MetaPackageImpl.ts')!)) as {
+      MetaPackageImpl: { eINSTANCE: { getMetaClass(): unknown; getMetaOperation(): unknown } };
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factory: any = new MetaFactoryImpl();
+    const pkg = MetaPackageImpl.eINSTANCE;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const base: any = factory.create(pkg.getMetaClass());
+    base.getOperations().add((() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const op: any = factory.create(pkg.getMetaOperation());
+      op.setName('baseOp');
+      return op;
+    })());
+
+    const first = base.getAllOperations();
+    const second = base.getAllOperations();
+    expect(second).toBe(first); // cache hit: the literal same EList object, not merely an equal one
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const other: any = factory.create(pkg.getMetaClass());
+    other.getOperations().add((() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const op: any = factory.create(pkg.getMetaOperation());
+      op.setName('otherOp');
+      return op;
+    })());
+    // A structural edit on a COMPLETELY UNRELATED object (not base, not its supertype) still
+    // invalidates base's cache - the deliberately global scope (see EObjectImpl.getModelGeneration's
+    // own doc comment for why): base.getAllOperations() must still be CORRECT after this, even though
+    // nothing about base's own inheritance chain changed.
+    const third = base.getAllOperations();
+    expect(third).not.toBe(first); // cache miss: invalidated by the unrelated edit
+    expect([...third].map((op: { getName(): string }) => op.getName())).toEqual(['baseOp']); // and still correct
+  });
+});

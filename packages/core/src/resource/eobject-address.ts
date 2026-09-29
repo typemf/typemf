@@ -1,4 +1,3 @@
-import { EStructuralFeatureImpl } from '../metamodel/impl/EStructuralFeatureImpl.js';
 import { EObject } from '../metamodel/types/EObject.js';
 
 /**
@@ -66,7 +65,11 @@ function computePositionalPath(target: EObject, roots: EObject[]): string {
       }
       segments.unshift(String(index));
     }
-    segments.unshift(feature.getName() as string);
+    const featureName = feature.getName();
+    if (featureName === undefined) {
+      throw new Error('The containing feature has no name - cannot build a positional path segment for it.');
+    }
+    segments.unshift(featureName);
     current = container;
     container = current.eContainer();
   }
@@ -94,7 +97,7 @@ function resolvePositionalPath(path: string, roots: EObject[]): EObject {
   let i = 1;
   while (i < segments.length) {
     const featureName = segments[i]!;
-    const feature = current.eClass().getEStructuralFeatures().filter(feat => feat.getName() === featureName).at(0);
+    const feature = current.eClass().getEStructuralFeature(featureName);
     if (!feature) {
       throw new Error(`Positional path '${path}': '${current.eClass().getName()}' has no feature '${featureName}'.`);
     }

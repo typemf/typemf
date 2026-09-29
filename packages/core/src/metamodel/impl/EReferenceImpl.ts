@@ -1,18 +1,24 @@
-import { EList } from '../types/EList.js';
 import { BasicEList } from './BasicEList.js';
-import { EReference } from '../types/EReference.js';
-import { getEcorePackageRef } from './EcorePackageRef.js';
-import { EClass } from '../types/EClass.js';
-import { EAttribute } from '../types/EAttribute.js';
 import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
+import { EAttribute } from '../types/EAttribute.js';
+import { EClass } from '../types/EClass.js';
+import { EList } from '../types/EList.js';
+import { EReference } from '../types/EReference.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
 
+
 export class EReferenceImpl extends EStructuralFeatureImpl implements EReference {
+
   private _containment: boolean = false;
+
   private _container: boolean = false;
-  private _resolveProxies: boolean = false;
+
+  private _resolveProxies: boolean = true;
+
   private _eOpposite: EReference | undefined;
+
   private _eReferenceType: EClass | undefined;
 
   private _eKeysCache: BasicEList<EAttribute> | undefined;
@@ -32,7 +38,6 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   isContainment(): boolean {
     return this._containment;
   }
-
   setContainment(value: boolean): void {
     this.eSet(getEcorePackageRef().getEReference_Containment(), value);
   }
@@ -42,14 +47,12 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   isResolveProxies(): boolean {
     return this._resolveProxies;
   }
-
   setResolveProxies(value: boolean): void {
     this.eSet(getEcorePackageRef().getEReference_ResolveProxies(), value);
   }
   getEOpposite(): EReference | undefined {
     return this._eOpposite;
   }
-
   setEOpposite(value: EReference | undefined): void {
     this.eSet(getEcorePackageRef().getEReference_EOpposite(), value);
   }
@@ -63,10 +66,12 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
       case 18: return this._containment;
-      case 19: return this._container;
+
+      case 19: return this.isContainer();
       case 20: return this._resolveProxies;
       case 21: return this._eOpposite;
-      case 22: return this._eReferenceType;
+
+      case 22: return this.getEReferenceType();
       case 23: return this._eKeys;
       default:
         return super.eGet(feature);
@@ -76,14 +81,6 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   eSet(feature: EStructuralFeature, value: unknown): void {
     switch (feature.getFeatureID()) {
       case 18: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
-      case 19: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
         this.eBasicSetValue(feature, value);
@@ -107,14 +104,6 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
         this.eDidAdd(feature, value);
         return;
       }
-      case 22: {
-        const oldValue = this.eGet(feature);
-        if (oldValue === value) return;
-        this.eBasicSetValue(feature, value);
-        this.eDidRemove(feature, oldValue);
-        this.eDidAdd(feature, value);
-        return;
-      }
       case 23: {
         const list = this._eKeys;
         const items = value === undefined || value === null ? [] : [...(value as Iterable<unknown>)];
@@ -122,6 +111,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
         for (const item of items) list.add(item as EAttribute);
         return;
       }
+
       default:
         super.eSet(feature, value);
         return;
@@ -154,7 +144,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
     switch (feature.getFeatureID()) {
       case 18: return this._containment !== false;
       case 19: return this._container !== false;
-      case 20: return this._resolveProxies !== false;
+      case 20: return this._resolveProxies !== true;
       case 21: return this._eOpposite !== undefined;
       case 22: return this._eReferenceType !== undefined;
       case 23: return this._eKeysCache !== undefined && this._eKeysCache.size() !== 0;
@@ -165,37 +155,48 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
+
       case 18: {
         const oldValue = this._containment;
         this._containment = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 19: {
         const oldValue = this._container;
         this._container = false;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 20: {
         const oldValue = this._resolveProxies;
-        this._resolveProxies = false;
+        this._resolveProxies = true;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 21: {
         const oldValue = this._eOpposite;
         this._eOpposite = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
+
       case 22: {
         const oldValue = this._eReferenceType;
         this._eReferenceType = undefined;
         this.eDidRemove(feature, oldValue);
         return;
       }
+
       case 23: this._eKeysCache?.clear(); return;
+
       default:
         super.eUnset(feature);
         return;
