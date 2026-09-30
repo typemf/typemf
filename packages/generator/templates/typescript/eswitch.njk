@@ -1,4 +1,7 @@
 {% file "util/" + switchClassName(package) + ".ts" %}
+/**
+ * Automatically generated visitor pattern for {%pkg.getName()%}.
+ */
 export abstract class {{ switchClassName(package) }}<T> {
   doSwitch(eObject: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
     switch (eObject.eClass().getClassifierID()) {

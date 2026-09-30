@@ -1,0 +1,8 @@
+{
+  "ecoreFile": "./Ecore.ecore",
+  "outputDir": "./ecore-output",
+  "templateSet": "typescript",
+  "options": {
+    "generate-ecore": true
+  }
+}

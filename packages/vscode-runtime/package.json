@@ -1,0 +1,36 @@
+{
+  "name": "vscode-runtime",
+  "displayName": "TypeMF Runtime",
+  "description": "Shared TypeMF runtime for VS Code extensions. Exposes one EPackageRegistry, ResourceFactoryRegistry, and UriConverterRegistry instance per extension host, handed out via activate() so every extension that depends on it shares the same registries instead of each bundling its own separate copy.",
+  "version": "0.0.1",
+  "publisher": "typemf",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/extension.js",
+  "engines": {
+    "node": ">=22",
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/typemf/typemf.git",
+    "directory": "packages/vscode-runtime"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@typemf/core": "workspace:*",
+    "@typemf/json": "workspace:*",
+    "@typemf/xmi": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.100.0"
+  }
+}
