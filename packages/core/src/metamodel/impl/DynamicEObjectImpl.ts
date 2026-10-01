@@ -47,9 +47,11 @@ export class DynamicEObjectImpl extends EObjectImpl {
 
     const oldValue = this.values.get(id);
     if (oldValue === value) return;
+    const wasSet = this.eIsSet(feature);
     this.values.set(id, value);
     this.eDidRemove(feature, oldValue);
     this.eDidAdd(feature, value);
+    this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
@@ -66,9 +68,11 @@ export class DynamicEObjectImpl extends EObjectImpl {
       this.requireList(feature).clear();
       return;
     }
+    const wasSet = this.eIsSet(feature);
     const oldValue = this.values.get(id);
     this.values.delete(id);
     this.eDidRemove(feature, oldValue);
+    this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
   }
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {

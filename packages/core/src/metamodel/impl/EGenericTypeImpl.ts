@@ -102,9 +102,11 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
       case 0: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 1: {
@@ -118,25 +120,31 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
       case 3: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 4: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 5: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       default:
@@ -182,9 +190,11 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
     switch (feature.getFeatureID()) {
 
       case 0: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eUpperBound;
         this._eUpperBound = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
@@ -193,25 +203,31 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
 
 
       case 3: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eLowerBound;
         this._eLowerBound = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 4: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eTypeParameter;
         this._eTypeParameter = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 5: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eClassifier;
         this._eClassifier = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

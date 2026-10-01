@@ -42,7 +42,14 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
   }
 
   setLiteral(value: string | undefined): void {
-    const oldValue = this._literal; if (oldValue === value) return; this._literal = value; this.eDidRemove(undefined, oldValue); this.eDidAdd(undefined, value);
+    const oldValue = this._literal;
+    if (oldValue === value) return;
+    const wasSet = this._literal !== undefined;
+    this._literal = value;
+    this.eDidRemove(undefined, oldValue);
+    this.eDidAdd(undefined, value);
+    const feature = getEcorePackageRef().getEEnumLiteral_Literal();
+    this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
   }
   getEEnum(): EEnum | undefined {
     return this._eEnum;
@@ -69,17 +76,21 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
       case 2: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 3: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 4: {
@@ -125,33 +136,41 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
     switch (feature.getFeatureID()) {
 
       case 2: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._value;
         this._value = 0;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 3: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._instance;
         this._instance = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 4: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._literal;
         this._literal = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 5: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eEnum;
         this._eEnum = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

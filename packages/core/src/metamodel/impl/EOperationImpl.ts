@@ -199,9 +199,11 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
     switch (feature.getFeatureID()) {
 
       case 10: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eContainingClass;
         this._eContainingClass = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

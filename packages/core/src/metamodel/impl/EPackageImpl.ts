@@ -96,25 +96,31 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
       case 2: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 3: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 4: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 5: {
@@ -180,25 +186,31 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
     switch (feature.getFeatureID()) {
 
       case 2: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._nsURI;
         this._nsURI = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 3: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._nsPrefix;
         this._nsPrefix = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 4: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eFactoryInstance;
         this._eFactoryInstance = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
@@ -208,9 +220,11 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
 
 
       case 7: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eSuperPackage;
         this._eSuperPackage = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

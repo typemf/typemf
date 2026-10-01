@@ -1,6 +1,11 @@
 import {
   createInstanceOf,
+  DynamicEFactoryImpl,
+  EClass,
+  EcorePackageImpl,
   EObject,
+  EPackage,
+  EStructuralFeature,
   ResourceSetImpl,
   URI,
   UriConverter,
@@ -307,5 +312,91 @@ describe('XmiSerializer', () => {
     expect(featured.eClass()).toBe(bookClass);
     const titleAttr = bookClass.getEStructuralFeature('title')!;
     expect(featured.eGet(titleAttr)).toBe('Dune');
+  });
+
+  it('resolves an attribute-form reference to an absolute URI (another document entirely) as a cross-document proxy, not a same-document fragment', async () => {
+    // A real, confirmed bug found parsing an externally-authored .ecore file: real EMF writes a
+    // same-attribute, polymorphic cross-document reference exactly this way (a type token
+    // followed by a full, absolute URI, both space-separated within one attribute value) - our
+    // own writer only ever produced this shape for same-document references, so this exercises a
+    // real external convention our own round-trip tests never happened to hit before.
+    void EcorePackageImpl.eINSTANCE;
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
+
+    const raw = `<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    name="sample" nsURI="https://example.com/sample" nsPrefix="sample">
+  <eClassifiers xsi:type="ecore:EClass" name="Thing">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+</ecore:EPackage>`;
+    await converter.writeBinary(URI.parse('mem:absolute-uri-ref.ecore'), new TextEncoder().encode(raw));
+
+    const resource = await rs.getResource(URI.parse('mem:absolute-uri-ref.ecore'), true);
+    const pkg = resource!.getContents().get(0) as unknown as EPackage;
+    const thingClass = pkg.getEClassifier('Thing') as EClass;
+    const labelAttr = thingClass.getEStructuralFeature('label') as EStructuralFeature;
+    const eTypeProxy = labelAttr.getEType() as EObject;
+
+    expect(eTypeProxy.eIsProxy()).toBe(true); // lazy, not eagerly resolved - same as the href-element case
+
+    const resolved = await rs.resolve(eTypeProxy);
+    expect(resolved).toBe(EcorePackageImpl.eINSTANCE.getEString());
+    expect((resolved as EClass).getName()).toBe('EString');
+  });
+
+  it('writes xsi:schemaLocation for the root\'s own package, when that package was itself loaded from a real, known location - matching Eclipse\'s own real, confirmed output for the same scenario', async () => {
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
+
+    const ecoreXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    name="variability" nsURI="https://example.com/variability" nsPrefix="variability">
+  <eClassifiers xsi:type="ecore:EClass" name="FeatureModel"/>
+</ecore:EPackage>`;
+    await converter.writeBinary(URI.parse('mem:dir/model.ecore'), new TextEncoder().encode(ecoreXml));
+
+    const pkgResource = await rs.getResource(URI.parse('mem:dir/model.ecore'), true);
+    const pkg = pkgResource!.getContents().get(0) as unknown as EPackage;
+    const featureModelClass = pkg.getEClassifier('FeatureModel') as EClass;
+    pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+    // EClassifier.getEPackage() reads a separate, independently-set field, not something derived
+    // from eContainer() - the same recurring gap loadLocalEcorePackage's own fix works around in
+    // real use; this test loads the package directly (not through that function), so it needs the
+    // same, explicit fix here too.
+    (featureModelClass as unknown as { setEPackage(p: EPackage): void }).setEPackage(pkg);
+    const root = createInstanceOf(featureModelClass);
+
+    // Same directory as the .ecore file - real EMF/Eclipse's own output for this exact case uses
+    // just the bare filename, no "./" or path segments at all.
+    const docResource = rs.createResource(URI.parse('mem:dir/instance.xmi'));
+    docResource.getContents().add(root);
+    const bytes = await docResource.getSerializer().serialize(docResource.getContents().toArray(), docResource);
+    const xml = new TextDecoder().decode(bytes);
+
+    expect(xml).toContain('xsi:schemaLocation="https://example.com/variability model.ecore"');
+  });
+
+  it('omits xsi:schemaLocation entirely when the root\'s own package has no known resource (e.g. a well-known or statically-registered package)', async () => {
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
+
+    const { bookClass } = buildSampleMetamodel();
+    const book = createInstanceOf(bookClass);
+    const docResource = rs.createResource(URI.parse('mem:dir/instance.xmi'));
+    docResource.getContents().add(book);
+    const bytes = await docResource.getSerializer().serialize(docResource.getContents().toArray(), docResource);
+    const xml = new TextDecoder().decode(bytes);
+
+    expect(xml).not.toContain('schemaLocation');
   });
 });

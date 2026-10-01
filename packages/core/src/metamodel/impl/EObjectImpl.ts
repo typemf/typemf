@@ -1,9 +1,16 @@
+import { Disposable } from '../types/Disposable.js';
 import { EClass } from '../types/EClass.js';
 import { EList } from '../types/EList.js';
 import { EObject } from '../types/EObject.js';
 import { EReference } from '../types/EReference.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
+import { Notification } from '../types/Notification.js';
 import { BasicEList } from './BasicEList.js';
+
+interface Listener {
+  readonly callback: (notification: Notification) => void;
+  readonly feature: EStructuralFeature | undefined;
+}
 
 let fallbackIdCounter = 0;
 
@@ -64,6 +71,49 @@ export abstract class EObjectImpl implements EObject {
   abstract eSet(feature: EStructuralFeature, value: unknown): void;
   abstract eIsSet(feature: EStructuralFeature): boolean;
   abstract eUnset(feature: EStructuralFeature): void;
+
+  private listeners: Listener[] = [];
+  private deliverFlag = true;
+
+  onDidChange(callback: (notification: Notification) => void, feature?: EStructuralFeature): Disposable {
+    const entry: Listener = { callback, feature };
+    this.listeners.push(entry);
+    return {
+      dispose: () => {
+        const index = this.listeners.indexOf(entry);
+        if (index !== -1) this.listeners.splice(index, 1);
+      },
+    };
+  }
+
+  eDeliver(): boolean {
+    return this.deliverFlag;
+  }
+
+  eSetDeliver(deliver: boolean): void {
+    this.deliverFlag = deliver;
+  }
+
+  /**
+   * Internal - fires `notification` to every listener whose own `feature` (if any) matches this
+   * one, unless eSetDeliver(false) is currently suppressing delivery. Called directly from the
+   * actual mutation call sites (the eSet default dance, BasicEList.onAdded/onRemoved, eUnset,
+   * and any feature's own custom setter body) - deliberately NOT derived from eDidAdd/eDidRemove,
+   * since a single logical change (one eSet call) fires those twice (a remove of the old value,
+   * an add of the new one), which would produce two notifications instead of the one real EMF (and
+   * this project's own settled design) expects for a SET. eDidAdd/eDidRemove keep their existing,
+   * unchanged responsibility (the counter bump and containment/opposite wiring); this is a
+   * separate, additional call alongside them, not a replacement for them.
+   */
+  eNotify(notification: Notification): void {
+    if (!this.deliverFlag || this.listeners.length === 0) return;
+    // A snapshot, not the live array - a listener disposing itself (or another listener) mid-
+    // dispatch must not skip or duplicate entries for the notification currently being delivered.
+    for (const entry of [...this.listeners]) {
+      if (entry.feature && entry.feature !== notification.feature) continue;
+      entry.callback(notification);
+    }
+  }
 
   eContainer(): EObject | undefined {
     return this._eContainer;

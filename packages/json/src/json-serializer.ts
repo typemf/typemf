@@ -49,6 +49,18 @@ export class JsonSerializer implements EObjectSerializer {
     return new TextEncoder().encode(JSON.stringify(doc, null, 2));
   }
 
+  /**
+   * $namespaces IS the document's declared-namespace table by construction - the writer only
+   * ever adds an entry when a real $eClass reference actually needs it (see NamespaceTable), so
+   * unlike XMI's xmlns (which can accumulate stray, unused declarations on a hand-edited file),
+   * this is already exactly the "declared" set with no further scanning needed.
+   */
+  async peekReferencedNsURIs(content: Uint8Array): Promise<string[]> {
+    const text = new TextDecoder().decode(content);
+    const doc = JSON.parse(text) as TypemfJsonDocument;
+    return Object.values(doc.$namespaces ?? {});
+  }
+
   async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
     const text = new TextDecoder().decode(content);
     const doc = JSON.parse(text) as TypemfJsonDocument;
@@ -197,7 +209,7 @@ function isReferenceFeature(feature: EStructuralFeature): feature is EReference 
  * carrying this convention back into @typemf/core's own docs once an
  * EEnum-typed feature actually exists there.
  */
-function encodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
+export function encodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
   const eType = feature.getEType();
   if (eType?.getName() === 'EDate' && value instanceof Date) {
     return value.toISOString();
@@ -298,7 +310,7 @@ function resolveRef(refJson: RefJson, feature: EReference, roots: EObject[], ctx
   return new ProxyEObjectImpl(overrideEClass ?? declaredEClass, uri);
 }
 
-function decodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
+export function decodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
   const eType = feature.getEType();
   if (eType?.getName() === 'EDate' && typeof value === 'string') {
     return new Date(value);

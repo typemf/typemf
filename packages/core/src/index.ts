@@ -1,5 +1,7 @@
 // api
 export * from './metamodel/impl/metamodel-helpers.js';
+export * from './metamodel/types/Disposable.js';
+export * from './metamodel/types/Notification.js';
 export * from './metamodel/types/EAnnotation.js';
 export * from './metamodel/types/EStringToStringMapEntry.js';
 export * from './metamodel/types/TypeScriptClass.js';
@@ -74,3 +76,4 @@ export * from './metamodel/EcorePackage.js';
 export * from './metamodel/EcoreFactory.js';
 export * from './metamodel/impl/EcorePackageImpl.js';
 export * from './metamodel/impl/EcoreFactoryImpl.js';
+export * from './metamodel/util/EcoreTypeGuards.js';

@@ -45,17 +45,21 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
       case 0: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 1: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       default:
@@ -91,17 +95,21 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
     switch (feature.getFeatureID()) {
 
       case 0: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._key;
         this._key = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 1: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._value;
         this._value = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

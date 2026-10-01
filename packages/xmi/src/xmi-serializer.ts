@@ -1,9 +1,11 @@
 import {
   EClass,
+  EcorePackageImpl,
   EObject,
   EPackageRegistry,
   EReference,
   EStructuralFeature,
+  isEClassifier,
   ProxyEObjectImpl,
   Resource,
   URI,
@@ -72,7 +74,25 @@ export class XmiSerializer implements EObjectSerializer {
       ['xmlns:xsi', XSI_NS],
       ...namespaces.entries().map(([prefix, uri]): [string, string] => [`xmlns:${prefix}`, uri]),
     ];
-    const allAttrs: Array<[string, string]> = [['xmi:version', '2.0'], ...nsAttrs, ...parts.attributes];
+    // xsi:schemaLocation="<nsURI> <path>" for the root's own package, when that package was
+    // itself loaded from a real, known file (getResourceOf - the same utility
+    // encodeReferenceValue's own "is this local" check relies on) distinct from the document
+    // being saved here - a dynamically-loaded .ecore file, the common case this project's own
+    // "New Model Instance" dynamic mode produces. Matches the real, standard XMI/XSD convention
+    // (confirmed directly against Eclipse's own output for the same scenario) that lets the
+    // document be reopened later and point straight back at its own metamodel's real location,
+    // without that package needing to be separately, globally registered first. Root's own
+    // package only, not every package anything in the document happens to reference -
+    // NamespaceCollector itself tracks prefixes and URIs, not the real EPackage objects behind
+    // them, and the root's own package is what the real, reported gap was actually about.
+    const schemaLocationAttrs: Array<[string, string]> = [];
+    const rootPackage = requirePackage(root.eClass());
+    const rootPackageResource = getResourceOf(rootPackage);
+    if (rootPackageResource && rootPackageResource !== resource) {
+      const location = relativeOrAbsolutePath(resource.getURI(), rootPackageResource.getURI());
+      schemaLocationAttrs.push(['xsi:schemaLocation', `${rootPackage.getNsURI()} ${location}`]);
+    }
+    const allAttrs: Array<[string, string]> = [['xmi:version', '2.0'], ...nsAttrs, ...schemaLocationAttrs, ...parts.attributes];
     const attrStr = allAttrs.map(([k, v]) => ` ${k}="${escapeAttributeValue(v)}"`).join('');
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -81,6 +101,31 @@ export class XmiSerializer implements EObjectSerializer {
         : `<${parts.tagName}${attrStr}/>`);
 
     return new TextEncoder().encode(xml);
+  }
+
+  /**
+   * Root-element only (not a full-tree walk), all declared xmlns:* values (not filtered to ones
+   * some xsi:type actually uses) - the simpler of the two real tradeoffs this method has for XMI,
+   * chosen deliberately: this project's own writer always declares every namespace a document
+   * needs on the root element (see NamespaceCollector/the ['xmlns:xmi', ...] block above), so this
+   * is exactly correct for anything this project produces. A third-party or hand-edited XMI file
+   * that declares a namespace deeper in the tree (legal XML, just non-standard practice for this
+   * kind of document) would have that namespace missed here - an accepted, documented limitation,
+   * not an oversight.
+   */
+  async peekReferencedNsURIs(content: Uint8Array): Promise<string[]> {
+    const text = new TextDecoder().decode(content);
+    const doc = await parseXmlDocument(text);
+    const root = doc.documentElement;
+    if (!root) return [];
+
+    const nsURIs: string[] = [];
+    for (const attr of Array.from(root.attributes)) {
+      if (!attr.name.startsWith('xmlns:')) continue;
+      if (attr.value === XMI_NS || attr.value === XSI_NS) continue;
+      nsURIs.push(attr.value);
+    }
+    return nsURIs;
   }
 
   async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
@@ -158,6 +203,15 @@ function writeObjectParts(
   let childrenXml = '';
 
   for (const feature of obj.eClass().getEAllStructuralFeatures()) {
+    // A derived/transient feature (e.g. EClass.eAllGenericSuperTypes, EAttribute.eAttributeType)
+    // is, by definition, recomputed from other, real data - never independently persisted, real
+    // EMF's own convention too. A real, confirmed bug found via direct reproduction against
+    // Ecore.ecore itself (not specific to any one file): without this check, a derived reference
+    // feature could get serialized as if it were real, stored data, and since its value may not
+    // even be part of this document's own containment tree at all (e.g. a synthesized fallback
+    // like EJavaObject), computeFragment/encodeReferenceValue would then fail outright, unable to
+    // address something that was never meant to be written out in the first place.
+    if (feature.isDerived() || feature.isTransient()) continue;
     if (!obj.eIsSet(feature)) continue;
 
     if (!isReferenceFeature(feature)) {
@@ -249,18 +303,94 @@ function encodeReferenceValue(
   }
 
   const targetResource = getResourceOf(target);
-  const isLocal = !targetResource || targetResource === sourceResource;
   const actual = target.eClass();
   const xsiType = declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
 
-  if (isLocal) {
+  // Genuine reachability from THIS document's own roots, not merely "has no resource of its own"
+  // - a real, confirmed bug found via direct reproduction against Ecore.ecore itself: the old
+  // check (`!targetResource || ...`) treated "not attached to any resource" as automatically
+  // local, which is wrong for something like EcorePackage's own EJavaObject - a real, stable,
+  // well-known classifier, always available, but never loaded via any real Resource.load() (it's
+  // part of the self-hosted, in-memory EcorePackageImpl.eINSTANCE), so getResourceOf() correctly
+  // (if misleadingly, for this purpose) returns undefined for it. Walking eContainer() against
+  // `roots` directly, rather than trusting resource identity, is what actually decides this.
+  if (isReachableFromRoots(target, roots)) {
     return { value: fragmentForTarget(target, targetResource, roots), crossDocument: false, xsiType };
   }
-  return {
-    value: `${targetResource!.getURI().toString()}#${fragmentForTarget(target, targetResource, roots)}`,
-    crossDocument: true,
-    xsiType,
-  };
+
+  // Not reachable from this document at all - but if it's part of Ecore's own, always-available
+  // metamodel, it's addressed the same way real EMF addresses it: a cross-document reference
+  // into Ecore's own real nsURI, with a name-based (not positional) fragment, since Ecore's own
+  // classifiers/features are referenced by name in every real .ecore file, never by index.
+  const ecoreOwnPath = ecoreOwnFragmentPath(target);
+  if (ecoreOwnPath !== undefined) {
+    return { value: `${EcorePackageImpl.eINSTANCE.getNsURI()}#${ecoreOwnPath}`, crossDocument: true, xsiType };
+  }
+
+  if (targetResource) {
+    return {
+      value: `${targetResource.getURI().toString()}#${fragmentForTarget(target, targetResource, roots)}`,
+      crossDocument: true,
+      xsiType,
+    };
+  }
+
+  // Genuinely unreachable, not part of Ecore's own metamodel, and not attached to any other real
+  // resource either - a real, separate problem (e.g. an object created but never actually
+  // attached anywhere), kept as a clear, thrown error rather than silently papered over.
+  throw new Error(
+    `Cannot encode a reference to an object of class '${actual.getName()}': it has no resource of its own, is not part of Ecore's own metamodel, and is not reachable from this document's own roots via containment.`
+  );
+}
+
+/** Whether `target`'s own eContainer() chain reaches one of `roots` - the real, governing
+ *  question "same-document fragment" needs answered, not resource identity. */
+function isReachableFromRoots(target: EObject, roots: EObject[]): boolean {
+  let current: EObject | undefined = target;
+  while (current) {
+    if (roots.includes(current)) return true;
+    current = current.eContainer();
+  }
+  return false;
+}
+
+/**
+ * The real EMF-style name-based path to `target` within Ecore's own, always-available metamodel
+ * (e.g. "//EJavaObject", "//EAttribute/eAttributeType") - undefined if target isn't part of it at
+ * all.
+ *
+ * Deliberately type-aware (checking getEPackage()/getEContainingClass(), not eContainer()) - a
+ * real, confirmed gap found via direct reproduction: eContainer() is never actually wired up for
+ * bootstrap-constructed Ecore objects at all (confirmed directly: EJavaObject.eContainer() is
+ * undefined, not EcorePackageImpl.eINSTANCE, even though EJavaObject.getEPackage() correctly
+ * returns it) - eBootstrapList()'s whole point is constructing the self-hosted metamodel without
+ * the normal containment-wiring overhead eDidAdd() would otherwise do, so walking eContainer() to
+ * discover "is this Ecore's own" can never work for it. getEPackage() (on a classifier) and
+ * getEContainingClass() (on a feature/operation) are explicitly-set fields instead, set directly
+ * during bootstrap regardless of containment wiring - the same reason a much earlier gap in this
+ * project ("EClassifier.getEPackage() returns undefined after loading") had to be fixed by
+ * setting that field directly rather than deriving it from eContainer().
+ */
+function ecoreOwnFragmentPath(target: EObject): string | undefined {
+  const ecore = EcorePackageImpl.eINSTANCE;
+
+  if (isEClassifier(target)) {
+    return target.getEPackage() === ecore ? `//${target.getName() ?? ''}` : undefined;
+  }
+
+  const containingClass = hasContainingClass(target) ? target.getEContainingClass() : undefined;
+  if (containingClass && containingClass.getEPackage() === ecore && isNamed(target)) {
+    return `//${containingClass.getName() ?? ''}/${target.getName() ?? ''}`;
+  }
+  return undefined;
+}
+
+function hasContainingClass(obj: EObject): obj is EObject & { getEContainingClass(): EClass | undefined } {
+  return typeof (obj as { getEContainingClass?: unknown }).getEContainingClass === 'function';
+}
+
+function isNamed(obj: EObject): obj is EObject & { getName(): string | undefined } {
+  return typeof (obj as { getName?: unknown }).getName === 'function';
 }
 
 /**
@@ -486,11 +616,13 @@ function completeObject(element: Element, obj: EObject, ctx: DeserializeContext,
       continue;
     }
 
-    // Same-document reference(s), written as an attribute regardless of
-    // cardinality - resolved immediately now, not deferred: every
-    // possible target already exists (see this function's doc comment).
+    // Reference(s) written as an attribute regardless of cardinality - same-document fragments
+    // (most attribute-form references) resolved immediately, since every possible same-document
+    // target already exists by this point; a same-attribute cross-document reference to another
+    // document entirely (see decodeAttributeFormReference's own reasoning) constructed as a proxy
+    // instead, exactly like the href-child-element case just below.
     const refFeature = feature as EReference;
-    const resolved = decodeSameDocumentReference(attr.value, refFeature, element, roots, ctx.packageRegistry);
+    const resolved = decodeAttributeFormReference(attr.value, refFeature, element, roots, ctx.packageRegistry);
     if (refFeature.isMany()) {
       const list = obj.eGet(refFeature) as { add(v: EObject): void };
       for (const r of resolved) list.add(r);
@@ -554,7 +686,20 @@ function completeObject(element: Element, obj: EObject, ctx: DeserializeContext,
   }
 }
 
-function decodeSameDocumentReference(
+/**
+ * A reference written as an XML attribute - same-document fragments (the common case) and
+ * cross-document references into an entirely different document both use this same attribute
+ * form in real EMF-authored XMI (a <feature href="..."/> child element, the other form this
+ * serializer writes, is only one of the two conventions actually in use - see writeObjectParts's
+ * own "anyPolymorphic" attribute-form path, which already produces both from this side; this was
+ * the read-side gap that had never been exercised until parsing a real, externally-authored file).
+ * Each whitespace-separated fragment is classified independently: one that parses as an absolute
+ * URI (a real scheme, e.g. "http://www.eclipse.org/emf/2002/Ecore#//EString") is cross-document,
+ * resolved as a ProxyEObjectImpl exactly like the href-child-element case; anything else is a
+ * same-document fragment, resolved immediately via resolveEmfFragment, since every possible
+ * same-document target already exists by this point.
+ */
+function decodeAttributeFormReference(
   rawValue: string,
   feature: EReference,
   contextElement: Element,
@@ -564,9 +709,17 @@ function decodeSameDocumentReference(
   const tokens = rawValue.split(/\s+/).filter((t) => t.length > 0);
   const paired = tokens.length > 0 && tokens.length % 2 === 0 && tokens.every((t, i) => (i % 2 === 0 ? looksLikeTypeToken(t) : true));
 
-  const fragments = paired ? tokens.filter((_, i) => i % 2 === 1) : tokens;
+  const pairs: Array<{ typeToken: string | undefined; fragment: string }> = paired
+    ? tokens.filter((_, i) => i % 2 === 1).map((fragment, i) => ({ typeToken: tokens[i * 2], fragment }))
+    : tokens.map((fragment) => ({ typeToken: undefined, fragment }));
 
-  return fragments.map((fragment) => {
+  return pairs.map(({ typeToken, fragment }) => {
+    if (isAbsoluteUri(fragment)) {
+      const declared = feature.getEType() as EClass;
+      const proxyEClass = typeToken ? resolvePrefixedName(typeToken, contextElement, packageRegistry) : declared;
+      return new ProxyEObjectImpl(proxyEClass, URI.parse(fragment));
+    }
+
     // Real EMF-authored files always write same-document attribute-form
     // references with a leading "#" (e.g. eType="#//EString") - our own
     // writer never produces one (computeEmfFragment's own output has no
@@ -586,8 +739,45 @@ function decodeSameDocumentReference(
   });
 }
 
+/**
+ * A relative path from `fromUri` to `toUri` when both share a scheme (the common, same-workspace
+ * case this is actually for), else `toUri`'s own full string form as a safe fallback - a portable,
+ * hand-rolled computation (segment-by-segment common-prefix comparison, "../" for each remaining
+ * `from` segment) rather than importing node:path, since this package is deliberately environment-
+ * agnostic, not Node-specific.
+ */
+function relativeOrAbsolutePath(fromUri: URI, toUri: URI): string {
+  if (fromUri.getScheme() !== toUri.getScheme()) return toUri.toString();
+
+  const fromSegments = fromUri.getPath().split('/').filter((s) => s.length > 0);
+  const toSegments = toUri.getPath().split('/').filter((s) => s.length > 0);
+  // The `to` file's own name is never a shared "directory" segment to compare away - compared
+  // against `from`'s own containing directory only.
+  const fromDir = fromSegments.slice(0, -1);
+  const toDir = toSegments.slice(0, -1);
+  const toFile = toSegments[toSegments.length - 1] ?? '';
+
+  let commonLength = 0;
+  while (commonLength < fromDir.length && commonLength < toDir.length && fromDir[commonLength] === toDir[commonLength]) {
+    commonLength++;
+  }
+
+  const upSegments = fromDir.slice(commonLength).map(() => '..');
+  const downSegments = toDir.slice(commonLength);
+  const relativeSegments = [...upSegments, ...downSegments, toFile];
+  return relativeSegments.join('/');
+}
+
 function looksLikeTypeToken(token: string): boolean {
   return token.includes(':') && !token.startsWith('/') && !token.startsWith('#');
+}
+
+/** A real scheme prefix immediately followed by "//" or "#" (e.g. "http://...",
+ *  "platform:/resource/...#//Foo") - the unambiguous signal of an absolute URI, never produced by
+ *  a same-document fragment (computeEmfFragment's own output starts with "/" or a digit, never a
+ *  scheme) or a prefixed type token like "ecore:EDataType" (never followed by "//" or "#"). */
+function isAbsoluteUri(token: string): boolean {
+  return /^[a-zA-Z][a-zA-Z0-9+.-]*:(\/\/|#)/.test(token);
 }
 
 function decodeAttributeValue(value: string, feature: EStructuralFeature): unknown {

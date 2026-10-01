@@ -46,13 +46,13 @@ export class BasicEList<T> implements EList<T> {
   add(item: T): void {
     if (this.rejectsDuplicate(item)) return;
     this.items.push(item);
-    this.onAdded(item);
+    this.onAdded(item, this.items.length - 1);
   }
 
   addAt(index: number, item: T): void {
     if (this.rejectsDuplicate(item)) return;
     this.items.splice(index, 0, item);
-    this.onAdded(item);
+    this.onAdded(item, index);
   }
 
   addAll(items: Iterable<T>): void {
@@ -63,19 +63,21 @@ export class BasicEList<T> implements EList<T> {
     const index = this.items.indexOf(item);
     if (index === -1) return false;
     this.items.splice(index, 1);
-    this.onRemoved(item);
+    this.onRemoved(item, index);
     return true;
   }
 
   removeAt(index: number): T {
     const [item] = this.items.splice(index, 1);
-    if (item !== undefined) this.onRemoved(item);
+    if (item !== undefined) this.onRemoved(item, index);
     return item as T;
   }
 
   clear(): void {
     const removed = this.items.splice(0, this.items.length);
-    for (const item of removed) this.onRemoved(item);
+    // Each removal reported at position 0 - after each splice, every remaining item has already
+    // shifted down by one, so the first remaining item is always the next one to go.
+    for (const item of removed) this.onRemoved(item, 0);
   }
 
   contains(item: T): boolean {
@@ -145,12 +147,36 @@ export class BasicEList<T> implements EList<T> {
     return !!this.feature && isReference(this.feature) && this.items.includes(item);
   }
 
-  private onAdded(item: T): void {
-    if (this.owner) this.owner.eDidAdd(this.feature, item);
+  private onAdded(item: T, position: number): void {
+    if (!this.owner) return;
+    this.owner.eDidAdd(this.feature, item);
+    if (this.feature) {
+      this.owner.eNotify({
+        eventType: 'ADD',
+        notifier: this.owner,
+        feature: this.feature,
+        oldValue: undefined,
+        newValue: item,
+        position,
+        wasSet: true,
+      });
+    }
   }
 
-  private onRemoved(item: T): void {
-    if (this.owner) this.owner.eDidRemove(this.feature, item);
+  private onRemoved(item: T, position: number): void {
+    if (!this.owner) return;
+    this.owner.eDidRemove(this.feature, item);
+    if (this.feature) {
+      this.owner.eNotify({
+        eventType: 'REMOVE',
+        notifier: this.owner,
+        feature: this.feature,
+        oldValue: item,
+        newValue: undefined,
+        position,
+        wasSet: true,
+      });
+    }
   }
 }
 

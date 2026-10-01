@@ -350,7 +350,7 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="literal" eType="#//EString">
       <eAnnotations source="https://typemf.dev/generator/feature">
         <details key="get" value="return this._literal ?? this.getName();"/>
-        <details key="set" value="const oldValue = this._literal; if (oldValue === value) return; this._literal = value; this.eDidRemove(undefined, oldValue); this.eDidAdd(undefined, value);"/>
+        <details key="set" value="const oldValue = this._literal;&#10;if (oldValue === value) return;&#10;const wasSet = this._literal !== undefined;&#10;this._literal = value;&#10;this.eDidRemove(undefined, oldValue);&#10;this.eDidAdd(undefined, value);&#10;const feature = getEcorePackageRef().getEEnumLiteral_Literal();&#10;this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });"/>
       </eAnnotations>
     </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eEnum" eType="#//EEnum"
@@ -566,7 +566,7 @@
         <details key="suppressedUnsetVisibility" value="true"/>
       </eAnnotations>
       <eAnnotations source="https://typemf.dev/generator/feature">
-        <details key="set" value="this._eType = value; this._eGenericType = undefined; this.eDidAdd(undefined, value);"/>
+        <details key="set" value="const oldValue = this._eType;&#10;const wasSet = this._eType !== undefined;&#10;this._eType = value;&#10;this._eGenericType = undefined;&#10;this.eDidAdd(undefined, value);&#10;const feature = getEcorePackageRef().getETypedElement_EType();&#10;this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });"/>
       </eAnnotations>
     </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EReference" name="eGenericType" eType="#//EGenericType"
@@ -576,7 +576,7 @@
         <details key="suppressedUnsetVisibility" value="true"/>
       </eAnnotations>
       <eAnnotations source="https://typemf.dev/generator/feature">
-        <details key="set" value="const feature = getEcorePackageRef().getETypedElement_EGenericType();&#10;const oldValue = this.eGet(feature);&#10;this.eBasicSetValue(feature, value);&#10;this.eDidRemove(feature, oldValue);&#10;this.eDidAdd(feature, value);&#10;this._eType = value?.getERawType();"/>
+        <details key="set" value="const feature = getEcorePackageRef().getETypedElement_EGenericType();&#10;const oldValue = this.eGet(feature);&#10;const wasSet = this.eIsSet(feature);&#10;this.eBasicSetValue(feature, value);&#10;this.eDidRemove(feature, oldValue);&#10;this.eDidAdd(feature, value);&#10;this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });&#10;const oldEType = this._eType;&#10;const eTypeWasSet = oldEType !== undefined;&#10;this._eType = value?.getERawType();&#10;const eTypeFeature = getEcorePackageRef().getETypedElement_EType();&#10;this.eNotify({ eventType: 'SET', notifier: this, feature: eTypeFeature, oldValue: oldEType, newValue: this._eType, position: undefined, wasSet: eTypeWasSet });"/>
       </eAnnotations>
     </eStructuralFeatures>
   </eClassifiers>

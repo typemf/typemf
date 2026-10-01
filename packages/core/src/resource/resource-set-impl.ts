@@ -1,4 +1,6 @@
+import { EClassifier } from '../metamodel/types/EClassifier.js';
 import { EObject } from '../metamodel/types/EObject.js';
+import { isEClass } from '../metamodel/util/EcoreTypeGuards.js';
 import { EPackageRegistry } from '../registry/epackage-registry.js';
 import { EPackageRegistryImpl } from '../registry/epackage-registry-impl.js';
 import { resolveFragment } from './eobject-address.js';
@@ -81,6 +83,31 @@ export class ResourceSetImpl implements ResourceSet {
     }
 
     const proxyURI = proxy.getProxyURI();
+
+    // A registered package's own nsURI as a "resource" to resolve into, exactly the way real
+    // EMF's own EPackage.Registry doubles as a virtual resource for its own metamodel: a real,
+    // confirmed gap found parsing an externally-authored file whose eType referenced Ecore's own
+    // EString by its real, absolute nsURI (http://www.eclipse.org/emf/2002/Ecore#//EString) - the
+    // mirror-image, read-side case of the write-side "treat an unattached, no-Resource object as
+    // automatically local" bug fixed earlier in @typemf/xmi's own encodeReferenceValue, except
+    // here the symptom is the opposite: trying to getResource()/createResource() a real URI that
+    // was never meant to be loaded as a document at all, since a registered EPackage already *is*
+    // the complete answer. Checked before the normal resource-loading path, not as a fallback
+    // after it fails, since a registered package should never be re-fetched as if it were a
+    // separate, unloaded document.
+    const registeredPackage = this.packageRegistry.getPackage(proxyURI.trimFragment().toString());
+    if (registeredPackage) {
+      const fragment = proxyURI.getFragment();
+      const resolved = fragment ? resolveAgainstPackage(registeredPackage, fragment) : undefined;
+      if (!resolved) {
+        throw new Error(
+          `Could not resolve proxy '${proxy.fullId()}': fragment '${fragment ?? '<none>'}' did not match anything in ` +
+            `the registered package '${registeredPackage.getNsURI() ?? '<no nsURI>'}'.`
+        );
+      }
+      return resolved;
+    }
+
     const targetResource = await this.getResource(proxyURI.trimFragment(), true);
     if (!targetResource) {
       throw new Error(`Could not resolve proxy '${proxy.fullId()}': its resource could not be loaded.`);
@@ -107,4 +134,24 @@ export class ResourceSetImpl implements ResourceSet {
     }
     return found;
   }
+}
+
+/**
+ * The real EMF-style name-based path within a registered package directly - "//Name" for a
+ * top-level classifier, "//Name/Name2" for a feature or operation one level inside a class -
+ * mirroring @typemf/xmi's own ecoreOwnFragmentPath (the write side of this same case), but here
+ * general enough for any registered package's own nsURI, not just Ecore's own. A package has no
+ * Resource, no containment tree, nothing eContainer()-walkable at all to defer to a serializer's
+ * own fragment grammar for, so this is deliberately simple, name-segment resolution - exactly
+ * what every real .ecore file's own attribute-form cross-references actually use.
+ */
+export function resolveAgainstPackage(pkg: { getEClassifier(name: string): EClassifier | undefined }, fragment: string): EObject | undefined {
+  const segments = fragment.replace(/^\/+/, '').split('/').filter((s) => s.length > 0);
+  if (segments.length === 0) return undefined;
+
+  const classifier = pkg.getEClassifier(segments[0]!);
+  if (segments.length === 1) return classifier;
+  if (!classifier || !isEClass(classifier)) return undefined;
+
+  return classifier.getEStructuralFeature(segments[1]!);
 }

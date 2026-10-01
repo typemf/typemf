@@ -390,9 +390,11 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
       case {{ feature.getFeatureID() }}: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
 {% endif %}
@@ -528,6 +530,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
           delegates entirely to a DIFFERENT feature has no field of its own here to reset - falls
           through to super/throw below instead, same as a getter-only feature. #}
       case {{ feature.getFeatureID() }}: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._{{ feature.getName() }};
 {% if isPrimitiveValueType(feature.getEType()) %}
         this._{{ feature.getName() }} = {{ primitiveDefaultValue(feature) }};
@@ -535,6 +538,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
         this._{{ feature.getName() }} = undefined;
 {% endif %}
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 {% endif %}

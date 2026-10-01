@@ -88,9 +88,11 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
       case 1: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 2: {
@@ -104,9 +106,11 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
       case 3: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       case 4: {
@@ -172,9 +176,11 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
     switch (feature.getFeatureID()) {
 
       case 1: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._source;
         this._source = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
@@ -182,9 +188,11 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
 
       case 3: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eModelElement;
         this._eModelElement = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

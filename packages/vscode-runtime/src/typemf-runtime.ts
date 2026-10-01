@@ -9,13 +9,17 @@ import {
   UriConverterRegistryImpl,
 } from '@typemf/core';
 import { registerDefaults } from './register-defaults.js';
+import { registerEcoreMetamodel } from './register-ecore-metamodel.js';
 
 export interface TypeMfRuntimeOptions {
   /**
-   * Whether the constructor calls registerDefaults() on its own resourceFactoryRegistry.
-   * Defaults to true - a caller who wants a clean registry (e.g. because they only care about a
-   * custom binary format and don't want "xmi"/"ecore"/"json" claiming those extensions) opts out
-   * explicitly with `{ registerDefaults: false }`.
+   * Whether the constructor calls registerDefaults() on its own resourceFactoryRegistry AND
+   * registerEcoreMetamodel() on its own packageRegistry. Defaults to true - a caller who wants
+   * genuinely clean registries (e.g. because they only care about a custom binary format and
+   * don't want "xmi"/"ecore"/"json" claiming those extensions, or don't want Ecore's own
+   * metamodel pre-registered either) opts out explicitly with `{ registerDefaults: false }`. One
+   * flag for both, not two separate ones: a caller asking for a clean slate almost certainly wants
+   * it fully clean, not partially so.
    */
   registerDefaults?: boolean;
 }
@@ -66,6 +70,7 @@ export class TypeMfRuntime implements TypeMfRuntimeApi {
   constructor(options: TypeMfRuntimeOptions = {}) {
     if (options.registerDefaults ?? true) {
       registerDefaults(this.resourceFactoryRegistry);
+      registerEcoreMetamodel(this.packageRegistry);
     }
   }
 

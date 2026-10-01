@@ -36,9 +36,11 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
       case 1: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       default:
@@ -74,9 +76,11 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
     switch (feature.getFeatureID()) {
 
       case 1: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._name;
         this._name = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

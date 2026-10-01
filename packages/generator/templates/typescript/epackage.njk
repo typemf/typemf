@@ -261,6 +261,25 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endif %}
 {{ bootstrapSet(fieldExpr, "setLowerBound", "Ids.ETypedElement.lowerBound", feature.getLowerBound()) }}
 {{ bootstrapSet(fieldExpr, "setUpperBound", "Ids.ETypedElement.upperBound", feature.getUpperBound()) }}
+{#- The rest of a feature's own boolean flags - derived/transient/volatile/unsettable/changeable
+    (EStructuralFeature) and ordered/unique (ETypedElement) - were a real, confirmed gap: nothing
+    here ever emitted bootstrap code for them at all, so every self-hosted feature silently fell
+    back to the runtime's own hardcoded field defaults regardless of what the model itself
+    declared. Confirmed directly against EClass.eAllGenericSuperTypes, which the real model marks
+    changeable="false" volatile="true" transient="true" derived="true" but which the generated
+    bootstrap (before this fix) never set any of - a real save/serialize failure downstream in
+    @typemf/xmi (a derived, never-persisted feature being written out as if it were real, stored
+    data) traced all the way back to this single missing set of bootstrapSet calls. Unconditional,
+    matching lowerBound/upperBound's own established pattern just above, rather than conditional
+    on differing from some assumed runtime default - simplest and least likely to silently drift
+    out of sync with whatever the runtime's own defaults happen to be. #}
+{{ bootstrapSet(fieldExpr, "setDerived", "Ids.EStructuralFeature.derived", feature.isDerived()) }}
+{{ bootstrapSet(fieldExpr, "setTransient", "Ids.EStructuralFeature.transient", feature.isTransient()) }}
+{{ bootstrapSet(fieldExpr, "setVolatile", "Ids.EStructuralFeature.volatile", feature.isVolatile()) }}
+{{ bootstrapSet(fieldExpr, "setUnsettable", "Ids.EStructuralFeature.unsettable", feature.isUnsettable()) }}
+{{ bootstrapSet(fieldExpr, "setChangeable", "Ids.EStructuralFeature.changeable", feature.isChangeable()) }}
+{{ bootstrapSet(fieldExpr, "setOrdered", "Ids.ETypedElement.ordered", feature.isOrdered()) }}
+{{ bootstrapSet(fieldExpr, "setUnique", "Ids.ETypedElement.unique", feature.isUnique()) }}
     {{ fieldExpr }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
     {#- containerClass: the concrete implementation class the feature is declared on - the closest
         TypeScript has to Java's own containerClass semantics (Class<?>, e.g. EClassifier.class in the

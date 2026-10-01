@@ -97,6 +97,9 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
       const json = JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>[];
       return json.map((r) => deserializeObject(r, resource));
     },
+    async peekReferencedNsURIs(): Promise<string[]> {
+      return []; // not exercised by this fixture - see @typemf/json/@typemf/xmi for real implementations
+    },
   };
 
   const factory: ResourceFactory = {
@@ -220,6 +223,39 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     expect(result).toBe(book);
   });
 
+  it('resolve() resolves a proxy against a registered package directly, by nsURI - no Resource/ResourceFactory involved at all', async () => {
+    const { bookClass, libraryClass } = buildSampleMetamodel();
+    const pkg = bookClass.getEPackage()!;
+    const nsURI = pkg.getNsURI()!;
+
+    const resourceSet = new ResourceSetImpl();
+    resourceSet.getPackageRegistry().register(pkg);
+
+    // No ResourceFactory registered for any scheme at all - if resolve() tried to load this as a
+    // real document, it would throw "No ResourceFactory registered", exactly the real, confirmed
+    // bug this is guarding against (found parsing an externally-authored file whose eType
+    // referenced Ecore's own EString by its real, absolute nsURI).
+    const classifierProxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//Library`));
+    const resolvedClassifier = await resourceSet.resolve(classifierProxy);
+    expect(resolvedClassifier).toBe(libraryClass);
+
+    const featureProxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//Library/books`));
+    const resolvedFeature = await resourceSet.resolve(featureProxy);
+    expect((resolvedFeature as EReference).getName()).toBe('books');
+  });
+
+  it('resolve() against a registered package throws a clear error for a fragment matching nothing in it', async () => {
+    const { bookClass } = buildSampleMetamodel();
+    const pkg = bookClass.getEPackage()!;
+    const nsURI = pkg.getNsURI()!;
+
+    const resourceSet = new ResourceSetImpl();
+    resourceSet.getPackageRegistry().register(pkg);
+
+    const proxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//NoSuchClassifier`));
+    await expect(resourceSet.resolve(proxy)).rejects.toThrow(/did not match anything in the registered package/);
+  });
+
   it('createResource throws a clear error when no factory is registered', () => {
     const resourceSet = new ResourceSetImpl();
     expect(() => resourceSet.createResource(URI.parse('mem:whatever'))).toThrow(/No ResourceFactory registered/);
@@ -254,6 +290,9 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
       async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
         const json = JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>[];
         return json.map((r) => deserializeWithPositionalRefs(r, resource));
+      },
+      async peekReferencedNsURIs(): Promise<string[]> {
+        return [];
       },
     };
 
@@ -425,6 +464,9 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
         (library.eGet(booksRef) as { add(v: EObject): void }).add(book);
         return [library];
       },
+      async peekReferencedNsURIs(): Promise<string[]> {
+        return [];
+      },
       resolveFragment(fragment: string, roots: EObject[]): EObject | undefined {
         if (!fragment.startsWith('CUSTOM:')) return undefined;
         const index = Number(fragment.slice('CUSTOM:'.length));
@@ -457,6 +499,7 @@ describe('getResourceOf() - root-walking for nested, non-root objects', () => {
     const resource = new ResourceImpl(URI.parse('mem:lib.xmi'), {
       serialize: async () => new Uint8Array(),
       deserialize: async () => [],
+      peekReferencedNsURIs: async () => [],
     });
     // Only the root (library) is ever added to getContents() - book is
     // reachable only via containment, never added directly. This is

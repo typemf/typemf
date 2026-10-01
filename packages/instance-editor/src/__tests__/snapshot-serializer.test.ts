@@ -1,0 +1,307 @@
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EAttributeImpl,
+  EClass,
+  EcorePackageImpl,
+  EClassImpl,
+  EDataTypeImpl,
+  EEnumImpl,
+  EEnumLiteralImpl,
+  EPackageImpl,
+  EReferenceImpl,
+  ResourceSetImpl,
+  URI,
+  UriConverter,
+} from '@typemf/core';
+import { describe, expect, it } from 'vitest';
+import { ObjectIdMap } from '../object-id-map.js';
+import { WebviewObjectRegistry } from '../webview-object-registry.js';
+import { snapshotObject } from '../snapshot-object.js';
+import { HOST_SCHEME, registerHostProtocol, uriForId } from '../snapshot-serializer.js';
+
+void EcorePackageImpl.eINSTANCE;
+
+function buildFixture() {
+  const eString = new EDataTypeImpl();
+  eString.setName('EString');
+
+  const bookClass = new EClassImpl();
+  bookClass.setName('Book');
+  const titleAttr = new EAttributeImpl();
+  titleAttr.setName('title');
+  titleAttr.setEType(eString);
+  titleAttr.setFeatureID(0);
+  bookClass.getEStructuralFeatures().add(titleAttr);
+
+  const libraryClass = new EClassImpl();
+  libraryClass.setName('Library');
+  const booksRef = new EReferenceImpl();
+  booksRef.setName('books');
+  booksRef.setEType(bookClass);
+  booksRef.setContainment(true);
+  booksRef.setUpperBound(-1);
+  booksRef.setFeatureID(0);
+  libraryClass.getEStructuralFeatures().add(booksRef);
+
+  const pkg = new EPackageImpl();
+  pkg.setName('library');
+  pkg.setNsURI('https://example.com/library');
+  pkg.getEClassifiers().add(bookClass);
+  pkg.getEClassifiers().add(libraryClass);
+  bookClass.setEPackage(pkg);
+  libraryClass.setEPackage(pkg);
+  pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+
+  return { bookClass, libraryClass, titleAttr, booksRef };
+}
+
+/** Serves canned bytes for whatever ids were registered via set(), matching the real
+ *  InMemoryUriConverter pattern used throughout json/xmi's own tests. */
+class FakeHostUriConverter implements UriConverter {
+  private readonly bytesById = new Map<string, Uint8Array>();
+
+  set(id: string, bytes: Uint8Array): void {
+    this.bytesById.set(id, bytes);
+  }
+
+  canHandle(uri: URI): boolean {
+    return uri.getScheme() === HOST_SCHEME;
+  }
+
+  async readBinary(uri: URI): Promise<Uint8Array> {
+    const id = uri.getPath().replace(/^\//, '');
+    const bytes = this.bytesById.get(id);
+    if (!bytes) throw new Error(`FakeHostUriConverter has nothing registered for id '${id}'.`);
+    return bytes;
+  }
+
+  async writeBinary(): Promise<void> {
+    throw new Error('not supported');
+  }
+
+  async exists(uri: URI): Promise<boolean> {
+    return this.bytesById.has(uri.getPath().replace(/^\//, ''));
+  }
+}
+
+function encodeSnapshot(snapshot: unknown): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(snapshot));
+}
+
+describe('SnapshotSerializer', () => {
+  it('resolves a proxy into a real, reconstructed object with correctly-decoded attributes', async () => {
+    const { bookClass, titleAttr } = buildFixture();
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+
+    const hostIds = new ObjectIdMap();
+    const converter = new FakeHostUriConverter();
+    converter.set(hostIds.idFor(book), encodeSnapshot(snapshotObject(book, hostIds)));
+    converter.set(hostIds.idFor(bookClass), encodeSnapshot(snapshotObject(bookClass, hostIds)));
+    // bookClass is itself a metaclass, so its own eStructuralFeatures (containing titleAttr) are
+    // eagerly resolved during reconstruction, not left as lazy proxies - titleAttr's own snapshot
+    // needs to be genuinely available for that to succeed.
+    converter.set(hostIds.idFor(titleAttr), encodeSnapshot(snapshotObject(titleAttr, hostIds)));
+    // Deliberately no registration for "EClass describing EClass" itself - proving the
+    // well-known-id short circuit means it's never fetched at all, breaking what would otherwise
+    // be infinite recursion (EClass.eClass() === EClass).
+
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(converter);
+
+    const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(book)), true);
+    const reconstructed = resource?.getContents().get(0)!;
+
+    expect(reconstructed.eClass().getName()).toBe('Book');
+    const reconstructedTitleFeature = reconstructed.eClass().getEStructuralFeature('title')!;
+    expect(reconstructed.eGet(reconstructedTitleFeature)).toBe('Dune');
+  });
+
+  it('reconstructs references (including containment) as unresolved proxies, not eagerly-fetched objects', async () => {
+    const { bookClass, libraryClass, titleAttr, booksRef } = buildFixture();
+    const library = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (library.eGet(booksRef) as { add(v: unknown): void }).add(book);
+
+    const hostIds = new ObjectIdMap();
+    const converter = new FakeHostUriConverter();
+    // Deliberately do NOT register bytes for `book` itself - proving the library's own
+    // reconstruction never needs to fetch it eagerly.
+    converter.set(hostIds.idFor(library), encodeSnapshot(snapshotObject(library, hostIds)));
+    converter.set(hostIds.idFor(libraryClass), encodeSnapshot(snapshotObject(libraryClass, hostIds)));
+    // libraryClass is itself a metaclass too - its own eStructuralFeatures (containing booksRef)
+    // are eagerly resolved, same reasoning as titleAttr above.
+    converter.set(hostIds.idFor(booksRef), encodeSnapshot(snapshotObject(booksRef, hostIds)));
+    // booksRef is ALSO itself a metaclass (EReference) - its own eType reference (pointing at
+    // bookClass) is eagerly resolved too, for the same reason, one level deeper.
+    converter.set(hostIds.idFor(bookClass), encodeSnapshot(snapshotObject(bookClass, hostIds)));
+    // ...and bookClass's own eStructuralFeatures (containing titleAttr) are eagerly resolved too.
+    converter.set(hostIds.idFor(titleAttr), encodeSnapshot(snapshotObject(titleAttr, hostIds)));
+
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(converter);
+
+    const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(library)), true);
+    const reconstructedLibrary = resource?.getContents().get(0)!;
+    const reconstructedBooksFeature = reconstructedLibrary.eClass().getEStructuralFeature('books')!;
+    const books = reconstructedLibrary.eGet(reconstructedBooksFeature) as Iterable<{ eIsProxy(): boolean }>;
+    const [firstBook] = [...books];
+
+    expect(firstBook!.eIsProxy()).toBe(true); // never fetched - still a proxy, exactly as designed
+  });
+
+  it('resolves a self-referential metamodel (a classifier whose own feature\'s eType is that SAME classifier) without hanging - the real, reported bug', async () => {
+    // "Feature contains child Features" - a normal, valid containment cycle at the metamodel
+    // level (a tree-structured metamodel, no different in kind from a directory containing
+    // subdirectories), not a modeling error. needsEagerOwnFeatures makes a dynamic-factory
+    // classifier's own eStructuralFeatures resolve eagerly - which, for THIS feature's own eType,
+    // asks to resolve the very same "Feature" classifier this reconstruction is already in the
+    // middle of, before it has finished. Confirmed hanging indefinitely before the fix (this
+    // exact scenario, reproduced directly against a real, externally-authored file).
+    const featureClass = new EClassImpl();
+    featureClass.setName('Feature');
+    const childrenRef = new EReferenceImpl();
+    childrenRef.setName('children');
+    childrenRef.setEType(featureClass); // self-referential
+    childrenRef.setContainment(true);
+    childrenRef.setUpperBound(-1);
+    childrenRef.setFeatureID(0);
+    featureClass.getEStructuralFeatures().add(childrenRef);
+
+    const pkg = new EPackageImpl();
+    pkg.setName('variability');
+    pkg.setNsURI('https://example.com/variability');
+    pkg.getEClassifiers().add(featureClass);
+    featureClass.setEPackage(pkg);
+    pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+
+    const hostIds = new ObjectIdMap();
+    const converter = new FakeHostUriConverter();
+    converter.set(hostIds.idFor(featureClass), encodeSnapshot(snapshotObject(featureClass, hostIds)));
+    converter.set(hostIds.idFor(childrenRef), encodeSnapshot(snapshotObject(childrenRef, hostIds)));
+
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(converter);
+
+    const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(featureClass)), true);
+    const reconstructedFeatureClass = resource?.getContents().get(0) as EClass;
+
+    expect(reconstructedFeatureClass.getName()).toBe('Feature');
+    const reconstructedChildren = reconstructedFeatureClass.getEStructuralFeature('children')!;
+    // The self-reference resolves back to the SAME, real, already-being-reconstructed object -
+    // not a copy, not a still-unresolved proxy left dangling.
+    expect(reconstructedChildren.getEType()).toBe(reconstructedFeatureClass);
+  });
+
+  it('reconstructs a feature\'s own featureID correctly - the second real, reported bug this editor had ("new instance of a dynamic model freezes on Loading…")', async () => {
+    // Two single-valued attributes on one dynamically-loaded class, matching the real bug's exact
+    // shape: DynamicEObjectImpl's own storage is a single Map<featureID, value> (see its own
+    // reasoning) - if the webview's own, separately reconstructed copies of these two features
+    // didn't each carry the SAME featureID their real, host-side originals have, both would
+    // collide on the reconstructed object's own default/sentinel id and silently share one slot.
+    const titleClass = new EClassImpl();
+    titleClass.setName('Book');
+    const eString = new EDataTypeImpl();
+    eString.setName('EString');
+    const titleAttr = new EAttributeImpl();
+    titleAttr.setName('title');
+    titleAttr.setEType(eString);
+    titleAttr.setFeatureID(3); // a real, specific (not 0, not sequential-by-luck) id
+    const authorAttr = new EAttributeImpl();
+    authorAttr.setName('author');
+    authorAttr.setEType(eString);
+    authorAttr.setFeatureID(7);
+    titleClass.getEStructuralFeatures().add(titleAttr);
+    titleClass.getEStructuralFeatures().add(authorAttr);
+    const pkg = new EPackageImpl();
+    pkg.setName('library4');
+    pkg.setNsURI('https://example.com/library4');
+    pkg.getEClassifiers().addAll([titleClass, eString]);
+    titleClass.setEPackage(pkg);
+    pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+
+    const hostIds = new ObjectIdMap();
+    const converter = new FakeHostUriConverter();
+    converter.set(hostIds.idFor(titleAttr), encodeSnapshot(snapshotObject(titleAttr, hostIds)));
+    converter.set(hostIds.idFor(authorAttr), encodeSnapshot(snapshotObject(authorAttr, hostIds)));
+
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(converter);
+
+    const titleResource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(titleAttr)), true);
+    const reconstructedTitle = titleResource!.getContents().get(0);
+    const authorResource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(authorAttr)), true);
+    const reconstructedAuthor = authorResource!.getContents().get(0);
+
+    expect((reconstructedTitle as unknown as { getFeatureID(): number }).getFeatureID()).toBe(3);
+    expect((reconstructedAuthor as unknown as { getFeatureID(): number }).getFeatureID()).toBe(7);
+  });
+
+  it("an enum attribute's own eType resolves with its eLiterals already real objects, not still-unresolved proxies - the real, reported bug (\"editor goes blank after adding a child and following it to a feature with an enum attribute\")", async () => {
+    // Mirrors the real metamodel this was found against: a dynamically-loaded class with an enum-
+    // typed attribute, four literals.
+    const variabilityType = new EEnumImpl();
+    variabilityType.setName('VariabilityType');
+    const literalNames = ['mandatory', 'optional', 'alternative', 'or'];
+    literalNames.forEach((name, i) => {
+      const literal = new EEnumLiteralImpl();
+      literal.setName(name);
+      literal.setLiteral(name);
+      literal.setValue(i);
+      variabilityType.getELiterals().add(literal);
+    });
+
+    const groupClass = new EClassImpl();
+    groupClass.setName('Group');
+    const typeAttr = new EAttributeImpl();
+    typeAttr.setName('type');
+    typeAttr.setEType(variabilityType);
+    typeAttr.setFeatureID(0);
+    groupClass.getEStructuralFeatures().add(typeAttr);
+
+    const pkg = new EPackageImpl();
+    pkg.setName('variability');
+    pkg.setNsURI('https://example.com/variability');
+    pkg.getEClassifiers().addAll([groupClass, variabilityType]);
+    groupClass.setEPackage(pkg);
+    variabilityType.setEPackage(pkg);
+    pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+
+    const group = createInstanceOf(groupClass);
+
+    const hostIds = new ObjectIdMap();
+    const converter = new FakeHostUriConverter();
+    converter.set(hostIds.idFor(group), encodeSnapshot(snapshotObject(group, hostIds)));
+    converter.set(hostIds.idFor(groupClass), encodeSnapshot(snapshotObject(groupClass, hostIds)));
+    converter.set(hostIds.idFor(typeAttr), encodeSnapshot(snapshotObject(typeAttr, hostIds)));
+    converter.set(hostIds.idFor(variabilityType), encodeSnapshot(snapshotObject(variabilityType, hostIds)));
+    for (const literal of variabilityType.getELiterals()) {
+      converter.set(hostIds.idFor(literal), encodeSnapshot(snapshotObject(literal, hostIds)));
+    }
+
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(converter);
+
+    const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(group)), true);
+    const reconstructedGroup = resource!.getContents().get(0);
+    const reconstructedTypeFeature = reconstructedGroup.eClass().getEStructuralFeature('type')!;
+    const reconstructedEnum = reconstructedTypeFeature.getEType() as unknown as { eIsProxy(): boolean; getELiterals(): Iterable<unknown> };
+
+    expect(reconstructedEnum.eIsProxy()).toBe(false);
+
+    const literals = [...reconstructedEnum.getELiterals()] as Array<{ eIsProxy(): boolean; getName(): string; getLiteral(): string }>;
+    expect(literals).toHaveLength(4);
+    for (const literal of literals) {
+      expect(literal.eIsProxy()).toBe(false);
+    }
+    expect(literals.map((l) => l.getName())).toEqual(literalNames);
+    expect(literals.map((l) => l.getLiteral())).toEqual(literalNames);
+  });
+});

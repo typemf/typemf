@@ -44,9 +44,11 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
       case 18: {
         const oldValue = this.eGet(feature);
         if (oldValue === value) return;
+        const wasSet = this.eIsSet(feature);
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
+        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
         return;
       }
       default:
@@ -84,17 +86,21 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
     switch (feature.getFeatureID()) {
 
       case 18: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._iD;
         this._iD = false;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 
 
       case 19: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eAttributeType;
         this._eAttributeType = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

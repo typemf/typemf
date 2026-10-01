@@ -9,18 +9,22 @@ import { TypeMfRuntime } from '../typemf-runtime.js';
 void EcorePackageImpl.eINSTANCE;
 
 describe('TypeMfRuntime', () => {
-  it('registers json/xmi/ecore by default', () => {
+  it('registers json/xmi/ecore formats, and Ecore\'s own metamodel, by default', () => {
     const runtime = new TypeMfRuntime();
     expect(runtime.resourceFactoryRegistry.getFactory(URI.createFileURI('model.json'))).toBeDefined();
     expect(runtime.resourceFactoryRegistry.getFactory(URI.createFileURI('model.xmi'))).toBeDefined();
     expect(runtime.resourceFactoryRegistry.getFactory(URI.createFileURI('model.ecore'))).toBeDefined();
+    // Ecore is foundational, not an arbitrary domain metamodel someone opts into - see
+    // register-ecore-metamodel.ts's own reasoning for why this is registered by default too.
+    expect(runtime.packageRegistry.getPackage(EcorePackageImpl.eINSTANCE.getNsURI()!)).toBe(EcorePackageImpl.eINSTANCE);
   });
 
-  it('registers nothing when registerDefaults: false is passed', () => {
+  it('registers nothing - not even Ecore\'s own metamodel - when registerDefaults: false is passed', () => {
     const runtime = new TypeMfRuntime({ registerDefaults: false });
     expect(runtime.resourceFactoryRegistry.getFactory(URI.createFileURI('model.json'))).toBeUndefined();
     expect(runtime.resourceFactoryRegistry.getFactory(URI.createFileURI('model.xmi'))).toBeUndefined();
     expect(runtime.resourceFactoryRegistry.getFactory(URI.createFileURI('model.ecore'))).toBeUndefined();
+    expect(runtime.packageRegistry.getPackage(EcorePackageImpl.eINSTANCE.getNsURI()!)).toBeUndefined();
   });
 
   it('starts with an empty, but real and shared, uriConverterRegistry', () => {

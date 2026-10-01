@@ -68,9 +68,11 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
     switch (feature.getFeatureID()) {
 
       case 10: {
+        const wasSet = this.eIsSet(feature);
         const oldValue = this._eOperation;
         this._eOperation = undefined;
         this.eDidRemove(feature, oldValue);
+        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
         return;
       }
 

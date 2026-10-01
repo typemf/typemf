@@ -1714,6 +1714,20 @@ this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAttribute_iD.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EAttribute_iD.setFeatureID(Ids.EAttribute.iD);
     this._EAttribute_iD.setContainerClass(EAttributeImpl);
 this._EAttribute_iD.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAttribute);
@@ -1730,6 +1744,20 @@ this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.eType, this._ED
 this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
 
 this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAttribute_eAttributeType.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EAttribute_eAttributeType.setFeatureID(Ids.EAttribute.eAttributeType);
     this._EAttribute_eAttributeType.setContainerClass(EAttributeImpl);
@@ -1750,6 +1778,20 @@ this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAnnotation_source.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EAnnotation_source.setFeatureID(Ids.EAnnotation.source);
     this._EAnnotation_source.setContainerClass(EAnnotationImpl);
 this._EAnnotation_source.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
@@ -1766,6 +1808,20 @@ this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.eType, this._EStringT
 this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EAnnotation_details.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EAnnotation_details.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EAnnotation_details.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EAnnotation_details.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAnnotation_details.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAnnotation_details.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EAnnotation_details.setFeatureID(Ids.EAnnotation.details);
     this._EAnnotation_details.setContainerClass(EAnnotationImpl);
@@ -1786,6 +1842,20 @@ this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAnnotation_eModelElement.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EAnnotation_eModelElement.setFeatureID(Ids.EAnnotation.eModelElement);
     this._EAnnotation_eModelElement.setContainerClass(EAnnotationImpl);
 this._EAnnotation_eModelElement.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
@@ -1803,6 +1873,20 @@ this._EAnnotation_contents.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EAnnotation_contents.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAnnotation_contents.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EAnnotation_contents.setFeatureID(Ids.EAnnotation.contents);
     this._EAnnotation_contents.setContainerClass(EAnnotationImpl);
 this._EAnnotation_contents.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EAnnotation);
@@ -1819,6 +1903,20 @@ this._EAnnotation_references.eBasicSetValue(Ids.ENamedElement.name, "references"
 this._EAnnotation_references.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EAnnotation_references.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EAnnotation_references.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EAnnotation_references.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EAnnotation_references.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EAnnotation_references.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EAnnotation_references.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EAnnotation_references.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EAnnotation_references.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EAnnotation_references.setFeatureID(Ids.EAnnotation.references);
     this._EAnnotation_references.setContainerClass(EAnnotationImpl);
@@ -1839,6 +1937,20 @@ this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_abstract.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_abstract.setFeatureID(Ids.EClass.abstract);
     this._EClass_abstract.setContainerClass(EClassImpl);
 this._EClass_abstract.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -1856,6 +1968,20 @@ this._EClass_interface.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_interface.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClass_interface.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_interface.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_interface.setFeatureID(Ids.EClass.interface);
     this._EClass_interface.setContainerClass(EClassImpl);
 this._EClass_interface.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -1872,6 +1998,20 @@ this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this._EClass);
 this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eSuperTypes.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eSuperTypes.setFeatureID(Ids.EClass.eSuperTypes);
     this._EClass_eSuperTypes.setContainerClass(EClassImpl);
@@ -1911,6 +2051,20 @@ this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eOperations.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eOperations.setFeatureID(Ids.EClass.eOperations);
     this._EClass_eOperations.setContainerClass(EClassImpl);
 this._EClass_eOperations.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -1929,6 +2083,20 @@ this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.eType, this._EAttri
 this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllAttributes.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eAllAttributes.setFeatureID(Ids.EClass.eAllAttributes);
     this._EClass_eAllAttributes.setContainerClass(EClassImpl);
@@ -2006,6 +2174,20 @@ this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllReferences.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eAllReferences.setFeatureID(Ids.EClass.eAllReferences);
     this._EClass_eAllReferences.setContainerClass(EClassImpl);
 this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -2081,6 +2263,20 @@ this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.eType, this._EReferenc
 this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eReferences.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eReferences.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eReferences.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eReferences.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eReferences.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eReferences.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eReferences.setFeatureID(Ids.EClass.eReferences);
     this._EClass_eReferences.setContainerClass(EClassImpl);
@@ -2158,6 +2354,20 @@ this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAttributes.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eAttributes.setFeatureID(Ids.EClass.eAttributes);
     this._EClass_eAttributes.setContainerClass(EClassImpl);
 this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -2233,6 +2443,20 @@ this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.eType, this._ERef
 this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllContainments.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eAllContainments.setFeatureID(Ids.EClass.eAllContainments);
     this._EClass_eAllContainments.setContainerClass(EClassImpl);
@@ -2310,6 +2534,20 @@ this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllOperations.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eAllOperations.setFeatureID(Ids.EClass.eAllOperations);
     this._EClass_eAllOperations.setContainerClass(EClassImpl);
 this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -2385,6 +2623,20 @@ this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.eType, this
 this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eAllStructuralFeatures.setFeatureID(Ids.EClass.eAllStructuralFeatures);
     this._EClass_eAllStructuralFeatures.setContainerClass(EClassImpl);
@@ -2462,6 +2714,20 @@ this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllSuperTypes.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eAllSuperTypes.setFeatureID(Ids.EClass.eAllSuperTypes);
     this._EClass_eAllSuperTypes.setContainerClass(EClassImpl);
 this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -2538,6 +2804,20 @@ this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eIDAttribute.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eIDAttribute.setFeatureID(Ids.EClass.eIDAttribute);
     this._EClass_eIDAttribute.setContainerClass(EClassImpl);
 this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -2570,6 +2850,20 @@ this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.lowerBound, 0)
 
 this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eStructuralFeatures.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClass_eStructuralFeatures.setFeatureID(Ids.EClass.eStructuralFeatures);
     this._EClass_eStructuralFeatures.setContainerClass(EClassImpl);
 this._EClass_eStructuralFeatures.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
@@ -2588,6 +2882,20 @@ this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this._EG
 this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eGenericSuperTypes.setFeatureID(Ids.EClass.eGenericSuperTypes);
     this._EClass_eGenericSuperTypes.setContainerClass(EClassImpl);
@@ -2626,6 +2934,20 @@ this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.eType, this.
 this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClass_eAllGenericSuperTypes.setFeatureID(Ids.EClass.eAllGenericSuperTypes);
     this._EClass_eAllGenericSuperTypes.setContainerClass(EClassImpl);
@@ -2728,6 +3050,20 @@ this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.lowerBound,
 
 this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClassifier_instanceClassName.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClassifier_instanceClassName.setFeatureID(Ids.EClassifier.instanceClassName);
     this._EClassifier_instanceClassName.setContainerClass(EClassifierImpl);
 this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
@@ -2764,6 +3100,20 @@ this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClassifier_instanceClass.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClassifier_instanceClass.setFeatureID(Ids.EClassifier.instanceClass);
     this._EClassifier_instanceClass.setContainerClass(EClassifierImpl);
 this._EClassifier_instanceClass.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
@@ -2781,6 +3131,20 @@ this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClassifier_defaultValue.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClassifier_defaultValue.setFeatureID(Ids.EClassifier.defaultValue);
     this._EClassifier_defaultValue.setContainerClass(EClassifierImpl);
 this._EClassifier_defaultValue.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
@@ -2797,6 +3161,20 @@ this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.eType, this.
 this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClassifier_instanceTypeName.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClassifier_instanceTypeName.setFeatureID(Ids.EClassifier.instanceTypeName);
     this._EClassifier_instanceTypeName.setContainerClass(EClassifierImpl);
@@ -2834,6 +3212,20 @@ this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClassifier_ePackage.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EClassifier_ePackage.setFeatureID(Ids.EClassifier.ePackage);
     this._EClassifier_ePackage.setContainerClass(EClassifierImpl);
 this._EClassifier_ePackage.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
@@ -2852,6 +3244,20 @@ this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.eType, this._
 this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EClassifier_eTypeParameters.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EClassifier_eTypeParameters.setFeatureID(Ids.EClassifier.eTypeParameters);
     this._EClassifier_eTypeParameters.setContainerClass(EClassifierImpl);
@@ -2872,6 +3278,20 @@ this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EDataType_serializable.setFeatureID(Ids.EDataType.serializable);
     this._EDataType_serializable.setContainerClass(EDataTypeImpl);
 this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EDataType);
@@ -2888,6 +3308,20 @@ this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.eType, this._EEnumLiteral
 this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EEnum_eLiterals.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EEnum_eLiterals.setFeatureID(Ids.EEnum.eLiterals);
     this._EEnum_eLiterals.setContainerClass(EEnumImpl);
@@ -2908,6 +3342,20 @@ this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EEnumLiteral_value.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EEnumLiteral_value.setFeatureID(Ids.EEnumLiteral.value);
     this._EEnumLiteral_value.setContainerClass(EEnumLiteralImpl);
 this._EEnumLiteral_value.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
@@ -2925,6 +3373,20 @@ this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EEnumLiteral_instance.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EEnumLiteral_instance.setFeatureID(Ids.EEnumLiteral.instance);
     this._EEnumLiteral_instance.setContainerClass(EEnumLiteralImpl);
 this._EEnumLiteral_instance.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
@@ -2941,6 +3403,20 @@ this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.eType, this._EString
 this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EEnumLiteral_literal.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EEnumLiteral_literal.setFeatureID(Ids.EEnumLiteral.literal);
     this._EEnumLiteral_literal.setContainerClass(EEnumLiteralImpl);
@@ -2960,7 +3436,7 @@ annotation.eBasicSetValue(Ids.EAnnotation.source, "https://typemf.dev/generator/
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "set");
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "const oldValue = this._literal; if (oldValue === value) return; this._literal = value; this.eDidRemove(undefined, oldValue); this.eDidAdd(undefined, value);");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "const oldValue = this._literal;\nif (oldValue === value) return;\nconst wasSet = this._literal !== undefined;\nthis._literal = value;\nthis.eDidRemove(undefined, oldValue);\nthis.eDidAdd(undefined, value);\nconst feature = getEcorePackageRef().getEEnumLiteral_Literal();\nthis.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });");
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
 this._EEnumLiteral_literal.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -2977,6 +3453,20 @@ this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.eType, this._EEnum);
 this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EEnumLiteral_eEnum.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EEnumLiteral_eEnum.setFeatureID(Ids.EEnumLiteral.eEnum);
     this._EEnumLiteral_eEnum.setContainerClass(EEnumLiteralImpl);
@@ -2997,6 +3487,20 @@ this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
 
 this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EFactory_ePackage.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EFactory_ePackage.setFeatureID(Ids.EFactory.ePackage);
     this._EFactory_ePackage.setContainerClass(EFactoryImpl);
 this._EFactory_ePackage.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EFactory);
@@ -3015,6 +3519,20 @@ this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.eType, this._E
 this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EModelElement_eAnnotations.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EModelElement_eAnnotations.setFeatureID(Ids.EModelElement.eAnnotations);
     this._EModelElement_eAnnotations.setContainerClass(EModelElementImpl);
@@ -3035,6 +3553,20 @@ this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ENamedElement_name.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._ENamedElement_name.setFeatureID(Ids.ENamedElement.name);
     this._ENamedElement_name.setContainerClass(ENamedElementImpl);
 this._ENamedElement_name.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ENamedElement);
@@ -3051,6 +3583,20 @@ this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.eType, this._
 this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EOperation_eContainingClass.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EOperation_eContainingClass.setFeatureID(Ids.EOperation.eContainingClass);
     this._EOperation_eContainingClass.setContainerClass(EOperationImpl);
@@ -3071,6 +3617,20 @@ this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.lowerBound, 0)
 
 this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EOperation_eTypeParameters.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EOperation_eTypeParameters.setFeatureID(Ids.EOperation.eTypeParameters);
     this._EOperation_eTypeParameters.setContainerClass(EOperationImpl);
 this._EOperation_eTypeParameters.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
@@ -3090,6 +3650,20 @@ this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EOperation_eParameters.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EOperation_eParameters.setFeatureID(Ids.EOperation.eParameters);
     this._EOperation_eParameters.setContainerClass(EOperationImpl);
 this._EOperation_eParameters.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
@@ -3108,6 +3682,20 @@ this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.eType, this._EClas
 this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EOperation_eExceptions.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EOperation_eExceptions.setFeatureID(Ids.EOperation.eExceptions);
     this._EOperation_eExceptions.setContainerClass(EOperationImpl);
@@ -3147,6 +3735,20 @@ this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.lowerBound,
 
 this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EOperation_eGenericExceptions.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EOperation_eGenericExceptions.setFeatureID(Ids.EOperation.eGenericExceptions);
     this._EOperation_eGenericExceptions.setContainerClass(EOperationImpl);
 this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
@@ -3185,6 +3787,20 @@ this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EPackage_nsURI.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EPackage_nsURI.setFeatureID(Ids.EPackage.nsURI);
     this._EPackage_nsURI.setContainerClass(EPackageImpl);
 this._EPackage_nsURI.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
@@ -3202,6 +3818,20 @@ this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EPackage_nsPrefix.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EPackage_nsPrefix.setFeatureID(Ids.EPackage.nsPrefix);
     this._EPackage_nsPrefix.setContainerClass(EPackageImpl);
 this._EPackage_nsPrefix.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
@@ -3218,6 +3848,20 @@ this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.eType, this._EF
 this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
 
 this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EPackage_eFactoryInstance.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EPackage_eFactoryInstance.setFeatureID(Ids.EPackage.eFactoryInstance);
     this._EPackage_eFactoryInstance.setContainerClass(EPackageImpl);
@@ -3238,6 +3882,20 @@ this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EPackage_eClassifiers.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EPackage_eClassifiers.setFeatureID(Ids.EPackage.eClassifiers);
     this._EPackage_eClassifiers.setContainerClass(EPackageImpl);
 this._EPackage_eClassifiers.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
@@ -3256,6 +3914,20 @@ this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.eType, this._EPacka
 this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EPackage_eSubpackages.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EPackage_eSubpackages.setFeatureID(Ids.EPackage.eSubpackages);
     this._EPackage_eSubpackages.setContainerClass(EPackageImpl);
@@ -3276,6 +3948,20 @@ this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EPackage_eSuperPackage.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EPackage_eSuperPackage.setFeatureID(Ids.EPackage.eSuperPackage);
     this._EPackage_eSuperPackage.setContainerClass(EPackageImpl);
 this._EPackage_eSuperPackage.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EPackage);
@@ -3294,6 +3980,20 @@ this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.eType, this._EOpera
 this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EParameter_eOperation.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EParameter_eOperation.setFeatureID(Ids.EParameter.eOperation);
     this._EParameter_eOperation.setContainerClass(EParameterImpl);
@@ -3314,6 +4014,20 @@ this._EReference_containment.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EReference_containment.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EReference_containment.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EReference_containment.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EReference_containment.setFeatureID(Ids.EReference.containment);
     this._EReference_containment.setContainerClass(EReferenceImpl);
 this._EReference_containment.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
@@ -3330,6 +4044,20 @@ this._EReference_container.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolea
 this._EReference_container.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EReference_container.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EReference_container.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EReference_container.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EReference_container.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EReference_container.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EReference_container.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EReference_container.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EReference_container.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EReference_container.setFeatureID(Ids.EReference.container);
     this._EReference_container.setContainerClass(EReferenceImpl);
@@ -3348,6 +4076,20 @@ this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EReference_resolveProxies.setFeatureID(Ids.EReference.resolveProxies);
     this._EReference_resolveProxies.setContainerClass(EReferenceImpl);
 this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
@@ -3364,6 +4106,20 @@ this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.eType, this._ERefere
 this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EReference_eOpposite.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EReference_eOpposite.setFeatureID(Ids.EReference.eOpposite);
     this._EReference_eOpposite.setContainerClass(EReferenceImpl);
@@ -3384,6 +4140,20 @@ this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
 
 this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EReference_eReferenceType.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EReference_eReferenceType.setFeatureID(Ids.EReference.eReferenceType);
     this._EReference_eReferenceType.setContainerClass(EReferenceImpl);
 this._EReference_eReferenceType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
@@ -3402,6 +4172,20 @@ this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.eType, this._EAttribute)
 this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._EReference_eKeys.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EReference_eKeys.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EReference_eKeys.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EReference_eKeys.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EReference_eKeys.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EReference_eKeys.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EReference_eKeys.setFeatureID(Ids.EReference.eKeys);
     this._EReference_eKeys.setContainerClass(EReferenceImpl);
@@ -3422,6 +4206,20 @@ this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.lowerBound,
 
 this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EStructuralFeature_changeable.setFeatureID(Ids.EStructuralFeature.changeable);
     this._EStructuralFeature_changeable.setContainerClass(EStructuralFeatureImpl);
 this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
@@ -3438,6 +4236,20 @@ this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.eType, this._
 this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_volatile.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EStructuralFeature_volatile.setFeatureID(Ids.EStructuralFeature.volatile);
     this._EStructuralFeature_volatile.setContainerClass(EStructuralFeatureImpl);
@@ -3456,6 +4268,20 @@ this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.lowerBound, 
 
 this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_transient.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EStructuralFeature_transient.setFeatureID(Ids.EStructuralFeature.transient);
     this._EStructuralFeature_transient.setContainerClass(EStructuralFeatureImpl);
 this._EStructuralFeature_transient.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
@@ -3472,6 +4298,20 @@ this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.eT
 this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_defaultValueLiteral.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EStructuralFeature_defaultValueLiteral.setFeatureID(Ids.EStructuralFeature.defaultValueLiteral);
     this._EStructuralFeature_defaultValueLiteral.setContainerClass(EStructuralFeatureImpl);
@@ -3490,6 +4330,20 @@ this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.lowerBoun
 
 this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EStructuralFeature_defaultValue.setFeatureID(Ids.EStructuralFeature.defaultValue);
     this._EStructuralFeature_defaultValue.setContainerClass(EStructuralFeatureImpl);
 this._EStructuralFeature_defaultValue.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
@@ -3506,6 +4360,20 @@ this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.eType, this
 this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_unsettable.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EStructuralFeature_unsettable.setFeatureID(Ids.EStructuralFeature.unsettable);
     this._EStructuralFeature_unsettable.setContainerClass(EStructuralFeatureImpl);
@@ -3524,6 +4392,20 @@ this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.lowerBound, 0)
 
 this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_derived.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EStructuralFeature_derived.setFeatureID(Ids.EStructuralFeature.derived);
     this._EStructuralFeature_derived.setContainerClass(EStructuralFeatureImpl);
 this._EStructuralFeature_derived.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStructuralFeature);
@@ -3540,6 +4422,20 @@ this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.eType
 this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStructuralFeature_eContainingClass.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EStructuralFeature_eContainingClass.setFeatureID(Ids.EStructuralFeature.eContainingClass);
     this._EStructuralFeature_eContainingClass.setContainerClass(EStructuralFeatureImpl);
@@ -3560,6 +4456,20 @@ this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._ETypedElement_ordered.setFeatureID(Ids.ETypedElement.ordered);
     this._ETypedElement_ordered.setContainerClass(ETypedElementImpl);
 this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
@@ -3576,6 +4486,20 @@ this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.eType, this._EBoolea
 this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._ETypedElement_unique.setFeatureID(Ids.ETypedElement.unique);
     this._ETypedElement_unique.setContainerClass(ETypedElementImpl);
@@ -3594,6 +4518,20 @@ this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_lowerBound.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._ETypedElement_lowerBound.setFeatureID(Ids.ETypedElement.lowerBound);
     this._ETypedElement_lowerBound.setContainerClass(ETypedElementImpl);
 this._ETypedElement_lowerBound.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
@@ -3610,6 +4548,20 @@ this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.eType, this._EIn
 this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._ETypedElement_upperBound.setFeatureID(Ids.ETypedElement.upperBound);
     this._ETypedElement_upperBound.setContainerClass(ETypedElementImpl);
@@ -3628,6 +4580,20 @@ this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_many.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._ETypedElement_many.setFeatureID(Ids.ETypedElement.many);
     this._ETypedElement_many.setContainerClass(ETypedElementImpl);
 this._ETypedElement_many.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
@@ -3645,6 +4611,20 @@ this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_required.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._ETypedElement_required.setFeatureID(Ids.ETypedElement.required);
     this._ETypedElement_required.setContainerClass(ETypedElementImpl);
 this._ETypedElement_required.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
@@ -3661,6 +4641,20 @@ this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.eType, this._EClassif
 this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_eType.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._ETypedElement_eType.setFeatureID(Ids.ETypedElement.eType);
     this._ETypedElement_eType.setContainerClass(ETypedElementImpl);
@@ -3695,7 +4689,7 @@ annotation.eBasicSetValue(Ids.EAnnotation.source, "https://typemf.dev/generator/
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "set");
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "this._eType = value; this._eGenericType = undefined; this.eDidAdd(undefined, value);");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "const oldValue = this._eType;\nconst wasSet = this._eType !== undefined;\nthis._eType = value;\nthis._eGenericType = undefined;\nthis.eDidAdd(undefined, value);\nconst feature = getEcorePackageRef().getETypedElement_EType();\nthis.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });");
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
 this._ETypedElement_eType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -3712,6 +4706,20 @@ this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.eType, this._E
 this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.volatile, true);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.unsettable, true);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypedElement_eGenericType.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._ETypedElement_eGenericType.setFeatureID(Ids.ETypedElement.eGenericType);
     this._ETypedElement_eGenericType.setContainerClass(ETypedElementImpl);
@@ -3746,7 +4754,7 @@ annotation.eBasicSetValue(Ids.EAnnotation.source, "https://typemf.dev/generator/
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, "set");
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "const feature = getEcorePackageRef().getETypedElement_EGenericType();\nconst oldValue = this.eGet(feature);\nthis.eBasicSetValue(feature, value);\nthis.eDidRemove(feature, oldValue);\nthis.eDidAdd(feature, value);\nthis._eType = value?.getERawType();");
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, "const feature = getEcorePackageRef().getETypedElement_EGenericType();\nconst oldValue = this.eGet(feature);\nconst wasSet = this.eIsSet(feature);\nthis.eBasicSetValue(feature, value);\nthis.eDidRemove(feature, oldValue);\nthis.eDidAdd(feature, value);\nthis.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });\nconst oldEType = this._eType;\nconst eTypeWasSet = oldEType !== undefined;\nthis._eType = value?.getERawType();\nconst eTypeFeature = getEcorePackageRef().getETypedElement_EType();\nthis.eNotify({ eventType: 'SET', notifier: this, feature: eTypeFeature, oldValue: oldEType, newValue: this._eType, position: undefined, wasSet: eTypeWasSet });");
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
 this._ETypedElement_eGenericType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -3763,6 +4771,20 @@ this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.eType, this._
 this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStringToStringMapEntry_key.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EStringToStringMapEntry_key.setFeatureID(Ids.EStringToStringMapEntry.key);
     this._EStringToStringMapEntry_key.setContainerClass(EStringToStringMapEntryImpl);
@@ -3781,6 +4803,20 @@ this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.lowerBound,
 
 this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EStringToStringMapEntry_value.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EStringToStringMapEntry_value.setFeatureID(Ids.EStringToStringMapEntry.value);
     this._EStringToStringMapEntry_value.setContainerClass(EStringToStringMapEntryImpl);
 this._EStringToStringMapEntry_value.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EStringToStringMapEntry);
@@ -3797,6 +4833,20 @@ this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.eType, this._EGe
 this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EGenericType_eUpperBound.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EGenericType_eUpperBound.setFeatureID(Ids.EGenericType.eUpperBound);
     this._EGenericType_eUpperBound.setContainerClass(EGenericTypeImpl);
@@ -3817,6 +4867,20 @@ this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.lowerBound, 0
 
 this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
 
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EGenericType_eTypeArguments.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EGenericType_eTypeArguments.setFeatureID(Ids.EGenericType.eTypeArguments);
     this._EGenericType_eTypeArguments.setContainerClass(EGenericTypeImpl);
 this._EGenericType_eTypeArguments.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
@@ -3835,6 +4899,20 @@ this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.eType, this._EClass
 this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.lowerBound, 1);
 
 this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.EStructuralFeature.derived, true);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.EStructuralFeature.transient, true);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.EStructuralFeature.changeable, false);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EGenericType_eRawType.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EGenericType_eRawType.setFeatureID(Ids.EGenericType.eRawType);
     this._EGenericType_eRawType.setContainerClass(EGenericTypeImpl);
@@ -3868,6 +4946,20 @@ this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EGenericType_eLowerBound.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EGenericType_eLowerBound.setFeatureID(Ids.EGenericType.eLowerBound);
     this._EGenericType_eLowerBound.setContainerClass(EGenericTypeImpl);
 this._EGenericType_eLowerBound.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
@@ -3886,6 +4978,20 @@ this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.eType, this._
 this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EGenericType_eTypeParameter.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._EGenericType_eTypeParameter.setFeatureID(Ids.EGenericType.eTypeParameter);
     this._EGenericType_eTypeParameter.setContainerClass(EGenericTypeImpl);
@@ -3906,6 +5012,20 @@ this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.upperBound, 1);
 
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._EGenericType_eClassifier.eBasicSetValue(Ids.ETypedElement.unique, true);
+
     this._EGenericType_eClassifier.setFeatureID(Ids.EGenericType.eClassifier);
     this._EGenericType_eClassifier.setContainerClass(EGenericTypeImpl);
 this._EGenericType_eClassifier.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EGenericType);
@@ -3924,6 +5044,20 @@ this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.eType, this._EGene
 this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.lowerBound, 0);
 
 this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.upperBound, -1);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EStructuralFeature.derived, false);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EStructuralFeature.transient, false);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EStructuralFeature.volatile, false);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EStructuralFeature.unsettable, false);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.EStructuralFeature.changeable, true);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.ordered, true);
+
+this._ETypeParameter_eBounds.eBasicSetValue(Ids.ETypedElement.unique, true);
 
     this._ETypeParameter_eBounds.setFeatureID(Ids.ETypeParameter.eBounds);
     this._ETypeParameter_eBounds.setContainerClass(ETypeParameterImpl);

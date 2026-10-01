@@ -53,6 +53,7 @@ export class ResourceImpl implements Resource {
   private readonly errorList: Diagnostic[] = [];
   private readonly warningList: Diagnostic[] = [];
   private resourceSet: ResourceSet | undefined;
+  private loadInProgress: Promise<void> | undefined;
 
   constructor(
     private uri: URI,
@@ -96,7 +97,37 @@ export class ResourceImpl implements Resource {
     return this.loaded;
   }
 
+  /**
+   * Concurrency-protected: `loaded` only flips to true once deserialize() fully finishes, so
+   * multiple concurrent load() calls for this exact resource - genuinely racing, none of them
+   * blocking on any of the others' own completion - used to each independently see
+   * `!resource.isLoaded()` and start their own, fully separate deserialize() call. Collapsed here
+   * into one: a call made while another is already in flight awaits that same, single,
+   * already-running promise instead. The real fix for a real, confirmed exponential-blowup hazard
+   * found this way: a self-referential metamodel (e.g. a "Feature contains child Features" style
+   * containment cycle - a normal, valid pattern, not a modeling error) can have many concurrent,
+   * independent resolve() calls converge on the same not-yet-finished resource.
+   *
+   * What this does NOT, and cannot, fix on its own: a caller that *directly awaits* a nested
+   * load() call on this exact resource, from within this resource's own still-running
+   * deserialize() itself, still deadlocks - confirmed directly, not just reasoned about. The
+   * shared, returned promise can only resolve once deserialize() returns, but deserialize() would
+   * now be waiting on that very promise, a genuine circular wait no Resource-level guard can
+   * break. A caller with that exact shape (e.g. SnapshotSerializer's own reconstruction of a
+   * self-referential metamodel) has to avoid making the reentrant load() call at all instead -
+   * see SnapshotSerializer's own registry.objectFor() short-circuit for how.
+   */
   async load(): Promise<void> {
+    if (this.loadInProgress) return this.loadInProgress;
+    this.loadInProgress = this.doLoad();
+    try {
+      await this.loadInProgress;
+    } finally {
+      this.loadInProgress = undefined;
+    }
+  }
+
+  private async doLoad(): Promise<void> {
     const converter = this.resolveUriConverter();
     const bytes = await converter.readBinary(this.uri);
     this.errorList.length = 0;

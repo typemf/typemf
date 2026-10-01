@@ -1,20 +1,17 @@
 {
   "name": "vscode-runtime",
   "displayName": "TypeMF Runtime",
-  "description": "Shared TypeMF runtime for VS Code extensions. Exposes one EPackageRegistry, ResourceFactoryRegistry, and UriConverterRegistry instance per extension host, handed out via activate() so every extension that depends on it shares the same registries instead of each bundling its own separate copy.",
+  "description": "Shared TypeMF runtime library. Exposes one EPackageRegistry, ResourceFactoryRegistry, and UriConverterRegistry instance per extension host, handed out via activate() so every extension that depends on it shares the same registries instead of each bundling its own separate copy. Not a separate, independently-installed VS Code extension itself (no activationEvents/contributes of its own) - instance-editor's own package.json is the one real extension manifest; this is a plain library it calls activate() on directly, bundling both into one single installed extension (one Extensions-view entry, with this package's own typemf.ecoreMappings setting merged into instance-editor's own 'configuration' contribution instead of a separate one here).",
   "version": "0.0.1",
   "publisher": "typemf",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/extension.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=22",
     "vscode": "^1.100.0"
   },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/typemf/typemf.git",
@@ -28,6 +25,7 @@
   "dependencies": {
     "@typemf/core": "workspace:*",
     "@typemf/json": "workspace:*",
+    "@typemf/node": "workspace:*",
     "@typemf/xmi": "workspace:*"
   },
   "devDependencies": {
