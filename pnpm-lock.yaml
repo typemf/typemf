@@ -188,6 +188,39 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@24.13.6)(yaml@2.9.1)
 
+  examples/library-extension:
+    devDependencies:
+      '@typemf/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@typemf/vscode-runtime':
+        specifier: workspace:*
+        version: link:../../packages/vscode-runtime
+      '@types/vscode':
+        specifier: ^1.100.0
+        version: 1.138.0
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
+      library-model:
+        specifier: workspace:^
+        version: link:../library-model
+
+  examples/library-model:
+    devDependencies:
+      '@typemf/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@typemf/generator':
+        specifier: workspace:*
+        version: link:../../packages/generator
+      '@typemf/vscode-runtime':
+        specifier: workspace:*
+        version: link:../../packages/vscode-runtime
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
+
   packages/core:
     devDependencies:
       tsup:
@@ -226,7 +259,7 @@ importers:
         version: 5.9.3
 
   packages/instance-editor:
-    dependencies:
+    devDependencies:
       '@typemf/core':
         specifier: workspace:*
         version: link:../core
@@ -236,19 +269,12 @@ importers:
       '@typemf/node':
         specifier: workspace:*
         version: link:../node
+      '@typemf/vscode-runtime':
+        specifier: workspace:*
+        version: link:../vscode-runtime
       '@typemf/xmi':
         specifier: workspace:*
         version: link:../xmi
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      vscode-runtime:
-        specifier: workspace:*
-        version: link:../vscode-runtime
-    devDependencies:
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.31
@@ -261,19 +287,24 @@ importers:
       esbuild:
         specifier: ^0.24.0
         version: 0.24.2
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
 
   packages/json:
-    dependencies:
+    devDependencies:
       '@typemf/core':
         specifier: workspace:*
         version: link:../core
 
   packages/node:
-    dependencies:
+    devDependencies:
       '@typemf/core':
         specifier: workspace:*
         version: link:../core
-    devDependencies:
       '@typemf/json':
         specifier: workspace:*
         version: link:../json
@@ -283,6 +314,10 @@ importers:
 
   packages/vscode-runtime:
     dependencies:
+      semver:
+        specifier: ^7.7.0
+        version: 7.8.5
+    devDependencies:
       '@typemf/core':
         specifier: workspace:*
         version: link:../core
@@ -295,20 +330,49 @@ importers:
       '@typemf/xmi':
         specifier: workspace:*
         version: link:../xmi
-    devDependencies:
+      '@types/semver':
+        specifier: ^7.7.0
+        version: 7.8.0
       '@types/vscode':
         specifier: ^1.100.0
         version: 1.138.0
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
 
-  packages/xmi:
-    dependencies:
+  packages/vscode-runtime-extension:
+    devDependencies:
       '@typemf/core':
         specifier: workspace:*
         version: link:../core
+      '@typemf/json':
+        specifier: workspace:*
+        version: link:../json
+      '@typemf/node':
+        specifier: workspace:*
+        version: link:../node
+      '@typemf/vscode-runtime':
+        specifier: workspace:*
+        version: link:../vscode-runtime
+      '@typemf/xmi':
+        specifier: workspace:*
+        version: link:../xmi
+      '@types/vscode':
+        specifier: ^1.100.0
+        version: 1.138.0
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
+
+  packages/xmi:
+    dependencies:
       '@xmldom/xmldom':
         specifier: ^0.9.12
         version: 0.9.12
     devDependencies:
+      '@typemf/core':
+        specifier: workspace:*
+        version: link:../core
       '@typemf/json':
         specifier: workspace:*
         version: link:../json
@@ -1083,6 +1147,9 @@ packages:
 
   '@types/react@18.3.31':
     resolution: {integrity: sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw==}
+
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@types/vscode@1.138.0':
     resolution: {integrity: sha512-DhlvrucJa8n6EHst7qQcXOcjLKs/VRTQy55plLO+RN74jonYsr/t9dd66zBnAyz1tpDig0okQAxuoPHpVNje2g==}
@@ -2104,6 +2171,8 @@ snapshots:
     dependencies:
       '@types/prop-types': 15.7.15
       csstype: 3.2.3
+
+  '@types/semver@7.8.0': {}
 
   '@types/vscode@1.138.0': {}
 

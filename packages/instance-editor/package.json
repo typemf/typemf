@@ -1,12 +1,13 @@
 {
   "name": "instance-editor",
   "displayName": "TypeMF",
-  "description": "A reflective editor for model instances - both static (generated code) and dynamic (loaded .ecore, not generated) modes, populated at runtime from whatever the root instance's own EClass actually is. Bundles the shared TypeMF runtime (package/resource-factory/URI-converter registries) directly - no longer a separate extension (see the two-section 'configuration' below: this is one single installed extension, with its own Editor and Runtime settings grouped under it).",
+  "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore), for generated as well as dynamically loaded metamodels.",
   "version": "0.0.1",
   "publisher": "typemf",
   "license": "Apache-2.0",
+  "private": true,
   "type": "module",
-  "main": "./dist/extension.js",
+  "main": "./dist/extension.cjs",
   "engines": {
     "node": ">=22",
     "vscode": "^1.100.0"
@@ -15,6 +16,9 @@
     "Other"
   ],
   "activationEvents": [],
+  "extensionDependencies": [
+    "typemf.vscode-runtime"
+  ],
   "contributes": {
     "customEditors": [
       {
@@ -47,46 +51,16 @@
         "title": "TypeMF: New Model Instance"
       }
     ],
-    "configuration": [
-      {
-        "title": "TypeMF \u203a Editor",
-        "properties": {
-          "typemf.showDerivedFeatures": {
-            "type": "boolean",
-            "default": false,
-            "description": "Show derived EStructuralFeatures (computed, not independently stored) in the properties panel. Off by default, since a derived feature is read-only and usually just clutter."
-          }
-        }
-      },
-      {
-        "title": "TypeMF \u203a Runtime",
-        "properties": {
-          "typemf.ecoreMappings": {
-            "type": "array",
-            "scope": "resource",
-            "default": [],
-            "items": {
-              "type": "object",
-              "required": [
-                "nsURI",
-                "ecoreFile"
-              ],
-              "properties": {
-                "nsURI": {
-                  "type": "string",
-                  "description": "The EPackage nsURI this mapping registers."
-                },
-                "ecoreFile": {
-                  "type": "string",
-                  "description": "Path to the .ecore file, resolved relative to the first workspace folder."
-                }
-              }
-            },
-            "description": "Maps a metamodel's nsURI to a .ecore file, loaded and registered into the shared package registry at startup. Merged across user/workspace/workspace-folder settings, most specific wins per nsURI (workspace-folder, then workspace, then user)."
-          }
+    "configuration": {
+      "title": "TypeMF › Editor",
+      "properties": {
+        "typemf.showDerivedFeatures": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show derived EStructuralFeatures (computed, not independently stored) in the properties panel. Off by default, since a derived feature is read-only and usually just clutter."
         }
       }
-    ]
+    }
   },
   "repository": {
     "type": "git",
@@ -94,21 +68,18 @@
     "directory": "packages/instance-editor"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && npm run build:webview",
-    "build:webview": "node esbuild.webview.mjs",
+    "build": "tsc -p tsconfig.json --noEmit && node esbuild.extension.mjs && node esbuild.webview.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.webview.json --noEmit",
     "test": "vitest run"
   },
-  "dependencies": {
+  "devDependencies": {
     "@typemf/core": "workspace:*",
     "@typemf/json": "workspace:*",
     "@typemf/node": "workspace:*",
     "@typemf/xmi": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "vscode-runtime": "workspace:*"
-  },
-  "devDependencies": {
+    "@typemf/vscode-runtime": "workspace:*",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/vscode": "^1.100.0",

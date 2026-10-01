@@ -68,4 +68,28 @@ describe('EPackageRegistryImpl', () => {
 
     expect(registry.getAllPackages()).toEqual([first, second]);
   });
+
+  it('resolves a descriptor once, on first lookup', () => {
+    const registry = new EPackageRegistryImpl();
+    const { libraryPackage } = buildSampleMetamodel();
+    let calls = 0;
+    registry.registerDescriptor('https://typemf.dev/samples/library', () => {
+      calls++;
+      return libraryPackage;
+    });
+
+    expect(registry.containsPackage('https://typemf.dev/samples/library')).toBe(true);
+    expect(calls).toBe(0);
+    expect(registry.getPackage('https://typemf.dev/samples/library')).toBe(libraryPackage);
+    expect(registry.getPackage('https://typemf.dev/samples/library')).toBe(libraryPackage);
+    expect(calls).toBe(1);
+  });
+
+  it('throws when a descriptor returns a package with a different nsURI', () => {
+    const registry = new EPackageRegistryImpl();
+    const { libraryPackage } = buildSampleMetamodel();
+    registry.registerDescriptor('https://typemf.dev/samples/other', () => libraryPackage);
+
+    expect(() => registry.getPackage('https://typemf.dev/samples/other')).toThrow(/returned a package with nsURI/);
+  });
 });

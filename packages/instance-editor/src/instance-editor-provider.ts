@@ -1,5 +1,5 @@
 import { EClass, EPackageRegistryImpl, isEPackage, ResourceSetImpl, URI } from '@typemf/core';
-import { TypeMfRuntimeApi } from 'vscode-runtime';
+import type { TypeMfRuntimeApi } from '@typemf/vscode-runtime';
 import * as vscode from 'vscode';
 import { handleAncestorChainRequest } from './handle-ancestor-chain-request.js';
 import { handleApplyEditRequest } from './handle-apply-edit-request.js';

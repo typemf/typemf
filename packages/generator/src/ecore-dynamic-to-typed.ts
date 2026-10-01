@@ -6,6 +6,7 @@ import {
   EClassifier,
   EClassifierImpl,
   EClassImpl,
+  EcorePackageImpl,
   EDataTypeImpl,
   EEnumImpl,
   EEnumLiteralImpl,
@@ -19,6 +20,9 @@ import {
   EParameterImpl,
   EReferenceImpl,
   EStructuralFeature,
+  isEClassifier,
+  ProxyEObjectImpl,
+  resolveAgainstPackage,
   type EGenericType,
   type ETypedElement,
   type ETypeParameter,
@@ -100,14 +104,34 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
     }
   }
 
-  /** Resolves a dynamic classifier reference through classifierMap, or reads eGenericType.eClassifier as a fallback when eType itself is unset. */
+  /**
+   * The real classifier a dynamic classifier reference denotes: one of this package's own, or, for a
+   * proxy into Ecore (e.g. `http://www.eclipse.org/emf/2002/Ecore#//EString`), Ecore's own. Ecore's
+   * EObject maps to undefined, like a local one.
+   */
+  function classifierOf(dynClassifier: EObject): EClassifier | undefined {
+    if (classifierMap.has(dynClassifier)) return classifierMap.get(dynClassifier);
+    const uri = dynClassifier.eIsProxy() ? (dynClassifier as ProxyEObjectImpl).getProxyURI() : undefined;
+    const ecore = EcorePackageImpl.eINSTANCE;
+    if (uri && uri.trimFragment().toString() === ecore.getNsURI()) {
+      const fragment = uri.getFragment() ?? '';
+      if (fragment === '//EObject') return undefined;
+      const resolved = resolveAgainstPackage(ecore, fragment);
+      if (isEClassifier(resolved)) return resolved;
+    }
+    throw new Error(
+      `Cannot resolve the classifier reference '${uri?.toString() ?? dynClassifier.fullId()}': only classifiers of this package and of Ecore are supported.`
+    );
+  }
+
+  /** Resolves a dynamic classifier reference, or reads eGenericType.eClassifier as a fallback when eType itself is unset. */
   function resolveType(dynFeature: EObject): EClassifier | undefined {
     const dynType = byNameRaw(dynFeature, 'eType') as EObject | undefined;
-    if (dynType) return classifierMap.get(dynType);
+    if (dynType) return classifierOf(dynType);
     const dynGeneric = byNameRaw(dynFeature, 'eGenericType') as EObject | undefined;
     if (dynGeneric) {
       const dynClassifier = byNameRaw(dynGeneric, 'eClassifier') as EObject | undefined;
-      if (dynClassifier) return classifierMap.get(dynClassifier);
+      if (dynClassifier) return classifierOf(dynClassifier);
     }
     return undefined;
   }
@@ -123,7 +147,7 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   function convertGenericType(dynGeneric: EObject): EGenericType {
     const gt = new EGenericTypeImpl();
     const dynClassifier = byNameRaw(dynGeneric, 'eClassifier') as EObject | undefined;
-    if (dynClassifier) gt.setEClassifier(classifierMap.get(dynClassifier));
+    if (dynClassifier) gt.setEClassifier(classifierOf(dynClassifier));
     const dynParameter = byNameRaw(dynGeneric, 'eTypeParameter') as EObject | undefined;
     if (dynParameter) gt.setETypeParameter(typeParameterMap.get(dynParameter));
     for (const dynArgument of listByName(dynGeneric, 'eTypeArguments')) {
@@ -168,7 +192,7 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
       if (byName<boolean>(dyn, 'abstract')) c.setAbstract(true);
       if (byName<boolean>(dyn, 'interface')) c.setInterface(true);
       for (const dynSuper of listByName(dyn, 'eSuperTypes')) {
-        const realSuper = classifierMap.get(dynSuper);
+        const realSuper = classifierOf(dynSuper);
         if (realSuper) c.getESuperTypes().add(realSuper as EClass);
       }
     }

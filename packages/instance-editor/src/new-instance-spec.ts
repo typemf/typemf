@@ -1,5 +1,5 @@
 import { EClass, EPackage, isEClass } from '@typemf/core';
-import { TypeMfRuntimeApi } from 'vscode-runtime';
+import type { TypeMfRuntimeApi } from '@typemf/vscode-runtime';
 import { loadLocalEcorePackage } from './load-local-ecore-package.js';
 
 /**

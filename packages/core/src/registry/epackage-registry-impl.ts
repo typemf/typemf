@@ -1,8 +1,8 @@
 import { EPackage } from '../metamodel/types/EPackage.js';
-import { EPackageRegistry } from './epackage-registry.js';
+import { EPackageDescriptor, EPackageRegistry } from './epackage-registry.js';
 
 export class EPackageRegistryImpl implements EPackageRegistry {
-  private readonly packagesByNsURI = new Map<string, EPackage>();
+  private readonly entries = new Map<string, EPackage | EPackageDescriptor>();
 
   register(pkg: EPackage): void {
     const nsURI = pkg.getNsURI();
@@ -12,22 +12,33 @@ export class EPackageRegistryImpl implements EPackageRegistry {
           'Every registrable EPackage needs a unique namespace URI - see setNsURI().'
       );
     }
-    this.packagesByNsURI.set(nsURI, pkg);
+    this.entries.set(nsURI, pkg);
+  }
+
+  registerDescriptor(nsURI: string, descriptor: EPackageDescriptor): void {
+    this.entries.set(nsURI, descriptor);
   }
 
   unregister(nsURI: string): void {
-    this.packagesByNsURI.delete(nsURI);
+    this.entries.delete(nsURI);
   }
 
   getPackage(nsURI: string): EPackage | undefined {
-    return this.packagesByNsURI.get(nsURI);
+    const entry = this.entries.get(nsURI);
+    if (typeof entry !== 'function') return entry;
+    const pkg = entry();
+    if (pkg.getNsURI() !== nsURI) {
+      throw new Error(`The descriptor registered for '${nsURI}' returned a package with nsURI '${pkg.getNsURI()}'.`);
+    }
+    this.entries.set(nsURI, pkg);
+    return pkg;
   }
 
   containsPackage(nsURI: string): boolean {
-    return this.packagesByNsURI.has(nsURI);
+    return this.entries.has(nsURI);
   }
 
   getAllPackages(): EPackage[] {
-    return [...this.packagesByNsURI.values()];
+    return [...this.entries.keys()].map((nsURI) => this.getPackage(nsURI)!);
   }
 }

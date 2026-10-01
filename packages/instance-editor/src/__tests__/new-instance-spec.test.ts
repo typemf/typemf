@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { TypeMfRuntimeApi } from 'vscode-runtime';
+import type { TypeMfRuntimeApi } from '@typemf/vscode-runtime';
 import { encodeDynamicSpec, encodeStaticSpec, resolveNewInstanceSpec } from '../new-instance-spec.js';
 
 void EcorePackageImpl.eINSTANCE;

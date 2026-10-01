@@ -1,5 +1,5 @@
 import { EClass, EPackage } from '@typemf/core';
-import { TypeMfRuntimeApi } from 'vscode-runtime';
+import type { TypeMfRuntimeApi } from '@typemf/vscode-runtime';
 import * as vscode from 'vscode';
 import { InstanceEditorProvider } from './instance-editor-provider.js';
 import { loadLocalEcorePackage } from './load-local-ecore-package.js';

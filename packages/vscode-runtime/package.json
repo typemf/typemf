@@ -1,34 +1,72 @@
 {
-  "name": "vscode-runtime",
-  "displayName": "TypeMF Runtime",
-  "description": "Shared TypeMF runtime library. Exposes one EPackageRegistry, ResourceFactoryRegistry, and UriConverterRegistry instance per extension host, handed out via activate() so every extension that depends on it shares the same registries instead of each bundling its own separate copy. Not a separate, independently-installed VS Code extension itself (no activationEvents/contributes of its own) - instance-editor's own package.json is the one real extension manifest; this is a plain library it calls activate() on directly, bundling both into one single installed extension (one Extensions-view entry, with this package's own typemf.ecoreMappings setting merged into instance-editor's own 'configuration' contribution instead of a separate one here).",
+  "name": "@typemf/vscode-runtime",
+  "description": "API, module host and esbuild plugin of the shared TypeMF runtime for VS Code extensions.",
   "version": "0.0.1",
-  "publisher": "typemf",
   "license": "Apache-2.0",
   "type": "module",
-  "main": "./dist/index.js",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./host": {
+      "types": "./dist/host.d.ts",
+      "import": "./dist/host.js",
+      "require": "./dist/host.cjs"
+    },
+    "./esbuild": {
+      "types": "./dist/esbuild.d.ts",
+      "import": "./dist/esbuild.js",
+      "require": "./dist/esbuild.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "engines": {
-    "node": ">=22",
-    "vscode": "^1.100.0"
+    "node": ">=22"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/typemf/typemf.git",
     "directory": "packages/vscode-runtime"
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.json --noEmit && tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "semver": "^7.7.0"
+  },
+  "peerDependencies": {
+    "@typemf/core": "workspace:^",
+    "@typemf/json": "workspace:^",
+    "@typemf/node": "workspace:^",
+    "@typemf/xmi": "workspace:^",
+    "esbuild": ">=0.20.0"
+  },
+  "peerDependenciesMeta": {
+    "esbuild": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
     "@typemf/core": "workspace:*",
     "@typemf/json": "workspace:*",
     "@typemf/node": "workspace:*",
-    "@typemf/xmi": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.100.0"
+    "@typemf/xmi": "workspace:*",
+    "@types/semver": "^7.7.0",
+    "@types/vscode": "^1.100.0",
+    "esbuild": "^0.24.0"
   }
 }

@@ -1,0 +1,66 @@
+{
+  "name": "vscode-runtime",
+  "displayName": "TypeMF Runtime",
+  "description": "Shared TypeMF runtime: one package registry and one instance of every shared model module for all TypeMF extensions.",
+  "version": "0.0.1",
+  "publisher": "typemf",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "contributes": {
+    "configuration": {
+      "title": "TypeMF › Runtime",
+      "properties": {
+        "typemf.ecoreMappings": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": [
+              "nsURI",
+              "ecoreFile"
+            ],
+            "properties": {
+              "nsURI": {
+                "type": "string",
+                "description": "The EPackage nsURI this mapping registers."
+              },
+              "ecoreFile": {
+                "type": "string",
+                "description": "Path to the .ecore file, resolved relative to the first workspace folder."
+              }
+            }
+          },
+          "description": "Maps a metamodel's nsURI to a .ecore file, loaded and registered into the shared package registry at startup. Merged across user/workspace/workspace-folder settings, most specific wins per nsURI (workspace-folder, then workspace, then user)."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/typemf/typemf.git",
+    "directory": "packages/vscode-runtime-extension"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && node esbuild.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@typemf/core": "workspace:*",
+    "@typemf/json": "workspace:*",
+    "@typemf/node": "workspace:*",
+    "@typemf/vscode-runtime": "workspace:*",
+    "@typemf/xmi": "workspace:*",
+    "@types/vscode": "^1.100.0",
+    "esbuild": "^0.24.0"
+  }
+}

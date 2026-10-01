@@ -3,7 +3,7 @@ import { NodeFileUriConverter } from '@typemf/node';
 import { join } from 'node:path';
 import * as vscode from 'vscode';
 import { EcoreMappingEntry, resolveMappings } from './ecore-mappings.js';
-import { TypeMfRuntimeApi } from './typemf-runtime.js';
+import type { TypeMfRuntimeApi } from './api.js';
 
 /**
  * Reads the `typemf.ecoreMappings` setting (merged across scopes, see resolveMappings), loads

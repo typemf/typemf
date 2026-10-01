@@ -31,7 +31,10 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@typemf/core": "workspace:^"
+  },
+  "devDependencies": {
     "@typemf/core": "workspace:*"
   }
 }

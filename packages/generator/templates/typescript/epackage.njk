@@ -85,6 +85,10 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
  call is correct and necessary there, and the bypass is correct and
  necessary here - never both from the same call site.
 #}
+{#- The expression for classifier `c`: its field for a classifier of this package, Ecore's own accessor otherwise. #}
+{% macro classifierExpr(c) -%}
+{%- if c.getEPackage() == package -%}this._{{ c.getName() }}{%- else -%}{{ useImport("EcorePackageImpl", "impl", {foundational: true}) }}.eINSTANCE.get{{ c.getName() }}(){%- endif -%}
+{%- endmacro %}
 {% macro bootstrapSet(targetExpr, beanSetterName, idsExpr, valueExpr) %}
 {% if options['generate-ecore'] %}
 {{ targetExpr }}.eBasicSetValue({{ idsExpr }}, {{ valueExpr }});
@@ -257,7 +261,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% set fieldExpr = "this._" + classifier.getName() + "_" + feature.getName() %}
 {{ bootstrapSet(fieldExpr, "setName", "Ids.ENamedElement.name", jsString(feature.getName())) }}
 {% if feature.getEType() %}
-{{ bootstrapSet(fieldExpr, "setEType", "Ids.ETypedElement.eType", "this._" + feature.getEType().getName()) }}
+{{ bootstrapSet(fieldExpr, "setEType", "Ids.ETypedElement.eType", classifierExpr(feature.getEType())) }}
 {% endif %}
 {{ bootstrapSet(fieldExpr, "setLowerBound", "Ids.ETypedElement.lowerBound", feature.getLowerBound()) }}
 {{ bootstrapSet(fieldExpr, "setUpperBound", "Ids.ETypedElement.upperBound", feature.getUpperBound()) }}
@@ -312,7 +316,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
     {{ opFieldExpr }} = new EOperationImpl();
 {{ bootstrapSet(opFieldExpr, "setName", "Ids.ENamedElement.name", jsString(op.getName())) }}
 {% if op.getEType() %}
-{{ bootstrapSet(opFieldExpr, "setEType", "Ids.ETypedElement.eType", "this._" + op.getEType().getName()) }}
+{{ bootstrapSet(opFieldExpr, "setEType", "Ids.ETypedElement.eType", classifierExpr(op.getEType())) }}
 {% endif %}
 {{ bootstrapSet(opFieldExpr, "setEContainingClass", "Ids.EOperation.eContainingClass", "this._" + classifier.getName()) }}
     {{ opFieldExpr }}.setOperationID(Ids.{{ classifier.getName() }}.op{{ opIndex }});
@@ -321,7 +325,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
     {{ paramFieldExpr }} = new EParameterImpl();
 {{ bootstrapSet(paramFieldExpr, "setName", "Ids.ENamedElement.name", jsString(param.getName())) }}
 {% if param.getEType() %}
-{{ bootstrapSet(paramFieldExpr, "setEType", "Ids.ETypedElement.eType", "this._" + param.getEType().getName()) }}
+{{ bootstrapSet(paramFieldExpr, "setEType", "Ids.ETypedElement.eType", classifierExpr(param.getEType())) }}
 {% endif %}
 {{ bootstrapSet(paramFieldExpr, "setLowerBound", "Ids.ETypedElement.lowerBound", param.getLowerBound()) }}
 {{ bootstrapSet(paramFieldExpr, "setUpperBound", "Ids.ETypedElement.upperBound", param.getUpperBound()) }}
@@ -329,7 +333,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {{ bootstrapAdd(opFieldExpr, "getEParameters", "Ids.EOperation.eParameters", paramFieldExpr) }}
 {% endfor %}
 {% for exception in op.getEExceptions() %}
-{{ bootstrapAdd(opFieldExpr, "getEExceptions", "Ids.EOperation.eExceptions", "this._" + exception.getName()) }}
+{{ bootstrapAdd(opFieldExpr, "getEExceptions", "Ids.EOperation.eExceptions", classifierExpr(exception)) }}
 {% endfor %}
 {{ emitAnnotations(opFieldExpr, op) }}
 {{ bootstrapAdd("this._" + classifier.getName(), "getEOperations", "Ids.EClass.eOperations", opFieldExpr) }}
@@ -346,7 +350,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% for classifier in eClassesOf(package) %}
 {% set parent = superType(classifier) %}
 {% if parent %}
-{{ bootstrapAdd("this._" + classifier.getName(), "getESuperTypes", "Ids.EClass.eSuperTypes", "this._" + parent.getName()) }}
+{{ bootstrapAdd("this._" + classifier.getName(), "getESuperTypes", "Ids.EClass.eSuperTypes", classifierExpr(parent)) }}
 {% endif %}
 {% endfor %}
 

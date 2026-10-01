@@ -31,11 +31,12 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {
-    "@typemf/core": "workspace:*"
-  },
   "devDependencies": {
+    "@typemf/core": "workspace:*",
     "@typemf/json": "workspace:*",
     "@typemf/xmi": "workspace:*"
+  },
+  "peerDependencies": {
+    "@typemf/core": "workspace:^"
   }
 }
