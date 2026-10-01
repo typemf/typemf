@@ -4,7 +4,7 @@
   "description": "A reflective editor for model instances - both static (generated code) and dynamic (loaded .ecore, not generated) modes, populated at runtime from whatever the root instance's own EClass actually is. Bundles the shared TypeMF runtime (package/resource-factory/URI-converter registries) directly - no longer a separate extension (see the two-section 'configuration' below: this is one single installed extension, with its own Editor and Runtime settings grouped under it).",
   "version": "0.0.1",
   "publisher": "typemf",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/extension.js",
   "engines": {

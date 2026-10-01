@@ -1,10 +1,14 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { loadEcorePackage } from '../ecore-loader.js';
 import { findUnresolvedCollisions, metaclassAccessorCollision } from '../typescript-filters.js';
 
+const fixturePath = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'Ecore.ecore');
+
 describe('metaclassAccessorCollision', () => {
   it('finds the real, inherited operation each of the two known metaclass-accessor collisions resolves to', async () => {
-    const pkg = await loadEcorePackage('/home/claude/typemf_workspace/packages/generator/src/__tests__/fixtures/Ecore.ecore');
+    const pkg = await loadEcorePackage(fixturePath);
     const annotationCollision = metaclassAccessorCollision('EAnnotation', pkg);
     expect(annotationCollision?.getName()).toBe('getEAnnotation');
     const classifierCollision = metaclassAccessorCollision('EClassifier', pkg);
@@ -19,7 +23,7 @@ describe('metaclassAccessorCollision', () => {
 
 describe('findUnresolvedCollisions', () => {
   it('finds exactly the two known, currently-unresolved collisions in real Ecore.ecore', async () => {
-    const pkg = await loadEcorePackage('/home/claude/typemf_workspace/packages/generator/src/__tests__/fixtures/Ecore.ecore');
+    const pkg = await loadEcorePackage(fixturePath);
     const collisions = findUnresolvedCollisions(pkg);
     for (const c of collisions) {
       console.log(`${c.classifierName}.${c.memberName}: ${c.sources.join(' vs ')}`);
