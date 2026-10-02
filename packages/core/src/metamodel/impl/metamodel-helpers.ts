@@ -63,4 +63,3 @@ export function setDetailValue(details: EList<EStringToStringMapEntry>, key: str
   entry.setValue(value);
   details.add(entry);
 }
-

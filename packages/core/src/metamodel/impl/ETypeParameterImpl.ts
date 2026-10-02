@@ -7,10 +7,7 @@ import { EList } from '../types/EList.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
-
-
 export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParameter {
-
   private _eBoundsCache: BasicEList<EGenericType> | undefined;
 
   private get _eBounds(): BasicEList<EGenericType> {
@@ -19,7 +16,6 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
     }
     return this._eBoundsCache;
   }
-
 
   eClass(): EClass {
     return getEcorePackageRef().getETypeParameter();
@@ -31,7 +27,8 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2: return this._eBounds;
+      case 2:
+        return this._eBounds;
       default:
         return super.eGet(feature);
     }
@@ -72,7 +69,8 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2: return this._eBoundsCache !== undefined && this._eBoundsCache.size() !== 0;
+      case 2:
+        return this._eBoundsCache !== undefined && this._eBoundsCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -80,7 +78,9 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-      case 2: this._eBoundsCache?.clear(); return;
+      case 2:
+        this._eBoundsCache?.clear();
+        return;
 
       default:
         super.eUnset(feature);

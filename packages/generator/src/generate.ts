@@ -14,7 +14,11 @@ import { TemplateSet } from './template-set.js';
  * between generated files are computable without knowing an eventual
  * absolute location.
  */
-export function generate(pkg: EPackage, templateSet: TemplateSet, options: Record<string, unknown> = {}): GeneratedFile[] {
+export function generate(
+  pkg: EPackage,
+  templateSet: TemplateSet,
+  options: Record<string, unknown> = {}
+): GeneratedFile[] {
   assignFreshIds(pkg);
 
   const problems = templateSet.validate?.(pkg) ?? [];

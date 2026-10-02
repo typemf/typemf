@@ -32,9 +32,15 @@ export class ModuleHost {
   /** Adds a module that is loaded on its first request. */
   declare(declaration: ModuleDeclaration): void {
     if (!semver.valid(declaration.version)) {
-      throw new Error(`Module '${declaration.name}' from '${declaration.provider}' has an invalid version '${declaration.version}'.`);
+      throw new Error(
+        `Module '${declaration.name}' from '${declaration.provider}' has an invalid version '${declaration.version}'.`
+      );
     }
-    this.add(declaration.name, { version: declaration.version, provider: declaration.provider, load: declaration.load });
+    this.add(declaration.name, {
+      version: declaration.version,
+      provider: declaration.provider,
+      load: declaration.load,
+    });
   }
 
   has(name: string): boolean {
@@ -45,14 +51,18 @@ export class ModuleHost {
   require(name: string, range: string): unknown {
     const providers = this.conflicts.get(name);
     if (providers) {
-      throw new Error(`Module '${name}' is provided by more than one extension (${providers.join(', ')}); only one provider is allowed.`);
+      throw new Error(
+        `Module '${name}' is provided by more than one extension (${providers.join(', ')}); only one provider is allowed.`
+      );
     }
     const entry = this.entries.get(name);
     if (!entry) {
       throw new Error(`No installed extension provides module '${name}'.`);
     }
     if (!semver.satisfies(entry.version, range, { includePrerelease: true })) {
-      throw new Error(`Module '${name}' ${entry.version} (from '${entry.provider}') does not satisfy the requested range '${range}'.`);
+      throw new Error(
+        `Module '${name}' ${entry.version} (from '${entry.provider}') does not satisfy the requested range '${range}'.`
+      );
     }
     if (!entry.loaded) {
       entry.loaded = { value: entry.load() };

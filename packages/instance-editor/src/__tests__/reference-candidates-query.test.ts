@@ -16,7 +16,7 @@ class FakeTransport implements PostMessageTransport {
 }
 
 describe('ReferenceCandidatesQuery', () => {
-  it('sends a ReferenceCandidatesRequest carrying the given typeId, and resolves with candidateIds once a matching response arrives', async () => {
+  it('sends a ReferenceCandidatesRequest and resolves with the candidates of the matching response', async () => {
     const transport = new FakeTransport();
     const query = new ReferenceCandidatesQuery(transport);
 
@@ -24,7 +24,11 @@ describe('ReferenceCandidatesQuery', () => {
     const request = transport.lastRequest();
     expect(request.typeId).toBe('book-class-id');
 
-    query.handleMessage({ type: 'typemf/referenceCandidatesResult', requestId: request.requestId, candidateIds: ['book-1', 'book-2'] });
+    query.handleMessage({
+      type: 'typemf/referenceCandidatesResult',
+      requestId: request.requestId,
+      candidateIds: ['book-1', 'book-2'],
+    });
 
     expect(await pending).toEqual(['book-1', 'book-2']);
   });
@@ -35,12 +39,16 @@ describe('ReferenceCandidatesQuery', () => {
 
     const pending = query.query('unknown-type');
     const request = transport.lastRequest();
-    query.handleMessage({ type: 'typemf/referenceCandidatesError', requestId: request.requestId, message: 'no class known' });
+    query.handleMessage({
+      type: 'typemf/referenceCandidatesError',
+      requestId: request.requestId,
+      message: 'no class known',
+    });
 
     await expect(pending).rejects.toThrow('no class known');
   });
 
-  it('a response with an unrelated requestId is ignored', async () => {
+  it('ignores a response with another requestId', async () => {
     const transport = new FakeTransport();
     const query = new ReferenceCandidatesQuery(transport);
 
@@ -48,12 +56,16 @@ describe('ReferenceCandidatesQuery', () => {
     const request = transport.lastRequest();
 
     query.handleMessage({ type: 'typemf/referenceCandidatesResult', requestId: 'unrelated', candidateIds: ['wrong'] });
-    query.handleMessage({ type: 'typemf/referenceCandidatesResult', requestId: request.requestId, candidateIds: ['right'] });
+    query.handleMessage({
+      type: 'typemf/referenceCandidatesResult',
+      requestId: request.requestId,
+      candidateIds: ['right'],
+    });
 
     expect(await pending).toEqual(['right']);
   });
 
-  it('handleMessage ignores unrelated message types without throwing', () => {
+  it('handleMessage ignores unrelated message types', () => {
     const query = new ReferenceCandidatesQuery(new FakeTransport());
     expect(() => query.handleMessage({ type: 'something/else' })).not.toThrow();
     expect(() => query.handleMessage(null)).not.toThrow();

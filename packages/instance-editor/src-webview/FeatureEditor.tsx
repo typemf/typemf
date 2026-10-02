@@ -1,4 +1,16 @@
-import { EClass, EDataType, EList, EObject, EReference, EStructuralFeature, ProxyEObjectImpl, isEClass, isEDataType, isEEnum, isEReference } from '@typemf/core';
+import {
+  EClass,
+  EDataType,
+  EList,
+  EObject,
+  EReference,
+  EStructuralFeature,
+  ProxyEObjectImpl,
+  isEClass,
+  isEDataType,
+  isEEnum,
+  isEReference,
+} from '@typemf/core';
 import React, { useState } from 'react';
 import { displayLabel } from '../src/display-label.js';
 import { uriForId } from '../src/snapshot-serializer.js';
@@ -34,7 +46,9 @@ export function FeatureEditor({ obj, feature, environment, onFollowReference }: 
     return <DerivedAttributeDisplay obj={obj} feature={feature} />;
   }
   if (isEReference(feature)) {
-    return <ReferenceEditor obj={obj} feature={feature} environment={environment} onFollowReference={onFollowReference} />;
+    return (
+      <ReferenceEditor obj={obj} feature={feature} environment={environment} onFollowReference={onFollowReference} />
+    );
   }
   return <AttributeEditor obj={obj} feature={feature} />;
 }
@@ -95,7 +109,15 @@ function defaultValueFor(typeName: string | undefined): unknown {
 /** One value's own editor widget, shared between the single- and multi-valued cases - the same
  *  checkbox/number/enum/text dispatch either way, just parameterized by value+onChange instead of
  *  reading/writing obj/feature directly, so ManyValuedAttributeEditor can use it once per row. */
-function ValueEditor({ eType, value, onChange }: { eType: unknown; value: unknown; onChange: (v: unknown) => void }): React.JSX.Element {
+function ValueEditor({
+  eType,
+  value,
+  onChange,
+}: {
+  eType: unknown;
+  value: unknown;
+  onChange: (v: unknown) => void;
+}): React.JSX.Element {
   const typeName = dataTypeName(eType);
 
   if (isEEnum(eType)) {
@@ -104,7 +126,9 @@ function ValueEditor({ eType, value, onChange }: { eType: unknown; value: unknow
         className="feature-input"
         value={typeof value === 'string' ? value : ''}
         onChange={(e) => {
-          const literal = eType.getEEnumLiteralByLiteral(e.target.value) ?? eType.getELiterals().find((l) => l.getName() === e.target.value);
+          const literal =
+            eType.getEEnumLiteralByLiteral(e.target.value) ??
+            eType.getELiterals().find((l) => l.getName() === e.target.value);
           onChange(literal?.getLiteral() ?? e.target.value);
         }}
       >
@@ -143,7 +167,12 @@ function ValueEditor({ eType, value, onChange }: { eType: unknown; value: unknow
   }
 
   return (
-    <input className="feature-input" type="text" value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value)} />
+    <input
+      className="feature-input"
+      type="text"
+      value={typeof value === 'string' ? value : ''}
+      onChange={(e) => onChange(e.target.value)}
+    />
   );
 }
 
@@ -197,7 +226,12 @@ function ManyValuedAttributeEditor({ obj, feature }: AttributeEditorProps): Reac
  * non-containment reference would - both come back from eGet() as (possibly still-proxy) EObject
  * values, and this editor doesn't distinguish the two.
  */
-function ReferenceEditor({ obj, feature: rawFeature, environment, onFollowReference }: FeatureEditorProps): React.JSX.Element {
+function ReferenceEditor({
+  obj,
+  feature: rawFeature,
+  environment,
+  onFollowReference,
+}: FeatureEditorProps): React.JSX.Element {
   // Always a real EReference here - FeatureEditor's own dispatch only ever calls this after
   // isEReference(feature) was already true; FeatureEditorProps itself stays typed at the broader
   // EStructuralFeature since every other widget genuinely needs that wider type.
@@ -273,7 +307,9 @@ function ReferenceEditor({ obj, feature: rawFeature, environment, onFollowRefere
       {/* value itself was set (a real proxy or object), but useResolved hasn't settled yet -
           genuinely pending, not "(unset)" - no follow/remove until it has, since following needs
           a real, resolved target and removing while still pending could race the resolution. */}
-      <span className="feature-reference-label">{resolvedSingle === undefined ? '…' : displayLabel(resolvedSingle)}</span>
+      <span className="feature-reference-label">
+        {resolvedSingle === undefined ? '…' : displayLabel(resolvedSingle)}
+      </span>
       {resolvedSingle !== undefined && (
         <>
           <button
@@ -285,7 +321,12 @@ function ReferenceEditor({ obj, feature: rawFeature, environment, onFollowRefere
             {'→'}
           </button>
           {!feature.isDerived() && (
-            <button className="feature-reference-remove" onClick={() => obj.eUnset(feature)} aria-label="Remove" title="Remove">
+            <button
+              className="feature-reference-remove"
+              onClick={() => obj.eUnset(feature)}
+              aria-label="Remove"
+              title="Remove"
+            >
               {'✕'}
             </button>
           )}
@@ -312,7 +353,15 @@ type AddChildState =
  * reference - marked via suppressNext first, since the host has already added it and relaying
  * that local mutation back would be redundant (see EditRelay's own reasoning for the full story).
  */
-function AddChildButton({ obj, feature, environment }: { obj: EObject; feature: EStructuralFeature; environment: WebviewEnvironment }): React.JSX.Element {
+function AddChildButton({
+  obj,
+  feature,
+  environment,
+}: {
+  obj: EObject;
+  feature: EStructuralFeature;
+  environment: WebviewEnvironment;
+}): React.JSX.Element {
   const { resourceSet, objectRegistry, concreteSubtypesQuery, editRelay } = environment;
   const [state, setState] = useState<AddChildState>({ kind: 'idle' });
 
@@ -397,7 +446,11 @@ function AddChildButton({ obj, feature, environment }: { obj: EObject; feature: 
 
   return (
     <div className="feature-add-child">
-      <button className="feature-list-add" onClick={() => void startAdd()} disabled={state.kind === 'loading' || state.kind === 'creating'}>
+      <button
+        className="feature-list-add"
+        onClick={() => void startAdd()}
+        disabled={state.kind === 'loading' || state.kind === 'creating'}
+      >
         {state.kind === 'loading' ? 'Loading…' : state.kind === 'creating' ? 'Adding…' : '+ Add'}
       </button>
       {state.kind === 'error' && <span className="feature-add-child-error">{state.message}</span>}
@@ -508,7 +561,13 @@ function LinkReferenceButton({
 
   if (state.kind === 'picking') {
     return (
-      <PickObjectForm candidates={state.candidates} labelFor={displayLabel} confirmLabel="Link" onCancel={() => setState({ kind: 'idle' })} onPick={link} />
+      <PickObjectForm
+        candidates={state.candidates}
+        labelFor={displayLabel}
+        confirmLabel="Link"
+        onCancel={() => setState({ kind: 'idle' })}
+        onPick={link}
+      />
     );
   }
 
@@ -546,7 +605,11 @@ function PickObjectForm<T extends EObject>({
   const [selectedIndex, setSelectedIndex] = useState(0);
   return (
     <div className="feature-add-child-picker">
-      <select className="feature-input" value={selectedIndex} onChange={(e) => setSelectedIndex(Number(e.target.value))}>
+      <select
+        className="feature-input"
+        value={selectedIndex}
+        onChange={(e) => setSelectedIndex(Number(e.target.value))}
+      >
         {candidates.map((item, index) => (
           <option key={index} value={index}>
             {labelFor(item)}

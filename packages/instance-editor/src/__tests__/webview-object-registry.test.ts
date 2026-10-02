@@ -17,13 +17,13 @@ describe('WebviewObjectRegistry', () => {
     expect(registry.hostIdFor(obj)).toBe('host-42');
   });
 
-  it('hostIdFor resolves one of Ecore\'s own classifiers via the well-known scheme, with no recording needed at all', () => {
+  it("hostIdFor resolves Ecore's classifiers through their well-known id", () => {
     const registry = new WebviewObjectRegistry();
     const realEClass = EcorePackageImpl.eINSTANCE.getEClass();
     expect(registry.hostIdFor(realEClass)).toBe(`ecore:${realEClass.getClassifierID()}`);
   });
 
-  it('a recorded id for one object does not leak to a different, unrecorded object', () => {
+  it('does not give a recorded id to another object', () => {
     const registry = new WebviewObjectRegistry();
     const recorded = new EClassImpl();
     const notRecorded = new EClassImpl();

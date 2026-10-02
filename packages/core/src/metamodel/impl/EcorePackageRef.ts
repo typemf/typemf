@@ -36,9 +36,7 @@ export function setEcorePackageRef(pkg: EcorePackage): void {
 
 export function getEcorePackageRef(): EcorePackage {
   if (!ref) {
-    throw new Error(
-      'getEcorePackageRef() called before the EcorePackage singleton finished constructing itself.'
-    );
+    throw new Error('getEcorePackageRef() called before the EcorePackage singleton finished constructing itself.');
   }
   return ref;
 }

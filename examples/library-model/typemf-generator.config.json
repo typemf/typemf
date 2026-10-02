@@ -1,0 +1,6 @@
+{
+  "ecoreFile": "./model/library.ecore",
+  "outputDir": "./src/generated",
+  "templateSet": "typescript",
+  "options": {}
+}

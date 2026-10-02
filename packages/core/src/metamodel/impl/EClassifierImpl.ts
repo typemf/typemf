@@ -10,10 +10,7 @@ import { ETypeParameter } from '../types/ETypeParameter.js';
 import { TypeScriptClass } from '../types/TypeScriptClass';
 import { EObjectImpl } from './EObjectImpl';
 
-
-
 export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
-
   private _instanceClassName: string | undefined;
 
   private _instanceClass: TypeScriptClass<unknown> | undefined;
@@ -28,11 +25,13 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   private get _eTypeParameters(): BasicEList<ETypeParameter> {
     if (!this._eTypeParametersCache) {
-      this._eTypeParametersCache = new BasicEList<ETypeParameter>(this, getEcorePackageRef().getEClassifier_ETypeParameters());
+      this._eTypeParametersCache = new BasicEList<ETypeParameter>(
+        this,
+        getEcorePackageRef().getEClassifier_ETypeParameters()
+      );
     }
     return this._eTypeParametersCache;
   }
-
 
   private classifierId = -1;
 
@@ -88,15 +87,20 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     return object instanceof EObjectImpl;
   }
 
-
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2: return this._instanceClassName;
-      case 3: return this._instanceClass;
-      case 4: return this._defaultValue;
-      case 5: return this._instanceTypeName;
-      case 6: return this._ePackage;
-      case 7: return this._eTypeParameters;
+      case 2:
+        return this._instanceClassName;
+      case 3:
+        return this._instanceClass;
+      case 4:
+        return this._defaultValue;
+      case 5:
+        return this._instanceTypeName;
+      case 6:
+        return this._ePackage;
+      case 7:
+        return this._eTypeParameters;
       default:
         return super.eGet(feature);
     }
@@ -111,7 +115,15 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 5: {
@@ -121,7 +133,15 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 7: {
@@ -140,11 +160,21 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 2: this._instanceClassName = value as string | undefined; return;
-      case 3: this._instanceClass = value as TypeScriptClass<unknown> | undefined; return;
-      case 4: this._defaultValue = value as unknown; return;
-      case 5: this._instanceTypeName = value as string | undefined; return;
-      case 6: this._ePackage = value as EPackage | undefined; return;
+      case 2:
+        this._instanceClassName = value as string | undefined;
+        return;
+      case 3:
+        this._instanceClass = value as TypeScriptClass<unknown> | undefined;
+        return;
+      case 4:
+        this._defaultValue = value as unknown;
+        return;
+      case 5:
+        this._instanceTypeName = value as string | undefined;
+        return;
+      case 6:
+        this._ePackage = value as EPackage | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -162,12 +192,18 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2: return this._instanceClassName !== undefined;
-      case 3: return this._instanceClass !== undefined;
-      case 4: return this._defaultValue !== undefined;
-      case 5: return this._instanceTypeName !== undefined;
-      case 6: return this._ePackage !== undefined;
-      case 7: return this._eTypeParametersCache !== undefined && this._eTypeParametersCache.size() !== 0;
+      case 2:
+        return this._instanceClassName !== undefined;
+      case 3:
+        return this._instanceClass !== undefined;
+      case 4:
+        return this._defaultValue !== undefined;
+      case 5:
+        return this._instanceTypeName !== undefined;
+      case 6:
+        return this._ePackage !== undefined;
+      case 7:
+        return this._eTypeParametersCache !== undefined && this._eTypeParametersCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -175,57 +211,94 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 2: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._instanceClassName;
         this._instanceClassName = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 3: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._instanceClass;
         this._instanceClass = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 4: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._defaultValue;
         this._defaultValue = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 5: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._instanceTypeName;
         this._instanceTypeName = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 6: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._ePackage;
         this._ePackage = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 
-      case 7: this._eTypeParametersCache?.clear(); return;
+      case 7:
+        this._eTypeParametersCache?.clear();
+        return;
 
       default:
         super.eUnset(feature);

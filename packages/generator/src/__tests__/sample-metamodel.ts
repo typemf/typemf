@@ -17,16 +17,12 @@ import {
   EcorePackageImpl,
 } from '@typemf/core';
 
-// See NOTES.md's point 6/7 write-ups: every generated setter routes through getEcorePackageRef(),
-// which needs Ecore's own metaclass system bootstrapped first - this triggers that safely, once, at
-// module load, before either exported function below constructs a single raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 /**
- * A datatype that declares its own TypeScript type via the generator's
- * `type` detail of the generator annotation - the generator has no built-in knowledge
- * of any datatype (EString, EDate, ...); every mapping comes from the
- * metamodel, exactly as real Ecore.ecore now does.
+ * A datatype with its TypeScript type in the `type` detail of the generator annotation. The
+ * generator has no built-in mapping for any datatype.
  */
 export function annotatedDataType(name: string, typescriptType: string): EDataTypeImpl {
   const dt = new EDataTypeImpl();

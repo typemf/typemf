@@ -7,22 +7,8 @@ import { EObjectSerializer } from '../serializer.js';
 import { URI } from '../uri.js';
 import { UriConverter } from '../uri-converter.js';
 
-describe('ResourceImpl.load() reentrancy', () => {
-  // NOTE on what this guard does NOT fix, confirmed directly: a caller that *directly awaits* a
-  // nested load() call on the same resource from within that resource's own still-running
-  // deserialize() still deadlocks - the returned, shared in-flight promise can only resolve once
-  // deserialize() itself returns, but deserialize() is now waiting on that very promise. This
-  // guard's real, confirmed value is what the two tests below show: collapsing genuinely
-  // *concurrent* (not mutually-blocking) redundant loads into one deserialize() call, matching
-  // exactly what getResource()'s own cross-Resource, cache-by-URI logic already does for
-  // *separate* Resource objects racing for the same URI - extended here to a single Resource's
-  // own concurrent calls to itself. A caller with a genuine, direct self-reference need (e.g.
-  // SnapshotSerializer's own reconstruction of a self-referential metamodel, "Feature contains
-  // child Features") must avoid the reentrant load() call entirely instead, which is exactly what
-  // SnapshotSerializer's own registry.objectFor() short-circuit does (see its own reasoning) -
-  // this guard alone was never sufficient for that case by itself, and isn't meant to be.
-
-  it('two genuinely separate, sequential load() calls (not reentrant, not concurrent) each still work normally', async () => {
+describe('ResourceImpl.load()', () => {
+  it('deserializes again on each sequential call', async () => {
     const { bookClass } = buildSampleMetamodel();
     const uri = URI.parse('mem:sequential.bin');
     let deserializeCallCount = 0;
@@ -50,13 +36,11 @@ describe('ResourceImpl.load() reentrancy', () => {
     await resource.load();
     expect(deserializeCallCount).toBe(1);
 
-    // A later, genuinely separate call (e.g. an explicit reload) is unaffected by the reentrancy
-    // guard - that only applies while a load is actually still in flight.
     await resource.load();
     expect(deserializeCallCount).toBe(2);
   });
 
-  it('two concurrent (not reentrant, just both started before either finishes) load() calls also only deserialize once', async () => {
+  it('deserializes once for concurrent calls', async () => {
     const { bookClass } = buildSampleMetamodel();
     const uri = URI.parse('mem:concurrent.bin');
     let deserializeCallCount = 0;

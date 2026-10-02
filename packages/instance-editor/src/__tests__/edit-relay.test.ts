@@ -7,7 +7,6 @@ import {
   EDataTypeImpl,
   EPackageImpl,
   EReferenceImpl,
-  ProxyEObjectImpl,
   ResourceSetImpl,
   UriConverter,
   URI,
@@ -71,12 +70,12 @@ function encodeSnapshot(snapshot: unknown): Uint8Array {
 }
 
 describe('the write path end to end', () => {
-  it('a local eSet on a reconstructed object is relayed as an ApplyEditRequest, and resolves once the simulated host applies it', async () => {
+  it('relays a local eSet as an ApplyEditRequest and resolves when the host has applied it', async () => {
     const { bookClass, titleAttr } = buildFixture();
     const book = createInstanceOf(bookClass);
     book.eSet(titleAttr, 'Old Title');
 
-    // The "host" side, entirely real - a genuine ObjectIdMap, exactly what InstanceDocument owns.
+    // The host side.
     const hostIds = new ObjectIdMap();
     const converter = new FakeHostUriConverter();
     converter.set(hostIds.idFor(book), encodeSnapshot(snapshotObject(book, hostIds)));
@@ -96,10 +95,9 @@ describe('the write path end to end', () => {
     const reconstructedBook = resource!.getContents().get(0);
     const reconstructedTitleFeature = reconstructedBook.eClass().getEStructuralFeature('title')!;
 
-    // The actual local edit - ordinary code, no awareness of any relay mechanism at all.
     reconstructedBook.eSet(reconstructedTitleFeature, 'New Title');
 
-    // Give onDidChange's synchronous dispatch (and the microtask it kicks off) a tick to run.
+    // Let the notification and its microtask run.
     await Promise.resolve();
 
     const request = sentMessages.find(isApplyEditRequest);
@@ -109,22 +107,17 @@ describe('the write path end to end', () => {
     expect(request?.featureId).toBe(hostIds.idFor(titleAttr));
     expect(request?.value).toEqual({ primitive: 'New Title' });
 
-    // Simulate the real host actually applying it (this is handleApplyEditRequest's own,
-    // separately-tested job - here just proving the round trip completes end to end).
+    // Apply the edit as the host does.
     const hostResponse = handleApplyEditRequest(request!, { objectIds: hostIds });
     expect(hostResponse.type).toBe('typemf/applyEditResult');
     expect(book.eGet(titleAttr)).toBe('New Title'); // the REAL, host-side object actually changed
 
-    // Feeding the host's real response back through handleMessage is what resolves the original,
-    // still-pending relay promise from the eSet() call above - the actual point of this test.
+    // The host's response resolves the pending relay.
     editRelay.handleMessage(hostResponse);
   });
 
-  it('a real edit on an object with no known host id posts a visible EditRelayFailedMessage, not silence', async () => {
-    // A plain, locally-created EObject - never reconstructed through SnapshotSerializer, so
-    // WebviewObjectRegistry has genuinely never recorded it (this is what matters here, not how
-    // such an object could arise in practice - see EditRelayFailedMessage's own reasoning for the
-    // real report that motivated this).
+  it('posts an EditRelayFailedMessage for an object without a host id', async () => {
+    // Created locally, so the registry has never recorded it.
     const { bookClass, titleAttr } = buildFixture();
     const orphanBook = createInstanceOf(bookClass);
 
@@ -141,18 +134,12 @@ describe('the write path end to end', () => {
     const failure = sentMessages.find(isEditRelayFailedMessage);
     expect(failure).toBeDefined();
     expect(failure?.reason).toContain('title');
-    // The local, webview-side edit still happened - EditRelay never undoes it, only reports that
-    // it couldn't reach the real document (see EditRelayFailedMessage's own reasoning for why).
+    // The local edit is kept.
     expect(orphanBook.eGet(titleAttr)).toBe('New Title');
   });
 
-  it('renaming a classifier itself (editing its own, well-known ENamedElement.name feature) relays successfully, not an EditRelayFailedMessage - the real, reported bug', async () => {
-    // Exactly the scenario reported: a plain, dynamically-loaded (no generated TypeScript)
-    // metamodel, like a hand-authored .ecore file - the classifier itself is the notifier, and
-    // its "name" feature is read straight off the real, already-available EClass metaclass
-    // (EcorePackageImpl.eINSTANCE.getEClass().getEStructuralFeature('name')), never reconstructed
-    // through SnapshotSerializer.deserialize() at all - the exact gap wellKnownEcoreId's own
-    // member-id case now covers.
+  it("relays renaming a classifier through Ecore's well-known name feature", async () => {
+    // A dynamic metamodel: the name feature belongs to Ecore and was never deserialized.
     const pkg = new EPackageImpl();
     pkg.setName('variability');
     pkg.setNsURI('https://example.com/variability');
@@ -191,7 +178,7 @@ describe('the write path end to end', () => {
     expect(featureModelClass.getName()).toBe('RenamedFeatureModel'); // the real, host-side object actually changed
   });
 
-  it('createChild sends a CreateChildRequest and resolves with the real childId once the host responds', async () => {
+  it('createChild sends a CreateChildRequest and resolves with the id of the child', async () => {
     const sentMessages: unknown[] = [];
     const transport: PostMessageTransport = { postMessage: (m) => sentMessages.push(m) };
     const editRelay = new EditRelay(transport);
@@ -212,19 +199,22 @@ describe('the write path end to end', () => {
 
     const pending = editRelay.createChild('parent-1', 'feature-1', 'class-1');
     const request = sentMessages.find(isCreateChildRequest)!;
-    editRelay.handleMessage({ type: 'typemf/createChildError', requestId: request.requestId, message: 'no class known' });
+    editRelay.handleMessage({
+      type: 'typemf/createChildError',
+      requestId: request.requestId,
+      message: 'no class known',
+    });
 
     await expect(pending).rejects.toThrow('no class known');
   });
 
-  it('createChild end-to-end against the real host handler, including the position argument', async () => {
+  it('createChild works with the host handler, including the position', async () => {
     const { bookClass } = buildFixture();
     const hostIds = new ObjectIdMap();
     const libraryClass = new EClassImpl();
     libraryClass.setName('Library');
 
-    // A minimal, real containment setup, built directly here rather than via buildFixture (which
-    // has no containment reference of its own).
+    // buildFixture has no containment reference.
     const booksRef = new EReferenceImpl();
     booksRef.setName('books');
     booksRef.setEType(bookClass);
@@ -251,13 +241,17 @@ describe('the write path end to end', () => {
     };
     const editRelay = new EditRelay(transport);
 
-    const childId = await editRelay.createChild(hostIds.idFor(library), hostIds.idFor(booksRef), hostIds.idFor(bookClass));
+    const childId = await editRelay.createChild(
+      hostIds.idFor(library),
+      hostIds.idFor(booksRef),
+      hostIds.idFor(bookClass)
+    );
     const realChild = hostIds.objectFor(childId);
     expect(realChild).toBeDefined();
     expect((library.eGet(booksRef) as { size(): number }).size()).toBe(1);
   });
 
-  it('suppressNext skips relaying exactly the next notification for that object, but the notification still fires normally', async () => {
+  it('suppressNext skips relaying only the next notification of that object', async () => {
     const { bookClass, titleAttr } = buildFixture();
     const book = createInstanceOf(bookClass);
     const sentMessages: unknown[] = [];
@@ -278,7 +272,7 @@ describe('the write path end to end', () => {
     expect(localListenerFired).toBe(1); // the notification still fired, for every OTHER listener
     expect(sentMessages.find(isApplyEditRequest)).toBeUndefined(); // but EditRelay itself stayed silent
 
-    // One-shot: a SECOND edit right after relays completely normally.
+    // The next edit is relayed again.
     book.eSet(titleAttr, 'Normal Edit');
     await Promise.resolve();
     const request = sentMessages.find(isApplyEditRequest);
@@ -286,12 +280,7 @@ describe('the write path end to end', () => {
     expect(request?.value).toEqual({ primitive: 'Normal Edit' });
   });
 
-  it('the reference picker: setting a NON-containment reference to an already-existing object relays correctly via the normal, unmodified mechanism - no suppressNext needed, unlike add-child', async () => {
-    // Confirms the real design claim behind the reference picker (as opposed to AddChildButton's
-    // add-child flow): the chosen object already exists and is already known on both sides, so a
-    // perfectly ordinary eSet() - relayNotification encoding it as `{ ref: hostId }`,
-    // handleApplyEditRequest resolving that id back to the SAME real object - already handles this
-    // correctly, with no special-casing, no host-side mutation request, and no suppression at all.
+  it('relays setting a non-containment reference to an existing object', async () => {
     const authorClass = new EClassImpl();
     authorClass.setName('Author');
     const bookClass = new EClassImpl();
@@ -333,8 +322,6 @@ describe('the write path end to end', () => {
     const reconstructedBook = resource!.getContents().get(0);
     const reconstructedFeature = reconstructedBook.eClass().getEStructuralFeature('favoriteAuthor')!;
 
-    // The chosen candidate, resolved normally - exactly what LinkReferenceButton's own picker
-    // flow does before calling eSet().
     const resolvedAuthor = await webviewResourceSet.resolve(
       new (await import('@typemf/core')).ProxyEObjectImpl(authorClass, uriForId(authorId))
     );

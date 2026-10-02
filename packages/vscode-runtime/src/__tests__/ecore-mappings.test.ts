@@ -25,10 +25,14 @@ describe('resolveMappings', () => {
     };
     const result = resolveMappings(inspected);
     expect(result).toHaveLength(3);
-    expect(result.map((e) => e.nsURI).sort()).toEqual(['https://example.com/a', 'https://example.com/b', 'https://example.com/c']);
+    expect(result.map((e) => e.nsURI).sort()).toEqual([
+      'https://example.com/a',
+      'https://example.com/b',
+      'https://example.com/c',
+    ]);
   });
 
-  it('workspaceFolder wins over workspace for the same nsURI - VS Code\'s real precedence, most specific first', () => {
+  it('workspaceFolder wins over workspace for the same nsURI', () => {
     const inspected: InspectedEcoreMappings = {
       workspaceValue: [entry('https://example.com/shared', './from-workspace.ecore')],
       workspaceFolderValue: [entry('https://example.com/shared', './from-folder.ecore')],
@@ -52,10 +56,13 @@ describe('resolveMappings', () => {
     expect(resolveMappings(inspected)).toEqual([entry('https://example.com/shared', './from-folder.ecore')]);
   });
 
-  it('keeps the first of two duplicate entries within the very same scope\'s own array, and warns', () => {
+  it('keeps the first of two duplicates within one scope and warns', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const inspected: InspectedEcoreMappings = {
-      workspaceValue: [entry('https://example.com/dup', './first.ecore'), entry('https://example.com/dup', './second.ecore')],
+      workspaceValue: [
+        entry('https://example.com/dup', './first.ecore'),
+        entry('https://example.com/dup', './second.ecore'),
+      ],
     };
     expect(resolveMappings(inspected)).toEqual([entry('https://example.com/dup', './first.ecore')]);
     expect(warnSpy).toHaveBeenCalledTimes(1);
@@ -63,7 +70,7 @@ describe('resolveMappings', () => {
     warnSpy.mockRestore();
   });
 
-  it('warns once per discarded duplicate across scopes, not once per nsURI overall', () => {
+  it('warns once per discarded duplicate', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const inspected: InspectedEcoreMappings = {
       globalValue: [entry('https://example.com/dup', './from-user.ecore')],

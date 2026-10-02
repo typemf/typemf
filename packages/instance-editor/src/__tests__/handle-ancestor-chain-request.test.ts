@@ -1,4 +1,12 @@
-import { createInstanceOf, DynamicEFactoryImpl, EClassImpl, EcorePackageImpl, EList, EPackageImpl, EReferenceImpl } from '@typemf/core';
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EClassImpl,
+  EcorePackageImpl,
+  EList,
+  EPackageImpl,
+  EReferenceImpl,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { handleAncestorChainRequest } from '../handle-ancestor-chain-request.js';
 import { ObjectIdMap } from '../object-id-map.js';
@@ -46,13 +54,16 @@ function buildFixture() {
 }
 
 describe('handleAncestorChainRequest', () => {
-  it('returns the chain root-first, the requested object\'s own id last, for a nested object', () => {
+  it('returns the chain from the root to the requested object', () => {
     const { library, book } = buildFixture();
     const objectIds = new ObjectIdMap();
     const libraryId = objectIds.idFor(library);
     const bookId = objectIds.idFor(book);
 
-    const response = handleAncestorChainRequest({ type: 'typemf/ancestorChain', requestId: 'r1', id: bookId }, { objectIds });
+    const response = handleAncestorChainRequest(
+      { type: 'typemf/ancestorChain', requestId: 'r1', id: bookId },
+      { objectIds }
+    );
 
     expect(response.type).toBe('typemf/ancestorChainResult');
     if (response.type === 'typemf/ancestorChainResult') {
@@ -60,12 +71,15 @@ describe('handleAncestorChainRequest', () => {
     }
   });
 
-  it('returns a lone-element array for the document\'s own root (nothing above it to expand)', () => {
+  it("returns only the root's id for the root", () => {
     const { library } = buildFixture();
     const objectIds = new ObjectIdMap();
     const libraryId = objectIds.idFor(library);
 
-    const response = handleAncestorChainRequest({ type: 'typemf/ancestorChain', requestId: 'r2', id: libraryId }, { objectIds });
+    const response = handleAncestorChainRequest(
+      { type: 'typemf/ancestorChain', requestId: 'r2', id: libraryId },
+      { objectIds }
+    );
 
     expect(response.type).toBe('typemf/ancestorChainResult');
     if (response.type === 'typemf/ancestorChainResult') {
@@ -75,18 +89,24 @@ describe('handleAncestorChainRequest', () => {
 
   it('returns an AncestorChainError for an unknown id', () => {
     const objectIds = new ObjectIdMap();
-    const response = handleAncestorChainRequest({ type: 'typemf/ancestorChain', requestId: 'r3', id: 'not-real' }, { objectIds });
+    const response = handleAncestorChainRequest(
+      { type: 'typemf/ancestorChain', requestId: 'r3', id: 'not-real' },
+      { objectIds }
+    );
     expect(response.type).toBe('typemf/ancestorChainError');
   });
 
-  it('walks multiple levels correctly, not just one', () => {
+  it('walks several levels', () => {
     const { library, book, chapter } = buildFixture();
     const objectIds = new ObjectIdMap();
     const libraryId = objectIds.idFor(library);
     const bookId = objectIds.idFor(book);
     const chapterId = objectIds.idFor(chapter);
 
-    const response = handleAncestorChainRequest({ type: 'typemf/ancestorChain', requestId: 'r4', id: chapterId }, { objectIds });
+    const response = handleAncestorChainRequest(
+      { type: 'typemf/ancestorChain', requestId: 'r4', id: chapterId },
+      { objectIds }
+    );
     expect(response.type).toBe('typemf/ancestorChainResult');
     if (response.type === 'typemf/ancestorChainResult') {
       expect(response.chainIds).toEqual([libraryId, bookId, chapterId]);

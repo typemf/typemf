@@ -9,15 +9,25 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.0.0",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
     "tsup": "^8.0.0",
     "turbo": "^2.11.5",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.71.0",
     "vitest": "^3.0.0"
   }
 }

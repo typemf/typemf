@@ -7,9 +7,7 @@ import { ETypeParameterImpl } from '../impl/ETypeParameterImpl.js';
 import { EObject } from '../types/EObject.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 function feature(owner: EObject, name: string): EStructuralFeature {
@@ -28,7 +26,7 @@ function genericClassifier() {
 }
 
 describe('type parameters and generic types', () => {
-  it('a classifier declares type parameters; none by default', () => {
+  it('a classifier has no type parameters by default', () => {
     expect(new EDataTypeImpl().getETypeParameters().size()).toBe(0);
     const { javaClass, t } = genericClassifier();
     expect(javaClass.getETypeParameters().size()).toBe(1);
@@ -36,7 +34,7 @@ describe('type parameters and generic types', () => {
     expect(t.getName()).toBe('T');
   });
 
-  it('an EGenericType holds a classifier and positional type arguments (an empty argument is "unbound")', () => {
+  it('an EGenericType holds a classifier and type arguments', () => {
     const { javaClass } = genericClassifier();
     const bound = new EDataTypeImpl();
     bound.setName('EString');
@@ -52,7 +50,7 @@ describe('type parameters and generic types', () => {
     expect(gt.getETypeArguments().get(1).getETypeParameter()).toBeUndefined();
   });
 
-  it('setEGenericType() keeps eType in sync (eType becomes the generic type\'s classifier)', () => {
+  it("setEGenericType() sets eType to the generic type's classifier", () => {
     const { javaClass } = genericClassifier();
     const gt = new EGenericTypeImpl();
     gt.setEClassifier(javaClass);
@@ -62,14 +60,14 @@ describe('type parameters and generic types', () => {
     expect(attr.getEType()).toBe(javaClass);
   });
 
-  it("getERawType(): a real eClassifier IS the raw type - real EMF's own erasure semantics", () => {
+  it('getERawType() returns the classifier', () => {
     const { javaClass } = genericClassifier();
     const gt = new EGenericTypeImpl();
     gt.setEClassifier(javaClass);
     expect(gt.getERawType()).toBe(javaClass);
   });
 
-  it("getERawType(): an eTypeParameter with no eClassifier and no bounds falls back to EJavaObject - real EMF's own erasure semantics for an unbounded type parameter (post-swap: the generated EGenericTypeImpl supports this fully, unlike hand-written core's old, simplified stand-in, which had no bounds modeled at all and returned undefined here)", () => {
+  it('getERawType() returns EJavaObject for an unbounded type parameter', () => {
     const param = new ETypeParameterImpl();
     param.setName('T');
     const gt = new EGenericTypeImpl();
@@ -77,7 +75,7 @@ describe('type parameters and generic types', () => {
     expect(gt.getERawType()?.getName()).toBe('EJavaObject');
   });
 
-  it("getERawType() feeds setEGenericType()'s eType side effect - so the EJavaObject fallback shows up there too", () => {
+  it('setEGenericType() with an unbounded type parameter sets eType to EJavaObject', () => {
     const param = new ETypeParameterImpl();
     param.setName('T');
     const gt = new EGenericTypeImpl();
@@ -85,10 +83,10 @@ describe('type parameters and generic types', () => {
     const attr = new EAttributeImpl();
     attr.setEGenericType(gt);
     expect(attr.getEGenericType()).toBe(gt);
-    expect(attr.getEType()?.getName()).toBe('EJavaObject'); // matches getERawType()'s own fallback
+    expect(attr.getEType()?.getName()).toBe('EJavaObject');
   });
 
-  it('setEType() replaces any generic type, so the two can never disagree', () => {
+  it('setEType() clears the generic type', () => {
     const { javaClass } = genericClassifier();
     const gt = new EGenericTypeImpl();
     gt.setEClassifier(javaClass);
@@ -100,7 +98,7 @@ describe('type parameters and generic types', () => {
     expect(attr.getEGenericType()).toBeUndefined();
   });
 
-  it('is reachable reflectively: eTypeParameters on a classifier, eGenericType on a typed element, and EGenericType\'s own features', () => {
+  it('eTypeParameters, eGenericType and the EGenericType features are reachable reflectively', () => {
     const { javaClass, t } = genericClassifier();
     expect(javaClass.eGet(feature(javaClass, 'eTypeParameters'))).toBe(javaClass.getETypeParameters());
     expect(javaClass.eIsSet(feature(javaClass, 'eTypeParameters'))).toBe(true);
@@ -125,8 +123,8 @@ describe('type parameters and generic types', () => {
   });
 });
 
-describe('EClass.eGenericSuperTypes (a direct generic supertype edge - separate from eSuperTypes)', () => {
-  it('is live, empty by default, and reachable reflectively - mirroring eSuperTypes exactly', () => {
+describe('EClass.eGenericSuperTypes', () => {
+  it('is empty by default and reachable reflectively', () => {
     const c = new EClassImpl();
     expect(c.getEGenericSuperTypes().size()).toBe(0);
     const gt = new EGenericTypeImpl();
@@ -142,7 +140,7 @@ describe('EClass.eGenericSuperTypes (a direct generic supertype edge - separate 
     expect(c.getEGenericSuperTypes().get(0)).toBe(gt);
   });
 
-  it('does not affect, and is not affected by, plain eSuperTypes', () => {
+  it('is independent of eSuperTypes', () => {
     const c = new EClassImpl();
     const base = new EClassImpl();
     c.getESuperTypes().add(base);

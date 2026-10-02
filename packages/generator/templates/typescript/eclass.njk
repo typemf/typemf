@@ -433,6 +433,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
         super.eBasicSetValue(feature, value);
         return;
 {% else %}
+        void value;
         throw new Error(`Feature ${featureId} on {{ eClass.getName() }} is many-valued or unknown.`);
 {% endif %}
     }

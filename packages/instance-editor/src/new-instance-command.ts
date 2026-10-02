@@ -21,7 +21,10 @@ async function newModelInstance(runtime: TypeMfRuntimeApi): Promise<void> {
     [
       { label: 'xmi', description: 'XMI' },
       { label: 'json', description: 'JSON' },
-      { label: 'ecore', description: 'Ecore (XMI-based) - only really meaningful for a root that is itself an EPackage' },
+      {
+        label: 'ecore',
+        description: 'Ecore (XMI-based) - only really meaningful for a root that is itself an EPackage',
+      },
     ],
     { placeHolder: 'Select the file format for the new instance' }
   );
@@ -33,7 +36,10 @@ async function newModelInstance(runtime: TypeMfRuntimeApi): Promise<void> {
     return;
   }
 
-  const encoded = picked.mode === 'static' ? encodeStaticSpec(picked.eClass, picked.pkg) : encodeDynamicSpec(picked.eClass, picked.ecoreFilePath);
+  const encoded =
+    picked.mode === 'static'
+      ? encodeStaticSpec(picked.eClass, picked.pkg)
+      : encodeDynamicSpec(picked.eClass, picked.ecoreFilePath);
   const uri = buildNewInstanceUri(folder.uri, `new-${nextId++}.${format.label}`, encoded);
   await vscode.commands.executeCommand('vscode.openWith', uri, InstanceEditorProvider.viewType);
 }
@@ -44,8 +50,16 @@ type PickedRoot = { eClass: EClass } & ({ mode: 'static'; pkg: EPackage } | { mo
 async function pickRootEClass(runtime: TypeMfRuntimeApi): Promise<PickedRoot | undefined> {
   const mode = await vscode.window.showQuickPick(
     [
-      { label: 'Registered metamodel', description: 'Pick a class from an already-registered package', mode: 'static' as const },
-      { label: 'Dynamic .ecore file', description: 'Pick a class from a .ecore file you select', mode: 'dynamic' as const },
+      {
+        label: 'Registered metamodel',
+        description: 'Pick a class from an already-registered package',
+        mode: 'static' as const,
+      },
+      {
+        label: 'Dynamic .ecore file',
+        description: 'Pick a class from a .ecore file you select',
+        mode: 'dynamic' as const,
+      },
     ],
     { placeHolder: 'Where should the root class come from?' }
   );
@@ -54,7 +68,9 @@ async function pickRootEClass(runtime: TypeMfRuntimeApi): Promise<PickedRoot | u
   if (mode.mode === 'static') {
     const packages = runtime.packageRegistry.getAllPackages();
     if (packages.length === 0) {
-      void vscode.window.showWarningMessage('No metamodels are currently registered. Try "Dynamic .ecore file" instead.');
+      void vscode.window.showWarningMessage(
+        'No metamodels are currently registered. Try "Dynamic .ecore file" instead.'
+      );
       return undefined;
     }
     const eClass = await pickEClass(packages);

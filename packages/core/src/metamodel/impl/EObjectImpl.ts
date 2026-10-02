@@ -326,17 +326,11 @@ function isContainmentReference(feature: EStructuralFeature): feature is ERefere
 }
 
 function isEObject(value: unknown): value is EObject {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as EObject).eClass === 'function'
-  );
+  return typeof value === 'object' && value !== null && typeof (value as EObject).eClass === 'function';
 }
 
 function isEListOfEObject(value: unknown): value is EList<EObject> {
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as EList<EObject>)[Symbol.iterator] === 'function'
+    typeof value === 'object' && value !== null && typeof (value as EList<EObject>)[Symbol.iterator] === 'function'
   );
 }

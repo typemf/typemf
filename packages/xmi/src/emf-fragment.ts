@@ -152,7 +152,9 @@ function walkNamedSegments(path: string, start: EObject): EObject | undefined {
     // current is (structurally) an EPackage: look up a classifier IT
     // declares by name - via current's own "eClassifiers" feature VALUE,
     // not via a feature named "eClassifiers" found some other way.
-    const eClassifiersFeature = allStructuralFeaturesOf(currentClass).filter(feature => feature.getName() === 'eClassifiers').at(0);
+    const eClassifiersFeature = allStructuralFeaturesOf(currentClass)
+      .filter((feature) => feature.getName() === 'eClassifiers')
+      .at(0);
     if (eClassifiersFeature) {
       current = findNamedChild(current, eClassifiersFeature, name);
       continue;
@@ -163,7 +165,9 @@ function walkNamedSegments(path: string, start: EObject): EObject | undefined {
     // on currentClass itself would instead search the shared reflective
     // shape every EClass-instance has - abstract/eSuperTypes/etc - which
     // is not what a "ClassName/featureName" fragment means.)
-    const eStructuralFeaturesFeature = allStructuralFeaturesOf(currentClass).filter(feature => feature.getName() === 'eStructuralFeatures').at(0);
+    const eStructuralFeaturesFeature = allStructuralFeaturesOf(currentClass)
+      .filter((feature) => feature.getName() === 'eStructuralFeatures')
+      .at(0);
     if (eStructuralFeaturesFeature) {
       current = findNamedChild(current, eStructuralFeaturesFeature, name);
       continue;
@@ -177,7 +181,9 @@ function walkNamedSegments(path: string, start: EObject): EObject | undefined {
 function findNamedChild(container: EObject, listFeature: EStructuralFeature, name: string): EObject | undefined {
   const children: EObject[] = [...(container.eGet(listFeature) as Iterable<EObject>)];
   return children.find((child: EObject) => {
-    const nameFeature = allStructuralFeaturesOf(child.eClass()).filter(feature => feature.getName() === 'name').at(0);
+    const nameFeature = allStructuralFeaturesOf(child.eClass())
+      .filter((feature) => feature.getName() === 'name')
+      .at(0);
     return nameFeature !== undefined && child.eGet(nameFeature) === name;
   });
 }
@@ -188,7 +194,9 @@ function walkSegments(path: string, start: EObject): EObject | undefined {
     if (!segment.startsWith('@')) return undefined;
     const dotIndex = segment.indexOf('.');
     const featureName = dotIndex === -1 ? segment.slice(1) : segment.slice(1, dotIndex);
-    const feature = allStructuralFeaturesOf(current.eClass()).filter(feature => feature.getName() === featureName).at(0);
+    const feature = allStructuralFeaturesOf(current.eClass())
+      .filter((feature) => feature.getName() === featureName)
+      .at(0);
     if (!feature) return undefined;
 
     if (feature.isMany()) {

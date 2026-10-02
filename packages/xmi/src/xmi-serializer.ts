@@ -92,7 +92,12 @@ export class XmiSerializer implements EObjectSerializer {
       const location = relativeOrAbsolutePath(resource.getURI(), rootPackageResource.getURI());
       schemaLocationAttrs.push(['xsi:schemaLocation', `${rootPackage.getNsURI()} ${location}`]);
     }
-    const allAttrs: Array<[string, string]> = [['xmi:version', '2.0'], ...nsAttrs, ...schemaLocationAttrs, ...parts.attributes];
+    const allAttrs: Array<[string, string]> = [
+      ['xmi:version', '2.0'],
+      ...nsAttrs,
+      ...schemaLocationAttrs,
+      ...parts.attributes,
+    ];
     const attrStr = allAttrs.map(([k, v]) => ` ${k}="${escapeAttributeValue(v)}"`).join('');
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -232,8 +237,14 @@ function writeObjectParts(
       for (const child of values) {
         const childTag = childElementTag(child, refFeature, namespaces);
         const childParts = writeObjectParts(child, feature.getName() as string, roots, sourceResource, namespaces);
-        const attrs = childTag.xsiType ? [['xsi:type', childTag.xsiType], ...childParts.attributes] : childParts.attributes;
-        childrenXml += renderElement({ tagName: childParts.tagName, attributes: attrs as Array<[string, string]>, childrenXml: childParts.childrenXml });
+        const attrs = childTag.xsiType
+          ? [['xsi:type', childTag.xsiType], ...childParts.attributes]
+          : childParts.attributes;
+        childrenXml += renderElement({
+          tagName: childParts.tagName,
+          attributes: attrs as Array<[string, string]>,
+          childrenXml: childParts.childrenXml,
+        });
       }
       continue;
     }
@@ -249,7 +260,9 @@ function writeObjectParts(
       }
     } else {
       const anyPolymorphic = encoded.some((e) => e.xsiType);
-      const tokens = encoded.map((e) => (anyPolymorphic ? `${e.xsiType ?? sameTypeToken(refFeature, namespaces)} ${e.value}` : e.value));
+      const tokens = encoded.map((e) =>
+        anyPolymorphic ? `${e.xsiType ?? sameTypeToken(refFeature, namespaces)} ${e.value}` : e.value
+      );
       attributes.push([feature.getName() as string, tokens.join(' ')]);
     }
   }
@@ -259,14 +272,12 @@ function writeObjectParts(
 
 function renderElement(parts: ElementParts): string {
   const attrStr = parts.attributes.map(([k, v]) => ` ${k}="${escapeAttributeValue(v)}"`).join('');
-  return parts.childrenXml ? `<${parts.tagName}${attrStr}>${parts.childrenXml}</${parts.tagName}>` : `<${parts.tagName}${attrStr}/>`;
+  return parts.childrenXml
+    ? `<${parts.tagName}${attrStr}>${parts.childrenXml}</${parts.tagName}>`
+    : `<${parts.tagName}${attrStr}/>`;
 }
 
-function childElementTag(
-  child: EObject,
-  feature: EReference,
-  namespaces: NamespaceCollector
-): { xsiType?: string } {
+function childElementTag(child: EObject, feature: EReference, namespaces: NamespaceCollector): { xsiType?: string } {
   const declared = feature.getEType() as EClass | undefined;
   const actual = child.eClass();
   if (declared === actual) return {};
@@ -298,13 +309,15 @@ function encodeReferenceValue(
   if (target.eIsProxy()) {
     const proxy = target as ProxyEObjectImpl;
     const actual = proxy.eClass();
-    const xsiType = declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
+    const xsiType =
+      declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
     return { value: proxy.getProxyURI().toString(), crossDocument: true, xsiType };
   }
 
   const targetResource = getResourceOf(target);
   const actual = target.eClass();
-  const xsiType = declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
+  const xsiType =
+    declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
 
   // Genuine reachability from THIS document's own roots, not merely "has no resource of its own"
   // - a real, confirmed bug found via direct reproduction against Ecore.ecore itself: the old
@@ -522,7 +535,12 @@ function resolvePrefixedName(token: string, contextElement: Element, packageRegi
  * ENamedElement.name is not marked iD="true" at all, yet "#//EClassName"
  * fragments throughout the file depend on exactly this lookup succeeding.
  */
-function constructShell(element: Element, eClass: EClass, ctx: DeserializeContext, elementToObj: Map<Element, EObject>): EObject {
+function constructShell(
+  element: Element,
+  eClass: EClass,
+  ctx: DeserializeContext,
+  elementToObj: Map<Element, EObject>
+): EObject {
   const obj = eClass.getEPackage()?.getEFactoryInstance()?.create(eClass);
   if (!obj) throw new Error('Could not create object');
   elementToObj.set(element, obj);
@@ -539,7 +557,9 @@ function constructShell(element: Element, eClass: EClass, ctx: DeserializeContex
   //    all (the sample metamodel's own ID attribute is "title").
   // Both need to already hold their real value before any reference to
   // this object is resolved, so pass 1 sets both here, whichever exist.
-  const nameFeature = allStructuralFeaturesOf(eClass).filter((f) => f.getName() === 'name').at(0);
+  const nameFeature = allStructuralFeaturesOf(eClass)
+    .filter((f) => f.getName() === 'name')
+    .at(0);
   if (nameFeature) {
     const nameAttrValue = element.getAttribute('name');
     if (nameAttrValue !== null) {
@@ -561,8 +581,8 @@ function constructShell(element: Element, eClass: EClass, ctx: DeserializeContex
     const child = node as unknown as Element;
 
     const feature = allStructuralFeaturesOf(eClass)
-                          .filter(feature => feature.getName() === child.localName)
-                          .at(0);
+      .filter((feature) => feature.getName() === child.localName)
+      .at(0);
     if (!feature || !isReferenceFeature(feature)) continue; // many-valued attribute or unrecognized: completeObject's job
     const refFeature = feature as EReference;
     if (!refFeature.isContainment()) continue; // cross-document href reference: completeObject's job
@@ -591,7 +611,13 @@ function constructShell(element: Element, eClass: EClass, ctx: DeserializeContex
  * document, so every possible reference target - forward or backward -
  * already exists and is already wired into the containment tree.
  */
-function completeObject(element: Element, obj: EObject, ctx: DeserializeContext, elementToObj: Map<Element, EObject>, roots: EObject[]): void {
+function completeObject(
+  element: Element,
+  obj: EObject,
+  ctx: DeserializeContext,
+  elementToObj: Map<Element, EObject>,
+  roots: EObject[]
+): void {
   const eClass = obj.eClass();
 
   for (let i = 0; i < element.attributes.length; i++) {
@@ -600,8 +626,8 @@ function completeObject(element: Element, obj: EObject, ctx: DeserializeContext,
     if (attr.name.startsWith('xmlns')) continue;
 
     const feature = allStructuralFeaturesOf(eClass)
-                          .filter(feature => feature.getName() === attr.localName)
-                          .at(0);
+      .filter((feature) => feature.getName() === attr.localName)
+      .at(0);
     if (!feature) continue;
 
     if (!isReferenceFeature(feature)) {
@@ -637,8 +663,8 @@ function completeObject(element: Element, obj: EObject, ctx: DeserializeContext,
     const child = node as unknown as Element;
 
     const feature = allStructuralFeaturesOf(eClass)
-                          .filter(feature => feature.getName() === child.localName)
-                          .at(0);
+      .filter((feature) => feature.getName() === child.localName)
+      .at(0);
     if (!feature) continue;
 
     if (!isReferenceFeature(feature)) {
@@ -707,7 +733,10 @@ function decodeAttributeFormReference(
   packageRegistry: EPackageRegistry
 ): EObject[] {
   const tokens = rawValue.split(/\s+/).filter((t) => t.length > 0);
-  const paired = tokens.length > 0 && tokens.length % 2 === 0 && tokens.every((t, i) => (i % 2 === 0 ? looksLikeTypeToken(t) : true));
+  const paired =
+    tokens.length > 0 &&
+    tokens.length % 2 === 0 &&
+    tokens.every((t, i) => (i % 2 === 0 ? looksLikeTypeToken(t) : true));
 
   const pairs: Array<{ typeToken: string | undefined; fragment: string }> = paired
     ? tokens.filter((_, i) => i % 2 === 1).map((fragment, i) => ({ typeToken: tokens[i * 2], fragment }))
@@ -749,8 +778,14 @@ function decodeAttributeFormReference(
 function relativeOrAbsolutePath(fromUri: URI, toUri: URI): string {
   if (fromUri.getScheme() !== toUri.getScheme()) return toUri.toString();
 
-  const fromSegments = fromUri.getPath().split('/').filter((s) => s.length > 0);
-  const toSegments = toUri.getPath().split('/').filter((s) => s.length > 0);
+  const fromSegments = fromUri
+    .getPath()
+    .split('/')
+    .filter((s) => s.length > 0);
+  const toSegments = toUri
+    .getPath()
+    .split('/')
+    .filter((s) => s.length > 0);
   // The `to` file's own name is never a shared "directory" segment to compare away - compared
   // against `from`'s own containing directory only.
   const fromDir = fromSegments.slice(0, -1);
@@ -758,7 +793,11 @@ function relativeOrAbsolutePath(fromUri: URI, toUri: URI): string {
   const toFile = toSegments[toSegments.length - 1] ?? '';
 
   let commonLength = 0;
-  while (commonLength < fromDir.length && commonLength < toDir.length && fromDir[commonLength] === toDir[commonLength]) {
+  while (
+    commonLength < fromDir.length &&
+    commonLength < toDir.length &&
+    fromDir[commonLength] === toDir[commonLength]
+  ) {
     commonLength++;
   }
 
@@ -784,7 +823,8 @@ function decodeAttributeValue(value: string, feature: EStructuralFeature): unkno
   const eType = feature.getEType();
   const typeName = eType?.getName();
   if (typeName === 'EDate') return new Date(value);
-  if (typeName === 'EInt' || typeName === 'ELong' || typeName === 'EDouble' || typeName === 'EFloat') return Number(value);
+  if (typeName === 'EInt' || typeName === 'ELong' || typeName === 'EDouble' || typeName === 'EFloat')
+    return Number(value);
   if (typeName === 'EBoolean') return value === 'true';
   return value;
 }

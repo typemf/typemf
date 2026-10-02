@@ -1,4 +1,8 @@
-import { ConcreteSubtypesRequest, isConcreteSubtypesError, isConcreteSubtypesResponse } from './host-message-protocol.js';
+import {
+  ConcreteSubtypesRequest,
+  isConcreteSubtypesError,
+  isConcreteSubtypesResponse,
+} from './host-message-protocol.js';
 import { PostMessageTransport } from './host-message-uri-converter.js';
 
 /**

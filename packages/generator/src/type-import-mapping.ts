@@ -28,7 +28,8 @@ export interface TypeImportInfo {
 /** The same shape as the annotation's own detail keys, for entries supplied from outside the model (see TypeImportMapping). */
 export type TypeImportEntries = Record<string, { type?: string; from?: string; 'internal-from'?: string }>;
 
-const nonEmpty = (value: string | undefined): string | undefined => (value !== undefined && value !== '' ? value : undefined);
+const nonEmpty = (value: string | undefined): string | undefined =>
+  value !== undefined && value !== '' ? value : undefined;
 
 function info(type: string, from: string | undefined, internalFrom: string | undefined): TypeImportInfo {
   const result: TypeImportInfo = { type };
@@ -40,7 +41,11 @@ function info(type: string, from: string | undefined, internalFrom: string | und
 function importInfoOf(details: EList<EStringToStringMapEntry> | undefined): TypeImportInfo | undefined {
   const type = nonEmpty(details && detailValue(details, 'type'));
   if (type === undefined) return undefined;
-  return info(type, nonEmpty(details && detailValue(details, 'from')), nonEmpty(details && detailValue(details, 'internal-from')));
+  return info(
+    type,
+    nonEmpty(details && detailValue(details, 'from')),
+    nonEmpty(details && detailValue(details, 'internal-from'))
+  );
 }
 
 /**

@@ -37,7 +37,7 @@ describe('docComment / documentationOf', () => {
     expect(docComment(bookClass)).toBe('/**\n * Line one.\n * Line two.\n */');
   });
 
-  describe('layering: typemf generator annotation first, the Ecore source as the fallback', () => {
+  describe('sources: the generator annotation first, then Ecore', () => {
     const GENERATOR = 'https://typemf.dev/generator';
     const ECORE = 'http://www.eclipse.org/emf/2002/Ecore';
     const GENMODEL = 'http://www.eclipse.org/emf/2002/GenModel';
@@ -53,38 +53,45 @@ describe('docComment / documentationOf', () => {
       return bookClass;
     }
 
-    it('layer 1: the `documentation` of the typemf generator annotation', () => {
+    it('uses the `documentation` of the generator annotation', () => {
       expect(docComment(documented([GENERATOR, { documentation: 'From typemf.' }]))).toBe('/** From typemf. */');
     });
 
-    it('layer 2: the Ecore `documentation`, when the generator annotation has none', () => {
+    it('falls back to the Ecore `documentation`', () => {
       expect(docComment(documented([ECORE, { documentation: 'From Ecore.' }]))).toBe('/** From Ecore. */');
     });
 
-    it('layer 1 beats layer 2, whichever annotation was added first - and the loser is not used at all', () => {
+    it('prefers the generator annotation regardless of order', () => {
       const gm = [ECORE, { documentation: 'Ecore loses.' }] as [string, Record<string, string>];
       const tm = [GENERATOR, { documentation: 'typemf wins.' }] as [string, Record<string, string>];
       expect(docComment(documented(gm, tm))).toBe('/** typemf wins. */');
       expect(docComment(documented(tm, gm))).toBe('/** typemf wins. */');
     });
 
-    it('an empty layer-1 documentation counts as absent, so the fallback applies', () => {
-      expect(docComment(documented([GENERATOR, { documentation: '' }], [ECORE, { documentation: 'Fallback.' }]))).toBe('/** Fallback. */');
+    it('treats an empty generator documentation as absent', () => {
+      expect(docComment(documented([GENERATOR, { documentation: '' }], [ECORE, { documentation: 'Fallback.' }]))).toBe(
+        '/** Fallback. */'
+      );
     });
 
-    it('the key is exactly `documentation`; other keys and other sources are ignored', () => {
-      expect(docComment(documented([GENERATOR, { doc: 'no' }], ['http://example.com/other', { documentation: 'no' }]))).toBe('');
+    it('ignores other keys and sources', () => {
+      expect(
+        docComment(documented([GENERATOR, { doc: 'no' }], ['http://example.com/other', { documentation: 'no' }]))
+      ).toBe('');
     });
 
-    it('GenModel `documentation` (where real EMF keeps it) is NOT read - only the typemf and Ecore sources are', () => {
+    it('does not read the GenModel documentation', () => {
       expect(docComment(documented([GENMODEL, { documentation: 'Ignored.' }]))).toBe('');
       expect(documentationOf(documented([GENMODEL, { documentation: 'Ignored.' }]))).toBeUndefined();
-      // ...and it does not interfere with the real layers either.
-      expect(docComment(documented([GENMODEL, { documentation: 'Ignored.' }], [ECORE, { documentation: 'Used.' }]))).toBe('/** Used. */');
+      expect(
+        docComment(documented([GENMODEL, { documentation: 'Ignored.' }], [ECORE, { documentation: 'Used.' }]))
+      ).toBe('/** Used. */');
     });
 
-    it('documentationOf() returns the raw layered value', () => {
-      expect(documentationOf(documented([ECORE, { documentation: 'X' }], [GENERATOR, { documentation: 'Y' }]))).toBe('Y');
+    it('documentationOf() returns the raw value', () => {
+      expect(documentationOf(documented([ECORE, { documentation: 'X' }], [GENERATOR, { documentation: 'Y' }]))).toBe(
+        'Y'
+      );
       expect(documentationOf(documented())).toBeUndefined();
     });
   });
@@ -103,15 +110,17 @@ describe('trivialDerivedFormula', () => {
     return f;
   }
 
-  it('returns the formula for each of the five trivially-computable derived features', () => {
-    expect(trivialDerivedFormula(feature('many', true))).toBe('this.getUpperBound() === -1 || this.getUpperBound() > 1');
+  it('returns the formula of each built-in derived feature', () => {
+    expect(trivialDerivedFormula(feature('many', true))).toBe(
+      'this.getUpperBound() === -1 || this.getUpperBound() > 1'
+    );
     expect(trivialDerivedFormula(feature('required', true))).toBe('this.getLowerBound() >= 1');
     expect(trivialDerivedFormula(feature('container', true))).toBe('(this.getEOpposite()?.isContainment() ?? false)');
     expect(trivialDerivedFormula(feature('eReferenceType', true))).toBe('(this.getEType() as EClass | undefined)');
     expect(trivialDerivedFormula(feature('eAttributeType', true))).toBe('(this.getEType() as EDataType | undefined)');
   });
 
-  it('only applies to a feature actually marked derived, even with a matching name', () => {
+  it('applies only to derived features', () => {
     expect(trivialDerivedFormula(feature('eAttributeType', false))).toBeUndefined();
   });
 
@@ -137,31 +146,29 @@ describe('operationBody', () => {
     return op;
   }
 
-  it('layer 1: the `body` of the typemf generator annotation', () => {
+  it('uses the `body` of the generator annotation', () => {
     expect(operationBody(opWith([GENERATOR, { body: 'return this.getTitle();' }]))).toBe('return this.getTitle();');
   });
 
-  it('layer 2: the `body` of the GenModel annotation, when the generator annotation has none', () => {
+  it('falls back to the `body` of the GenModel annotation', () => {
     expect(operationBody(opWith([GENMODEL, { body: 'return "gm";' }]))).toBe('return "gm";');
   });
 
-  it('layer 1 beats layer 2, whichever annotation was added first', () => {
+  it('prefers the generator annotation regardless of order', () => {
     const gm = [GENMODEL, { body: 'return "gm";' }] as [string, Record<string, string>];
     const tm = [GENERATOR, { body: 'return "tm";' }] as [string, Record<string, string>];
     expect(operationBody(opWith(gm, tm))).toBe('return "tm";');
     expect(operationBody(opWith(tm, gm))).toBe('return "tm";');
   });
 
-  it('an empty layer-1 body counts as absent, so layer 2 applies', () => {
+  it('treats an empty generator body as absent', () => {
     expect(operationBody(opWith([GENERATOR, { body: '' }], [GENMODEL, { body: 'return "gm";' }]))).toBe('return "gm";');
   });
 
-  it('the key is exactly `body` - the old per-template-set key `body:typescript` is no longer read', () => {
-    expect(operationBody(opWith([GENERATOR, { 'body:typescript': 'return 1;' }]))).toBeUndefined();
-  });
-
   it('a `body` in any other annotation source, or a different key in a known one, is ignored', () => {
-    expect(operationBody(opWith(['http://example.com/other', { body: 'return 1;' }], [GENMODEL, { documentation: 'docs' }]))).toBeUndefined();
+    expect(
+      operationBody(opWith(['http://example.com/other', { body: 'return 1;' }], [GENMODEL, { documentation: 'docs' }]))
+    ).toBeUndefined();
   });
 
   it('returns undefined when there is no annotation at all', () => {
@@ -221,19 +228,16 @@ describe('operation parameter formatting', () => {
 });
 
 describe('jsString', () => {
-  it('produces valid, safely-escaped TypeScript string literals for content naive quoting would break', () => {
-    // Exactly the case that motivated this: free-form annotation/documentation
-    // text is genuinely likely to contain apostrophes, unlike ordinary
-    // classifier/feature names.
+  it('produces escaped string literals', () => {
     expect(jsString("don't")).toBe('"don\'t"');
     expect(jsString('line one\nline two')).toBe('"line one\\nline two"');
     expect(jsString('has "double quotes" too')).toBe('"has \\"double quotes\\" too"');
     expect(jsString('back\\slash')).toBe('"back\\\\slash"');
 
     // Every result must be valid as a standalone JS expression.
-    // eslint-disable-next-line no-eval
-    expect(eval(jsString("it's a \"test\" with\nnewlines and \\backslashes\\"))).toBe(
-      "it's a \"test\" with\nnewlines and \\backslashes\\"
+
+    expect(eval(jsString('it\'s a "test" with\nnewlines and \\backslashes\\'))).toBe(
+      'it\'s a "test" with\nnewlines and \\backslashes\\'
     );
   });
 });

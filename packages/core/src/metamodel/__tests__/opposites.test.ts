@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { createInstanceOf, DynamicEFactoryImpl, EClassImpl, EcorePackageImpl, EList, EObject, EPackageImpl, EReferenceImpl } from '../../index.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EClassImpl,
+  EcorePackageImpl,
+  EList,
+  EObject,
+  EPackageImpl,
+  EReferenceImpl,
+} from '../../index.js';
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 /**

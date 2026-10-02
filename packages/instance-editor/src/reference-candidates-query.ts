@@ -1,4 +1,8 @@
-import { ReferenceCandidatesRequest, isReferenceCandidatesError, isReferenceCandidatesResponse } from './host-message-protocol.js';
+import {
+  ReferenceCandidatesRequest,
+  isReferenceCandidatesError,
+  isReferenceCandidatesResponse,
+} from './host-message-protocol.js';
 import { PostMessageTransport } from './host-message-uri-converter.js';
 
 /**
@@ -9,7 +13,10 @@ import { PostMessageTransport } from './host-message-uri-converter.js';
  * own class rather than folding into one of the others.
  */
 export class ReferenceCandidatesQuery {
-  private readonly pending = new Map<string, { resolve: (candidateIds: string[]) => void; reject: (err: Error) => void }>();
+  private readonly pending = new Map<
+    string,
+    { resolve: (candidateIds: string[]) => void; reject: (err: Error) => void }
+  >();
   private nextRequestId = 1;
 
   constructor(private readonly transport: PostMessageTransport) {}

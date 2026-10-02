@@ -44,14 +44,21 @@ export function registerManifestModules(
       }
       const absolutePath = join(extension.extensionPath, entry.path);
       try {
-        runtime.modules.declare({ name, version: entry.version, provider: extension.id, load: () => loadFile(absolutePath) });
+        runtime.modules.declare({
+          name,
+          version: entry.version,
+          provider: extension.id,
+          load: () => loadFile(absolutePath),
+        });
       } catch (err) {
         problems.push(`${extension.id}: ${(err as Error).message}`);
         continue;
       }
       for (const [nsURI, exportName] of Object.entries(entry.packages ?? {})) {
         if (runtime.packageRegistry.containsPackage(nsURI)) {
-          problems.push(`${extension.id}: nsURI '${nsURI}' of module '${name}' is already registered; keeping the existing registration.`);
+          problems.push(
+            `${extension.id}: nsURI '${nsURI}' of module '${name}' is already registered; keeping the existing registration.`
+          );
           continue;
         }
         runtime.packageRegistry.registerDescriptor(nsURI, () =>
@@ -67,7 +74,9 @@ function packageFromExport(module: unknown, moduleName: string, exportName: stri
   const exported = (module as Record<string, unknown> | undefined)?.[exportName] as { eINSTANCE?: unknown } | undefined;
   const pkg = exported?.eINSTANCE ?? exported;
   if (!isEPackage(pkg)) {
-    throw new Error(`Export '${exportName}' of module '${moduleName}' is neither an EPackage nor a class with a static EPackage 'eINSTANCE'.`);
+    throw new Error(
+      `Export '${exportName}' of module '${moduleName}' is neither an EPackage nor a class with a static EPackage 'eINSTANCE'.`
+    );
   }
   return pkg;
 }

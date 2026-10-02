@@ -22,7 +22,10 @@ export interface BuiltinModuleVersions {
  * the modules of all installed extensions (and of extensions installed later), and loads the
  * `typemf.ecoreMappings` setting. Called by the runtime extension's `activate()`.
  */
-export async function activateRuntime(context: vscode.ExtensionContext, versions: BuiltinModuleVersions): Promise<TypeMfRuntimeApi> {
+export async function activateRuntime(
+  context: vscode.ExtensionContext,
+  versions: BuiltinModuleVersions
+): Promise<TypeMfRuntimeApi> {
   const runtime = new TypeMfRuntime();
   runtime.uriConverterRegistry.register(new node.NodeFileUriConverter());
   runtime.modules.provide('@typemf/core', versions['@typemf/core'], core);

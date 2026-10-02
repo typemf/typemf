@@ -12,9 +12,7 @@ successor to the original TMF's `TJson`.
   "$roots": [
     {
       "$eClass": { "namespace": "lib", "name": "Library" },
-      "books": [
-        { "$eClass": { "namespace": "lib", "name": "Book" }, "title": "Dune" }
-      ],
+      "books": [{ "$eClass": { "namespace": "lib", "name": "Book" }, "title": "Dune" }],
       "featuredBook": { "$ref": "#Book_Dune" }
     }
   ]

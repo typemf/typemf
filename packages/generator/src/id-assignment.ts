@@ -43,7 +43,9 @@ export function assignFreshIds(pkg: EPackage): void {
     // No recomputeAllLists() call needed anymore - generated get-bodied features cache automatically
     // (see EObjectImpl.getModelGeneration()), unlike hand-written core's old manual-recompute pattern
     // this used to rely on.
-    classifier.getEAllStructuralFeatures().forEach((feature, index) => (feature as EStructuralFeatureImpl).setFeatureID(index));
+    classifier
+      .getEAllStructuralFeatures()
+      .forEach((feature, index) => (feature as EStructuralFeatureImpl).setFeatureID(index));
     classifier.getEAllOperations().forEach((op, index) => (op as EOperationImpl).setOperationID(index));
   }
 }

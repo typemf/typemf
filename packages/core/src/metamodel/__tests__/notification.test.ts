@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { EAttributeImpl } from '../impl/EAttributeImpl.js';
+import { EClassImpl } from '../impl/EClassImpl.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
+import { EDataTypeImpl } from '../impl/EDataTypeImpl.js';
+import { EEnumImpl } from '../impl/EEnumImpl.js';
+import { EEnumLiteralImpl } from '../impl/EEnumLiteralImpl.js';
+import { EGenericTypeImpl } from '../impl/EGenericTypeImpl.js';
+import { EPackageImpl } from '../impl/EPackageImpl.js';
 import { Notification } from '../types/Notification.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 import { createInstanceOf } from '../impl/metamodel-helpers.js';
 
-// See NOTES.md's point 6/7 write-ups: every generated setter routes through getEcorePackageRef(),
-// which needs Ecore's own metaclass system bootstrapped first.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 describe('EObject.onDidChange', () => {
@@ -157,8 +162,122 @@ describe('EObject.onDidChange', () => {
     expect(received).toHaveLength(1);
     expect(received[0]!.newValue).toBe('Dune');
   });
+});
 
-  it('a plain, standalone EAttributeImpl (not attached to any document) still supports onDidChange', () => {
+describe('EObject.onDidChange on metamodel objects', () => {
+  it('a setter fires SET', () => {
+    const pkg = new EPackageImpl();
+    const received: Notification[] = [];
+    pkg.onDidChange((n) => received.push(n));
+
+    pkg.setNsURI('https://example.com/x');
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.eventType).toBe('SET');
+    expect(received[0]!.newValue).toBe('https://example.com/x');
+    expect(received[0]!.wasSet).toBe(false);
+  });
+
+  it('eUnset fires UNSET', () => {
+    const pkg = new EPackageImpl();
+    pkg.setNsURI('https://example.com/x');
+    const nsURIFeature = pkg.eClass().getEStructuralFeature('nsURI')!;
+    const received: Notification[] = [];
+    pkg.onDidChange((n) => received.push(n));
+
+    pkg.eUnset(nsURIFeature);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.eventType).toBe('UNSET');
+    expect(received[0]!.oldValue).toBe('https://example.com/x');
+    expect(received[0]!.wasSet).toBe(true);
+  });
+
+  it('EEnumLiteral.setLiteral() fires SET for the literal feature', () => {
+    const lit = new EEnumLiteralImpl();
+    lit.setName('SciFi');
+    const received: Notification[] = [];
+    lit.onDidChange((n) => received.push(n));
+
+    lit.setLiteral('sci-fi');
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.eventType).toBe('SET');
+    expect(received[0]!.newValue).toBe('sci-fi');
+    expect(received[0]!.feature?.getName()).toBe('literal');
+    expect(received[0]!.wasSet).toBe(false);
+  });
+
+  it('ETypedElement.setEType() fires SET for the eType feature', () => {
+    const attr = new EAttributeImpl();
+    const dataType = new EDataTypeImpl();
+    dataType.setName('EString');
+    const received: Notification[] = [];
+    attr.onDidChange((n) => received.push(n));
+
+    attr.setEType(dataType);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.eventType).toBe('SET');
+    expect(received[0]!.newValue).toBe(dataType);
+    expect(received[0]!.feature?.getName()).toBe('eType');
+  });
+
+  it('ETypedElement.setEGenericType() fires SET for eGenericType and for eType', () => {
+    const attr = new EAttributeImpl();
+    const eClass = new EClassImpl();
+    eClass.setName('Widget');
+    const gt = new EGenericTypeImpl();
+    gt.setEClassifier(eClass);
+
+    const received: Notification[] = [];
+    attr.onDidChange((n) => received.push(n));
+
+    attr.setEGenericType(gt);
+
+    expect(received).toHaveLength(2);
+    expect(received[0]!.eventType).toBe('SET');
+    expect(received[0]!.feature?.getName()).toBe('eGenericType');
+    expect(received[0]!.newValue).toBe(gt);
+    expect(received[1]!.eventType).toBe('SET');
+    expect(received[1]!.feature?.getName()).toBe('eType');
+    expect(received[1]!.newValue).toBe(eClass);
+  });
+
+  it('a feature-scoped listener sees only its feature of setEGenericType()', () => {
+    const attr = new EAttributeImpl();
+    const eClass = new EClassImpl();
+    eClass.setName('Widget');
+    const gt = new EGenericTypeImpl();
+    gt.setEClassifier(eClass);
+
+    const eTypeFeature = attr.eClass().getEStructuralFeature('eType')!;
+    const received: Notification[] = [];
+    attr.onDidChange((n) => received.push(n), eTypeFeature);
+
+    attr.setEGenericType(gt);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.feature?.getName()).toBe('eType');
+  });
+
+  it('adding to a list fires ADD', () => {
+    const en = new EEnumImpl();
+    en.setName('Genre');
+    const lit = new EEnumLiteralImpl();
+    lit.setName('SciFi');
+    const received: Notification[] = [];
+    en.onDidChange((n) => received.push(n));
+
+    en.getELiterals().add(lit);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.eventType).toBe('ADD');
+    expect(received[0]!.newValue).toBe(lit);
+    expect(received[0]!.position).toBe(0);
+  });
+
+  it('works on an object outside any resource', () => {
     const attr = new EAttributeImpl();
     const received: Notification[] = [];
     attr.onDidChange((n) => received.push(n));

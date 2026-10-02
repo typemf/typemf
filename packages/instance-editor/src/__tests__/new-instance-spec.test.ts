@@ -26,7 +26,7 @@ describe('resolveNewInstanceSpec', () => {
     expect(result).toBeUndefined();
   });
 
-  it('static mode: re-resolves the real EClass from the runtime\'s own packageRegistry', async () => {
+  it("static mode: resolves the EClass from the runtime's package registry", async () => {
     const pkg = new EPackageImpl();
     pkg.setName('library');
     pkg.setNsURI('https://example.com/library');
@@ -37,16 +37,14 @@ describe('resolveNewInstanceSpec', () => {
     const registry = new EPackageRegistryImpl();
     registry.register(pkg);
 
-    // The fragment is the plain, un-encoded JSON string - matching what vscode.Uri's own
-    // `fragment` property already provides, decoded, on both ends of the real round trip (see
-    // buildNewInstanceUri's own reasoning).
+    // vscode.Uri provides the fragment decoded.
     const fragment = JSON.stringify(encodeStaticSpec(bookClass, pkg));
 
     const resolved = await resolveNewInstanceSpec({ fragment }, fakeRuntime(registry));
     expect(resolved).toBe(bookClass);
   });
 
-  it('static mode: returns undefined if the package is no longer registered', async () => {
+  it('static mode: returns undefined when the package is not registered', async () => {
     const pkg = new EPackageImpl();
     pkg.setName('library');
     pkg.setNsURI('https://example.com/library');
@@ -61,39 +59,34 @@ describe('resolveNewInstanceSpec', () => {
     expect(resolved).toBeUndefined();
   });
 
-  it('dynamic mode: re-resolves by reloading the same .ecore file from disk', async () => {
+  it('dynamic mode: reloads the .ecore file', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'new-instance-spec-'));
     const filePath = join(dir, 'library.ecore');
     writeFileSync(filePath, SAMPLE_ECORE);
 
     try {
-      // Only the class name and file path are encoded - the original EClass object here stands
-      // in for "whatever was picked interactively," never actually read by encodeDynamicSpec
-      // beyond its own name.
+      // Only the class name and file path are encoded.
       const placeholderClass = new EClassImpl();
       placeholderClass.setName('Book');
       const fragment = JSON.stringify(encodeDynamicSpec(placeholderClass, filePath));
 
       const resolved = await resolveNewInstanceSpec({ fragment }, fakeRuntime(new EPackageRegistryImpl()));
       expect(resolved?.getName()).toBe('Book');
-      expect(resolved).not.toBe(placeholderClass); // genuinely re-loaded fresh, not the same object
+      expect(resolved).not.toBe(placeholderClass); // reloaded, not the same object
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   });
 
-  it('returns undefined for malformed JSON in the fragment, rather than throwing', async () => {
-    const result = await resolveNewInstanceSpec({ fragment: 'not-valid-json' }, fakeRuntime(new EPackageRegistryImpl()));
+  it('returns undefined for malformed JSON', async () => {
+    const result = await resolveNewInstanceSpec(
+      { fragment: 'not-valid-json' },
+      fakeRuntime(new EPackageRegistryImpl())
+    );
     expect(result).toBeUndefined();
   });
 
-  it('real nsURI values containing "." (e.g. the real Ecore namespace) round-trip correctly - the exact shape of the real, reported regression', async () => {
-    // The real bug this guards against: a query-string encoding of this exact spec (a real nsURI
-    // like "http://www.eclipse.org/emf/2002/Ecore" contains "." characters) corrupted
-    // @typemf/core's own getFileExtension() once the full uri.toString() reached it, since that
-    // URI class has no concept of a query string at all. The fragment never has this problem -
-    // this test's only real point is confirming the round trip itself still works correctly for
-    // exactly the kind of value that broke it.
+  it('round-trips nsURIs that contain dots', async () => {
     const pkg = new EPackageImpl();
     pkg.setName('ecore');
     pkg.setNsURI('http://www.eclipse.org/emf/2002/Ecore');

@@ -8,8 +8,7 @@ import { loadLocalEcorePackage } from './load-local-ecore-package.js';
  * encoded as a plain string, but "which package, which class" can.
  */
 export type EncodedSpec =
-  | { mode: 'static'; nsURI: string; className: string }
-  | { mode: 'dynamic'; ecoreFilePath: string; className: string };
+  { mode: 'static'; nsURI: string; className: string } | { mode: 'dynamic'; ecoreFilePath: string; className: string };
 
 export function encodeStaticSpec(eClass: EClass, pkg: EPackage): EncodedSpec {
   return { mode: 'static', nsURI: pkg.getNsURI() ?? '', className: eClass.getName() ?? '' };
@@ -44,7 +43,10 @@ export function encodeDynamicSpec(eClass: EClass, ecoreFilePath: string): Encode
  * same reasoning as handleGetObjectRequest's own `{ objectIds }` narrowing and
  * loadLocalEcorePackage's own `{ fsPath }` narrowing.
  */
-export async function resolveNewInstanceSpec(uri: { fragment: string | undefined }, runtime: TypeMfRuntimeApi): Promise<EClass | undefined> {
+export async function resolveNewInstanceSpec(
+  uri: { fragment: string | undefined },
+  runtime: TypeMfRuntimeApi
+): Promise<EClass | undefined> {
   const raw = uri.fragment;
   if (!raw) return undefined;
 

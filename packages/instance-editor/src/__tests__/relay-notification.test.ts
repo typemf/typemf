@@ -1,12 +1,18 @@
-import { EcorePackageImpl, EClassImpl, EAttributeImpl, EDataTypeImpl, EPackageImpl, EReferenceImpl, Notification } from '@typemf/core';
+import {
+  EcorePackageImpl,
+  EClassImpl,
+  EAttributeImpl,
+  EDataTypeImpl,
+  EPackageImpl,
+  EReferenceImpl,
+  Notification,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { ApplyEditRequest } from '../host-message-protocol.js';
 import { relayNotification } from '../relay-notification.js';
 import { WebviewObjectRegistry } from '../webview-object-registry.js';
 
-/** Narrows a relayNotification outcome to a real ApplyEditRequest, failing the test clearly if
- *  it's a RelayFailure or undefined instead - every test expecting a real request goes through
- *  this rather than asserting on the union type directly. */
+/** Asserts that the outcome is an ApplyEditRequest. */
 function expectRequest(outcome: ReturnType<typeof relayNotification>): ApplyEditRequest {
   if (outcome === undefined) throw new Error('expected an ApplyEditRequest, got undefined (a silent, expected no-op)');
   if ('reason' in outcome) throw new Error(`expected an ApplyEditRequest, got a RelayFailure: ${outcome.reason}`);
@@ -53,7 +59,12 @@ describe('relayNotification', () => {
     registry.record(bookClass, 'host-class-1'); // not the book itself, just a stand-in EObject as notifier
     registry.record(titleAttr, 'host-feature-1');
 
-    const notification = setNotification({ notifier: bookClass, feature: titleAttr, oldValue: 'Old', newValue: 'Dune' });
+    const notification = setNotification({
+      notifier: bookClass,
+      feature: titleAttr,
+      oldValue: 'Old',
+      newValue: 'Dune',
+    });
     const request = expectRequest(relayNotification(notification, registry, 'r1'));
 
     expect(request.objectId).toBe('host-class-1');
@@ -62,7 +73,7 @@ describe('relayNotification', () => {
     expect(request.value).toEqual({ primitive: 'Dune' });
   });
 
-  it('returns a RelayFailure (not undefined) for a notifier this registry never recorded - a real problem, not a silent no-op', () => {
+  it('returns a RelayFailure for a notifier the registry never recorded', () => {
     const { titleAttr } = buildFixture();
     const registry = new WebviewObjectRegistry();
     const unrecorded = new EClassImpl();
@@ -74,7 +85,7 @@ describe('relayNotification', () => {
     expect(outcome && 'reason' in outcome).toBe(true);
   });
 
-  it('returns undefined for an event type this project never actually fires (e.g. MOVE)', () => {
+  it('returns undefined for event types that are not relayed, such as MOVE', () => {
     const { bookClass, titleAttr } = buildFixture();
     const registry = new WebviewObjectRegistry();
     registry.record(bookClass, 'host-class-1');
@@ -84,20 +95,25 @@ describe('relayNotification', () => {
     expect(relayNotification(notification, registry, 'r3')).toBeUndefined();
   });
 
-  it('an UNSET notification has no value at all in the request', () => {
+  it('an UNSET request carries no value', () => {
     const { bookClass, titleAttr } = buildFixture();
     const registry = new WebviewObjectRegistry();
     registry.record(bookClass, 'host-class-1');
     registry.record(titleAttr, 'host-feature-1');
 
-    const notification = setNotification({ eventType: 'UNSET', notifier: bookClass, feature: titleAttr, oldValue: 'Dune' });
+    const notification = setNotification({
+      eventType: 'UNSET',
+      notifier: bookClass,
+      feature: titleAttr,
+      oldValue: 'Dune',
+    });
     const request = expectRequest(relayNotification(notification, registry, 'r4'));
 
     expect(request.eventType).toBe('UNSET');
     expect(request.value).toBeUndefined();
   });
 
-  it('a REMOVE notification on a real reference feature encodes the removed object (oldValue) as a ref, not newValue', () => {
+  it('a REMOVE encodes the removed object as a ref', () => {
     const { bookClass } = buildFixture();
     const booksRef = new EReferenceImpl();
     booksRef.setName('books');
@@ -127,7 +143,7 @@ describe('relayNotification', () => {
     expect(request.position).toBe(0);
   });
 
-  it('a reference value with no known host id makes the whole notification a RelayFailure, not a silent no-op', () => {
+  it('a reference value without a host id makes the notification a RelayFailure', () => {
     const { bookClass } = buildFixture();
     const booksRef = new EReferenceImpl();
     booksRef.setName('books');
@@ -142,7 +158,13 @@ describe('relayNotification', () => {
     registry.record(booksRef, 'host-books-feature');
     const neverRecordedBook = new EClassImpl(); // deliberately not registry.record()'d
 
-    const notification = setNotification({ eventType: 'ADD', notifier: library, feature: booksRef, newValue: neverRecordedBook, position: 0 });
+    const notification = setNotification({
+      eventType: 'ADD',
+      notifier: library,
+      feature: booksRef,
+      newValue: neverRecordedBook,
+      position: 0,
+    });
     const outcome = relayNotification(notification, registry, 'r7');
     expect(outcome).toBeDefined();
     expect(outcome && 'reason' in outcome).toBe(true);

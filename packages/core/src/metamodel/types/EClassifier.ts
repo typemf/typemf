@@ -4,10 +4,7 @@ import { EPackage } from './EPackage.js';
 import { ETypeParameter } from './ETypeParameter.js';
 import { TypeScriptClass } from './TypeScriptClass';
 
-
-
 export interface EClassifier extends ENamedElement {
-
   getInstanceClassName(): string | undefined;
   setInstanceClassName(value: string | undefined): void;
 

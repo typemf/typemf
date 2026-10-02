@@ -38,7 +38,7 @@ describe('ObjectIdMap', () => {
     expect(ids.objectFor('not-a-real-id')).toBeUndefined();
   });
 
-  it('two separate ObjectIdMap instances are independent - one is unaffected by the other', () => {
+  it('separate maps are independent', () => {
     const idsA = new ObjectIdMap();
     const idsB = new ObjectIdMap();
     const objA1 = new EClassImpl();
@@ -49,9 +49,7 @@ describe('ObjectIdMap', () => {
     const idForObjA2 = idsA.idFor(objA2);
     idsB.idFor(objB); // a completely separate map - must not affect idsA's own assignments at all
 
-    // idsA's own assignments are exactly as they were, unaffected by anything idsB just did.
     expect(idsA.objectFor(idForObjA2)).toBe(objA2);
-    // idsB was never involved in assigning objA1's id - only idsA's own bookkeeping did that.
     expect(idsA.objectFor(idsA.idFor(objA1))).toBe(objA1);
   });
 });

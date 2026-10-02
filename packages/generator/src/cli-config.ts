@@ -19,14 +19,14 @@ export async function loadConfig(configPath: string): Promise<GeneratorConfig> {
   try {
     raw = await readFile(configPath, 'utf-8');
   } catch (err) {
-    throw new Error(`Could not read config file '${configPath}': ${(err as Error).message}`);
+    throw new Error(`Could not read config file '${configPath}': ${(err as Error).message}`, { cause: err });
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    throw new Error(`Failed to parse '${configPath}' as JSON: ${(err as Error).message}`);
+    throw new Error(`Failed to parse '${configPath}' as JSON: ${(err as Error).message}`, { cause: err });
   }
 
   return validateConfig(parsed, configPath);
@@ -44,7 +44,10 @@ function validateConfig(value: unknown, configPath: string): GeneratorConfig {
     }
   }
 
-  if (obj.options !== undefined && (typeof obj.options !== 'object' || obj.options === null || Array.isArray(obj.options))) {
+  if (
+    obj.options !== undefined &&
+    (typeof obj.options !== 'object' || obj.options === null || Array.isArray(obj.options))
+  ) {
     throw new Error(`'${configPath}': "options", if present, must be a JSON object.`);
   }
 

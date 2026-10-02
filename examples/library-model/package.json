@@ -1,0 +1,42 @@
+{
+  "name": "library-model",
+  "displayName": "TypeMF Example: Library Model",
+  "description": "Provides a generated library metamodel as a shared TypeMF module.",
+  "version": "1.0.0",
+  "publisher": "typemf-examples",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionDependencies": [
+    "typemf.vscode-runtime"
+  ],
+  "typemf": {
+    "modules": {
+      "library-model": {
+        "path": "./dist/library-model.cjs",
+        "version": "1.0.0",
+        "packages": {
+          "https://typemf.dev/examples/library": "LibraryPackageImpl"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "generate": "typemf-generate typemf-generator.config.json",
+    "build": "pnpm generate && tsc -p tsconfig.json && node esbuild.mjs",
+    "typecheck": "pnpm generate && tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@typemf/core": "workspace:^",
+    "@typemf/generator": "workspace:*",
+    "@typemf/vscode-runtime": "workspace:*",
+    "esbuild": "^0.24.0"
+  }
+}

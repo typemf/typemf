@@ -8,9 +8,7 @@ import { EPackageImpl } from '../impl/EPackageImpl.js';
 import { EClassImpl } from '../impl/EClassImpl.js';
 import { DynamicEFactoryImpl } from '../impl/DynamicEFactoryImpl.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 class TestFactory extends EFactoryImpl {
@@ -25,8 +23,8 @@ function dataType(name: string): EDataTypeImpl {
   return d;
 }
 
-describe('EFactoryImpl - generic primitive conversion', () => {
-  it('converts every built-in primitive name, including the *Object wrapper variants', () => {
+describe('EFactoryImpl data type conversion', () => {
+  it('converts every built-in Ecore data type, including the *Object variants', () => {
     const factory = new TestFactory();
     expect(factory.createFromString(dataType('EString'), 'hello')).toBe('hello');
 
@@ -53,8 +51,7 @@ describe('EFactoryImpl - generic primitive conversion', () => {
       123456789012345678901234567890n
     );
 
-    // EBigDecimal: no native JS arbitrary-precision decimal type - honest
-    // pass-through rather than a false-precision guess.
+    // JavaScript has no arbitrary-precision decimal type, so EBigDecimal stays a string.
     expect(factory.createFromString(dataType('EBigDecimal'), '3.14159265358979')).toBe('3.14159265358979');
 
     const date = factory.createFromString(dataType('EDate'), '2026-01-15T00:00:00.000Z') as Date;
@@ -62,18 +59,18 @@ describe('EFactoryImpl - generic primitive conversion', () => {
     expect(date.toISOString()).toBe('2026-01-15T00:00:00.000Z');
   });
 
-  it('round-trips convertToString for EDate specifically (ISO 8601)', () => {
+  it('converts EDate to an ISO 8601 string', () => {
     const factory = new TestFactory();
     const date = new Date('2026-06-01T12:30:00.000Z');
     expect(factory.convertToString(dataType('EDate'), date)).toBe('2026-06-01T12:30:00.000Z');
   });
 
-  it('hands back an unknown/custom EDataType literal untouched, rather than guessing', () => {
+  it('returns the literal unchanged for an unknown data type', () => {
     const factory = new TestFactory();
     expect(factory.createFromString(dataType('MyCustomType'), 'whatever')).toBe('whatever');
   });
 
-  it('throws a clear error when asked to convert a datatype from a different package', () => {
+  it('throws for a data type from a different package', () => {
     const factory = new TestFactory();
     const ownPackage = new EPackageImpl();
     ownPackage.setName('mine');
@@ -87,14 +84,14 @@ describe('EFactoryImpl - generic primitive conversion', () => {
     expect(() => factory.createFromString(foreignType, '1')).toThrow(/not a valid classifier/);
   });
 
-  it('does not throw the ownership check when the factory has no package set at all (permissive default)', () => {
+  it('skips the package check when the factory has no package', () => {
     const factory = new TestFactory();
     expect(factory.createFromString(dataType('EInt'), '1')).toBe(1);
   });
 });
 
-describe('EFactoryImpl.create() - the base, terminal implementation', () => {
-  it('warns and falls back to a real, working DynamicEObjectImpl for an unrecognized classifier, rather than throwing', () => {
+describe('EFactoryImpl.create()', () => {
+  it('warns and creates a DynamicEObjectImpl for an unknown classifier', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const factory = new EFactoryImpl();
     const eClass = new EClassImpl();
@@ -104,13 +101,13 @@ describe('EFactoryImpl.create() - the base, terminal implementation', () => {
     const instance = factory.create(eClass);
 
     expect(instance).toBeInstanceOf(DynamicEObjectImpl);
-    expect(instance.eClass()).toBe(eClass); // a REAL, working instance, reflectively backed by eClass
+    expect(instance.eClass()).toBe(eClass);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toMatch(/classifier id 7.*Thing.*DynamicEObjectImpl/);
     warn.mockRestore();
   });
 
-  it('still throws for an abstract or interface eClass - a dynamic instance would not fix what is actually wrong', () => {
+  it('throws for an abstract class or an interface', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const factory = new EFactoryImpl();
 
@@ -124,16 +121,16 @@ describe('EFactoryImpl.create() - the base, terminal implementation', () => {
     interfaceClass.setInterface(true);
     expect(() => factory.create(interfaceClass)).toThrow(/InterfaceThing.*abstract or an interface/);
 
-    expect(warn).not.toHaveBeenCalled(); // neither case reaches the fallback at all
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 
-  it('is what a subclass reaches via super.create() when it does not recognize the classifier itself - the delegation chain efactory.njk generates', () => {
+  it('is the fallback for generated factories calling super.create()', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     class PartialFactory extends EFactoryImpl {
       override create(eClass: EClass): EObject {
         if (eClass.getName() === 'Known') return {} as EObject;
-        return super.create(eClass); // exactly the shape efactory.njk now generates
+        return super.create(eClass);
       }
     }
     const factory = new PartialFactory();
@@ -149,7 +146,7 @@ describe('EFactoryImpl.create() - the base, terminal implementation', () => {
     warn.mockRestore();
   });
 
-  it('DynamicEFactoryImpl still overrides create() with its own real, reflective implementation (never reaches this base, never warns)', () => {
+  it('is overridden by DynamicEFactoryImpl without a warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const eClass = new EClassImpl();
     eClass.setName('Thing');

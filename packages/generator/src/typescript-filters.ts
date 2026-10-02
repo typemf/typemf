@@ -34,7 +34,11 @@ export const ECLIPSE_ECORE_ANNOTATION_SOURCE = 'http://www.eclipse.org/emf/2002/
  * not globally. Used as written - not checked, not interpreted; an empty
  * value counts as absent (so it falls through to the next layer).
  */
-export function layeredAnnotationDetail(element: EModelElement, key: string, fallbackSource: string): string | undefined {
+export function layeredAnnotationDetail(
+  element: EModelElement,
+  key: string,
+  fallbackSource: string
+): string | undefined {
   for (const source of [TYPEMF_GENERATOR_ANNOTATION_SOURCE, fallbackSource]) {
     const details = element.getEAnnotation(source)?.getDetails();
     const value = details && detailValue(details, key);
@@ -170,7 +174,10 @@ export function customBodyNeedsOwnField(feature: EStructuralFeature): boolean {
  * (it never has a setter regardless).
  */
 export function isReadOnlyFeature(feature: EStructuralFeature): boolean {
-  return trivialDerivedFormula(feature) !== undefined || (featureGetter(feature) !== undefined && featureSetter(feature) === undefined);
+  return (
+    trivialDerivedFormula(feature) !== undefined ||
+    (featureGetter(feature) !== undefined && featureSetter(feature) === undefined)
+  );
 }
 
 /**
@@ -191,7 +198,9 @@ export function findFeatureAnnotationProblems(pkg: EPackage): string[] {
     if (!isEClass(classifier)) continue;
     for (const feature of classifier.getEStructuralFeatures()) {
       if (feature.isMany() && featureSetter(feature) !== undefined) {
-        problems.push(`${classifier.getName()}.${feature.getName()}: has a \`set\` annotation, but is many-valued - many-valued features never have a setter, so it is ignored`);
+        problems.push(
+          `${classifier.getName()}.${feature.getName()}: has a \`set\` annotation, but is many-valued - many-valued features never have a setter, so it is ignored`
+        );
       }
     }
   }
@@ -394,7 +403,8 @@ function resolveDataTypeText(dataType: EDataType): ResolvedDataTypeText {
 export function registerBodyImports(element: EModelElement): string {
   for (const entry of readImportAnnotations(element)) {
     const source = entry.internalFrom ?? entry.from;
-    if (source !== undefined) importCollector.add({ name: entry.type, location: 'root', foundational: false, from: source });
+    if (source !== undefined)
+      importCollector.add({ name: entry.type, location: 'root', foundational: false, from: source });
   }
   return '';
 }
@@ -402,7 +412,12 @@ export function registerBodyImports(element: EModelElement): string {
 function tsPrimitiveType(dataType: EDataType): string {
   const resolved = resolveDataTypeTs(dataType);
   if (resolved.importName !== undefined && resolved.importFrom !== undefined) {
-    importCollector.add({ name: resolved.importName, location: 'root', foundational: false, from: resolved.importFrom });
+    importCollector.add({
+      name: resolved.importName,
+      location: 'root',
+      foundational: false,
+      from: resolved.importFrom,
+    });
   }
   return resolved.text;
 }
@@ -425,7 +440,9 @@ function tsPrimitiveType(dataType: EDataType): string {
 const PRIMITIVE_VALUE_DATATYPE_NAMES = new Set(['EBoolean', 'EInt', 'ELong', 'EFloat', 'EDouble', 'EShort', 'EByte']);
 
 export function isPrimitiveValueType(classifier: EClassifier | undefined): boolean {
-  return classifier !== undefined && isEDataType(classifier) && PRIMITIVE_VALUE_DATATYPE_NAMES.has(classifier.getName()!);
+  return (
+    classifier !== undefined && isEDataType(classifier) && PRIMITIVE_VALUE_DATATYPE_NAMES.has(classifier.getName()!)
+  );
 }
 
 /**
@@ -435,7 +452,8 @@ export function isPrimitiveValueType(classifier: EClassifier | undefined): boole
  * field's initial value instead of `undefined`.
  */
 export function primitiveDefaultValue(feature: ETypedElement): string {
-  const literal = 'getDefaultValueLiteral' in feature ? (feature as EStructuralFeature).getDefaultValueLiteral() : undefined;
+  const literal =
+    'getDefaultValueLiteral' in feature ? (feature as EStructuralFeature).getDefaultValueLiteral() : undefined;
   if (literal !== undefined && literal !== '') return literal;
   const classifier = feature.getEType();
   return classifier?.getName() === 'EBoolean' ? 'false' : '0';
@@ -556,7 +574,13 @@ export function groupOperationsByName(operations: Iterable<EOperation>): EOperat
 /** "name" if every name in `names` is identical, otherwise "nameOrValueOrEtc" - used to synthesize a merged parameter name for an overload group. */
 function mergeNames(names: string[]): string {
   const unique = [...new Set(names)];
-  return unique[0] + unique.slice(1).map((n) => `Or${ucfirst(n)}`).join('');
+  return (
+    unique[0] +
+    unique
+      .slice(1)
+      .map((n) => `Or${ucfirst(n)}`)
+      .join('')
+  );
 }
 
 interface MergedParam {
@@ -709,7 +733,8 @@ export function overloadDispatch(group: EOperation[], className: string): Overlo
     stubMessage: escapeForSingleQuotes(`${className}.${name}() is overloaded and ${why} - nothing to generate.`),
   });
 
-  if (!group.some((op) => operationBody(op) !== undefined)) return stub('none of its overloads has a `body` annotation');
+  if (!group.some((op) => operationBody(op) !== undefined))
+    return stub('none of its overloads has a `body` annotation');
 
   const merged = mergedParams(group);
   const branches: OverloadBranch[] = [];
@@ -729,7 +754,9 @@ export function overloadDispatch(group: EOperation[], className: string): Overlo
           parts.push(`${m.name} === undefined`);
           continue;
         }
-        const havingTypes = new Set(group.filter((o) => o.getEParameters().size() > i).map((o) => tsFeatureType(o.getEParameters().get(i)!)));
+        const havingTypes = new Set(
+          group.filter((o) => o.getEParameters().size() > i).map((o) => tsFeatureType(o.getEParameters().get(i)!))
+        );
         if (havingTypes.size > 1) {
           const test = 'isMany' in own && own.isMany() ? undefined : primitiveTest(m.name, tsScalarType(own));
           if (test === undefined) {
@@ -748,13 +775,16 @@ export function overloadDispatch(group: EOperation[], className: string): Overlo
 
     const body = operationBody(op);
     const code = body === undefined ? '' : codeOnly(body);
-    const aliases = body === undefined ? [] : params.flatMap((p, i) => {
-      const merged_i = merged[i]!;
-      const own = p.getName()!;
-      return own !== merged_i.name && new RegExp(`(?<![\\w$])${own.replace(/[$]/g, '\\$')}(?![\\w$])`).test(code)
-        ? [`const ${own} = ${merged_i.name} as ${tsFeatureType(p)};`]
-        : [];
-    });
+    const aliases =
+      body === undefined
+        ? []
+        : params.flatMap((p, i) => {
+            const merged_i = merged[i]!;
+            const own = p.getName()!;
+            return own !== merged_i.name && new RegExp(`(?<![\\w$])${own.replace(/[$]/g, '\\$')}(?![\\w$])`).test(code)
+              ? [`const ${own} = ${merged_i.name} as ${tsFeatureType(p)};`]
+              : [];
+          });
     branches.push({ operation: op, condition, body, aliases, label });
   }
 
@@ -888,9 +918,11 @@ export function isOperationDerived(eClass: EClass): boolean {
  */
 export function isBookkeepingOperation(op: EOperation, eClass: EClass): boolean {
   if (op.getName() === 'getClassifierID' && op.getEParameters().isEmpty() && isClassifierDerived(eClass)) return true;
-  if (op.getName() === 'getFeatureID' && op.getEParameters().isEmpty() && isStructuralFeatureDerived(eClass)) return true;
+  if (op.getName() === 'getFeatureID' && op.getEParameters().isEmpty() && isStructuralFeatureDerived(eClass))
+    return true;
   if (op.getName() === 'getOperationID' && op.getEParameters().isEmpty() && isOperationDerived(eClass)) return true;
-  if (op.getName() === 'getContainerClass' && op.getEParameters().isEmpty() && isStructuralFeatureDerived(eClass)) return true;
+  if (op.getName() === 'getContainerClass' && op.getEParameters().isEmpty() && isStructuralFeatureDerived(eClass))
+    return true;
   return false;
 }
 
@@ -993,13 +1025,20 @@ export function findUnnamedElements(pkg: EPackage): string[] {
   for (const classifier of pkg.getEClassifiers()) {
     check(classifier, 'classifier', pkg.getName() ?? '(this package)');
     if (isEClass(classifier)) {
-      for (const feature of classifier.getEStructuralFeatures()) check(feature, 'feature', classifier.getName() ?? '(unnamed classifier)');
+      for (const feature of classifier.getEStructuralFeatures())
+        check(feature, 'feature', classifier.getName() ?? '(unnamed classifier)');
       for (const op of classifier.getEOperations()) {
         check(op, 'operation', classifier.getName() ?? '(unnamed classifier)');
-        for (const param of op.getEParameters()) check(param, 'parameter', `${classifier.getName() ?? '(unnamed classifier)'}.${op.getName() ?? '(unnamed operation)'}`);
+        for (const param of op.getEParameters())
+          check(
+            param,
+            'parameter',
+            `${classifier.getName() ?? '(unnamed classifier)'}.${op.getName() ?? '(unnamed operation)'}`
+          );
       }
     } else if (isEEnum(classifier)) {
-      for (const literal of classifier.getELiterals()) check(literal, 'enum literal', classifier.getName() ?? '(unnamed classifier)');
+      for (const literal of classifier.getELiterals())
+        check(literal, 'enum literal', classifier.getName() ?? '(unnamed classifier)');
     }
   }
   return problems;
@@ -1024,7 +1063,6 @@ export function findUnresolvedCollisions(pkg: EPackage): MemberCollision[] {
     for (const anc of chain) {
       const ancName = anc.getName()!;
       for (const f of anc.getEStructuralFeatures()) {
-
         add(beanGetterName(f), `${ancName}.${f.getName()} getter`);
         if (!f.isMany()) {
           add('set' + f.getName()![0]!.toUpperCase() + f.getName()!.slice(1), `${ancName}.${f.getName()} setter`);
@@ -1091,7 +1129,8 @@ export function referencedApiTypes(features: Iterable<EStructuralFeature>, ...ex
     if (type && (isEReference(feature) || isEEnum(type)) && !exclude.has(type.getName()!)) names.add(type.getName()!);
     // Classes/enums bound inside type arguments need importing too.
     for (const argument of genericArgumentClassifiers(feature.getEGenericType())) {
-      if ((isEClass(argument) || isEEnum(argument)) && !exclude.has(argument.getName()!)) names.add(argument.getName()!);
+      if ((isEClass(argument) || isEEnum(argument)) && !exclude.has(argument.getName()!))
+        names.add(argument.getName()!);
     }
   }
   return [...names];

@@ -10,17 +10,17 @@ import { EParameter } from '../types/EParameter.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
-
-
 export class EOperationImpl extends ETypedElementImpl implements EOperation {
-
   private _eContainingClass: EClass | undefined;
 
   private _eTypeParametersCache: BasicEList<ETypeParameter> | undefined;
 
   private get _eTypeParameters(): BasicEList<ETypeParameter> {
     if (!this._eTypeParametersCache) {
-      this._eTypeParametersCache = new BasicEList<ETypeParameter>(this, getEcorePackageRef().getEOperation_ETypeParameters());
+      this._eTypeParametersCache = new BasicEList<ETypeParameter>(
+        this,
+        getEcorePackageRef().getEOperation_ETypeParameters()
+      );
     }
     return this._eTypeParametersCache;
   }
@@ -47,11 +47,13 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
 
   private get _eGenericExceptions(): BasicEList<EGenericType> {
     if (!this._eGenericExceptionsCache) {
-      this._eGenericExceptionsCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getEOperation_EGenericExceptions());
+      this._eGenericExceptionsCache = new BasicEList<EGenericType>(
+        this,
+        getEcorePackageRef().getEOperation_EGenericExceptions()
+      );
     }
     return this._eGenericExceptionsCache;
   }
-
 
   private operationId = -1;
 
@@ -106,11 +108,16 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 10: return this._eContainingClass;
-      case 11: return this._eTypeParameters;
-      case 12: return this._eParameters;
-      case 13: return this._eExceptions;
-      case 14: return this._eGenericExceptions;
+      case 10:
+        return this._eContainingClass;
+      case 11:
+        return this._eTypeParameters;
+      case 12:
+        return this._eParameters;
+      case 13:
+        return this._eExceptions;
+      case 14:
+        return this._eGenericExceptions;
       default:
         return super.eGet(feature);
     }
@@ -158,7 +165,9 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 10: this._eContainingClass = value as EClass | undefined; return;
+      case 10:
+        this._eContainingClass = value as EClass | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -185,11 +194,16 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 10: return this._eContainingClass !== undefined;
-      case 11: return this._eTypeParametersCache !== undefined && this._eTypeParametersCache.size() !== 0;
-      case 12: return this._eParametersCache !== undefined && this._eParametersCache.size() !== 0;
-      case 13: return this._eExceptionsCache !== undefined && this._eExceptionsCache.size() !== 0;
-      case 14: return this._eGenericExceptionsCache !== undefined && this._eGenericExceptionsCache.size() !== 0;
+      case 10:
+        return this._eContainingClass !== undefined;
+      case 11:
+        return this._eTypeParametersCache !== undefined && this._eTypeParametersCache.size() !== 0;
+      case 12:
+        return this._eParametersCache !== undefined && this._eParametersCache.size() !== 0;
+      case 13:
+        return this._eExceptionsCache !== undefined && this._eExceptionsCache.size() !== 0;
+      case 14:
+        return this._eGenericExceptionsCache !== undefined && this._eGenericExceptionsCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -197,23 +211,38 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 10: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._eContainingClass;
         this._eContainingClass = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 
-      case 11: this._eTypeParametersCache?.clear(); return;
+      case 11:
+        this._eTypeParametersCache?.clear();
+        return;
 
-      case 12: this._eParametersCache?.clear(); return;
+      case 12:
+        this._eParametersCache?.clear();
+        return;
 
-      case 13: this._eExceptionsCache?.clear(); return;
+      case 13:
+        this._eExceptionsCache?.clear();
+        return;
 
-      case 14: this._eGenericExceptionsCache?.clear(); return;
+      case 14:
+        this._eGenericExceptionsCache?.clear();
+        return;
 
       default:
         super.eUnset(feature);

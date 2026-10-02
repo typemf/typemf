@@ -3,7 +3,7 @@
 Template-based code generation, targeting the design agreed on in planning:
 
 - **Template sets are the extension point.** A `TemplateSet` is `{ name, baseFolder }` -
-  `baseFolder` contains a `main.njk` entry point and is *also* the private include/import
+  `baseFolder` contains a `main.njk` entry point and is _also_ the private include/import
   resolution root for that set. Two different sets never see each other's templates; there's
   no override mechanism to design because isolation is structural.
 - **`main.njk` is invoked once per run**, handed the whole `EPackage` as a Nunjucks global. It's
@@ -70,7 +70,7 @@ circular-import ones specifically, since they're easy to reintroduce if the gene
 ```ts
 import { generate, typescriptTemplateSet } from '@typemf/generator';
 
-const files = generate(myPackage, typescriptTemplateSet, { /* options.* in templates */ });
+const files = generate(myPackage, typescriptTemplateSet, {/* options.* in templates */});
 for (const file of files) {
   // write file.path (relative) under wherever you want, e.g. via @typemf/node
 }

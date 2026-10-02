@@ -67,11 +67,15 @@ export function isApplyEditRequest(message: unknown): message is ApplyEditReques
 }
 
 export function isApplyEditResponse(message: unknown): message is ApplyEditResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/applyEditResult';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/applyEditResult'
+  );
 }
 
 export function isApplyEditError(message: unknown): message is ApplyEditError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/applyEditError';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/applyEditError'
+  );
 }
 
 /**
@@ -101,15 +105,27 @@ export interface ConcreteSubtypesError {
 }
 
 export function isConcreteSubtypesRequest(message: unknown): message is ConcreteSubtypesRequest {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/concreteSubtypes';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/concreteSubtypes'
+  );
 }
 
 export function isConcreteSubtypesResponse(message: unknown): message is ConcreteSubtypesResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/concreteSubtypesResult';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/concreteSubtypesResult'
+  );
 }
 
 export function isConcreteSubtypesError(message: unknown): message is ConcreteSubtypesError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/concreteSubtypesError';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/concreteSubtypesError'
+  );
 }
 
 /**
@@ -141,15 +157,25 @@ export interface AncestorChainError {
 }
 
 export function isAncestorChainRequest(message: unknown): message is AncestorChainRequest {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/ancestorChain';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/ancestorChain'
+  );
 }
 
 export function isAncestorChainResponse(message: unknown): message is AncestorChainResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/ancestorChainResult';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/ancestorChainResult'
+  );
 }
 
 export function isAncestorChainError(message: unknown): message is AncestorChainError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/ancestorChainError';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/ancestorChainError'
+  );
 }
 
 /**
@@ -185,15 +211,25 @@ export interface CreateChildError {
 }
 
 export function isCreateChildRequest(message: unknown): message is CreateChildRequest {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/createChild';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/createChild'
+  );
 }
 
 export function isCreateChildResponse(message: unknown): message is CreateChildResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/createChildResult';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/createChildResult'
+  );
 }
 
 export function isCreateChildError(message: unknown): message is CreateChildError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/createChildError';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/createChildError'
+  );
 }
 
 /**
@@ -227,15 +263,27 @@ export interface ReferenceCandidatesError {
 }
 
 export function isReferenceCandidatesRequest(message: unknown): message is ReferenceCandidatesRequest {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/referenceCandidates';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/referenceCandidates'
+  );
 }
 
 export function isReferenceCandidatesResponse(message: unknown): message is ReferenceCandidatesResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/referenceCandidatesResult';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/referenceCandidatesResult'
+  );
 }
 
 export function isReferenceCandidatesError(message: unknown): message is ReferenceCandidatesError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/referenceCandidatesError';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/referenceCandidatesError'
+  );
 }
 
 /**
@@ -271,15 +319,27 @@ export interface BrowseExternalReferenceError {
 }
 
 export function isBrowseExternalReferenceRequest(message: unknown): message is BrowseExternalReferenceRequest {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/browseExternalReference';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/browseExternalReference'
+  );
 }
 
 export function isBrowseExternalReferenceResponse(message: unknown): message is BrowseExternalReferenceResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/browseExternalReferenceResult';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/browseExternalReferenceResult'
+  );
 }
 
 export function isBrowseExternalReferenceError(message: unknown): message is BrowseExternalReferenceError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/browseExternalReferenceError';
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as { type?: unknown }).type === 'typemf/browseExternalReferenceError'
+  );
 }
 
 /** Sent by the webview once its own JS has loaded and is ready to receive - mirrors
@@ -334,11 +394,15 @@ export function isGetObjectRequest(message: unknown): message is GetObjectReques
 }
 
 export function isGetObjectResponse(message: unknown): message is GetObjectResponse {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/getObjectResult';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/getObjectResult'
+  );
 }
 
 export function isGetObjectError(message: unknown): message is GetObjectError {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/getObjectError';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/getObjectError'
+  );
 }
 
 /**
@@ -361,5 +425,7 @@ export interface EditRelayFailedMessage {
 }
 
 export function isEditRelayFailedMessage(message: unknown): message is EditRelayFailedMessage {
-  return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/editRelayFailed';
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/editRelayFailed'
+  );
 }

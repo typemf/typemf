@@ -6,12 +6,8 @@ import { EOperation } from '../types/EOperation.js';
 import { EParameter } from '../types/EParameter.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
-
-
 export class EParameterImpl extends ETypedElementImpl implements EParameter {
-
   private _eOperation: EOperation | undefined;
-
 
   eClass(): EClass {
     return getEcorePackageRef().getEParameter();
@@ -27,7 +23,8 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 10: return this._eOperation;
+      case 10:
+        return this._eOperation;
       default:
         return super.eGet(feature);
     }
@@ -43,7 +40,9 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 10: this._eOperation = value as EOperation | undefined; return;
+      case 10:
+        this._eOperation = value as EOperation | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -58,7 +57,8 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 10: return this._eOperation !== undefined;
+      case 10:
+        return this._eOperation !== undefined;
       default:
         return super.eIsSet(feature);
     }
@@ -66,13 +66,20 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 10: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._eOperation;
         this._eOperation = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 

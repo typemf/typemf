@@ -10,7 +10,7 @@ during planning:
 - **`EAnnotation`** - arbitrary source-namespaced metadata on any
   `EModelElement`, which the original TMF had no equivalent of at all.
 - **`DynamicEObjectImpl` / `DynamicEFactoryImpl`** - a generic, map-backed
-  `EObject` that works for *any* `EClass` with zero generated code, built
+  `EObject` that works for _any_ `EClass` with zero generated code, built
   specifically so a `.ecore` file parsed at runtime (no codegen step) can be
   instantiated and edited reflectively. Containment bookkeeping
   (`eContainer`/`eContents`/`eAllContents`) is fully generic on
@@ -44,13 +44,7 @@ npm run build     # typecheck + tsup (emits dist/ as ESM + CJS + .d.ts)
 ## Try it
 
 ```ts
-import {
-  EAttributeImpl,
-  EClassImpl,
-  EDataTypeImpl,
-  EPackageImpl,
-  DynamicEFactoryImpl,
-} from '@typemf/core';
+import { EAttributeImpl, EClassImpl, EDataTypeImpl, EPackageImpl, DynamicEFactoryImpl } from '@typemf/core';
 
 const eString = new EDataTypeImpl();
 eString.setName('EString');
@@ -78,8 +72,8 @@ pkg.setEFactoryInstance(new DynamicEFactoryImpl());
 
 const book = bookClass.createInstance(); // -> a DynamicEObjectImpl
 book.eSet(titleAttr, 'Dune');
-console.log(book.eGet(titleAttr));       // "Dune"
-console.log(book.fullId());              // "Book_Dune"
+console.log(book.eGet(titleAttr)); // "Dune"
+console.log(book.fullId()); // "Book_Dune"
 ```
 
 See `src/metamodel/__tests__/sample-metamodel.ts` for a fuller example with

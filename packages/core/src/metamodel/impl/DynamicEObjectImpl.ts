@@ -72,7 +72,15 @@ export class DynamicEObjectImpl extends EObjectImpl {
     const oldValue = this.values.get(id);
     this.values.delete(id);
     this.eDidRemove(feature, oldValue);
-    this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+    this.eNotify({
+      eventType: 'UNSET',
+      notifier: this,
+      feature,
+      oldValue,
+      newValue: undefined,
+      position: undefined,
+      wasSet,
+    });
   }
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {

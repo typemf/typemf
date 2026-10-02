@@ -6,18 +6,10 @@ import { EEnumImpl } from '../impl/EEnumImpl.js';
 import { EEnumLiteralImpl } from '../impl/EEnumLiteralImpl.js';
 import { EPackageImpl } from '../impl/EPackageImpl.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
-/**
- * freeze()/isFrozen() are protected, matching real EMF's own access level
- * exactly (an internal construction-lifecycle concern, not a general
- * public API - see the doc comment on EModelElementImpl.freeze()). Tests
- * reach them via a deliberate, narrow cast rather than widening the real
- * access level just to make testing convenient.
- */
+// freeze() and isFrozen() are protected, as in EMF.
 function callFreeze(obj: object): void {
   (obj as unknown as { freeze(): void }).freeze();
 }
@@ -25,13 +17,13 @@ function checkFrozen(obj: object): boolean {
   return (obj as unknown as { isFrozen(): boolean }).isFrozen();
 }
 
-describe('freeze()/isFrozen() - cascading immutability marker', () => {
+describe('freeze()', () => {
   it('starts unfrozen', () => {
     const pkg = new EPackageImpl();
     expect(checkFrozen(pkg)).toBe(false);
   });
 
-  it('EPackageImpl.freeze() cascades to every classifier it contains', () => {
+  it('on a package freezes its classifiers and their features', () => {
     const eString = new EDataTypeImpl();
     eString.setName('EString');
 
@@ -54,17 +46,13 @@ describe('freeze()/isFrozen() - cascading immutability marker', () => {
 
     callFreeze(pkg);
 
-    // The package itself, every classifier (including a plain EDataType,
-    // which has no freeze() override of its own - it just inherits the
-    // base flag-setting behavior, matching real EMF exactly), and - via
-    // EClassImpl's own cascade - every structural feature too.
     expect(checkFrozen(pkg)).toBe(true);
     expect(checkFrozen(eString)).toBe(true);
     expect(checkFrozen(book)).toBe(true);
     expect(checkFrozen(title)).toBe(true);
   });
 
-  it('EClassImpl.freeze() alone (without going through a package) still cascades to its own features', () => {
+  it('on a class freezes its features but not their types', () => {
     const eString = new EDataTypeImpl();
     eString.setName('EString');
     const widget = new EClassImpl();
@@ -78,12 +66,10 @@ describe('freeze()/isFrozen() - cascading immutability marker', () => {
 
     expect(checkFrozen(widget)).toBe(true);
     expect(checkFrozen(name)).toBe(true);
-    // The feature's own type is NOT cascaded to (matches real EMF - eType
-    // is a reference, not something this element contains).
     expect(checkFrozen(eString)).toBe(false);
   });
 
-  it('EEnumImpl.freeze() cascades to its own literals - a real gap found and fixed while writing this test (see NOTES.md)', () => {
+  it('on an enum freezes its literals', () => {
     const genre = new EEnumImpl();
     genre.setName('Genre');
     const scifi = new EEnumLiteralImpl();
@@ -99,7 +85,7 @@ describe('freeze()/isFrozen() - cascading immutability marker', () => {
     expect(checkFrozen(scifi)).toBe(true);
   });
 
-  it('EPackageImpl.freeze() reaches an EEnum literal transitively (package -> EEnum -> literal)', () => {
+  it('on a package freezes the literals of its enums', () => {
     const genre = new EEnumImpl();
     genre.setName('Genre');
     const scifi = new EEnumLiteralImpl();

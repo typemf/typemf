@@ -88,7 +88,9 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     const pkg = eClass.getEPackage();
     const factory = pkg?.getEFactoryInstance();
     if (!pkg || !factory) {
-      throw new Error(`'${eClass.getName()}''s EPackage has no EFactoryInstance registered - cannot construct a root instance.`);
+      throw new Error(
+        `'${eClass.getName()}''s EPackage has no EFactoryInstance registered - cannot construct a root instance.`
+      );
     }
     // Registered into the shared, global package registry here, not just this one document's own
     // - a real, confirmed regression this fixes: saving a new instance of a DYNAMIC model (one
@@ -109,7 +111,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
 
     const documentRegistry = new EPackageRegistryImpl();
     documentRegistry.register(pkg);
-    const resourceSet = new ResourceSetImpl(documentRegistry, this.runtime.resourceFactoryRegistry, this.runtime.uriConverterRegistry);
+    const resourceSet = new ResourceSetImpl(
+      documentRegistry,
+      this.runtime.resourceFactoryRegistry,
+      this.runtime.uriConverterRegistry
+    );
     // The fragment only ever mattered for resolveNewInstanceSpec, above - stripped here before it
     // becomes @typemf/core's own, internal resource URI, so nothing downstream (a save path, a
     // future re-derived extension lookup) ever has to deal with it again. document.uri itself
@@ -129,7 +135,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     const bytes = await vscode.workspace.fs.readFile(uri);
 
     const documentRegistry = new EPackageRegistryImpl();
-    const resourceSet = new ResourceSetImpl(documentRegistry, this.runtime.resourceFactoryRegistry, this.runtime.uriConverterRegistry);
+    const resourceSet = new ResourceSetImpl(
+      documentRegistry,
+      this.runtime.resourceFactoryRegistry,
+      this.runtime.uriConverterRegistry
+    );
     // A tracked-but-unloaded Resource - used first just to reach its own serializer for the peek
     // below, then loaded for real once documentRegistry is fully resolved. One Resource, not two.
     const resource = resourceSet.createResource(fileUri);
@@ -177,7 +187,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     return new InstanceDocument(uri, resourceSet, resource);
   }
 
-  async resolveCustomEditor(document: InstanceDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
+  async resolveCustomEditor(
+    document: InstanceDocument,
+    webviewPanel: vscode.WebviewPanel,
+    _token: vscode.CancellationToken
+  ): Promise<void> {
     // The tree/properties rendering itself is still a stub (STILL a separate, not-yet-designed
     // piece) - but the getObject message handling below is real, functional wiring: it's what
     // makes the webview side's HostMessageUriConverter (see host-message-uri-converter.ts)
@@ -237,7 +251,12 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
           }
           try {
             const { candidateIds, cancelled } = await browseExternalReferenceCandidates(document, declaredType);
-            void webviewPanel.webview.postMessage({ type: 'typemf/browseExternalReferenceResult', requestId, candidateIds, cancelled });
+            void webviewPanel.webview.postMessage({
+              type: 'typemf/browseExternalReferenceResult',
+              requestId,
+              candidateIds,
+              cancelled,
+            });
           } catch (err) {
             void webviewPanel.webview.postMessage({
               type: 'typemf/browseExternalReferenceError',
@@ -262,7 +281,10 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     // disposed with this webview's own lifetime, not left running after the panel closes.
     const configListener = vscode.workspace.onDidChangeConfiguration((e) => {
       if (!e.affectsConfiguration('typemf.showDerivedFeatures')) return;
-      const settingsMessage: SettingsMessage = { type: 'typemf/settings', showDerivedFeatures: readShowDerivedFeatures() };
+      const settingsMessage: SettingsMessage = {
+        type: 'typemf/settings',
+        showDerivedFeatures: readShowDerivedFeatures(),
+      };
       void webviewPanel.webview.postMessage(settingsMessage);
     });
     webviewPanel.onDidDispose(() => configListener.dispose());
@@ -302,7 +324,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     await document.resource.save();
   }
 
-  async saveCustomDocumentAs(document: InstanceDocument, destination: vscode.Uri, _token: vscode.CancellationToken): Promise<void> {
+  async saveCustomDocumentAs(
+    document: InstanceDocument,
+    destination: vscode.Uri,
+    _token: vscode.CancellationToken
+  ): Promise<void> {
     // Reuses Resource.save()'s own, already-correct logic (going through the proper
     // UriConverter) by pointing the resource at the new destination, permanently - a real,
     // confirmed bug: this used to restore the resource's original URI in a `finally` block after

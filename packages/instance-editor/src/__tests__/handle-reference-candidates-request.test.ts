@@ -1,4 +1,16 @@
-import { createInstanceOf, DynamicEFactoryImpl, EClassImpl, EcorePackageImpl, EList, EObject, EObjectSerializer, EPackageImpl, EReferenceImpl, ResourceImpl, URI } from '@typemf/core';
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EClassImpl,
+  EcorePackageImpl,
+  EList,
+  EObject,
+  EObjectSerializer,
+  EPackageImpl,
+  EReferenceImpl,
+  ResourceImpl,
+  URI,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { handleReferenceCandidatesRequest } from '../handle-reference-candidates-request.js';
 import { ObjectIdMap } from '../object-id-map.js';
@@ -47,8 +59,7 @@ function buildFixture() {
   (library.eGet(booksRef) as EList<unknown>).add(audioBook);
   (library.eGet(authorsRef) as EList<unknown>).add(author);
 
-  // Constructed directly, bypassing ResourceSetImpl.createResource()'s own factory-lookup
-  // requirement - this test never serializes anything, so a never-called fake serializer is fine.
+  // The serializer is never called.
   const fakeSerializer: EObjectSerializer = {
     serialize: async () => new Uint8Array(),
     deserialize: async () => [] as EObject[],
@@ -61,12 +72,15 @@ function buildFixture() {
 }
 
 describe('handleReferenceCandidatesRequest', () => {
-  it('finds every object of the requested type, including subtypes (isSuperTypeOf is reflexive)', () => {
+  it('finds every object of the requested type and its subtypes', () => {
     const { bookClass, book, audioBook, resource } = buildFixture();
     const objectIds = new ObjectIdMap();
     const typeId = objectIds.idFor(bookClass);
 
-    const response = handleReferenceCandidatesRequest({ type: 'typemf/referenceCandidates', requestId: 'r1', typeId }, { objectIds, resource });
+    const response = handleReferenceCandidatesRequest(
+      { type: 'typemf/referenceCandidates', requestId: 'r1', typeId },
+      { objectIds, resource }
+    );
 
     expect(response.type).toBe('typemf/referenceCandidatesResult');
     if (response.type === 'typemf/referenceCandidatesResult') {
@@ -81,7 +95,10 @@ describe('handleReferenceCandidatesRequest', () => {
     const objectIds = new ObjectIdMap();
     const typeId = objectIds.idFor(authorClass);
 
-    const response = handleReferenceCandidatesRequest({ type: 'typemf/referenceCandidates', requestId: 'r2', typeId }, { objectIds, resource });
+    const response = handleReferenceCandidatesRequest(
+      { type: 'typemf/referenceCandidates', requestId: 'r2', typeId },
+      { objectIds, resource }
+    );
 
     expect(response.type).toBe('typemf/referenceCandidatesResult');
     if (response.type === 'typemf/referenceCandidatesResult') {
@@ -89,12 +106,15 @@ describe('handleReferenceCandidatesRequest', () => {
     }
   });
 
-  it('includes the document\'s own root when it is itself type-compatible', () => {
+  it('includes the root when its type matches', () => {
     const { library, resource } = buildFixture();
     const objectIds = new ObjectIdMap();
     const typeId = objectIds.idFor(library.eClass());
 
-    const response = handleReferenceCandidatesRequest({ type: 'typemf/referenceCandidates', requestId: 'r3', typeId }, { objectIds, resource });
+    const response = handleReferenceCandidatesRequest(
+      { type: 'typemf/referenceCandidates', requestId: 'r3', typeId },
+      { objectIds, resource }
+    );
 
     expect(response.type).toBe('typemf/referenceCandidatesResult');
     if (response.type === 'typemf/referenceCandidatesResult') {
@@ -105,7 +125,10 @@ describe('handleReferenceCandidatesRequest', () => {
   it('returns a ReferenceCandidatesError for an unknown typeId', () => {
     const { resource } = buildFixture();
     const objectIds = new ObjectIdMap();
-    const response = handleReferenceCandidatesRequest({ type: 'typemf/referenceCandidates', requestId: 'r4', typeId: 'not-real' }, { objectIds, resource });
+    const response = handleReferenceCandidatesRequest(
+      { type: 'typemf/referenceCandidates', requestId: 'r4', typeId: 'not-real' },
+      { objectIds, resource }
+    );
     expect(response.type).toBe('typemf/referenceCandidatesError');
   });
 });

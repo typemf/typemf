@@ -37,23 +37,20 @@ describe('loadLocalEcorePackage', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('loads the real EPackage, with its own real classifiers', async () => {
+  it('loads the EPackage with its classifiers', async () => {
     const pkg = await loadLocalEcorePackage({ fsPath: filePath });
     expect(pkg.getName()).toBe('library');
     const names = pkg.getEClassifiers().map((c) => c.getName());
     expect(names).toContain('Book');
   });
 
-  it('the returned package has a real factory - an instance can actually be constructed from one of its classifiers (this is exactly the bug that went uncaught before)', async () => {
+  it('gives the package a factory that creates instances', async () => {
     const pkg = await loadLocalEcorePackage({ fsPath: filePath });
     const bookClass = pkg.getEClassifiers().find((c) => c.getName() === 'Book');
     expect(bookClass).toBeDefined();
     expect(isEClass(bookClass)).toBe(true);
     if (!isEClass(bookClass)) return;
 
-    // This is the actual assertion that matters - createInstanceOf throws its own, clear error if
-    // the package has no EFactoryInstance registered, which is precisely what happened in
-    // production before this fix.
     const book = createInstanceOf(bookClass);
     expect(book.eClass().getName()).toBe('Book');
   });
@@ -71,9 +68,7 @@ describe('loadLocalEcorePackage', () => {
     expect(book.eGet(titleFeature!)).toBe('Dune');
   });
 
-  // The real, reported bug this covers: "new instance of a dynamic model freezes on Loading…" -
-  // reproduced directly, then traced to two separate, stacked causes, both fixed here.
-  it('a same-attribute, cross-document eType reference (into Ecore\'s own metamodel) is eagerly resolved, not left as an unresolved proxy', async () => {
+  it("resolves an eType reference into Ecore's metamodel", async () => {
     const pkg = await loadLocalEcorePackage({ fsPath: filePath });
     const bookClass = pkg.getEClassifiers().find((c) => c.getName() === 'Book');
     expect(isEClass(bookClass)).toBe(true);
@@ -88,7 +83,7 @@ describe('loadLocalEcorePackage', () => {
     expect(pageCountFeature!.getEType()?.getName()).toBe('EInt');
   });
 
-  it('every feature on a class gets its own, distinct featureID - no two features silently share DynamicEObjectImpl\'s one Map<featureID, value> slot', async () => {
+  it('gives every feature of a class its own featureID', async () => {
     const pkg = await loadLocalEcorePackage({ fsPath: filePath });
     const bookClass = pkg.getEClassifiers().find((c) => c.getName() === 'Book');
     expect(isEClass(bookClass)).toBe(true);
@@ -99,7 +94,7 @@ describe('loadLocalEcorePackage', () => {
     expect(ids.every((id) => id >= 0)).toBe(true); // none left at an unassigned sentinel
   });
 
-  it('setting multiple features on one instance keeps them genuinely independent - the real, end-to-end symptom of the featureID collision bug', async () => {
+  it('keeps the values of several features apart', async () => {
     const pkg = await loadLocalEcorePackage({ fsPath: filePath });
     const bookClass = pkg.getEClassifiers().find((c) => c.getName() === 'Book');
     expect(isEClass(bookClass)).toBe(true);
@@ -119,7 +114,7 @@ describe('loadLocalEcorePackage', () => {
     expect(book.eGet(pageCountFeature)).toBe(412);
   });
 
-  it('an inherited feature keeps its own id, and a subclass\'s own new feature gets a different one, not colliding with it', async () => {
+  it("gives a subclass's own feature an id different from the inherited ones", async () => {
     const pkg = await loadLocalEcorePackage({ fsPath: filePath });
     const bookClass = pkg.getEClassifiers().find((c) => c.getName() === 'Book');
     const audioBookClass = pkg.getEClassifiers().find((c) => c.getName() === 'AudioBook');

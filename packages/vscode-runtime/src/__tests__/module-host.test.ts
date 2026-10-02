@@ -25,11 +25,15 @@ describe('ModuleHost', () => {
     const host = new ModuleHost();
     host.provide('@typemf/core', '0.5.0', {});
 
-    expect(() => host.require('@typemf/core', '^0.6.0')).toThrow(/0\.5\.0 .* does not satisfy the requested range '\^0\.6\.0'/);
+    expect(() => host.require('@typemf/core', '^0.6.0')).toThrow(
+      /0\.5\.0 .* does not satisfy the requested range '\^0\.6\.0'/
+    );
   });
 
   it('throws for a module nobody provides', () => {
-    expect(() => new ModuleHost().require('@acme/missing', '*')).toThrow(/No installed extension provides module '@acme\/missing'/);
+    expect(() => new ModuleHost().require('@acme/missing', '*')).toThrow(
+      /No installed extension provides module '@acme\/missing'/
+    );
   });
 
   it('refuses a module declared by more than one extension', () => {

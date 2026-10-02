@@ -10,7 +10,10 @@ import { ObjectIdMap } from './object-id-map.js';
  * same reason (InstanceDocument's own vscode.Uri can't be constructed outside a real extension
  * host).
  */
-export function handleReadyMessage(document: { objectIds: ObjectIdMap; resource: Resource }, showDerivedFeatures: boolean): InitMessage {
+export function handleReadyMessage(
+  document: { objectIds: ObjectIdMap; resource: Resource },
+  showDerivedFeatures: boolean
+): InitMessage {
   const contents = document.resource.getContents();
   const root = contents.isEmpty() ? undefined : contents.get(0);
   return { type: 'typemf/init', rootId: root ? document.objectIds.idFor(root) : undefined, showDerivedFeatures };

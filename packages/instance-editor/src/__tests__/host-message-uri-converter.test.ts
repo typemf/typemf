@@ -20,13 +20,13 @@ class FakeTransport implements PostMessageTransport {
 }
 
 describe('HostMessageUriConverter', () => {
-  it('canHandle only recognizes the typemf-host scheme', () => {
+  it('canHandle accepts only the typemf-host scheme', () => {
     const converter = new HostMessageUriConverter(new FakeTransport());
     expect(converter.canHandle(uriForId('1'))).toBe(true);
     expect(converter.canHandle(URI.parse('file:/some/path.json'))).toBe(false);
   });
 
-  it('readBinary sends a GetObjectRequest carrying the id from the URI, and resolves once a matching GetObjectResponse arrives', async () => {
+  it('readBinary sends a GetObjectRequest and resolves with the matching response', async () => {
     const transport = new FakeTransport();
     const converter = new HostMessageUriConverter(transport);
 
@@ -45,7 +45,7 @@ describe('HostMessageUriConverter', () => {
     expect(decoded.attributes.title).toBe('Dune');
   });
 
-  it('readBinary rejects when a matching GetObjectError arrives instead', async () => {
+  it('readBinary rejects on a matching GetObjectError', async () => {
     const transport = new FakeTransport();
     const converter = new HostMessageUriConverter(transport);
 
@@ -57,22 +57,30 @@ describe('HostMessageUriConverter', () => {
     await expect(pending).rejects.toThrow('not found');
   });
 
-  it('a response with an unrelated requestId is ignored - the real pending request stays pending', async () => {
+  it('ignores a response with another requestId', async () => {
     const transport = new FakeTransport();
     const converter = new HostMessageUriConverter(transport);
 
     const pending = converter.readBinary(uriForId('1'));
     const request = transport.lastRequest();
 
-    converter.handleMessage({ type: 'typemf/getObjectResult', requestId: 'some-other-request', snapshot: { id: '999', eClassId: 'ecore:1', attributes: {}, references: {} } });
-    converter.handleMessage({ type: 'typemf/getObjectResult', requestId: request.requestId, snapshot: { id: '1', eClassId: 'ecore:1', attributes: {}, references: {} } });
+    converter.handleMessage({
+      type: 'typemf/getObjectResult',
+      requestId: 'some-other-request',
+      snapshot: { id: '999', eClassId: 'ecore:1', attributes: {}, references: {} },
+    });
+    converter.handleMessage({
+      type: 'typemf/getObjectResult',
+      requestId: request.requestId,
+      snapshot: { id: '1', eClassId: 'ecore:1', attributes: {}, references: {} },
+    });
 
     const bytes = await pending;
     const decoded = JSON.parse(new TextDecoder().decode(bytes));
     expect(decoded.id).toBe('1'); // the real one, not the unrelated one that was ignored
   });
 
-  it('two concurrent readBinary calls resolve independently, each to its own response', async () => {
+  it('resolves concurrent readBinary calls independently', async () => {
     const transport = new FakeTransport();
     const converter = new HostMessageUriConverter(transport);
 
@@ -81,20 +89,30 @@ describe('HostMessageUriConverter', () => {
     const pendingB = converter.readBinary(uriForId('b'));
     const requestB = transport.sent.filter(isGetObjectRequest).find((r) => r.id === 'b')!;
 
-    converter.handleMessage({ type: 'typemf/getObjectResult', requestId: requestB.requestId, snapshot: { id: 'b', eClassId: 'ecore:1', attributes: {}, references: {} } });
-    converter.handleMessage({ type: 'typemf/getObjectResult', requestId: requestA.requestId, snapshot: { id: 'a', eClassId: 'ecore:1', attributes: {}, references: {} } });
+    converter.handleMessage({
+      type: 'typemf/getObjectResult',
+      requestId: requestB.requestId,
+      snapshot: { id: 'b', eClassId: 'ecore:1', attributes: {}, references: {} },
+    });
+    converter.handleMessage({
+      type: 'typemf/getObjectResult',
+      requestId: requestA.requestId,
+      snapshot: { id: 'a', eClassId: 'ecore:1', attributes: {}, references: {} },
+    });
 
-    const [decodedA, decodedB] = await Promise.all([pendingA, pendingB].map(async (p) => JSON.parse(new TextDecoder().decode(await p))));
+    const [decodedA, decodedB] = await Promise.all(
+      [pendingA, pendingB].map(async (p) => JSON.parse(new TextDecoder().decode(await p)))
+    );
     expect(decodedA.id).toBe('a');
     expect(decodedB.id).toBe('b');
   });
 
-  it('writeBinary is unsupported - read-only', async () => {
+  it('writeBinary is not supported', async () => {
     const converter = new HostMessageUriConverter(new FakeTransport());
     await expect(converter.writeBinary()).rejects.toThrow();
   });
 
-  it('handleMessage ignores messages that are not a GetObjectResponse/GetObjectError, without throwing', () => {
+  it('handleMessage ignores unrelated message types', () => {
     const converter = new HostMessageUriConverter(new FakeTransport());
     expect(() => converter.handleMessage({ type: 'something/unrelated' })).not.toThrow();
     expect(() => converter.handleMessage(null)).not.toThrow();

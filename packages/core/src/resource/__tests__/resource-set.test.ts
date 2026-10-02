@@ -16,15 +16,9 @@ import { URI } from '../uri.js';
 import { UriConverter } from '../uri-converter.js';
 
 /**
- * A deliberately minimal fixture serializer/converter, built only to
- * exercise Resource/ResourceSet plumbing (load, save, cross-resource proxy
- * creation and resolution) - NOT a preview of @typemf/json's real design.
- * Classifier lookup is closed over test-local EClasses rather than going
- * through a package registry by nsURI, and only cross-resource
- * non-containment references are supported (the case this test actually
- * needs); a same-resource non-containment reference intentionally throws
- * rather than pretending to work, to avoid masking a real bug as a fixture
- * limitation.
+ * Minimal serializer for testing Resource and ResourceSet. Classifiers are
+ * looked up among the test's EClasses, and only cross-resource
+ * non-containment references are supported.
  */
 function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
   const eClassByName = new Map<string, EClass>([
@@ -43,7 +37,7 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
       }
       const refFeature = feature as EReference;
       if (feature.isMany()) {
-        const children = (obj.eGet(feature) as Iterable<EObject>);
+        const children = obj.eGet(feature) as Iterable<EObject>;
         json[feature.getName()!] = [...children].map((c) => serializeObject(c, sourceResource));
       } else if (refFeature.isContainment()) {
         json[feature.getName()!] = serializeObject(obj.eGet(feature) as EObject, sourceResource);
@@ -98,7 +92,7 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
       return json.map((r) => deserializeObject(r, resource));
     },
     async peekReferencedNsURIs(): Promise<string[]> {
-      return []; // not exercised by this fixture - see @typemf/json/@typemf/xmi for real implementations
+      return [];
     },
   };
 
@@ -223,7 +217,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     expect(result).toBe(book);
   });
 
-  it('resolve() resolves a proxy against a registered package directly, by nsURI - no Resource/ResourceFactory involved at all', async () => {
+  it('resolve() resolves a proxy into a registered package by nsURI without loading a resource', async () => {
     const { bookClass, libraryClass } = buildSampleMetamodel();
     const pkg = bookClass.getEPackage()!;
     const nsURI = pkg.getNsURI()!;
@@ -231,10 +225,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const resourceSet = new ResourceSetImpl();
     resourceSet.getPackageRegistry().register(pkg);
 
-    // No ResourceFactory registered for any scheme at all - if resolve() tried to load this as a
-    // real document, it would throw "No ResourceFactory registered", exactly the real, confirmed
-    // bug this is guarding against (found parsing an externally-authored file whose eType
-    // referenced Ecore's own EString by its real, absolute nsURI).
+    // No ResourceFactory is registered, so loading a document would throw.
     const classifierProxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//Library`));
     const resolvedClassifier = await resourceSet.resolve(classifierProxy);
     expect(resolvedClassifier).toBe(libraryClass);
@@ -244,7 +235,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     expect((resolvedFeature as EReference).getName()).toBe('books');
   });
 
-  it('resolve() against a registered package throws a clear error for a fragment matching nothing in it', async () => {
+  it('resolve() throws for a fragment that matches nothing in a registered package', async () => {
     const { bookClass } = buildSampleMetamodel();
     const pkg = bookClass.getEPackage()!;
     const nsURI = pkg.getNsURI()!;
@@ -261,7 +252,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     expect(() => resourceSet.createResource(URI.parse('mem:whatever'))).toThrow(/No ResourceFactory registered/);
   });
 
-  it("load() throws a clear error when the resource has no UriConverter available", async () => {
+  it('load() throws a clear error when the resource has no UriConverter available', async () => {
     const { bookClass, libraryClass } = buildSampleMetamodel();
     const { factory } = buildFixtureIo(bookClass, libraryClass);
     const resourceSet = new ResourceSetImpl();
@@ -271,14 +262,8 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     await expect(resource.load()).rejects.toThrow(/no UriConverter available/);
   });
 
-  it('resolves a cross-resource proxy addressed by a positional path, not just by ID', async () => {
-    // Regression test: computeFragment()/resolveFragment() must be used
-    // consistently for cross-resource addressing too, not just same-
-    // resource. A target with no ID attribute set produces a positional
-    // fragment ("/0/books/0"), and ResourceSet.resolve() must be able to
-    // walk that against the *target* resource's own roots - this is
-    // exactly the gap that existed before eobject-address.ts unified
-    // same-resource and cross-resource fragment handling into one place.
+  it('resolves a cross-resource proxy addressed by a positional path', async () => {
+    // Without an ID the fragment is a positional path such as "/0/books/0".
     const { bookClass, libraryClass, booksRef, featuredBookRef } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
 
@@ -384,11 +369,6 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
   });
 
   it('supports two different transports registered in the same ResourceSet at once', async () => {
-    // The scenario from the design discussion: a resource one "transport"
-    // handles (e.g. a local-file-shaped scheme) cross-referencing an
-    // object that lives behind a *different* scheme (e.g. a network-shaped
-    // one) - neither converter needs to know the other exists, and neither
-    // needs to handle both schemes itself.
     const { bookClass, libraryClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
     const { factory } = buildFixtureIo(bookClass, libraryClass);
 
@@ -440,12 +420,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
   });
 
   it("resolve() defers to the target resource's own serializer.resolveFragment() when it provides one", async () => {
-    // Proves the mechanism @typemf/xmi relies on for cross-format
-    // compatibility, without depending on @typemf/xmi from core: a
-    // serializer using a deliberately different, non-default fragment
-    // grammar ("CUSTOM:<index>" instead of core's own) must still resolve
-    // correctly through the generic ResourceSet.resolve(), because it
-    // supplies its own resolveFragment() rather than relying on core's.
+    // The serializer uses its own fragment syntax ("CUSTOM:<index>").
     const { bookClass, libraryClass, booksRef, titleAttr } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter('custom');
 
@@ -454,10 +429,6 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
         return new TextEncoder().encode('marker'); // content is irrelevant to this test
       },
       async deserialize(): Promise<EObject[]> {
-        // Deliberately reconstructs fresh, ignoring the input bytes - this
-        // fixture only exists to prove resolveFragment() dispatch, not to
-        // be a real round-tripping serializer (that's covered by
-        // @typemf/json's and @typemf/xmi's own test suites).
         const library = createInstanceOf(libraryClass);
         const book = createInstanceOf(bookClass);
         book.eSet(titleAttr, 'Dune');
@@ -489,8 +460,8 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
   });
 });
 
-describe('getResourceOf() - root-walking for nested, non-root objects', () => {
-  it('finds the owning resource for a contained (non-root) object by walking up to its root', () => {
+describe('getResourceOf()', () => {
+  it('finds the resource of a contained object through its root', () => {
     const { libraryClass, bookClass, booksRef } = buildSampleMetamodel();
     const library = createInstanceOf(libraryClass);
     const book = createInstanceOf(bookClass);
@@ -501,10 +472,6 @@ describe('getResourceOf() - root-walking for nested, non-root objects', () => {
       deserialize: async () => [],
       peekReferencedNsURIs: async () => [],
     });
-    // Only the root (library) is ever added to getContents() - book is
-    // reachable only via containment, never added directly. This is
-    // exactly the case getResourceOf()'s root-walk exists for: nothing
-    // above this associates `book` with a resource directly.
     resource.getContents().add(library);
 
     expect(getResourceOf(library)).toBe(resource);

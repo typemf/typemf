@@ -40,7 +40,9 @@ export function useObjectVersion(obj: EObject | undefined): number {
  * here.
  */
 export function useResolved(objOrProxy: EObject | undefined, resourceSet: ResourceSet): EObject | undefined {
-  const [resolved, setResolved] = useState<EObject | undefined>(objOrProxy && !objOrProxy.eIsProxy() ? objOrProxy : undefined);
+  const [resolved, setResolved] = useState<EObject | undefined>(
+    objOrProxy && !objOrProxy.eIsProxy() ? objOrProxy : undefined
+  );
 
   useEffect(() => {
     if (!objOrProxy) {

@@ -91,7 +91,12 @@ export function App({ environment, rootId, showDerivedFeatures }: AppProps): Rea
         />
       </div>
       <div className="app-properties-pane">
-        <PropertiesPanel obj={selected} environment={environment} onFollowReference={followReference} showDerivedFeatures={showDerivedFeatures} />
+        <PropertiesPanel
+          obj={selected}
+          environment={environment}
+          onFollowReference={followReference}
+          showDerivedFeatures={showDerivedFeatures}
+        />
       </div>
     </div>
   );

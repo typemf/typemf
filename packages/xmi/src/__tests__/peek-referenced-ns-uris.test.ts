@@ -10,7 +10,7 @@ function encode(xml: string): Uint8Array {
 }
 
 describe('XmiSerializer.peekReferencedNsURIs', () => {
-  it('returns every xmlns:* declared on the root element, without needing any package registered', async () => {
+  it('returns every xmlns:* of the root element without a registered package', async () => {
     const content = encode(
       `<?xml version="1.0"?><lib:Library xmlns:lib="https://typemf.dev/samples/library" xmlns:other="https://example.com/other"/>`
     );
@@ -18,7 +18,7 @@ describe('XmiSerializer.peekReferencedNsURIs', () => {
     expect(result.sort()).toEqual(['https://example.com/other', 'https://typemf.dev/samples/library']);
   });
 
-  it('excludes the structural xmi/xsi namespaces - those are never a real, user-registrable metamodel', async () => {
+  it('excludes the xmi and xsi namespaces', async () => {
     const content = encode(
       `<?xml version="1.0"?><lib:Library xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:lib="https://typemf.dev/samples/library"/>`
     );
@@ -30,7 +30,7 @@ describe('XmiSerializer.peekReferencedNsURIs', () => {
     expect(await serializer.peekReferencedNsURIs(content)).toEqual([]);
   });
 
-  it('real round-trip: a document actually written by this serializer peeks back its own real nsURI', async () => {
+  it('returns the nsURI of a document written by the serializer', async () => {
     const { libraryPackage, libraryClass } = buildSampleMetamodel();
     const library = createInstanceOf(libraryClass);
     const rs = new ResourceSetImpl();

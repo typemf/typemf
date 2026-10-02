@@ -1,4 +1,12 @@
-import { createInstanceOf, DynamicEFactoryImpl, EClassImpl, EcorePackageImpl, EList, EPackageImpl, EReferenceImpl } from '@typemf/core';
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EClassImpl,
+  EcorePackageImpl,
+  EList,
+  EPackageImpl,
+  EReferenceImpl,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { handleCreateChildRequest } from '../handle-create-child-request.js';
 import { ObjectIdMap } from '../object-id-map.js';
@@ -37,14 +45,17 @@ function buildFixture() {
 }
 
 describe('handleCreateChildRequest', () => {
-  it('creates a real instance and adds it to a many-valued containment feature', () => {
+  it('creates an instance in a many-valued containment feature', () => {
     const { library, bookClass, booksRef } = buildFixture();
     const objectIds = new ObjectIdMap();
     const parentId = objectIds.idFor(library);
     const featureId = objectIds.idFor(booksRef);
     const classId = objectIds.idFor(bookClass);
 
-    const response = handleCreateChildRequest({ type: 'typemf/createChild', requestId: 'r1', parentId, featureId, classId }, { objectIds });
+    const response = handleCreateChildRequest(
+      { type: 'typemf/createChild', requestId: 'r1', parentId, featureId, classId },
+      { objectIds }
+    );
 
     expect(response.type).toBe('typemf/createChildResult');
     const list = library.eGet(booksRef) as EList<unknown>;
@@ -55,14 +66,17 @@ describe('handleCreateChildRequest', () => {
     }
   });
 
-  it('creates and sets a real instance on a single-valued containment feature', () => {
+  it('creates an instance in a single-valued containment feature', () => {
     const { library, bookClass, featuredBookRef } = buildFixture();
     const objectIds = new ObjectIdMap();
     const parentId = objectIds.idFor(library);
     const featureId = objectIds.idFor(featuredBookRef);
     const classId = objectIds.idFor(bookClass);
 
-    const response = handleCreateChildRequest({ type: 'typemf/createChild', requestId: 'r2', parentId, featureId, classId }, { objectIds });
+    const response = handleCreateChildRequest(
+      { type: 'typemf/createChild', requestId: 'r2', parentId, featureId, classId },
+      { objectIds }
+    );
 
     expect(response.type).toBe('typemf/createChildResult');
     const value = library.eGet(featuredBookRef);
@@ -98,7 +112,13 @@ describe('handleCreateChildRequest', () => {
     const { bookClass, booksRef } = buildFixture();
     const objectIds = new ObjectIdMap();
     const response = handleCreateChildRequest(
-      { type: 'typemf/createChild', requestId: 'r4', parentId: 'not-real', featureId: objectIds.idFor(booksRef), classId: objectIds.idFor(bookClass) },
+      {
+        type: 'typemf/createChild',
+        requestId: 'r4',
+        parentId: 'not-real',
+        featureId: objectIds.idFor(booksRef),
+        classId: objectIds.idFor(bookClass),
+      },
       { objectIds }
     );
     expect(response.type).toBe('typemf/createChildError');

@@ -7,7 +7,8 @@ import { EStructuralFeature } from './EStructuralFeature.js';
  * isTouch()/isReset()'s implied "no-op" event shapes (out of scope for now - not needed by either
  * motivating use case, undo/redo or the instance editor's webview relay).
  */
-export type NotificationEventType = 'SET' | 'UNSET' | 'ADD' | 'REMOVE' | 'ADD_MANY' | 'REMOVE_MANY' | 'MOVE' | 'RESOLVE' | 'CREATE';
+export type NotificationEventType =
+  'SET' | 'UNSET' | 'ADD' | 'REMOVE' | 'ADD_MANY' | 'REMOVE_MANY' | 'MOVE' | 'RESOLVE' | 'CREATE';
 
 /**
  * A single, already-happened change to one EObject - real EMF's Notification, adapted: plain

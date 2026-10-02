@@ -150,7 +150,7 @@ arbitrary real `.ecore` file on disk).
 
 This does NOT block generating code for a programmatically-built `EPackage` (call `generate()`
 directly, bypassing the CLI's config-file/file-loading layer entirely) - which is also the
-*correct* way to bootstrap Ecore's own metamodel specifically, since parsing a `.ecore` file to
+_correct_ way to bootstrap Ecore's own metamodel specifically, since parsing a `.ecore` file to
 build the very first `EPackage` that describes `.ecore` files is circular by construction; every
 real implementation solves this via a hand-authored seed graph, not by parsing.
 
@@ -209,7 +209,7 @@ broke the generator's own `TRIVIAL_DERIVED_FORMULAS` treatment (which checks
 `feature.isDerived()` first) for every feature converted from any real .ecore file, including
 real Ecore.ecore itself: `required`/`many`/`container`/`eReferenceType`/`eAttributeType` were
 all generating as ordinary stored fields, not the intended formulas, silently, since generation
-succeeded without error either way - only the generated *content* was wrong.
+succeeded without error either way - only the generated _content_ was wrong.
 
 Found by inspecting the regenerated real output directly (`getRequired()` returned
 `this._required`, not the formula) rather than by a failing test - none of the existing tests
@@ -231,7 +231,7 @@ cross-check against the raw XML (mechanically extracted, not hand-counted, so it
 drift from the real file), and deep, hand-verified checks on a representative set of classes
 covering every information kind the format carries: abstract flags, multi-level inheritance,
 attribute/reference/containment/opposite wiring (including confirming `eOpposite` points at the
-*real* feature object in both directions), the derived-feature flags
+_real_ feature object in both directions), the derived-feature flags
 (`changeable`/`volatile`/`transient`/`derived`) that were the subject of a real bug fixed earlier
 in this project, real GenModel/Ecore constraint annotations with their real source and details,
 `EObject`'s deliberate exclusion (both as a classifier and as a feature type, via `EAnnotation`'s
@@ -330,7 +330,7 @@ not just plausible-looking text.
   reflectively against the real metamodel `EClass` hierarchy - correct `instanceof` behavior,
   zero restructuring of the existing `{Name}Impl extends {Super}Impl implements {Name}` shape;
   (2) flatten inherited features directly into the abstract classes and have `{Name}Impl extends
-  {Name}` - real prototype-chain `instanceof`, but a substantially bigger change that also
+{Name}` - real prototype-chain `instanceof`, but a substantially bigger change that also
   inverts which folder holds the real logic; (3) accept only-partial `instanceof` correctness.
 
 ## RESOLVED: overloaded EOperations generate invalid TypeScript (two method bodies, same name)
@@ -374,7 +374,7 @@ files rather than the index - that's a different, narrower case (a handful of sp
 mode.** The real design question flagged before implementing this - where would generated output
 actually live inside `@typemf/core`'s tree, which determines the relative depth back to every
 core symbol - is now answered concretely, from the person's own already-integrated
-`@typemf/core`: generated classifier files sit as **plain siblings** in the *same* `types/`/
+`@typemf/core`: generated classifier files sit as **plain siblings** in the _same_ `types/`/
 `impl/`/`util/` folders as `@typemf/core`'s own foundational classes (`EObject`, `EObjectImpl`,
 `BasicEList`, ...), confirmed by reading that structure directly - `types/EAttribute.ts` and
 `impl/EAttributeImpl.ts` there already use ordinary same-folder/cross-folder relative imports for
@@ -401,7 +401,7 @@ nominal type. That resolves to nothing anywhere in generated output; any feature
 currently generates a reference to an undefined type name.
 
 **The real mapping, decided in discussion, not yet implemented:** a constructor type, since a
-JS/TS class *is* its own constructor function - the same "reference to the class itself, not an
+JS/TS class _is_ its own constructor function - the same "reference to the class itself, not an
 instance of it" relationship `Class<T>` has in Java:
 
 ```ts
@@ -414,7 +414,7 @@ how `EJavaClass` is actually used today (registered generically in the meta-sche
 argument attached).
 
 **Worth remembering when this is implemented:** if `EJavaClass` ever needs to represent an
-*abstract* Java class, `new (...args) => T` is too strict (abstract classes can't be
+_abstract_ Java class, `new (...args) => T` is too strict (abstract classes can't be
 constructed with `new` directly) - TypeScript's `abstract new (...args: any[]) => T`
 construct-signature form (4.2+) is the correct alternative for that case, if abstractness is
 something the metamodel actually needs to distinguish.
@@ -475,7 +475,7 @@ with the classifier's own self-import or a `referencedApiTypes()` entry), and
 import colliding with its `concreteEClassesOf()` loop - the exact case originally reported).
 
 **Fixed with `excludeCollidingCoreNames()`/`coreImportLine()`**: filters a requested core-symbol
-list to drop any name that's also a real classifier in this package, since whichever *other*
+list to drop any name that's also a real classifier in this package, since whichever _other_
 import already brings that name into scope (the classifier's own self-import, a
 `referencedApiTypes()` entry, or a `concreteEClassesOf()`/`eClassesOf()` loop) is - in every such
 case - a real classifier of this exact package, so nothing is actually lost by not
@@ -486,7 +486,7 @@ that could ever bring the same core name back in.
 
 A third, distinct instance of the same underlying pattern was found and fixed separately:
 `EcoreFactoryImpl.ts`'s own `EFactory`-unification special case (`import { EFactoryImpl } from
-'./EFactoryImpl.js'`) collided with its *own* `concreteEClassesOf()`-based classifier-impl loop,
+'./EFactoryImpl.js'`) collided with its _own_ `concreteEClassesOf()`-based classifier-impl loop,
 which also brings in `EFactoryImpl` (since `EFactory` is itself a concrete classifier). Fixed by
 excluding `EFactory`'s own `Impl` name from that loop specifically when the unification case
 applies.
@@ -502,12 +502,12 @@ scanning for duplicate imports): `EcorePackage.ts` declares `getEAnnotation(): E
 per-classifier metamodel accessor `epackage.njk` generates for every `EClass`-kind classifier
 (`get{ClassifierName}(): EClass`), which fires for "EAnnotation" since it's a real classifier in
 Ecore.ecore - but `EcorePackage extends EPackage`, and `EPackage` inherits
-`EModelElement.getEAnnotation(source: string): EAnnotation | undefined` (the *reflective*
+`EModelElement.getEAnnotation(source: string): EAnnotation | undefined` (the _reflective_
 "look up an attached annotation by source URI" operation). Both are named `getEAnnotation`;
 TypeScript correctly rejects the interface as incompatible.
 
 This is NOT the same bug as the import-collision issue - it's a method name colliding with an
-*inherited operation name*, not two imports of the same symbol. The general shape: **any real
+_inherited operation name_, not two imports of the same symbol. The general shape: **any real
 Ecore.ecore classifier whose name coincides with an existing `EModelElement`/`ENamedElement`/
 `EPackage` operation name** (`getEAnnotation` is the one confirmed instance; others may exist -
 not yet exhaustively checked) will hit this. Needs its own analysis before fixing - not attempted
@@ -547,6 +547,7 @@ actually declared.
    `mergedReturnType()` (the overloaded-operations merge) was updated to use it per-overload too.
 
 **Verified three ways:**
+
 - A dedicated conversion-level test (`ecore-dynamic-to-typed.test.ts`) proving `lowerBound`
   survives conversion correctly for both an operation and its parameter, matching real
   Ecore.ecore's own `getEAnnotation(source)` shape exactly (operation not required, parameter
@@ -558,7 +559,7 @@ actually declared.
   `lowerBound=1` since it genuinely never returns undefined - a real, meaningful test of the
   "required" branch, not just a loosened assertion).
 - Confirmed directly in a real Ecore.ecore regeneration: `EModelElement.getEAnnotation(source:
-  string): EAnnotation | undefined` in both `types/EModelElement.ts` and
+string): EAnnotation | undefined` in both `types/EModelElement.ts` and
   `impl/EModelElementImpl.ts`; `EClass.isSuperTypeOf()`/`EClassifier.getClassifierID()` (real,
   primitive-typed operations) correctly remain non-optional regardless of their own declared
   multiplicity, confirming the primitive short-circuit still applies correctly to operations too.
@@ -639,7 +640,7 @@ concept, different signature, different purpose, needed a different name).
 
 **Critical scoping correction to #4, itself found empirically:** `epackage.njk` is shared between
 ordinary metamodel generation and self-hosting. The bypass mechanism above only works when the
-runtime metaclasses are themselves *generated* instances (self-hosting) - for an ordinary
+runtime metaclasses are themselves _generated_ instances (self-hosting) - for an ordinary
 metamodel, they're `@typemf/core`'s own hand-written classes, which don't have
 `eBasicSetValue(number)`/`eBootstrapList()` at all, and `Ids` has no entry for foundational names
 like `EClassifier`/`EClass` unless the metamodel genuinely declares classifiers with those names.
@@ -652,7 +653,7 @@ both from the same call site.
 **5. `EAnnotation.details` is a genuinely different shape between the two modes, not just a
 different method name.** `@typemf/core`'s own hand-written `EAnnotationImpl` stores `details` as
 a plain `Map<string, string>` (a deliberate, earlier design simplification - see much further up
-in this file). But self-hosting's *generated* `EAnnotationImpl.ts` correctly models `details` as
+in this file). But self-hosting's _generated_ `EAnnotationImpl.ts` correctly models `details` as
 the real, modeled Ecore feature it is: `EList<EStringToStringMapEntry>`, a containment list of
 real entry objects. The old `emitAnnotations` macro's `annotation.getDetails().set(key, value)`
 was already broken against the self-hosted generated type before this session (confirmed by
@@ -675,7 +676,7 @@ pair directly in `eclass.njk`, declared once on `EClassifier`/`EStructuralFeatur
 **6b. This collided with something new:** real Ecore.ecore genuinely declares
 `EClassifier.getClassifierID(): EInt` and `EStructuralFeature.getFeatureID(): EInt` as real,
 zero-arg `EOperation`s (confirmed directly against the fixture file, not assumed) - meaning the
-ordinary, generic operation-rendering loop *also* tries to generate a `getClassifierID()`/
+ordinary, generic operation-rendering loop _also_ tries to generate a `getClassifierID()`/
 `getFeatureID()` method, as a throwing stub (no `body:typescript` annotation exists for either in
 the source file). Both declarations share the exact method name; the later one silently wins at
 runtime, shadowing the real, hand-added implementation with a stub that always throws. Fixed by
@@ -700,9 +701,9 @@ real integration currently must), built with `tsup`, and ran real runtime code -
 bootstrap (name/nsURI/nsPrefix), `classifierID`/`featureID` correctly assigned, supertypes
 correctly wired (`EAttribute` → `EStructuralFeature`), cross-classifier type resolution
 (`EReference.containment` → `EBoolean`), and instance creation via the factory including adding
-features to a *new* instance via the lazy-getter path (the original, first-reported deadlock's
+features to a _new_ instance via the lazy-getter path (the original, first-reported deadlock's
 exact scenario) - all confirmed working, not just compiling. All 150 existing tests continued
-passing throughout, including the full compile-and-run test for the *ordinary* (non-self-hosted)
+passing throughout, including the full compile-and-run test for the _ordinary_ (non-self-hosted)
 path, confirming none of this affected the common case.
 
 **Not touched, deliberately out of scope for this pass:** the `getEAnnotation` naming collision
@@ -755,10 +756,11 @@ deliberately-removed barrel behavior it used to assert.
 Verified against real Ecore.ecore, merged into the full workspace structure exactly as earlier
 verifications in this file were: error count on a strict `tsc --noEmit` dropped from the
 pre-refactor baseline to 48, all of them exactly the two already-known, separate, deferred issues
+
 - `EObject` missing from the loaded package entirely (tied to the still-unresolved
-`getEClassifier`/`getEAnnotation` collision, not this rewrite) and `EJavaClass`/`EJavaObject`/
-`EEnumerator` (tracked separately as the not-yet-started "EDataTypes" work). All 157 generator
-tests pass.
+  `getEClassifier`/`getEAnnotation` collision, not this rewrite) and `EJavaClass`/`EJavaObject`/
+  `EEnumerator` (tracked separately as the not-yet-started "EDataTypes" work). All 157 generator
+  tests pass.
 
 ## EDataType type text: three layers, no built-in mappings; generics
 
@@ -767,8 +769,9 @@ tests pass.
 Wherever an EDataType occurs (attribute/reference type, operation return type, parameter type, and
 every cast/field the templates emit for one), the TypeScript text comes from `resolveDataTypeTs()`
 (`typescript-filters.ts`), in strict priority order, and with NO built-in knowledge of any datatype
+
 - every mapping lives in the metamodel; a missing one is a metamodel fix (an annotation), not
-something the generator papers over:
+  something the generator papers over:
 
 1. The `typescript-type` detail of the annotation with source `https://typemf.dev/generator`, as
    written (not checked, not interpreted - `number | undefined`, `number []` are all fine). If
@@ -805,6 +808,7 @@ foundational `EList` - one module when self-hosting, genuinely different sources
 collision) in ordinary mode.
 
 **Known limitations, deliberate:**
+
 - Type-parameter bounds, `EOperation.eTypeParameters`, `EClass.eGenericSuperTypes`, wildcard bounds
   are not modeled.
 - In the old (canonical) pipeline a type argument bound to `EObject` degrades to `unknown` (the
@@ -853,26 +857,27 @@ State as of the last Ecore.ecore supplied. Each needs a `body` detail in an anno
 Ecore.ecore; until then it throws when called. To refresh: regenerate and look for methods whose body
 is `throw new Error('X.y() has no `body` annotation - nothing to generate.')`.
 
-| Class | Operation (generated signature) |
-|---|---|
-| `EClass` | `getOverride(operation: EOperation): EOperation | undefined` |
-| `EEnum` | `getEEnumLiteralByLiteral(literal: string): EEnumLiteral | undefined` |
-| `EFactory` | `create(eClass: EClass): EObject | undefined` |
-| `EFactory` | `createFromString(eDataType: EDataType, literalValue: string): unknown` |
-| `EFactory` | `convertToString(eDataType: EDataType, instanceValue: unknown): string | undefined` |
-| `EOperation` | `getOperationID(): number` |
-| `EOperation` | `isOverrideOf(someOperation: EOperation): boolean` |
-| `EStructuralFeature` | `getContainerClass(): TypeScriptClass<unknown> | undefined` |
+| Class                | Operation (generated signature)                                         |
+| -------------------- | ----------------------------------------------------------------------- |
+| `EClass`             | `getOverride(operation: EOperation): EOperation                         | undefined` |
+| `EEnum`              | `getEEnumLiteralByLiteral(literal: string): EEnumLiteral                | undefined` |
+| `EFactory`           | `create(eClass: EClass): EObject                                        | undefined` |
+| `EFactory`           | `createFromString(eDataType: EDataType, literalValue: string): unknown` |
+| `EFactory`           | `convertToString(eDataType: EDataType, instanceValue: unknown): string  | undefined` |
+| `EOperation`         | `getOperationID(): number`                                              |
+| `EOperation`         | `isOverrideOf(someOperation: EOperation): boolean`                      |
+| `EStructuralFeature` | `getContainerClass(): TypeScriptClass<unknown>                          | undefined` |
 
 8 stubs (15 before the last update: 7 of `EClass`, `EClassifier.isInstance`, `EEnum.getEEnumLiteralByLiteral`, 3 of `EFactory`, 2 of `EOperation`, `EStructuralFeature.getContainerClass`; now implemented: `EClass.getEOperation`, `EClass.getFeatureCount`, `EClass.getFeatureID`, `EClass.getOperationCount`, `EClass.getOperationID`, `EClass.isSuperTypeOf`, `EClassifier.isInstance`).
 
 **Overloaded operations** are dispatched when they have bodies (see "Overload dispatch" at the end of this file); `EEnum.getEEnumLiteral` (no body on any overload) is the only overloaded stub left.
 
 **Bodies that do not compile yet** (7 strict-`tsc` errors, all inside bodies - the generator emits a body verbatim and registers no imports for what it references):
+
 - missing imports of names the bodies use: `isEClass` and `EStructuralFeatureImpl`/`EOperationImpl`/`EObjectImpl` (in `EClass`/`EClassifier` impls);
 - `EClass.getOperationCount`: `this.getOperations()` does not exist (`getEOperations()`);
 - `EClass.isSuperTypeOf`: `.filter(clazz => isEClass(clazz))` is not a type guard, so `clazz` stays `EClassifier | undefined` (needs `(c): c is EClass => isEClass(c)`).
-The import gap is a generator question (bodies have no way to declare imports); the rest are body fixes.
+  The import gap is a generator question (bodies have no way to declare imports); the rest are body fixes.
 
 ## Documentation: typemf annotation first, Ecore annotation as the fallback
 
@@ -882,7 +887,7 @@ the fallback. Applies to everything that gets a doc comment: package (interface 
 classifiers, features, operations, enums. Used as written; an empty layer-1 value counts as absent
 and falls through.
 
-**Consequence, by decision:** real EMF keeps `documentation` in the *GenModel* source
+**Consequence, by decision:** real EMF keeps `documentation` in the _GenModel_ source
 (`http://www.eclipse.org/emf/2002/GenModel`), and that source is no longer read for documentation at
 all - documentation an EMF-authored .ecore carries there is silently ignored unless it is also
 supplied under one of the two sources above. (An earlier version of this section read GenModel as
@@ -948,7 +953,7 @@ Plumbing: `TemplateSet.configureEnvironment(env, { pkg, options })` now receives
 generated and the options; the typescript set starts the generation context from it (one shared
 instance, like the import collector, reset per `generate()`).
 
-**Scope / limits:** the annotation is read on EDataTypes only. External *classes* (a class extending
+**Scope / limits:** the annotation is read on EDataTypes only. External _classes_ (a class extending
 one from another package) need import locations too - not done. And nothing loaded from disk can be
 external yet: the loader still rejects references into other files, so the external branch is
 exercised by hand-built two-package models only. `generate-ecore` and the foundational names are
@@ -996,6 +1001,7 @@ Verified: unit tests, end-to-end tests loading real .ecore files (bodies asserte
 compile), 6 mutations each caught. Real Ecore.ecore: 11 -> 6 strict `tsc` errors.
 
 ### Errors left in Ecore.ecore itself (all 6 are in the file, not the generator)
+
 - `EClassifier.isInstance`: its import annotation has `type="EObjectImple"` (typo) - imports a
   non-existent symbol AND leaves `EObjectImpl` (used by the body) undeclared: 2 errors.
 - `EClass.isSuperTypeOf`: the body uses `isEClass` and has no import annotation (1 error); and
@@ -1022,7 +1028,7 @@ throwing stub and ignore every body. Now:
   written (over the MERGED parameter names) - else derived, `&&`-combined per position: a position the
   overload lacks must be `=== undefined`; where the overloads having the position differ in type, the
   overload's own type must be a runtime-testable TS primitive (`typeof x === 'string' | 'number' |
-  'boolean' | 'bigint'`); where the type is the same everywhere but the position is optional,
+'boolean' | 'bigint'`); where the type is the same everywhere but the position is optional,
   `!== undefined`. That is TypeScript knowledge, not a mapping of Ecore datatypes.
 - **Aliases.** Inside a branch, each of the overload's OWN parameter names whose body actually uses it
   (string literals and comments ignored; `${...}` in a template literal counts) is declared as
@@ -1058,7 +1064,7 @@ generated package (bootstraps: 52 classifiers; `getEStructuralFeature` dispatch 
    (verified: with the path corrected, 0 errors - TS 5.9 infers the `.filter` type predicate itself, so
    the earlier "needs an explicit type guard" advice was wrong).
 2. **`EClass.isSuperTypeOf` recurses forever (RangeError).** `someClass.getESuperTypes().find(clazz =>
-   clazz.isSuperTypeOf(someClass))` asks the SAME question of a supertype with the same argument. It must
+clazz.isSuperTypeOf(someClass))` asks the SAME question of a supertype with the same argument. It must
    ask `this.isSuperTypeOf(clazz)`. Every reflective type guard calls it.
 3. **`EClass.getFeatureCount` counts own features only** (16; 24 with inherited) - the body uses
    `getEStructuralFeatures()`; it needs the ALL-features list, which is unimplemented (see 4).
@@ -1104,6 +1110,7 @@ Note for maintaining the checker: a merge step once wrote `open(p,'w').write(ope
 truncates before reading and wiped four hand-written core files (375 bogus errors) - read first, then write.
 
 ### Result for the upload that changed the `isEClass` path, `getFeatureCount` and `getOperationCount` bodies
+
 12 passed, 18 failed. `tsc` 0 errors (aspect 3 fixed). `isSuperTypeOf` unchanged - still infinite recursion.
 `getFeatureCount`/`getOperationCount` bodies are now semantically right but return 0: they depend on the
 unimplemented derived features (eAllStructuralFeatures, eAllOperations) and on operations existing at runtime.
@@ -1161,9 +1168,10 @@ rewritten" note); its `isEClass` import annotation was also cleaned up: moved fr
 `./util/EcoreTypeGuards.js`; `BasicEList` from `@typemf/core` / internal-from `./impl/BasicEList.js`).
 This is DATA ONLY: no template reads a `get` detail yet, so `getEAllStructuralFeatures()` and
 everything depending on it (`getFeatureCount`, `eAllAttributes`, `eAllReferences`, ...) are UNCHANGED
+
 - still the stored-field stub, still 0 at runtime. Confirmed with `check_ecore.py`: same 16 failures as
-the baseline upload, `isSuperTypeOf`'s 5 checks still pass, `tsc` still 0 errors (the unread annotation
-does not disturb generation).
+  the baseline upload, `isSuperTypeOf`'s 5 checks still pass, `tsc` still 0 errors (the unread annotation
+  does not disturb generation).
 
 ## `get`/`set` for EStructuralFeature: `https://typemf.dev/generator/feature`
 
@@ -1204,14 +1212,16 @@ at all (nothing to unset, bootstrap-write, or hand back - falls to super/throw).
 body is source code that becomes part of the package being generated, in every generation, never a
 reference to something belonging to a DIFFERENT package (unlike a datatype, which genuinely can). `from`
 on a body import is only an alternate spelling of the same (internal) path, not a distinct external case
+
 - contrast `resolveDataTypeTs`, where `from`/`internal-from` really do mean external/internal.
 
 One consequence worth knowing, not a bug: a body wanting `BasicEList` specifically collides with the
 template's own unconditional foundational import of it if that generation is ORDINARY (not self-hosting)
+
 - both resolve to the same NAME from different modules there. This isn't a case the mechanism needs to
-paper over: constructing a fresh `EList` from scratch inside a body is a self-hosting-only need in
-practice (`getEAllStructuralFeatures` and its kin), and self-hosting (`generate-ecore: true`) is exactly
-where the two resolve to the identical relative specifier and merge cleanly (confirmed).
+  paper over: constructing a fresh `EList` from scratch inside a body is a self-hosting-only need in
+  practice (`getEAllStructuralFeatures` and its kin), and self-hosting (`generate-ecore: true`) is exactly
+  where the two resolve to the identical relative specifier and merge cleanly (confirmed).
 
 Verified: 12 new tests (annotation reading, validation, generated shape for get-only/get+set/many-valued,
 the formula-delegation fix, a real self-hosting-mode compile+execute); 6 mutations each caught. Real
@@ -1251,6 +1261,7 @@ for a different feature). Mirrors `eSuperTypes` exactly. Separate from the frame
 piece needed to model a direct generic-supertype edge at all.
 
 **Verification, and what it does and doesn't cover:**
+
 - Real Ecore.ecore, merged into the user's workspace layout: strict `tsc` 0 errors; `eAllAttributes`
   (7), `eAllReferences` (17), `eAllContainments` (5), `eAllSuperTypes` (3), `eAllStructuralFeatures` (24)
   all match an oracle computed independently from the XML. 25/33 checks pass, up from 21.
@@ -1277,7 +1288,7 @@ piece needed to model a direct generic-supertype edge at all.
 
 - **`eAttributeType`** (on `EAttribute`, single-valued): fits the exact shape already established for
   `eReferenceType` - added as a fifth entry to `TRIVIAL_DERIVED_FORMULAS` (`(this.getEType() as EDataType |
-  undefined)`), a GENERATOR code change, not a model one. New unit tests cover the table directly (all
+undefined)`), a GENERATOR code change, not a model one. New unit tests cover the table directly (all
   five entries, that it only applies to a feature actually marked `derived`, that an unrelated name
   returns `undefined`) - the table had no dedicated test before this. Mutation-confirmed: a wrong cast
   type is caught.
@@ -1313,7 +1324,7 @@ Three changes, matching the design once clarified:
 
 1. **`@typemf/core`'s `EFactoryImpl.create()`** is no longer `abstract` - it now has a concrete, terminal
    implementation throwing `Cannot create an instance of classifier id ${id}: unrecognized by this
-   factory or any in its super chain.` (mirroring `createFromString`/`convertToString`'s existing
+factory or any in its super chain.` (mirroring `createFromString`/`convertToString`'s existing
    concrete-default pattern in the same class). `DynamicEFactoryImpl` is unaffected - it already overrides
    `create()` fully. The class itself is no longer `abstract class` either, since nothing else on it was.
 2. **`efactory.njk`**'s generated `default:` case now `return super.create(eClass);` instead of throwing
@@ -1345,8 +1356,9 @@ the self-hosted `EFactoryImpl.create()` body and throw from there. Stub count: 8
 
 Changed the terminal end of the `create()` delegation chain (see the previous section) from throwing to
 a graceful degrade: `console.warn(...)` naming the classifier, then `return new DynamicEObjectImpl(eClass);`
+
 - a REAL, working instance, reflectively backed by `eClass`, not a placeholder. `DynamicEObjectImpl` was
-already used exactly this way by `DynamicEFactoryImpl`, so there was no circularity to introduce.
+  already used exactly this way by `DynamicEFactoryImpl`, so there was no circularity to introduce.
 
 Kept `DynamicEFactoryImpl`'s existing abstract/interface guard, applied here too: creating ANY instance of
 an abstract or interface `EClass` is invalid regardless of which factory ends up doing it, dynamic or
@@ -1380,21 +1392,22 @@ Goal: replace the hand-rolled classes in `packages/core/src/metamodel` with the 
 output. Ordered by actual dependency, not by how the issues were first found. Status legend: TODO / IN
 PROGRESS / DONE / DEFERRED (explicitly out of scope for this swap).
 
-| # | Point | Status | Notes |
-|---|---|---|---|
-| 0 | `use-type-name` cleanup | **DONE** | Removed from Ecore.ecore. Was already inert (redundant with the import annotation); this only removes noise. |
-| 1 | Caching for `get`-bodied derived features | **DONE** | See the dedicated write-up below - two real bugs found and fixed along the way, not just a straightforward implementation of the approved design. |
-| 2 | 4 of 5 independent stub bodies | **DONE (4/5)** | `EStructuralFeature.getContainerClass` needed new infrastructure that doesn't exist yet, split out - see the write-up below and the new tracker line D3. |
-| 3 | Operations exist at runtime | **DONE** | See the dedicated write-up below. |
-| 4 | 3 operations-dependent stub bodies | **DONE** | See the dedicated write-up below. | `EClass.getOverride`, `EOperation.getOperationID`, `EOperation.isOverrideOf` - need real `EOperation` objects to operate on. |
-| 5 | `eRawType` | **DONE** | See the dedicated write-up below. | A derived feature not looked at yet this session. Likely the same shape as `eAttributeType`/`eReferenceType` or the `get`-bodied `eAll*` features - unconfirmed until investigated. |
-| 6 | Loader pipeline dependency | **DONE** | See the dedicated write-up below. |
-| 7 | The actual swap | **DONE** | See the dedicated write-up below. | Merge generated output into `packages/core/src/metamodel`; ensure `types/TypeScriptClass.ts` and `types/EEnumerator.ts` (hand-authored, never generated, by design) are in place; run the full EXISTING `packages/core` test suite against the swapped-in implementation. |
-| D1 | `eAllGenericSuperTypes` real-edge verification | DEFERRED | Logic verified against a hand-built toy model only - real Ecore.ecore has no generic supertype edges to exercise the "reuse the real object" branch against. Same code path as the tested `eAllSuperTypes`, so treated as covered by extension; revisit only if the model ever gains a genuine generic edge. |
-| D3 | `EStructuralFeature.getContainerClass` | **DONE** | See the dedicated write-up below. |
-| D2 | Cross-package/external loading | DEFERRED | The loader rejects references into other `.ecore` files; external classes have no import-location mechanism. Not needed for Ecore.ecore itself (one self-contained file) - explicitly out of scope for this swap. |
+| #   | Point                                          | Status         | Notes                                                                                                                                                                                                                                                                                                        |
+| --- | ---------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0   | `use-type-name` cleanup                        | **DONE**       | Removed from Ecore.ecore. Was already inert (redundant with the import annotation); this only removes noise.                                                                                                                                                                                                 |
+| 1   | Caching for `get`-bodied derived features      | **DONE**       | See the dedicated write-up below - two real bugs found and fixed along the way, not just a straightforward implementation of the approved design.                                                                                                                                                            |
+| 2   | 4 of 5 independent stub bodies                 | **DONE (4/5)** | `EStructuralFeature.getContainerClass` needed new infrastructure that doesn't exist yet, split out - see the write-up below and the new tracker line D3.                                                                                                                                                     |
+| 3   | Operations exist at runtime                    | **DONE**       | See the dedicated write-up below.                                                                                                                                                                                                                                                                            |
+| 4   | 3 operations-dependent stub bodies             | **DONE**       | See the dedicated write-up below.                                                                                                                                                                                                                                                                            | `EClass.getOverride`, `EOperation.getOperationID`, `EOperation.isOverrideOf` - need real `EOperation` objects to operate on.                                                                                                                                              |
+| 5   | `eRawType`                                     | **DONE**       | See the dedicated write-up below.                                                                                                                                                                                                                                                                            | A derived feature not looked at yet this session. Likely the same shape as `eAttributeType`/`eReferenceType` or the `get`-bodied `eAll*` features - unconfirmed until investigated.                                                                                       |
+| 6   | Loader pipeline dependency                     | **DONE**       | See the dedicated write-up below.                                                                                                                                                                                                                                                                            |
+| 7   | The actual swap                                | **DONE**       | See the dedicated write-up below.                                                                                                                                                                                                                                                                            | Merge generated output into `packages/core/src/metamodel`; ensure `types/TypeScriptClass.ts` and `types/EEnumerator.ts` (hand-authored, never generated, by design) are in place; run the full EXISTING `packages/core` test suite against the swapped-in implementation. |
+| D1  | `eAllGenericSuperTypes` real-edge verification | DEFERRED       | Logic verified against a hand-built toy model only - real Ecore.ecore has no generic supertype edges to exercise the "reuse the real object" branch against. Same code path as the tested `eAllSuperTypes`, so treated as covered by extension; revisit only if the model ever gains a genuine generic edge. |
+| D3  | `EStructuralFeature.getContainerClass`         | **DONE**       | See the dedicated write-up below.                                                                                                                                                                                                                                                                            |
+| D2  | Cross-package/external loading                 | DEFERRED       | The loader rejects references into other `.ecore` files; external classes have no import-location mechanism. Not needed for Ecore.ecore itself (one self-contained file) - explicitly out of scope for this swap.                                                                                            |
 
 ### Ordering rationale
+
 Points 1-2 are independent, low-risk, and improve on what exists today (a real regression and a real gap)
 without touching the bootstrap or the loader - done first for that reason, not because they're most
 important. Point 3 is the one substantive unknown (scope not yet investigated) and gates point 4. Point 6
@@ -1414,6 +1427,7 @@ never leaves anything stale, and still serves the actual motivating pattern (edi
 construction/load time, reads cluster at serialization time, the two rarely interleave).
 
 **Two real bugs found by testing, not predicted in advance:**
+
 1. The first version scoped the bump to four feature names only (`eStructuralFeatures`, `eOperations`,
    `eSuperTypes`, `eGenericSuperTypes` - the metamodel-structural ones the motivating `eAll*` bodies
    depend on). A real execution test caught this as wrong: a `get` body is free to read ANY feature, not
@@ -1472,6 +1486,7 @@ default implementations (the primitive-name switch, the ownership check comparin
 against the datatype's own package).
 
 **Real, unplanned findings along the way, not predicted:**
+
 - **Real Ecore.ecore declares NO `EEnum` classifiers at all** - a naive test assuming one existed (e.g.
   `EDataTypeInstanceKind`) failed outright. Had to hand-build an `EEnumImpl` instance instead.
 - **An ordinary, user-defined `EEnum` classifier compiles to a plain native TypeScript `enum`, with no
@@ -1548,7 +1563,7 @@ now-identified causes - none of them a correctness gap in the generated metamode
    call sites should simply be deleted, not replaced.
 3. **`getEStructuralFeatureByName` - a naming mismatch, not a missing capability.** Confirmed: it's
    hand-written core's own non-overloaded name for exactly what generated `getEStructuralFeature(name:
-   string)` (the string overload, built earlier this session) already does. Found in BOTH a test
+string)` (the string overload, built earlier this session) already does. Found in BOTH a test
    (`eclass-reflection.test.ts`) AND real, hand-written PRODUCTION code outside `metamodel/` entirely -
    `resource/eobject-address.ts` (positional-path resolution) calls it directly. **Actionable now:** that
    production call site needs updating to `getEStructuralFeature(featureName)` for the swap to work at all.
@@ -1563,7 +1578,7 @@ now-identified causes - none of them a correctness gap in the generated metamode
    `addLiteral()`'s special case is obsolete for generated code; callers should use `getELiterals().add()`
    directly.
 5. **`EAnnotation.getDetails()` returns `Map<string, string>` (hand-written) vs. `EList<
-   EStringToStringMapEntry>` (generated, model-faithful) - the one genuinely consequential divergence.**
+EStringToStringMapEntry>` (generated, model-faithful) - the one genuinely consequential divergence.**
    Confirmed: hand-written `EAnnotationImpl.getDetails()` returns a native `Map`, a deliberate ergonomic
    wrapper; the real Ecore metamodel (and therefore generated code) represents `details` as an `EList` of
    key/value entry objects, matching real EMF. Every `.get(key)`/`.set(key, value)` call on the result
@@ -1590,6 +1605,7 @@ live workspace (nothing broken there), and the swap diagnostic went from 93 erro
 one major, unresolved, scope-defining finding at the very end (see "NEW FINDING" below).
 
 ### `getDetails()`: Map -> real EList<EStringToStringMapEntry>
+
 `EAnnotation.getDetails()` migrated from a hand-written-only `Map<string,string>` to the real,
 model-faithful `EList<EStringToStringMapEntry>` (a new type + impl added, matching Ecore.ecore's own
 declared shape exactly - extends EObject directly, `key`/`value` EString attributes). Two new free
@@ -1602,6 +1618,7 @@ not predicted). Also ported to `xmi-serializer.test.ts` and `real-ecore-full-val
 initially missed by the file-by-file sweep and only caught by a full monorepo compile check.
 
 ### `createInstance()`: interface method -> free function `createInstanceOf()`
+
 Removed from the `EClass` interface entirely (never a real Ecore.ecore operation) and reimplemented as a
 free function, same error-message behavior preserved. Wider blast radius than expected: it was a
 DECLARED INTERFACE METHOD, used in PRODUCTION code in `packages/json/src/json-serializer.ts`, not just
@@ -1617,9 +1634,11 @@ relocating all three to a new, dedicated `metamodel-helpers.ts` the swap never t
 for any FUTURE free function meant to survive the swap: it cannot live in a generated file, full stop.
 
 ### `recomputeAllLists()`, `getEStructuralFeatureByName`, `addLiteral()`
+
 Scoped correctly to `packages/core`'s own `__tests__` (and one production file, `eobject-address.ts`) -
 NOT `packages/generator`'s tests, which use hand-written classes as legitimate generator INPUT data, never
 as a stand-in for swapped generated code, so calls there are fine and untouched.
+
 - `recomputeAllLists()`: obsolete calls deleted outright - generated code's caching (point 1) needs no
   manual invalidation at all, and even hand-written core's own lazy-build-on-first-access behavior means
   removing the explicit call changes nothing observable.
@@ -1639,6 +1658,7 @@ as a stand-in for swapped generated code, so calls there are fine and untouched.
   differently-named.
 
 ### NEW: `getName()` - a real type-signature divergence, migrated
+
 Discovered by the diagnostic itself, not anticipated: hand-written `ENamedElement.getName(): string`
 (never undefined) vs. generated `getName(): string | undefined` (matching real EMF - `name` is a
 genuinely optional attribute). Migrated the interface, `ENamedElementImpl` (removing a `''`-as-sentinel
@@ -1659,6 +1679,7 @@ lets every other function in the file safely assert non-null, exactly mirroring 
 exists in the first place. New test file `unnamed-elements.test.ts` (4 tests) covers the new function.
 
 ### NEW FINDING, confirmed but NOT resolved - central to point 6, changes its scope
+
 With every fix above applied, the full swap diagnostic (merge generated code into a scratch copy of the
 REAL workspace, `tsc`, full `vitest run`) reached **0 `tsc` errors** - a first. But running the actual
 existing test suite against the swapped-in implementation: 105 of 128 tests FAILED at runtime, all with
@@ -1770,6 +1791,7 @@ block (mirroring the existing `EClassifier`/`EStructuralFeature` ones exactly) p
 `@typemf/core`'s `EOperation` interface and `EOperationImpl` too, for ordinary (non-self-hosting) mode.
 
 **`isOverrideOf`/`getOverride` - real EMF's own algorithm, exactly, per direct user request:**
+
 - `isOverrideOf(someOperation)`: false if `someOperation === this`; false if the two operations'
   containing classes are the same; false unless the OTHER operation's containing class is a real
   supertype of THIS operation's containing class (via `isSuperTypeOf`, correct since earlier this
@@ -1804,16 +1826,17 @@ operations weren't independently tracked checks, they were part of the stub list
 
 **Real EMF's algorithm, confirmed against the exact declared shape first, not assumed:** `eRawType` is
 `derived`, `lowerBound="1"` (always resolves to something in real EMF), returning the "erased" classifier
+
 - Java's own "raw type" terminology (`List` from `List<String>`). Resolves: a real `eClassifier` directly;
-otherwise, for an `eTypeParameter` reference, through that parameter's own first `eBounds` entry,
-recursively; otherwise, for a wildcard (`eUpperBound`/`eLowerBound`), through the upper bound, recursively;
-otherwise falls back to Java's `Object`.
+  otherwise, for an `eTypeParameter` reference, through that parameter's own first `eBounds` entry,
+  recursively; otherwise, for a wildcard (`eUpperBound`/`eLowerBound`), through the upper bound, recursively;
+  otherwise falls back to Java's `Object`.
 
 **A related, deeper gap found while scoping this, per the user's own suggestion to check it:** hand-written
 `ETypedElementImpl.setEGenericType()` computed `eType` as `type?.getEClassifier()` directly - a shortcut
 that only works for the plain-classifier case, silently wrong (returns `undefined`) for a type-parameter
 or wildcard reference. Fixed to use the real `getERawType()` instead - though for HAND-WRITTEN core
-specifically this is a correctness-by-name fix with no *observable* behavior change today, since this
+specifically this is a correctness-by-name fix with no _observable_ behavior change today, since this
 port's hand-written `EGenericType`/`ETypeParameter` don't model bounds or wildcards at all (their own,
 pre-existing doc comments already say so) - so `getERawType()` there reduces to exactly what
 `getEClassifier()` already did. Disclosed as a known, honest limitation rather than worked around:
@@ -1835,6 +1858,7 @@ containment specifically is NOT silently dropped) rather than bypassing it, then
 
 **Two real, unplanned mistakes caught by testing, not by review, each confirmed against the actual code
 before fixing:**
+
 1. First draft of the fallback called `getEcorePackageRef().getEObject()` - `tsc` caught this
    immediately (`Property 'getEObject' does not exist`). Root cause: `EObject` is deliberately excluded
    from ALL generated-class treatment in this port (a pre-existing, intentional design decision, found by
@@ -1881,9 +1905,10 @@ what `containerClass` holds here - a deliberate, necessary divergence from liter
 an oversight.
 
 **A genuinely missing piece, found while implementing, not part of the original ask:** `TypeScriptClass<T>`
+
 - the real EMF `EJavaClass`'s already-established TypeScript mapping (`type: "TypeScriptClass"`, `from:
 "@typemf/core"`) - had never actually existed in hand-written `@typemf/core` at all. Every verification
-script this whole session had been manually creating a STAND-IN file for it. Added for real: `export type
+  script this whole session had been manually creating a STAND-IN file for it. Added for real: `export type
 TypeScriptClass<T> = new (...args: unknown[]) => T;`, exported from the public barrel.
 
 **Implementation, mirroring `featureID`/`classifierID`/`operationID`'s exact, already-established
@@ -1959,6 +1984,7 @@ src/metamodel/__tests__/instance-class-name.test.ts
 src/metamodel/__tests__/model-generation.test.ts
 src/metamodel/__tests__/efactory-impl.test.ts
 ```
+
 (`resource-set.test.ts`, flagged as affected in the earlier diagnostic, is NOT actually on this list -
 checked directly: it builds its model entirely through the shared, already-fixed helper, so it needs
 nothing further.)
@@ -2035,12 +2061,12 @@ Fixed to read the feature's real declared default when present.
 **`EEnumLiteral.literal`'s fallback-to-name getter needed three separate fixes**, once traced
 through: the wrong annotation source URI (`.../generator` vs the correct `.../generator/feature`),
 the field-declaration gate wrongly assuming "custom getter → no backing field" (broke for a feature
-whose getter *and* setter both reference their own field), and `eIsSet`/`eUnset` wrongly calling the
+whose getter _and_ setter both reference their own field), and `eIsSet`/`eUnset` wrongly calling the
 fallback-augmented getter instead of checking the raw field. Generalized as a new
 `customBodyNeedsOwnField()` (checks whether the getter/setter body text actually references
 `this._<name>`, not just whether both exist) - caught and fixed a real overreach of an earlier,
 blunter version of this same fix, which broke a getter/setter pair that delegates entirely to a
-*different* feature (found by rerunning `packages/generator`'s own suite after the first attempt).
+_different_ feature (found by rerunning `packages/generator`'s own suite after the first attempt).
 
 **`EClass.getEIDAttribute()` had silently degraded to a dead, always-undefined stored field** - marked
 `derived="true"` in the model but with no matching `get` body annotation, so it never actually
@@ -2082,8 +2108,8 @@ Mechanical, fixed throughout wherever found.
 
 ### What "point 6, done" turned out to still need
 
-Point 6 had confirmed the bootstrap-ordering mitigation *works*; point 7 is where it actually got
-*applied*, for real, everywhere it was needed - including two places (the earlier-than-expected
+Point 6 had confirmed the bootstrap-ordering mitigation _works_; point 7 is where it actually got
+_applied_, for real, everywhere it was needed - including two places (the earlier-than-expected
 `ecore-meta-schema.ts` need, and the loader's own `addLiteral()`/`eOpposite`-wiring assumptions) that
 weren't visible until the swap was actually attempted rather than diagnosed in a scratch copy.
 
@@ -2096,6 +2122,7 @@ webview edits back to the real objects) rather than undo/redo directly, though i
 too.
 
 **Design departures from Java, each deliberate:**
+
 - `EObject.onDidChange(listener, feature?)` returns a `Disposable` - not a ported 4-method `Adapter`
   interface (`getTarget`/`setTarget`/`isAdapterForType`/`notifyChanged`). That shape exists largely
   because Java, when EMF was designed, had no first-class closures; this project already uses the
@@ -2121,7 +2148,7 @@ every real mutation site: the `eSet`/`eUnset` default dance (both hand-written i
 `DynamicEObjectImpl.ts` and the generated template), `BasicEList.onAdded`/`onRemoved` (ADD/REMOVE,
 with real position tracking, threaded through `add`/`addAt`/`remove`/`removeAt`/`clear`), and each of
 the three custom setter bodies in the model (`literal`, `eType`, `eGenericType`). `eGenericType`'s
-setter fires *two* notifications - one for itself, one for the `eType` it side-effects - found to be
+setter fires _two_ notifications - one for itself, one for the `eType` it side-effects - found to be
 necessary while implementing it, not designed in speculatively.
 
 **New foundational type**: `Disposable` (`{ dispose(): void }`) in `metamodel/types/` - deliberately

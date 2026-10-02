@@ -1,4 +1,12 @@
-import { createInstanceOf, DynamicEFactoryImpl, EAttributeImpl, EcorePackageImpl, EClassImpl, EDataTypeImpl, EPackageImpl } from '@typemf/core';
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EAttributeImpl,
+  EcorePackageImpl,
+  EClassImpl,
+  EDataTypeImpl,
+  EPackageImpl,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { displayLabel } from '../display-label.js';
 
@@ -31,7 +39,7 @@ function buildFixture() {
 }
 
 describe('displayLabel', () => {
-  it('uses the "name" feature value when it has one and it is set', () => {
+  it('uses the value of the "name" feature when set', () => {
     const { bookClass, nameAttr } = buildFixture();
     const book = createInstanceOf(bookClass);
     book.eSet(nameAttr, 'Dune');

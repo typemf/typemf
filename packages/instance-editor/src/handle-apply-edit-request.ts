@@ -25,8 +25,15 @@ function decodeWireValue(request: ApplyEditRequest, feature: EStructuralFeature,
  * the generated eSet/eUnset/BasicEList machinery, unchanged) - which is what eventually marks the
  * document dirty via onDidChangeCustomDocument, separately, in InstanceEditorProvider itself.
  */
-export function handleApplyEditRequest(request: ApplyEditRequest, document: { objectIds: ObjectIdMap }): ApplyEditResponse | ApplyEditError {
-  const fail = (message: string): ApplyEditError => ({ type: 'typemf/applyEditError', requestId: request.requestId, message });
+export function handleApplyEditRequest(
+  request: ApplyEditRequest,
+  document: { objectIds: ObjectIdMap }
+): ApplyEditResponse | ApplyEditError {
+  const fail = (message: string): ApplyEditError => ({
+    type: 'typemf/applyEditError',
+    requestId: request.requestId,
+    message,
+  });
 
   const obj = document.objectIds.objectFor(request.objectId);
   if (!obj) return fail(`No object known for id '${request.objectId}'.`);

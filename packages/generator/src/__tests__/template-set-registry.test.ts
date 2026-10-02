@@ -7,7 +7,7 @@ describe('resolveTemplateSet', () => {
     expect(resolveTemplateSet('typescript')).toBe(typescriptTemplateSet);
   });
 
-  it('throws a clear error naming the known sets for an unknown name', () => {
+  it('throws naming the known sets for an unknown name', () => {
     expect(() => resolveTemplateSet('java')).toThrow(/Unknown template set 'java'.*typescript/);
   });
 });

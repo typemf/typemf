@@ -1,6 +1,10 @@
 import { EClass, Resource } from '@typemf/core';
 import { findTypeCompatibleObjects } from './find-type-compatible-objects.js';
-import { ReferenceCandidatesError, ReferenceCandidatesRequest, ReferenceCandidatesResponse } from './host-message-protocol.js';
+import {
+  ReferenceCandidatesError,
+  ReferenceCandidatesRequest,
+  ReferenceCandidatesResponse,
+} from './host-message-protocol.js';
 import { ObjectIdMap } from './object-id-map.js';
 
 /**
@@ -19,7 +23,11 @@ export function handleReferenceCandidatesRequest(
 ): ReferenceCandidatesResponse | ReferenceCandidatesError {
   const targetType = document.objectIds.objectFor(request.typeId) as EClass | undefined;
   if (!targetType) {
-    return { type: 'typemf/referenceCandidatesError', requestId: request.requestId, message: `No class known for id '${request.typeId}'.` };
+    return {
+      type: 'typemf/referenceCandidatesError',
+      requestId: request.requestId,
+      message: `No class known for id '${request.typeId}'.`,
+    };
   }
 
   const candidateIds = findTypeCompatibleObjects(document.resource, targetType, document.objectIds);

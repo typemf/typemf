@@ -82,7 +82,7 @@ cross-referenced a real ID attribute.
 ## `fullId()`'s fallback (no ID attribute) is not idempotent
 
 Noticed while building the fragment-addressing above, not yet fixed: `EObjectImpl.fullId()`'s
-fallback path (`eobject-impl.ts`) increments a per-process counter *on every call*, so calling
+fallback path (`eobject-impl.ts`) increments a per-process counter _on every call_, so calling
 `fullId()` twice on the same object with no ID attribute returns two different strings. This
 was harmless as long as nothing depended on the fallback value being stable - but it's worth
 knowing before writing code that calls `fullId()` more than once on the same unidentified

@@ -56,8 +56,7 @@ function buildFixture() {
   return { bookClass, libraryClass, titleAttr, booksRef };
 }
 
-/** Serves canned bytes for whatever ids were registered via set(), matching the real
- *  InMemoryUriConverter pattern used throughout json/xmi's own tests. */
+/** Serves the registered bytes for each id. */
 class FakeHostUriConverter implements UriConverter {
   private readonly bytesById = new Map<string, Uint8Array>();
 
@@ -90,7 +89,7 @@ function encodeSnapshot(snapshot: unknown): Uint8Array {
 }
 
 describe('SnapshotSerializer', () => {
-  it('resolves a proxy into a real, reconstructed object with correctly-decoded attributes', async () => {
+  it('resolves a proxy into a reconstructed object with decoded attributes', async () => {
     const { bookClass, titleAttr } = buildFixture();
     const book = createInstanceOf(bookClass);
     book.eSet(titleAttr, 'Dune');
@@ -99,27 +98,23 @@ describe('SnapshotSerializer', () => {
     const converter = new FakeHostUriConverter();
     converter.set(hostIds.idFor(book), encodeSnapshot(snapshotObject(book, hostIds)));
     converter.set(hostIds.idFor(bookClass), encodeSnapshot(snapshotObject(bookClass, hostIds)));
-    // bookClass is itself a metaclass, so its own eStructuralFeatures (containing titleAttr) are
-    // eagerly resolved during reconstruction, not left as lazy proxies - titleAttr's own snapshot
-    // needs to be genuinely available for that to succeed.
+    // The features of a metaclass are resolved eagerly, so titleAttr must be available.
     converter.set(hostIds.idFor(titleAttr), encodeSnapshot(snapshotObject(titleAttr, hostIds)));
-    // Deliberately no registration for "EClass describing EClass" itself - proving the
-    // well-known-id short circuit means it's never fetched at all, breaking what would otherwise
-    // be infinite recursion (EClass.eClass() === EClass).
+    // EClass has a well-known id and is never fetched; otherwise EClass.eClass() === EClass would recurse forever.
 
     const webviewResourceSet = new ResourceSetImpl();
     registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
     webviewResourceSet.getUriConverterRegistry().register(converter);
 
     const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(book)), true);
-    const reconstructed = resource?.getContents().get(0)!;
+    const reconstructed = resource!.getContents().get(0);
 
     expect(reconstructed.eClass().getName()).toBe('Book');
     const reconstructedTitleFeature = reconstructed.eClass().getEStructuralFeature('title')!;
     expect(reconstructed.eGet(reconstructedTitleFeature)).toBe('Dune');
   });
 
-  it('reconstructs references (including containment) as unresolved proxies, not eagerly-fetched objects', async () => {
+  it('reconstructs references as unresolved proxies', async () => {
     const { bookClass, libraryClass, titleAttr, booksRef } = buildFixture();
     const library = createInstanceOf(libraryClass);
     const book = createInstanceOf(bookClass);
@@ -128,17 +123,12 @@ describe('SnapshotSerializer', () => {
 
     const hostIds = new ObjectIdMap();
     const converter = new FakeHostUriConverter();
-    // Deliberately do NOT register bytes for `book` itself - proving the library's own
-    // reconstruction never needs to fetch it eagerly.
+    // book is not registered, since it is never fetched.
     converter.set(hostIds.idFor(library), encodeSnapshot(snapshotObject(library, hostIds)));
     converter.set(hostIds.idFor(libraryClass), encodeSnapshot(snapshotObject(libraryClass, hostIds)));
-    // libraryClass is itself a metaclass too - its own eStructuralFeatures (containing booksRef)
-    // are eagerly resolved, same reasoning as titleAttr above.
+    // The features of metaclasses and their eTypes are resolved eagerly.
     converter.set(hostIds.idFor(booksRef), encodeSnapshot(snapshotObject(booksRef, hostIds)));
-    // booksRef is ALSO itself a metaclass (EReference) - its own eType reference (pointing at
-    // bookClass) is eagerly resolved too, for the same reason, one level deeper.
     converter.set(hostIds.idFor(bookClass), encodeSnapshot(snapshotObject(bookClass, hostIds)));
-    // ...and bookClass's own eStructuralFeatures (containing titleAttr) are eagerly resolved too.
     converter.set(hostIds.idFor(titleAttr), encodeSnapshot(snapshotObject(titleAttr, hostIds)));
 
     const webviewResourceSet = new ResourceSetImpl();
@@ -146,7 +136,7 @@ describe('SnapshotSerializer', () => {
     webviewResourceSet.getUriConverterRegistry().register(converter);
 
     const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(library)), true);
-    const reconstructedLibrary = resource?.getContents().get(0)!;
+    const reconstructedLibrary = resource!.getContents().get(0);
     const reconstructedBooksFeature = reconstructedLibrary.eClass().getEStructuralFeature('books')!;
     const books = reconstructedLibrary.eGet(reconstructedBooksFeature) as Iterable<{ eIsProxy(): boolean }>;
     const [firstBook] = [...books];
@@ -154,14 +144,8 @@ describe('SnapshotSerializer', () => {
     expect(firstBook!.eIsProxy()).toBe(true); // never fetched - still a proxy, exactly as designed
   });
 
-  it('resolves a self-referential metamodel (a classifier whose own feature\'s eType is that SAME classifier) without hanging - the real, reported bug', async () => {
-    // "Feature contains child Features" - a normal, valid containment cycle at the metamodel
-    // level (a tree-structured metamodel, no different in kind from a directory containing
-    // subdirectories), not a modeling error. needsEagerOwnFeatures makes a dynamic-factory
-    // classifier's own eStructuralFeatures resolve eagerly - which, for THIS feature's own eType,
-    // asks to resolve the very same "Feature" classifier this reconstruction is already in the
-    // middle of, before it has finished. Confirmed hanging indefinitely before the fix (this
-    // exact scenario, reproduced directly against a real, externally-authored file).
+  it('resolves a metamodel whose class contains features of its own type', async () => {
+    // "Feature contains child Features": resolving the feature's eType reaches the class being reconstructed.
     const featureClass = new EClassImpl();
     featureClass.setName('Feature');
     const childrenRef = new EReferenceImpl();
@@ -193,17 +177,12 @@ describe('SnapshotSerializer', () => {
 
     expect(reconstructedFeatureClass.getName()).toBe('Feature');
     const reconstructedChildren = reconstructedFeatureClass.getEStructuralFeature('children')!;
-    // The self-reference resolves back to the SAME, real, already-being-reconstructed object -
-    // not a copy, not a still-unresolved proxy left dangling.
+    // The eType is the object being reconstructed, not a copy or a proxy.
     expect(reconstructedChildren.getEType()).toBe(reconstructedFeatureClass);
   });
 
-  it('reconstructs a feature\'s own featureID correctly - the second real, reported bug this editor had ("new instance of a dynamic model freezes on Loading…")', async () => {
-    // Two single-valued attributes on one dynamically-loaded class, matching the real bug's exact
-    // shape: DynamicEObjectImpl's own storage is a single Map<featureID, value> (see its own
-    // reasoning) - if the webview's own, separately reconstructed copies of these two features
-    // didn't each carry the SAME featureID their real, host-side originals have, both would
-    // collide on the reconstructed object's own default/sentinel id and silently share one slot.
+  it("reconstructs each feature's featureID", async () => {
+    // DynamicEObjectImpl stores values by featureID, so the reconstructed features need the host's ids.
     const titleClass = new EClassImpl();
     titleClass.setName('Book');
     const eString = new EDataTypeImpl();
@@ -243,9 +222,8 @@ describe('SnapshotSerializer', () => {
     expect((reconstructedAuthor as unknown as { getFeatureID(): number }).getFeatureID()).toBe(7);
   });
 
-  it("an enum attribute's own eType resolves with its eLiterals already real objects, not still-unresolved proxies - the real, reported bug (\"editor goes blank after adding a child and following it to a feature with an enum attribute\")", async () => {
-    // Mirrors the real metamodel this was found against: a dynamically-loaded class with an enum-
-    // typed attribute, four literals.
+  it("resolves an enum attribute's eType together with its literals", async () => {
+    // A dynamic class with an enum attribute of four literals.
     const variabilityType = new EEnumImpl();
     variabilityType.setName('VariabilityType');
     const literalNames = ['mandatory', 'optional', 'alternative', 'or'];
@@ -292,11 +270,18 @@ describe('SnapshotSerializer', () => {
     const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(group)), true);
     const reconstructedGroup = resource!.getContents().get(0);
     const reconstructedTypeFeature = reconstructedGroup.eClass().getEStructuralFeature('type')!;
-    const reconstructedEnum = reconstructedTypeFeature.getEType() as unknown as { eIsProxy(): boolean; getELiterals(): Iterable<unknown> };
+    const reconstructedEnum = reconstructedTypeFeature.getEType() as unknown as {
+      eIsProxy(): boolean;
+      getELiterals(): Iterable<unknown>;
+    };
 
     expect(reconstructedEnum.eIsProxy()).toBe(false);
 
-    const literals = [...reconstructedEnum.getELiterals()] as Array<{ eIsProxy(): boolean; getName(): string; getLiteral(): string }>;
+    const literals = [...reconstructedEnum.getELiterals()] as Array<{
+      eIsProxy(): boolean;
+      getName(): string;
+      getLiteral(): string;
+    }>;
     expect(literals).toHaveLength(4);
     for (const literal of literals) {
       expect(literal.eIsProxy()).toBe(false);

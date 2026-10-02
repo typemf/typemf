@@ -7,10 +7,7 @@ import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EEnumerator } from '../types/EEnumerator';
 
-
-
 export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral {
-
   private _value: number = 0;
 
   private _instance: EEnumerator | undefined;
@@ -18,7 +15,6 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
   private _literal: string | undefined;
 
   private _eEnum: EEnum | undefined;
-
 
   eClass(): EClass {
     return getEcorePackageRef().getEEnumLiteral();
@@ -61,11 +57,15 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 2: return this._value;
-      case 3: return this._instance;
+      case 2:
+        return this._value;
+      case 3:
+        return this._instance;
 
-      case 4: return this.getLiteral();
-      case 5: return this._eEnum;
+      case 4:
+        return this.getLiteral();
+      case 5:
+        return this._eEnum;
       default:
         return super.eGet(feature);
     }
@@ -80,7 +80,15 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 3: {
@@ -90,7 +98,15 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 4: {
@@ -105,9 +121,15 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 2: this._value = value as number; return;
-      case 3: this._instance = value as EEnumerator | undefined; return;
-      case 5: this._eEnum = value as EEnum | undefined; return;
+      case 2:
+        this._value = value as number;
+        return;
+      case 3:
+        this._instance = value as EEnumerator | undefined;
+        return;
+      case 5:
+        this._eEnum = value as EEnum | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -122,11 +144,15 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 2: return this._value !== 0;
-      case 3: return this._instance !== undefined;
+      case 2:
+        return this._value !== 0;
+      case 3:
+        return this._instance !== undefined;
 
-      case 4: return this._literal !== undefined;
-      case 5: return this._eEnum !== undefined;
+      case 4:
+        return this._literal !== undefined;
+      case 5:
+        return this._eEnum !== undefined;
       default:
         return super.eIsSet(feature);
     }
@@ -134,43 +160,71 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 2: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._value;
         this._value = 0;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 3: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._instance;
         this._instance = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 4: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._literal;
         this._literal = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 5: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._eEnum;
         this._eEnum = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 

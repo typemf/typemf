@@ -9,10 +9,7 @@ import { EObject } from '../types/EObject.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
-
-
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
-
   private _source: string | undefined;
 
   private _detailsCache: BasicEList<EStringToStringMapEntry> | undefined;
@@ -44,7 +41,6 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
     return this._referencesCache;
   }
 
-
   eClass(): EClass {
     return getEcorePackageRef().getEAnnotation();
   }
@@ -73,11 +69,16 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 1: return this._source;
-      case 2: return this._details;
-      case 3: return this._eModelElement;
-      case 4: return this._contents;
-      case 5: return this._references;
+      case 1:
+        return this._source;
+      case 2:
+        return this._details;
+      case 3:
+        return this._eModelElement;
+      case 4:
+        return this._contents;
+      case 5:
+        return this._references;
       default:
         return super.eGet(feature);
     }
@@ -92,7 +93,15 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 2: {
@@ -110,7 +119,15 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 4: {
@@ -137,8 +154,12 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 1: this._source = value as string | undefined; return;
-      case 3: this._eModelElement = value as EModelElement | undefined; return;
+      case 1:
+        this._source = value as string | undefined;
+        return;
+      case 3:
+        this._eModelElement = value as EModelElement | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -162,11 +183,16 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 1: return this._source !== undefined;
-      case 2: return this._detailsCache !== undefined && this._detailsCache.size() !== 0;
-      case 3: return this._eModelElement !== undefined;
-      case 4: return this._contentsCache !== undefined && this._contentsCache.size() !== 0;
-      case 5: return this._referencesCache !== undefined && this._referencesCache.size() !== 0;
+      case 1:
+        return this._source !== undefined;
+      case 2:
+        return this._detailsCache !== undefined && this._detailsCache.size() !== 0;
+      case 3:
+        return this._eModelElement !== undefined;
+      case 4:
+        return this._contentsCache !== undefined && this._contentsCache.size() !== 0;
+      case 5:
+        return this._referencesCache !== undefined && this._referencesCache.size() !== 0;
       default:
         return super.eIsSet(feature);
     }
@@ -174,31 +200,51 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 1: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._source;
         this._source = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 
-      case 2: this._detailsCache?.clear(); return;
-
+      case 2:
+        this._detailsCache?.clear();
+        return;
 
       case 3: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._eModelElement;
         this._eModelElement = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 
-      case 4: this._contentsCache?.clear(); return;
+      case 4:
+        this._contentsCache?.clear();
+        return;
 
-      case 5: this._referencesCache?.clear(); return;
+      case 5:
+        this._referencesCache?.clear();
+        return;
 
       default:
         super.eUnset(feature);

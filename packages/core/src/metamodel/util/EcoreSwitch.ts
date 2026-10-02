@@ -25,164 +25,150 @@ export abstract class EcoreSwitch<T> {
     switch (eObject.eClass().getClassifierID()) {
       case Ids.EAttribute.self: {
         // EAttribute
-        let result: T | undefined;
-        result = this.caseEAttribute(eObject as EAttribute);
-        if (result !== undefined) return result;
-        result = this.caseEStructuralFeature(eObject as EStructuralFeature);
-        if (result !== undefined) return result;
-        result = this.caseETypedElement(eObject as ETypedElement);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEAttribute(eObject as EAttribute);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEStructuralFeature(eObject as EStructuralFeature);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseETypedElement(eObject as ETypedElement);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseENamedElement(eObject as ENamedElement);
+        if (result4 !== undefined) return result4;
+        const result5 = this.caseEModelElement(eObject as EModelElement);
+        if (result5 !== undefined) return result5;
         return this.defaultCase(eObject);
       }
       case Ids.EAnnotation.self: {
         // EAnnotation
-        let result: T | undefined;
-        result = this.caseEAnnotation(eObject as EAnnotation);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEAnnotation(eObject as EAnnotation);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEModelElement(eObject as EModelElement);
+        if (result2 !== undefined) return result2;
         return this.defaultCase(eObject);
       }
       case Ids.EClass.self: {
         // EClass
-        let result: T | undefined;
-        result = this.caseEClass(eObject as EClass);
-        if (result !== undefined) return result;
-        result = this.caseEClassifier(eObject as EClassifier);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEClass(eObject as EClass);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEClassifier(eObject as EClassifier);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseENamedElement(eObject as ENamedElement);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseEModelElement(eObject as EModelElement);
+        if (result4 !== undefined) return result4;
         return this.defaultCase(eObject);
       }
       case Ids.EDataType.self: {
         // EDataType
-        let result: T | undefined;
-        result = this.caseEDataType(eObject as EDataType);
-        if (result !== undefined) return result;
-        result = this.caseEClassifier(eObject as EClassifier);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEDataType(eObject as EDataType);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEClassifier(eObject as EClassifier);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseENamedElement(eObject as ENamedElement);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseEModelElement(eObject as EModelElement);
+        if (result4 !== undefined) return result4;
         return this.defaultCase(eObject);
       }
       case Ids.EEnum.self: {
         // EEnum
-        let result: T | undefined;
-        result = this.caseEEnum(eObject as EEnum);
-        if (result !== undefined) return result;
-        result = this.caseEDataType(eObject as EDataType);
-        if (result !== undefined) return result;
-        result = this.caseEClassifier(eObject as EClassifier);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEEnum(eObject as EEnum);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEDataType(eObject as EDataType);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseEClassifier(eObject as EClassifier);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseENamedElement(eObject as ENamedElement);
+        if (result4 !== undefined) return result4;
+        const result5 = this.caseEModelElement(eObject as EModelElement);
+        if (result5 !== undefined) return result5;
         return this.defaultCase(eObject);
       }
       case Ids.EEnumLiteral.self: {
         // EEnumLiteral
-        let result: T | undefined;
-        result = this.caseEEnumLiteral(eObject as EEnumLiteral);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEEnumLiteral(eObject as EEnumLiteral);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseENamedElement(eObject as ENamedElement);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseEModelElement(eObject as EModelElement);
+        if (result3 !== undefined) return result3;
         return this.defaultCase(eObject);
       }
       case Ids.EFactory.self: {
         // EFactory
-        let result: T | undefined;
-        result = this.caseEFactory(eObject as EFactory);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEFactory(eObject as EFactory);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEModelElement(eObject as EModelElement);
+        if (result2 !== undefined) return result2;
         return this.defaultCase(eObject);
       }
       case Ids.EOperation.self: {
         // EOperation
-        let result: T | undefined;
-        result = this.caseEOperation(eObject as EOperation);
-        if (result !== undefined) return result;
-        result = this.caseETypedElement(eObject as ETypedElement);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEOperation(eObject as EOperation);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseETypedElement(eObject as ETypedElement);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseENamedElement(eObject as ENamedElement);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseEModelElement(eObject as EModelElement);
+        if (result4 !== undefined) return result4;
         return this.defaultCase(eObject);
       }
       case Ids.EPackage.self: {
         // EPackage
-        let result: T | undefined;
-        result = this.caseEPackage(eObject as EPackage);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEPackage(eObject as EPackage);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseENamedElement(eObject as ENamedElement);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseEModelElement(eObject as EModelElement);
+        if (result3 !== undefined) return result3;
         return this.defaultCase(eObject);
       }
       case Ids.EParameter.self: {
         // EParameter
-        let result: T | undefined;
-        result = this.caseEParameter(eObject as EParameter);
-        if (result !== undefined) return result;
-        result = this.caseETypedElement(eObject as ETypedElement);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEParameter(eObject as EParameter);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseETypedElement(eObject as ETypedElement);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseENamedElement(eObject as ENamedElement);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseEModelElement(eObject as EModelElement);
+        if (result4 !== undefined) return result4;
         return this.defaultCase(eObject);
       }
       case Ids.EReference.self: {
         // EReference
-        let result: T | undefined;
-        result = this.caseEReference(eObject as EReference);
-        if (result !== undefined) return result;
-        result = this.caseEStructuralFeature(eObject as EStructuralFeature);
-        if (result !== undefined) return result;
-        result = this.caseETypedElement(eObject as ETypedElement);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseEReference(eObject as EReference);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseEStructuralFeature(eObject as EStructuralFeature);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseETypedElement(eObject as ETypedElement);
+        if (result3 !== undefined) return result3;
+        const result4 = this.caseENamedElement(eObject as ENamedElement);
+        if (result4 !== undefined) return result4;
+        const result5 = this.caseEModelElement(eObject as EModelElement);
+        if (result5 !== undefined) return result5;
         return this.defaultCase(eObject);
       }
       case Ids.EStringToStringMapEntry.self: {
         // EStringToStringMapEntry
-        let result: T | undefined;
-        result = this.caseEStringToStringMapEntry(eObject as EStringToStringMapEntry);
-        if (result !== undefined) return result;
+        const result1 = this.caseEStringToStringMapEntry(eObject as EStringToStringMapEntry);
+        if (result1 !== undefined) return result1;
         return this.defaultCase(eObject);
       }
       case Ids.EGenericType.self: {
         // EGenericType
-        let result: T | undefined;
-        result = this.caseEGenericType(eObject as EGenericType);
-        if (result !== undefined) return result;
+        const result1 = this.caseEGenericType(eObject as EGenericType);
+        if (result1 !== undefined) return result1;
         return this.defaultCase(eObject);
       }
       case Ids.ETypeParameter.self: {
         // ETypeParameter
-        let result: T | undefined;
-        result = this.caseETypeParameter(eObject as ETypeParameter);
-        if (result !== undefined) return result;
-        result = this.caseENamedElement(eObject as ENamedElement);
-        if (result !== undefined) return result;
-        result = this.caseEModelElement(eObject as EModelElement);
-        if (result !== undefined) return result;
+        const result1 = this.caseETypeParameter(eObject as ETypeParameter);
+        if (result1 !== undefined) return result1;
+        const result2 = this.caseENamedElement(eObject as ENamedElement);
+        if (result2 !== undefined) return result2;
+        const result3 = this.caseEModelElement(eObject as EModelElement);
+        if (result3 !== undefined) return result3;
         return this.defaultCase(eObject);
       }
       default:

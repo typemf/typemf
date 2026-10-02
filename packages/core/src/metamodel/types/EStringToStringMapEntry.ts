@@ -1,9 +1,6 @@
 import { EObject } from './EObject.js';
 
-
-
 export interface EStringToStringMapEntry extends EObject {
-
   getKey(): string | undefined;
   setKey(value: string | undefined): void;
 

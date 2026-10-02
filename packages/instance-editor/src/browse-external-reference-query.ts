@@ -1,4 +1,8 @@
-import { BrowseExternalReferenceRequest, isBrowseExternalReferenceError, isBrowseExternalReferenceResponse } from './host-message-protocol.js';
+import {
+  BrowseExternalReferenceRequest,
+  isBrowseExternalReferenceError,
+  isBrowseExternalReferenceResponse,
+} from './host-message-protocol.js';
 import { PostMessageTransport } from './host-message-uri-converter.js';
 
 export interface ExternalReferenceResult {
@@ -14,7 +18,10 @@ export interface ExternalReferenceResult {
  * genuine "nothing compatible in that file" result.
  */
 export class BrowseExternalReferenceQuery {
-  private readonly pending = new Map<string, { resolve: (result: ExternalReferenceResult) => void; reject: (err: Error) => void }>();
+  private readonly pending = new Map<
+    string,
+    { resolve: (result: ExternalReferenceResult) => void; reject: (err: Error) => void }
+  >();
   private nextRequestId = 1;
 
   constructor(private readonly transport: PostMessageTransport) {}

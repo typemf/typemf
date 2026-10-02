@@ -17,10 +17,21 @@ import { snapshotObject } from './snapshot-object.js';
  * this actually uses keeps it genuinely unit-testable with no vscode present, while a real
  * InstanceDocument still satisfies this structurally, with no change needed at the real call site.
  */
-export function handleGetObjectRequest(request: GetObjectRequest, document: { objectIds: ObjectIdMap }): GetObjectResponse | GetObjectError {
+export function handleGetObjectRequest(
+  request: GetObjectRequest,
+  document: { objectIds: ObjectIdMap }
+): GetObjectResponse | GetObjectError {
   const obj = document.objectIds.objectFor(request.id);
   if (!obj) {
-    return { type: 'typemf/getObjectError', requestId: request.requestId, message: `No object known for id '${request.id}'.` };
+    return {
+      type: 'typemf/getObjectError',
+      requestId: request.requestId,
+      message: `No object known for id '${request.id}'.`,
+    };
   }
-  return { type: 'typemf/getObjectResult', requestId: request.requestId, snapshot: snapshotObject(obj, document.objectIds) };
+  return {
+    type: 'typemf/getObjectResult',
+    requestId: request.requestId,
+    snapshot: snapshotObject(obj, document.objectIds),
+  };
 }

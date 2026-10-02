@@ -2,8 +2,7 @@ import { EcorePackageImpl, EClassImpl, EDataTypeImpl, EPackageImpl } from '@type
 import { describe, expect, it } from 'vitest';
 import { instantiableClasses } from '../instantiable-classes.js';
 
-// See vscode-runtime's NOTES.md-referenced pattern: every generated setter routes through
-// getEcorePackageRef(), which needs Ecore's own metaclass system bootstrapped first.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 function buildPackage(): EPackageImpl {

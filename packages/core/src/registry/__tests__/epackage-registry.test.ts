@@ -45,7 +45,7 @@ describe('EPackageRegistryImpl', () => {
     expect(() => registry.unregister('https://never-registered.example')).not.toThrow();
   });
 
-  it('two independent registries do not see each other\'s registrations', () => {
+  it("two independent registries do not see each other's registrations", () => {
     const registryA = new EPackageRegistryImpl();
     const registryB = new EPackageRegistryImpl();
     const { libraryPackage } = buildSampleMetamodel();

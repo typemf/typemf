@@ -53,8 +53,7 @@ function buildFixture() {
   pkg.setNsURI('https://example.com/library');
   pkg.getEClassifiers().add(bookClass);
   pkg.getEClassifiers().add(libraryClass);
-  // eClassifiers' eOpposite is never wired on the self-hosted bootstrap's own metaclass
-  // descriptions - a known, separate gap found earlier this session - so this needs to stay explicit.
+  // Adding a classifier to eClassifiers doesn't set its package.
   bookClass.setEPackage(pkg);
   libraryClass.setEPackage(pkg);
   pkg.setEFactoryInstance(new DynamicEFactoryImpl());
@@ -63,7 +62,7 @@ function buildFixture() {
 }
 
 describe('snapshotObject', () => {
-  it('encodes single-valued attributes directly, using @typemf/json\'s own encoding', () => {
+  it("encodes single-valued attributes with @typemf/json's encoding", () => {
     const { bookClass, titleAttr, pageCountAttr } = buildFixture();
     const book = createInstanceOf(bookClass);
     book.eSet(titleAttr, 'Dune');
@@ -75,7 +74,7 @@ describe('snapshotObject', () => {
     expect(snapshot.attributes.pageCount).toBe(412);
   });
 
-  it('never includes an EObject value directly - references are always ids, even for containment', () => {
+  it('encodes references as ids, also for containment', () => {
     const { libraryClass, booksRef, bookClass, titleAttr } = buildFixture();
     const library = createInstanceOf(libraryClass);
     const book = createInstanceOf(bookClass);
@@ -86,10 +85,10 @@ describe('snapshotObject', () => {
     const snapshot = snapshotObject(library, ids);
 
     expect(snapshot.references.books).toEqual([ids.idFor(book)]);
-    expect(JSON.stringify(snapshot)).not.toContain('DynamicEObjectImpl'); // sanity: genuinely plain data
+    expect(JSON.stringify(snapshot)).not.toContain('DynamicEObjectImpl');
   });
 
-  it('a single-valued reference (non-containment) becomes a single id, or undefined when unset', () => {
+  it('encodes a single-valued reference as an id, or undefined when unset', () => {
     const { libraryClass, featuredBookRef, bookClass, titleAttr } = buildFixture();
     const library = createInstanceOf(libraryClass);
     const book = createInstanceOf(bookClass);
@@ -102,7 +101,7 @@ describe('snapshotObject', () => {
     expect(snapshotObject(library, ids).references.featuredBook).toBe(ids.idFor(book));
   });
 
-  it('id and eClassId are stable across repeated snapshots of the same object, using the same map', () => {
+  it('keeps id and eClassId stable across snapshots', () => {
     const { bookClass } = buildFixture();
     const book = createInstanceOf(bookClass);
     const ids = new ObjectIdMap();
@@ -114,7 +113,7 @@ describe('snapshotObject', () => {
     expect(second.eClassId).toBe(first.eClassId);
   });
 
-  it('eClassId resolves back to the real EClass via the same ObjectIdMap', () => {
+  it('eClassId resolves to the EClass through the ObjectIdMap', () => {
     const { bookClass } = buildFixture();
     const book = createInstanceOf(bookClass);
     const ids = new ObjectIdMap();

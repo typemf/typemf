@@ -1,9 +1,16 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", "dist-webview/**"] },
-    "typecheck": { "dependsOn": ["^build"] },
-    "test":  { "dependsOn": ["build"] },
-    "lint":  {}
-  }
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "dist-webview/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    }
+  },
+  "agentGuidance": false
 }

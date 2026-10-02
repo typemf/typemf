@@ -39,7 +39,7 @@ const model = (...ops: string[]) => `<?xml version="1.0" encoding="UTF-8"?>
 </ecore:EPackage>
 `;
 
-describe('operation body imports, declared with the import annotation on the operation', () => {
+describe('operation body imports', () => {
   let dir: string;
   let outDir: string;
 
@@ -60,13 +60,21 @@ describe('operation body imports, declared with the import annotation on the ope
     return { files, content: (p: string) => files.find((f) => f.path === p)!.content };
   }
 
-  it('an import annotation on an operation registers an import in the file that contains its body - internal-from, relative to the folder', async () => {
-    const { content } = await generated(model(op('shout', "return helper(this.getTitle() ?? '');", importOf('helper', { from: 'my-lib', internalFrom: './util/Helper' }))));
+  it('an import annotation on an operation adds an import from internal-from, relative to the file', async () => {
+    const { content } = await generated(
+      model(
+        op(
+          'shout',
+          "return helper(this.getTitle() ?? '');",
+          importOf('helper', { from: 'my-lib', internalFrom: './util/Helper' })
+        )
+      )
+    );
     expect(content('impl/BookImpl.ts')).toContain("import { helper } from '../util/Helper';");
     expect(content('impl/BookImpl.ts')).toContain("return helper(this.getTitle() ?? '');");
   });
 
-  it('an operation can declare several imports: one annotation per import', async () => {
+  it('an operation can declare several imports, one annotation each', async () => {
     const { content } = await generated(
       model(
         op(
@@ -83,21 +91,25 @@ describe('operation body imports, declared with the import annotation on the ope
     expect(impl).toContain('return helper(new Other().label);');
   });
 
-  it('without internal-from it falls back to from (a body only ever belongs to the package being generated)', async () => {
+  it('falls back to from without internal-from', async () => {
     const { content } = await generated(model(op('viaLib', 'return ext();', importOf('ext', { from: 'ext-lib' }))));
     expect(content('impl/BookImpl.ts')).toContain("import { ext } from 'ext-lib';");
   });
 
-  it('the same symbol requested by several operations is imported once', async () => {
+  it('imports a symbol requested by several operations once', async () => {
     const helper = importOf('helper', { internalFrom: './util/Helper' });
-    const { content } = await generated(model(op('a', "return helper('a');", helper), op('b', "return helper('b');", helper)));
+    const { content } = await generated(
+      model(op('a', "return helper('a');", helper), op('b', "return helper('b');", helper))
+    );
     expect(content('impl/BookImpl.ts').match(/import \{[^}]*\bhelper\b[^}]*\}/g)).toHaveLength(1);
     expect(content('impl/BookImpl.ts')).toContain("return helper('a');");
     expect(content('impl/BookImpl.ts')).toContain("return helper('b');");
   });
 
-  it('only files that emit the body get the import: not the interface, not other classes\' files', async () => {
-    const { files, content } = await generated(model(op('shout', "return helper('x');", importOf('helper', { internalFrom: './util/Helper' }))));
+  it('adds the import only to files that contain the body', async () => {
+    const { files, content } = await generated(
+      model(op('shout', "return helper('x');", importOf('helper', { internalFrom: './util/Helper' })))
+    );
     expect(content('types/Book.ts')).not.toContain('helper');
     // Author has an operation too (the first one is reused there): its own impl gets it, unrelated files do not.
     expect(content('impl/AuthorImpl.ts')).toContain("import { helper } from '../util/Helper';");
@@ -106,20 +118,28 @@ describe('operation body imports, declared with the import annotation on the ope
     }
   });
 
-  it('an operation with NO body (the throwing stub) imports nothing, even if it declares imports', async () => {
-    const { content } = await generated(model(op('stubbed', undefined, importOf('helper', { internalFrom: './util/Helper' }))));
+  it('an operation without a body imports nothing', async () => {
+    const { content } = await generated(
+      model(op('stubbed', undefined, importOf('helper', { internalFrom: './util/Helper' })))
+    );
     expect(content('impl/BookImpl.ts')).toContain('has no `body` annotation');
     expect(content('impl/BookImpl.ts')).not.toContain('helper');
   });
 
-  it('an import annotation without a `type` is ignored, like everywhere else', async () => {
+  it('ignores an import annotation without a `type`', async () => {
     const { content } = await generated(
-      model(op('noType', "return 'x';", `<eAnnotations source="${IMPORT}"><details key="internal-from" value="./util/Nothing"/></eAnnotations>`))
+      model(
+        op(
+          'noType',
+          "return 'x';",
+          `<eAnnotations source="${IMPORT}"><details key="internal-from" value="./util/Nothing"/></eAnnotations>`
+        )
+      )
     );
     expect(content('impl/BookImpl.ts')).not.toContain('Nothing');
   });
 
-  it('a symbol two bodies want from DIFFERENT modules is a reported collision', async () => {
+  it('reports a symbol imported from two different modules as a collision', async () => {
     await expect(
       generated(
         model(
@@ -130,10 +150,15 @@ describe('operation body imports, declared with the import annotation on the ope
     ).rejects.toThrow(/"helper" was requested from/);
   });
 
-  it('the generated code, bodies and their imports included, type-checks with zero errors', async () => {
+  it('type-checks', async () => {
     const { files } = await generated(
       model(
-        op('shout', 'return helper(new Other().label);', importOf('helper', { internalFrom: './util/Helper' }), importOf('Other', { internalFrom: './util/Other' }))
+        op(
+          'shout',
+          'return helper(new Other().label);',
+          importOf('helper', { internalFrom: './util/Helper' }),
+          importOf('Other', { internalFrom: './util/Other' })
+        )
       )
     );
     for (const file of files) {
@@ -142,18 +167,25 @@ describe('operation body imports, declared with the import annotation on the ope
       await writeFile(tsPath, file.content, 'utf-8');
     }
     await mkdir(join(outDir, 'util'), { recursive: true });
-    await writeFile(join(outDir, 'util', 'Helper.ts'), 'export function helper(s: string): string { return s.toUpperCase(); }\n', 'utf-8');
+    await writeFile(
+      join(outDir, 'util', 'Helper.ts'),
+      'export function helper(s: string): string { return s.toUpperCase(); }\n',
+      'utf-8'
+    );
     await writeFile(join(outDir, 'util', 'Other.ts'), "export class Other { label = 'x'; }\n", 'utf-8');
 
-    const program = ts.createProgram([...files.map((f) => join(outDir, f.path)), join(outDir, 'util', 'Helper.ts'), join(outDir, 'util', 'Other.ts')], {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      noEmit: true,
-    });
+    const program = ts.createProgram(
+      [...files.map((f) => join(outDir, f.path)), join(outDir, 'util', 'Helper.ts'), join(outDir, 'util', 'Other.ts')],
+      {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        noEmit: true,
+      }
+    );
     const diagnostics = ts.getPreEmitDiagnostics(program);
     const formatted = ts.formatDiagnosticsWithColorAndContext(diagnostics, {
       getCurrentDirectory: () => outDir,

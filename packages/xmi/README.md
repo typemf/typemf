@@ -38,7 +38,7 @@ Key rules, all with real-EMF rationale in the code comments and `NOTES.md`:
 ## Cross-format references
 
 `@typemf/xmi` and `@typemf/json` can reference each other's documents correctly: the
-fragment written for a cross-document reference always uses the *target* document's own
+fragment written for a cross-document reference always uses the _target_ document's own
 format's grammar, not the referencing document's. See `src/__tests__/cross-format.test.ts`
 for both directions, verified against the actual bytes written.
 

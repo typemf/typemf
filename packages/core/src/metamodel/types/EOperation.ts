@@ -6,10 +6,7 @@ import { EParameter } from './EParameter.js';
 import { ETypeParameter } from './ETypeParameter.js';
 import { ETypedElement } from './ETypedElement.js';
 
-
-
 export interface EOperation extends ETypedElement {
-
   getEContainingClass(): EClass | undefined;
 
   getETypeParameters(): EList<ETypeParameter>;

@@ -5,9 +5,7 @@ import { createInstanceOf } from '../impl/metamodel-helpers.js';
 import { EDataTypeImpl } from '../impl/EDataTypeImpl.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 describe('EClass reflection', () => {
@@ -42,21 +40,21 @@ describe('EClass reflection', () => {
     expect(audioBookClass.getEStructuralFeature(2)).toBe(narratorAttr);
   });
 
-  it('getEStructuralFeature(name: string) resolves across the whole hierarchy - the real EMF overload, replacing the old hand-written-only getEStructuralFeatureByName', () => {
+  it('getEStructuralFeature(name) finds inherited features by name', () => {
     const { audioBookClass } = buildSampleMetamodel();
     expect(audioBookClass.getEStructuralFeature('title')?.getName()).toBe('title');
     expect(audioBookClass.getEStructuralFeature('narrator')?.getName()).toBe('narrator');
     expect(audioBookClass.getEStructuralFeature('doesNotExist')).toBeUndefined();
   });
 
-  it('the numeric overload still works correctly, dispatched from the SAME method name', () => {
+  it('getEStructuralFeature(id) and getEStructuralFeature(name) return the same feature', () => {
     const { audioBookClass } = buildSampleMetamodel();
     const byName = audioBookClass.getEStructuralFeature('title');
     const id = byName!.getFeatureID();
     expect(audioBookClass.getEStructuralFeature(id)).toBe(byName);
   });
 
-  it('createInstanceOf() uses the EClass\'s EPackage EFactoryInstance', () => {
+  it("createInstanceOf() uses the EClass's EPackage EFactoryInstance", () => {
     const { bookClass } = buildSampleMetamodel();
     const instance = createInstanceOf(bookClass);
     expect(instance.eClass()).toBe(bookClass);
@@ -70,19 +68,11 @@ describe('EClass reflection', () => {
 });
 
 /**
- * eSuperTypes is many-valued - real multiple inheritance, not just single
- * chains, is structurally supported and exercised nowhere above. Builds a
- * genuine diamond:
- *
- *        Base (feature: id)
+ *        Base (id)
  *       /    \
- *  Movable  Named   (features: position / label)
+ *  Movable  Named   (position / label)
  *       \    /
  *      Sprite
- *
- * recomputeAllLists() dedups via a Set<EClass>, specifically to handle
- * exactly this shape (Base reachable via two paths) without visiting it,
- * or its features, twice.
  */
 function buildDiamondMetamodel() {
   const eString = new EDataTypeImpl();
@@ -119,11 +109,10 @@ function buildDiamondMetamodel() {
   sprite.getESuperTypes().add(movable);
   sprite.getESuperTypes().add(named);
 
-
   return { base, movable, named, sprite, idAttr, positionAttr, labelAttr };
 }
 
-describe('EClass reflection - diamond (multiple) inheritance', () => {
+describe('EClass reflection - diamond inheritance', () => {
   it('eAllSuperTypes includes every ancestor exactly once, even when reachable via two paths', () => {
     const { base, movable, named, sprite } = buildDiamondMetamodel();
     const supers = [...sprite.getEAllSuperTypes()];
@@ -131,8 +120,6 @@ describe('EClass reflection - diamond (multiple) inheritance', () => {
     expect(supers).toContain(base);
     expect(supers).toContain(movable);
     expect(supers).toContain(named);
-    // Specifically: base is not duplicated despite being reachable via
-    // both Movable and Named.
     expect(supers.filter((s) => s === base)).toHaveLength(1);
   });
 
@@ -151,5 +138,36 @@ describe('EClass reflection - diamond (multiple) inheritance', () => {
     expect(base.isSuperTypeOf(sprite)).toBe(true);
     expect(movable.isSuperTypeOf(sprite)).toBe(true);
     expect(named.isSuperTypeOf(sprite)).toBe(true);
+  });
+});
+
+describe('EClass reflection - derived lists after edits', () => {
+  it('getEAllStructuralFeatures() reflects features added to the class and its supertypes later', () => {
+    const { bookClass, audioBookClass } = buildSampleMetamodel();
+    expect(audioBookClass.getEAllStructuralFeatures().size()).toBe(3);
+
+    const isbn = new EAttributeImpl();
+    isbn.setName('isbn');
+    bookClass.getEStructuralFeatures().add(isbn);
+    expect([...audioBookClass.getEAllStructuralFeatures()]).toContain(isbn);
+
+    bookClass.getEStructuralFeatures().remove(isbn);
+    expect([...audioBookClass.getEAllStructuralFeatures()]).not.toContain(isbn);
+  });
+
+  it('getEAllSuperTypes() and getEAllStructuralFeatures() reflect supertypes added later', () => {
+    const { base, idAttr } = buildDiamondMetamodel();
+    const thing = new EClassImpl();
+    expect(thing.getEAllSuperTypes().size()).toBe(0);
+
+    thing.getESuperTypes().add(base);
+    expect([...thing.getEAllSuperTypes()]).toEqual([base]);
+    expect([...thing.getEAllStructuralFeatures()]).toEqual([idAttr]);
+  });
+
+  it('getEAllContainments() reflects a reference that becomes a containment later', () => {
+    const { libraryClass, booksRef, featuredBookRef } = buildSampleMetamodel();
+    featuredBookRef.setContainment(true);
+    expect([...libraryClass.getEAllContainments()]).toEqual([booksRef, featuredBookRef]);
   });
 });

@@ -9,12 +9,8 @@ import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { DynamicEObjectImpl } from './DynamicEObjectImpl.js';
 
-
-
 export class EFactoryImpl extends EModelElementImpl implements EFactory {
-
   private _ePackage: EPackage | undefined;
-
 
   eClass(): EClass {
     return getEcorePackageRef().getEFactory();
@@ -82,7 +78,8 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 1: return this._ePackage;
+      case 1:
+        return this._ePackage;
       default:
         return super.eGet(feature);
     }
@@ -97,7 +94,15 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       default:
@@ -108,7 +113,9 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 1: this._ePackage = value as EPackage | undefined; return;
+      case 1:
+        this._ePackage = value as EPackage | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -123,7 +130,8 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 1: return this._ePackage !== undefined;
+      case 1:
+        return this._ePackage !== undefined;
       default:
         return super.eIsSet(feature);
     }
@@ -131,13 +139,20 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 1: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._ePackage;
         this._ePackage = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 

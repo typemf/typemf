@@ -69,8 +69,7 @@ describe('XmiSerializer', () => {
     expect(raw).toContain('<lib:Library');
     expect(raw).toContain('title="Dune"');
     expect(raw).toContain('published="1965-08-01T00:00:00.000Z"');
-    // No xmi:id anywhere - matches EMF's actual default (fragment-path,
-    // non-UUID) behaviour rather than always assigning generated ids.
+    // Like EMF's default, no xmi:id is written.
     expect(raw).not.toContain('xmi:id');
 
     const freshSet = newResourceSet(converter);
@@ -136,7 +135,7 @@ describe('XmiSerializer', () => {
     expect(reloadedLibrary.eGet(featuredBookRef)).toBe(reloadedBooks[0]);
   });
 
-  it('serializes a cross-document reference as a nested <feature href="..."/> element, and resolves it lazily', async () => {
+  it('serializes a cross-document reference as <feature href="..."/> and resolves it lazily', async () => {
     const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
@@ -177,7 +176,7 @@ describe('XmiSerializer', () => {
   });
 
   it('emits xsi:type on the href element for a polymorphic cross-document reference', async () => {
-    const { libraryPackage, libraryClass, bookClass, audioBookClass, booksRef, featuredBookRef, titleAttr, narratorAttr } =
+    const { libraryPackage, libraryClass, audioBookClass, booksRef, featuredBookRef, titleAttr, narratorAttr } =
       buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
@@ -275,7 +274,7 @@ describe('XmiSerializer', () => {
     expect([...(reloadedBook.eGet(tagsAttr) as Iterable<string>)]).toEqual(['sci-fi', 'classic']);
   });
 
-  it('rejects a multi-root document with a clear error (v1 scope)', async () => {
+  it('rejects saving more than one root', async () => {
     const { libraryPackage, libraryClass } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
@@ -286,16 +285,13 @@ describe('XmiSerializer', () => {
     await expect(resource.save()).rejects.toThrow(/only supports exactly one root/);
   });
 
-  it('resolves a same-document attribute-form reference written WITH a leading "#" (real EMF\'s own convention - our own writer never produces this, so a hand-written raw file is needed to exercise it)', async () => {
+  it('resolves a same-document reference written with a leading "#"', async () => {
     const { libraryPackage, bookClass } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
     rs.getPackageRegistry().register(libraryPackage);
 
-    // Hand-written raw XML - "featuredBook" (a non-containment reference)
-    // given the SAME-document fragment form real EMF always writes with a
-    // leading "#", which our own writer never produces (so this exercises
-    // a code path our own round-trip tests can't reach).
+    // EMF writes same-document references with a leading "#"; the serializer doesn't.
     const raw = `<?xml version="1.0" encoding="UTF-8"?>
 <lib:Library xmi:version="2.0"
     xmlns:xmi="http://www.omg.org/XMI"
@@ -314,13 +310,7 @@ describe('XmiSerializer', () => {
     expect(featured.eGet(titleAttr)).toBe('Dune');
   });
 
-  it('resolves an attribute-form reference to an absolute URI (another document entirely) as a cross-document proxy, not a same-document fragment', async () => {
-    // A real, confirmed bug found parsing an externally-authored .ecore file: real EMF writes a
-    // same-attribute, polymorphic cross-document reference exactly this way (a type token
-    // followed by a full, absolute URI, both space-separated within one attribute value) - our
-    // own writer only ever produced this shape for same-document references, so this exercises a
-    // real external convention our own round-trip tests never happened to hit before.
-    void EcorePackageImpl.eINSTANCE;
+  it('loads an attribute reference with a type and an absolute URI as a proxy', async () => {
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
     rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
@@ -344,14 +334,14 @@ describe('XmiSerializer', () => {
     const labelAttr = thingClass.getEStructuralFeature('label') as EStructuralFeature;
     const eTypeProxy = labelAttr.getEType() as EObject;
 
-    expect(eTypeProxy.eIsProxy()).toBe(true); // lazy, not eagerly resolved - same as the href-element case
+    expect(eTypeProxy.eIsProxy()).toBe(true);
 
     const resolved = await rs.resolve(eTypeProxy);
     expect(resolved).toBe(EcorePackageImpl.eINSTANCE.getEString());
     expect((resolved as EClass).getName()).toBe('EString');
   });
 
-  it('writes xsi:schemaLocation for the root\'s own package, when that package was itself loaded from a real, known location - matching Eclipse\'s own real, confirmed output for the same scenario', async () => {
+  it("writes xsi:schemaLocation relative to the document when the root's package was loaded from a file", async () => {
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
     rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
@@ -368,15 +358,11 @@ describe('XmiSerializer', () => {
     const pkg = pkgResource!.getContents().get(0) as unknown as EPackage;
     const featureModelClass = pkg.getEClassifier('FeatureModel') as EClass;
     pkg.setEFactoryInstance(new DynamicEFactoryImpl());
-    // EClassifier.getEPackage() reads a separate, independently-set field, not something derived
-    // from eContainer() - the same recurring gap loadLocalEcorePackage's own fix works around in
-    // real use; this test loads the package directly (not through that function), so it needs the
-    // same, explicit fix here too.
+    // A loaded classifier doesn't know its package yet.
     (featureModelClass as unknown as { setEPackage(p: EPackage): void }).setEPackage(pkg);
     const root = createInstanceOf(featureModelClass);
 
-    // Same directory as the .ecore file - real EMF/Eclipse's own output for this exact case uses
-    // just the bare filename, no "./" or path segments at all.
+    // Same directory as the .ecore file: Eclipse writes just the file name.
     const docResource = rs.createResource(URI.parse('mem:dir/instance.xmi'));
     docResource.getContents().add(root);
     const bytes = await docResource.getSerializer().serialize(docResource.getContents().toArray(), docResource);
@@ -385,7 +371,7 @@ describe('XmiSerializer', () => {
     expect(xml).toContain('xsi:schemaLocation="https://example.com/variability model.ecore"');
   });
 
-  it('omits xsi:schemaLocation entirely when the root\'s own package has no known resource (e.g. a well-known or statically-registered package)', async () => {
+  it("omits xsi:schemaLocation when the root's package has no resource", async () => {
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
     rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);

@@ -2,10 +2,7 @@ import { EClass } from './EClass.js';
 import { ETypedElement } from './ETypedElement.js';
 import { TypeScriptClass } from './TypeScriptClass';
 
-
-
 export interface EStructuralFeature extends ETypedElement {
-
   isChangeable(): boolean;
   setChangeable(value: boolean): void;
 

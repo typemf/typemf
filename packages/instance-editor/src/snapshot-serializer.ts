@@ -253,11 +253,15 @@ export class SnapshotSerializer implements EObjectSerializer {
   }
 
   async serialize(): Promise<Uint8Array> {
-    throw new Error('SnapshotSerializer is read-only - it reconstructs live host objects, it never serializes back to this wire format.');
+    throw new Error(
+      'SnapshotSerializer is read-only - it reconstructs live host objects, it never serializes back to this wire format.'
+    );
   }
 
   async peekReferencedNsURIs(): Promise<string[]> {
-    throw new Error('SnapshotSerializer has no meaningful nsURI to peek - it is not a real, standalone document format.');
+    throw new Error(
+      'SnapshotSerializer has no meaningful nsURI to peek - it is not a real, standalone document format.'
+    );
   }
 
   /**
@@ -285,7 +289,11 @@ export class SnapshotSerializer implements EObjectSerializer {
  * createResource() call, but they all record into the same registry), so a later edit on any of
  * them can find its own host id via WebviewObjectRegistry.hostIdFor.
  */
-export function registerHostProtocol(resourceFactoryRegistry: ResourceFactoryRegistry, objectRegistry: WebviewObjectRegistry, editRelay?: EditRelay): void {
+export function registerHostProtocol(
+  resourceFactoryRegistry: ResourceFactoryRegistry,
+  objectRegistry: WebviewObjectRegistry,
+  editRelay?: EditRelay
+): void {
   const factory: ResourceFactory = {
     createResource: (uri: URI) => new ResourceImpl(uri, new SnapshotSerializer(objectRegistry, editRelay)),
   };

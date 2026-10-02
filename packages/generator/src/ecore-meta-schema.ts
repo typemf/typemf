@@ -1,4 +1,13 @@
-import { DynamicEFactoryImpl, EAttributeImpl, EClassImpl, EClassifierImpl, EDataTypeImpl, EPackageImpl, EReferenceImpl, type EClass } from '@typemf/core';
+import {
+  DynamicEFactoryImpl,
+  EAttributeImpl,
+  EClassImpl,
+  EClassifierImpl,
+  EDataTypeImpl,
+  EPackageImpl,
+  EReferenceImpl,
+  type EClass,
+} from '@typemf/core';
 import { assignFreshIds } from './id-assignment.js';
 
 /**
@@ -41,13 +50,50 @@ export function buildEcoreMetaSchema() {
   // instanceClassName/serializable/etc values are read from the file
   // itself during conversion, not hardcoded here).
   const primitiveNames = [
-    'EBigDecimal', 'EBigInteger', 'EBoolean', 'EBooleanObject', 'EByte', 'EByteArray', 'EByteObject',
-    'EChar', 'ECharacterObject', 'EDate', 'EDiagnosticChain', 'EDouble', 'EDoubleObject', 'EEList',
-    'EEnumerator', 'EFeatureMap', 'EFeatureMapEntry', 'EFloat', 'EFloatObject', 'EInt', 'EIntegerObject',
-    'EJavaClass', 'EJavaObject', 'ELong', 'ELongObject', 'EMap', 'EResource', 'EResourceSet', 'EShort',
-    'EShortObject', 'EString', 'ETreeIterator', 'EInvocationTargetException',
+    'EBigDecimal',
+    'EBigInteger',
+    'EBoolean',
+    'EBooleanObject',
+    'EByte',
+    'EByteArray',
+    'EByteObject',
+    'EChar',
+    'ECharacterObject',
+    'EDate',
+    'EDiagnosticChain',
+    'EDouble',
+    'EDoubleObject',
+    'EEList',
+    'EEnumerator',
+    'EFeatureMap',
+    'EFeatureMapEntry',
+    'EFloat',
+    'EFloatObject',
+    'EInt',
+    'EIntegerObject',
+    'EJavaClass',
+    'EJavaObject',
+    'ELong',
+    'ELongObject',
+    'EMap',
+    'EResource',
+    'EResourceSet',
+    'EShort',
+    'EShortObject',
+    'EString',
+    'ETreeIterator',
+    'EInvocationTargetException',
   ];
-  const primitives = new Map(primitiveNames.map((n) => [n, (() => { const d = new EDataTypeImpl(); d.setName(n); return d; })()]));
+  const primitives = new Map(
+    primitiveNames.map((n) => [
+      n,
+      (() => {
+        const d = new EDataTypeImpl();
+        d.setName(n);
+        return d;
+      })(),
+    ])
+  );
   const p = (name: string) => primitives.get(name)!;
 
   // --- Pass 1: every EClass as an empty shell.
@@ -116,9 +162,26 @@ export function buildEcoreMetaSchema() {
   eTypeParameter.getESuperTypes().add(eNamedElement);
 
   const allClasses: EClass[] = [
-    eObject, eModelElement, eAnnotation, eNamedElement, eTypedElement, eClassifier, eStructuralFeature,
-    eAttribute, eReference, eClass, ePackage, eDataType, eEnum, eEnumLiteral, eFactory, eOperation,
-    eParameter, eStringToStringMapEntry, eGenericType, eTypeParameter,
+    eObject,
+    eModelElement,
+    eAnnotation,
+    eNamedElement,
+    eTypedElement,
+    eClassifier,
+    eStructuralFeature,
+    eAttribute,
+    eReference,
+    eClass,
+    ePackage,
+    eDataType,
+    eEnum,
+    eEnumLiteral,
+    eFactory,
+    eOperation,
+    eParameter,
+    eStringToStringMapEntry,
+    eGenericType,
+    eTypeParameter,
   ];
 
   // --- Small helpers to keep pass 3 readable - mirror real Ecore.ecore's
@@ -198,8 +261,18 @@ export function buildEcoreMetaSchema() {
   const classifier_ePackage = ref(eClassifier, 'ePackage', ePackage, { changeable: false, transient: true });
   ref(eClassifier, 'eTypeParameters', eTypeParameter, { many: true, containment: true });
   attr(eClassifier, 'instanceClassName', p('EString'), { volatile: true });
-  attr(eClassifier, 'instanceClass', p('EJavaClass'), { changeable: false, volatile: true, transient: true, derived: true });
-  attr(eClassifier, 'defaultValue', p('EJavaObject'), { changeable: false, volatile: true, transient: true, derived: true });
+  attr(eClassifier, 'instanceClass', p('EJavaClass'), {
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  attr(eClassifier, 'defaultValue', p('EJavaObject'), {
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
   attr(eClassifier, 'instanceTypeName', p('EString'), { volatile: true });
 
   // EStructuralFeature
@@ -207,10 +280,18 @@ export function buildEcoreMetaSchema() {
   attr(eStructuralFeature, 'volatile', p('EBoolean'));
   attr(eStructuralFeature, 'transient', p('EBoolean'));
   attr(eStructuralFeature, 'defaultValueLiteral', p('EString'));
-  attr(eStructuralFeature, 'defaultValue', p('EJavaObject'), { changeable: false, volatile: true, transient: true, derived: true });
+  attr(eStructuralFeature, 'defaultValue', p('EJavaObject'), {
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
   attr(eStructuralFeature, 'unsettable', p('EBoolean'));
   attr(eStructuralFeature, 'derived', p('EBoolean'));
-  const feature_eContainingClass = ref(eStructuralFeature, 'eContainingClass', eClass, { changeable: false, transient: true });
+  const feature_eContainingClass = ref(eStructuralFeature, 'eContainingClass', eClass, {
+    changeable: false,
+    transient: true,
+  });
 
   // EAttribute
   attr(eAttribute, 'iD', p('EBoolean'));
@@ -229,18 +310,72 @@ export function buildEcoreMetaSchema() {
   attr(eClass, 'interface', p('EBoolean'));
   ref(eClass, 'eSuperTypes', eClass, { many: true });
   const eOperations = ref(eClass, 'eOperations', eOperation, { many: true, containment: true });
-  ref(eClass, 'eAllAttributes', eAttribute, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eAllReferences', eReference, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eReferences', eReference, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eAttributes', eAttribute, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eAllContainments', eReference, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eAllOperations', eOperation, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eAllStructuralFeatures', eStructuralFeature, { many: true, changeable: false, volatile: true, transient: true, derived: true });
-  ref(eClass, 'eAllSuperTypes', eClass, { many: true, changeable: false, volatile: true, transient: true, derived: true });
+  ref(eClass, 'eAllAttributes', eAttribute, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eAllReferences', eReference, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eReferences', eReference, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eAttributes', eAttribute, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eAllContainments', eReference, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eAllOperations', eOperation, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eAllStructuralFeatures', eStructuralFeature, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
+  ref(eClass, 'eAllSuperTypes', eClass, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
   ref(eClass, 'eIDAttribute', eAttribute, { changeable: false, volatile: true, transient: true, derived: true });
   const eStructuralFeatures = ref(eClass, 'eStructuralFeatures', eStructuralFeature, { many: true, containment: true });
   ref(eClass, 'eGenericSuperTypes', eGenericType, { many: true, containment: true });
-  ref(eClass, 'eAllGenericSuperTypes', eGenericType, { many: true, changeable: false, volatile: true, transient: true, derived: true });
+  ref(eClass, 'eAllGenericSuperTypes', eGenericType, {
+    many: true,
+    changeable: false,
+    volatile: true,
+    transient: true,
+    derived: true,
+  });
 
   // EDataType
   attr(eDataType, 'serializable', p('EBoolean'));
@@ -263,7 +398,10 @@ export function buildEcoreMetaSchema() {
   // instance the way it does for EClass etc.
 
   // EOperation
-  const operation_eContainingClass = ref(eOperation, 'eContainingClass', eClass, { changeable: false, transient: true });
+  const operation_eContainingClass = ref(eOperation, 'eContainingClass', eClass, {
+    changeable: false,
+    transient: true,
+  });
   ref(eOperation, 'eTypeParameters', eTypeParameter, { many: true, containment: true });
   const eParameters = ref(eOperation, 'eParameters', eParameter, { many: true, containment: true });
   ref(eOperation, 'eExceptions', eClassifier, { many: true });
@@ -339,8 +477,25 @@ export function buildEcoreMetaSchema() {
 
   return {
     pkg,
-    eObject, eModelElement, eAnnotation, eNamedElement, eTypedElement, eClassifier, eStructuralFeature,
-    eAttribute, eReference, eClass, ePackage, eDataType, eEnum, eEnumLiteral, eFactory, eOperation,
-    eParameter, eStringToStringMapEntry, eGenericType, eTypeParameter,
+    eObject,
+    eModelElement,
+    eAnnotation,
+    eNamedElement,
+    eTypedElement,
+    eClassifier,
+    eStructuralFeature,
+    eAttribute,
+    eReference,
+    eClass,
+    ePackage,
+    eDataType,
+    eEnum,
+    eEnumLiteral,
+    eFactory,
+    eOperation,
+    eParameter,
+    eStringToStringMapEntry,
+    eGenericType,
+    eTypeParameter,
   };
 }

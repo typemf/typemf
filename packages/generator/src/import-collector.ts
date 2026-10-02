@@ -109,7 +109,9 @@ export class ImportCollector {
     };
 
     for (const name of [...this.entries.keys()].sort((a, b) => a.localeCompare(b))) {
-      const resolved = this.entries.get(name)!.map((entry) => ({ entry, ...resolveEntry(entry, currentLocation, generateEcore) }));
+      const resolved = this.entries
+        .get(name)!
+        .map((entry) => ({ entry, ...resolveEntry(entry, currentLocation, generateEcore) }));
 
       // Two requests for the same name are one import only if they name
       // the same module - "the same module, however spelled": the
@@ -153,7 +155,11 @@ function resolveEntry(
   }
   if (entry.foundational && !generateEcore) return { specifier: '@typemf/core', key: '@typemf/core', core: true };
   const file = entry.file ?? entry.name;
-  return { specifier: relativeImportPath(currentLocation, entry.location, file), key: `${entry.location}/${file}`, core: false };
+  return {
+    specifier: relativeImportPath(currentLocation, entry.location, file),
+    key: `${entry.location}/${file}`,
+    core: false,
+  };
 }
 
 /** See ImportEntry.from. */

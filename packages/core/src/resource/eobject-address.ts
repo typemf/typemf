@@ -76,7 +76,9 @@ function computePositionalPath(target: EObject, roots: EObject[]): string {
 
   const rootIndex = roots.indexOf(current);
   if (rootIndex === -1) {
-    throw new Error('Target object is not reachable from the given roots via containment - cannot address it positionally.');
+    throw new Error(
+      'Target object is not reachable from the given roots via containment - cannot address it positionally.'
+    );
   }
   segments.unshift(String(rootIndex));
   return `/${segments.join('/')}`;
@@ -107,7 +109,9 @@ function resolvePositionalPath(path: string, roots: EObject[]): EObject {
       const indexSegment = segments[i];
       const index = Number(indexSegment);
       if (indexSegment === undefined || !Number.isInteger(index)) {
-        throw new Error(`Positional path '${path}': expected an array index after many-valued feature '${featureName}'.`);
+        throw new Error(
+          `Positional path '${path}': expected an array index after many-valued feature '${featureName}'.`
+        );
       }
       i += 1;
       const list = [...(current.eGet(feature) as Iterable<EObject>)];

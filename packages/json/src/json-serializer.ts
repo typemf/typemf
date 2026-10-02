@@ -170,7 +170,12 @@ function fragmentForTarget(target: EObject, owningResource: Resource | undefined
   return serializer.computeFragment ? serializer.computeFragment(target, roots) : computeFragment(target, roots);
 }
 
-function buildRefJson(refString: string, actualEClass: EClass, feature: EReference, namespaces: NamespaceTable): RefJson {
+function buildRefJson(
+  refString: string,
+  actualEClass: EClass,
+  feature: EReference,
+  namespaces: NamespaceTable
+): RefJson {
   const declaredEClass = feature.getEType() as EClass | undefined;
   const json: RefJson = { $ref: refString };
   if (declaredEClass !== actualEClass) {
@@ -289,7 +294,9 @@ function wireReference(
 function resolveRef(refJson: RefJson, feature: EReference, roots: EObject[], ctx: DeserializeContext): EObject {
   const refString = refJson.$ref;
   const declaredEClass = feature.getEType() as EClass;
-  const overrideEClass = refJson.$eClass ? refToEClass(refJson.$eClass, ctx.namespaces, ctx.packageRegistry) : undefined;
+  const overrideEClass = refJson.$eClass
+    ? refToEClass(refJson.$eClass, ctx.namespaces, ctx.packageRegistry)
+    : undefined;
 
   if (refString.startsWith('#')) {
     // Same-resource: resolveFragment() from @typemf/core handles both the

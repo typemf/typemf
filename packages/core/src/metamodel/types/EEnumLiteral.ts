@@ -2,10 +2,7 @@ import { EEnum } from './EEnum.js';
 import { ENamedElement } from './ENamedElement.js';
 import { EEnumerator } from './EEnumerator';
 
-
-
 export interface EEnumLiteral extends ENamedElement {
-
   getValue(): number;
   setValue(value: number): void;
 

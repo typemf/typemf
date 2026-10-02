@@ -13,31 +13,27 @@ describe('assignFreshIds', () => {
     expect(audioBookClass.getClassifierID()).toBeLessThan(libraryClass.getClassifierID());
   });
 
-  it('assigns featureID as one flat, inheritance-continuing space (a subclass\'s own feature never collides with an inherited one)', () => {
+  it("continues a subclass's featureIDs after the inherited ones", () => {
     const { libraryPackage, bookClass, audioBookClass, titleAttr, publishedAttr, narratorAttr } =
       buildSampleMetamodel();
     assignFreshIds(libraryPackage);
 
     expect(titleAttr.getFeatureID()).toBe(0);
     expect(publishedAttr.getFeatureID()).toBe(1);
-    // AudioBook's own narrator continues the count after Book's two
-    // inherited features, rather than restarting at 0 - this is what lets
-    // a generated AudioBookGen.eGet/eSet use one flat switch (handling its
-    // own featureID 2, delegating 0/1 to super.eGet/eSet) without any
-    // collision between inherited and own features.
+    // AudioBook's narrator continues after Book's two features.
     expect(narratorAttr.getFeatureID()).toBe(2);
     expect(bookClass.getEStructuralFeatures().size()).toBe(2);
     expect(audioBookClass.getEStructuralFeatures().size()).toBe(1);
   });
 
-  it('recomputes getEAllStructuralFeatures() so inherited + own ordering stays correct after reassignment', () => {
+  it('keeps getEAllStructuralFeatures() in inherited-then-own order', () => {
     const { libraryPackage, audioBookClass, titleAttr, publishedAttr, narratorAttr } = buildSampleMetamodel();
     assignFreshIds(libraryPackage);
 
     expect([...audioBookClass.getEAllStructuralFeatures()]).toEqual([titleAttr, publishedAttr, narratorAttr]);
   });
 
-  it('is idempotent-safe to call twice (regenerating twice gives the same result)', () => {
+  it('gives the same result when called twice', () => {
     const { libraryPackage, bookClass } = buildSampleMetamodel();
     assignFreshIds(libraryPackage);
     const firstId = bookClass.getClassifierID();

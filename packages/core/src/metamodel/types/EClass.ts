@@ -6,10 +6,7 @@ import { EOperation } from './EOperation.js';
 import { EReference } from './EReference.js';
 import { EStructuralFeature } from './EStructuralFeature.js';
 
-
-
 export interface EClass extends EClassifier {
-
   isAbstract(): boolean;
   setAbstract(value: boolean): void;
 

@@ -38,7 +38,9 @@ export function resolveMappings(inspected: InspectedEcoreMappings): EcoreMapping
   const seen = new Map<string, EcoreMappingEntry>();
   for (const entry of ordered) {
     if (seen.has(entry.nsURI)) {
-      console.warn(`typemf.ecoreMappings: duplicate entry for nsURI '${entry.nsURI}' - keeping the more specific (or earlier-declared) one, ignoring this one ('${entry.ecoreFile}').`);
+      console.warn(
+        `typemf.ecoreMappings: duplicate entry for nsURI '${entry.nsURI}' - keeping the more specific (or earlier-declared) one, ignoring this one ('${entry.ecoreFile}').`
+      );
       continue;
     }
     seen.set(entry.nsURI, entry);

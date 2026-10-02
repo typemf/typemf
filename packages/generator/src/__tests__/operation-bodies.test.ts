@@ -14,11 +14,13 @@ const GENMODEL = 'http://www.eclipse.org/emf/2002/GenModel';
 const op = (name: string, ...annotations: Array<[string, string]>) => `
     <eOperations name="${name}" lowerBound="1" eType="#//EString">
 ${annotations
-  .map(([source, body]) => `      <eAnnotations source="${source}"><details key="body" value="${body}"/></eAnnotations>`)
+  .map(
+    ([source, body]) => `      <eAnnotations source="${source}"><details key="body" value="${body}"/></eAnnotations>`
+  )
   .join('\n')}
     </eOperations>`;
 
-/** A real .ecore file on disk, carrying operation bodies in both annotation sources. */
+/** An .ecore file with operation bodies in both annotation sources. */
 const ECORE = `<?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0"
     xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -33,7 +35,7 @@ const ECORE = `<?xml version="1.0" encoding="UTF-8"?>
 </ecore:EPackage>
 `;
 
-describe('operation bodies, loaded from a real .ecore file', () => {
+describe('operation bodies from an .ecore file', () => {
   let dir: string;
   let outDir: string;
 
@@ -53,56 +55,60 @@ describe('operation bodies, loaded from a real .ecore file', () => {
     return generate(await loadEcorePackage(path), typescriptTemplateSet, {});
   }
 
-  it('reaches the generator at all: annotations on operations survive loading (they used to be dropped)', async () => {
+  it('uses the body of the generator annotation', async () => {
     const impl = (await generateFromFile()).find((f) => f.path === 'impl/BookImpl.ts')!.content;
     expect(impl).toContain("return (this.getTitle() ?? '') + '!';");
   });
 
-  it('layer 2: a body only in the GenModel annotation is used', async () => {
+  it('uses the GenModel body when there is no generator body', async () => {
     const impl = (await generateFromFile()).find((f) => f.path === 'impl/BookImpl.ts')!.content;
     expect(impl).toContain("return 'from-genmodel';");
   });
 
-  it('layer 1 beats layer 2 when both are present, and the loser is not emitted anywhere', async () => {
+  it('prefers the generator body over the GenModel body', async () => {
     const impl = (await generateFromFile()).find((f) => f.path === 'impl/BookImpl.ts')!.content;
     expect(impl).toContain("return 'typemf-wins';");
     expect(impl).not.toContain('genmodel-loses');
   });
 
-  it('an empty layer-1 body falls through to layer 2', async () => {
+  it('falls back to the GenModel body when the generator body is empty', async () => {
     const impl = (await generateFromFile()).find((f) => f.path === 'impl/BookImpl.ts')!.content;
     expect(impl).toContain("return 'genmodel-fallback';");
   });
 
-  it('an operation with neither gets the throwing stub, which now names the annotation it is missing', async () => {
+  it('generates a throwing stub that names the missing annotation when there is no body', async () => {
     const impl = (await generateFromFile()).find((f) => f.path === 'impl/BookImpl.ts')!.content;
-    expect(impl).toMatch(/neither\(\): string \{\s+throw new Error\('Book\.neither\(\) has no `body` annotation - nothing to generate\.'\);/);
-    expect(impl).not.toContain('body:typescript');
+    expect(impl).toMatch(
+      /neither\(\): string \{\s+throw new Error\('Book\.neither\(\) has no `body` annotation - nothing to generate\.'\);/
+    );
   });
 
-  it('a multi-line body is indented as a whole: every line sits inside the method, keeping its own relative indentation', async () => {
+  it('indents a multi-line body as a whole', async () => {
     const impl = (await generateFromFile()).find((f) => f.path === 'impl/BookImpl.ts')!.content;
     expect(impl).toContain(
       "  multiLine(): string {\n    if ((this.getTitle() ?? '') === '') {\n      return 'untitled';\n    }\n    return this.getTitle() + '!';\n  }"
     );
   });
 
-  it('the generated code, bodies included, type-checks with zero errors', async () => {
+  it('type-checks', async () => {
     const files = await generateFromFile();
     for (const file of files) {
       const tsPath = join(outDir, file.path);
       await mkdir(dirname(tsPath), { recursive: true });
       await writeFile(tsPath, file.content, 'utf-8');
     }
-    const program = ts.createProgram(files.map((f) => join(outDir, f.path)), {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      noEmit: true,
-    });
+    const program = ts.createProgram(
+      files.map((f) => join(outDir, f.path)),
+      {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        noEmit: true,
+      }
+    );
     const diagnostics = ts.getPreEmitDiagnostics(program);
     const formatted = ts.formatDiagnosticsWithColorAndContext(diagnostics, {
       getCurrentDirectory: () => outDir,

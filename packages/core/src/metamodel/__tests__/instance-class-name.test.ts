@@ -5,9 +5,7 @@ import { EDataTypeImpl } from '../impl/EDataTypeImpl.js';
 import { EEnumImpl } from '../impl/EEnumImpl.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 function feature(owner: EAttributeImpl | EClassImpl | EEnumImpl | EDataTypeImpl, name: string): EStructuralFeature {
@@ -17,14 +15,14 @@ function feature(owner: EAttributeImpl | EClassImpl | EEnumImpl | EDataTypeImpl,
 }
 
 describe('EClassifier.instanceClassName', () => {
-  it('is undefined until set, then round-trips through the plain getter/setter', () => {
+  it('is undefined until set', () => {
     const dt = new EDataTypeImpl();
     expect(dt.getInstanceClassName()).toBeUndefined();
     dt.setInstanceClassName('java.lang.String');
     expect(dt.getInstanceClassName()).toBe('java.lang.String');
   });
 
-  it('is reachable reflectively (eGet/eSet/eIsSet/eUnset) on every EClassifier subtype, not just EDataType', () => {
+  it('is reachable reflectively on every EClassifier subtype', () => {
     for (const classifier of [new EDataTypeImpl(), new EClassImpl(), new EEnumImpl()]) {
       const f = feature(classifier, 'instanceClassName');
       expect(classifier.eIsSet(f)).toBe(false);

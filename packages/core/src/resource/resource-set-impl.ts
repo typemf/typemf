@@ -145,8 +145,14 @@ export class ResourceSetImpl implements ResourceSet {
  * own fragment grammar for, so this is deliberately simple, name-segment resolution - exactly
  * what every real .ecore file's own attribute-form cross-references actually use.
  */
-export function resolveAgainstPackage(pkg: { getEClassifier(name: string): EClassifier | undefined }, fragment: string): EObject | undefined {
-  const segments = fragment.replace(/^\/+/, '').split('/').filter((s) => s.length > 0);
+export function resolveAgainstPackage(
+  pkg: { getEClassifier(name: string): EClassifier | undefined },
+  fragment: string
+): EObject | undefined {
+  const segments = fragment
+    .replace(/^\/+/, '')
+    .split('/')
+    .filter((s) => s.length > 0);
   if (segments.length === 0) return undefined;
 
   const classifier = pkg.getEClassifier(segments[0]!);

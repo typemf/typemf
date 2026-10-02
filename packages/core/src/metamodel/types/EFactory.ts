@@ -4,10 +4,7 @@ import { EModelElement } from './EModelElement.js';
 import { EObject } from './EObject.js';
 import { EPackage } from './EPackage.js';
 
-
-
 export interface EFactory extends EModelElement {
-
   getEPackage(): EPackage | undefined;
   setEPackage(value: EPackage | undefined): void;
 

@@ -3,17 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { convertDynamicEcoreToTyped } from '../ecore-dynamic-to-typed.js';
 import { buildEcoreMetaSchema } from '../ecore-meta-schema.js';
 
-// See NOTES.md's point 6/7 write-ups: this test calls convertDynamicEcoreToTyped/buildEcoreMetaSchema
-// directly, bypassing loadEcorePackage's own trigger entirely - needs its own.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 /**
- * Builds a small, real dynamic instance graph - a package containing two
- * classes (Book, AudioBook extends Book), an enum (Genre), a many-valued
- * containment reference (Library.books), an eOpposite pair, and an
- * operation with a parameter - against the REAL meta-schema (not a
- * simplified test fixture), then converts it and checks the resulting
- * typed EPackage.
+ * A dynamic instance graph of the Ecore meta-schema: Book, AudioBook extends Book, the enum Genre,
+ * the containment Library.books, an opposite pair and an operation with a parameter.
  */
 function buildDynamicInstance() {
   const meta = buildEcoreMetaSchema();
@@ -34,9 +29,7 @@ function buildDynamicInstance() {
   set(dynPkg, 'nsURI', 'https://typemf.dev/samples/library');
   set(dynPkg, 'nsPrefix', 'lib');
 
-  // Primitive EDataTypes as dynamic instances (they need to be members of
-  // this dynamic graph too, so classifierMap - keyed off object identity -
-  // can see them as valid eType targets).
+  // The data types must be part of the graph to be valid eType targets.
   const wrapPrimitive = (name: string) => {
     const w = new DynamicEObjectImpl(meta.eDataType);
     set(w, 'name', name);
@@ -126,13 +119,16 @@ describe('convertDynamicEcoreToTyped', () => {
     expect(real.getNsPrefix()).toBe('lib');
   });
 
-  it('converts classes, attributes, and iD flag', () => {
+  it('converts classes, attributes and the iD flag', () => {
     const { dynPkg } = buildDynamicInstance();
     const real = convertDynamicEcoreToTyped(dynPkg);
     const book = real.getEClassifier('Book')!;
     expect(book.getName()).toBe('Book');
     const bookClass = book as unknown as { getEStructuralFeatures(): { toArray(): { getName(): string }[] } };
-    const featureNames = bookClass.getEStructuralFeatures().toArray().map((f) => f.getName());
+    const featureNames = bookClass
+      .getEStructuralFeatures()
+      .toArray()
+      .map((f) => f.getName());
     expect(featureNames).toContain('title');
     expect(featureNames).toContain('pageCount');
   });
@@ -152,21 +148,30 @@ describe('convertDynamicEcoreToTyped', () => {
     const real = convertDynamicEcoreToTyped(dynPkg);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const library = real.getEClassifier('Library') as any;
-    const books = library.getEStructuralFeatures().toArray().find((f: { getName(): string }) => f.getName() === 'books');
+    const books = library
+      .getEStructuralFeatures()
+      .toArray()
+      .find((f: { getName(): string }) => f.getName() === 'books');
     expect(books.isMany()).toBe(true);
     expect(books.isContainment()).toBe(true);
     expect(books.getEType()).toBe(real.getEClassifier('Book'));
   });
 
-  it('converts eOpposite pairing correctly', () => {
+  it('converts eOpposite pairs', () => {
     const { dynPkg } = buildDynamicInstance();
     const real = convertDynamicEcoreToTyped(dynPkg);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const library = real.getEClassifier('Library') as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const book = real.getEClassifier('Book') as any;
-    const featuredBook = library.getEStructuralFeatures().toArray().find((f: { getName(): string }) => f.getName() === 'featuredBook');
-    const libraries = book.getEStructuralFeatures().toArray().find((f: { getName(): string }) => f.getName() === 'libraries');
+    const featuredBook = library
+      .getEStructuralFeatures()
+      .toArray()
+      .find((f: { getName(): string }) => f.getName() === 'featuredBook');
+    const libraries = book
+      .getEStructuralFeatures()
+      .toArray()
+      .find((f: { getName(): string }) => f.getName() === 'libraries');
     expect(featuredBook.getEOpposite()).toBe(libraries);
     expect(libraries.getEOpposite()).toBe(featuredBook);
   });
@@ -185,13 +190,16 @@ describe('convertDynamicEcoreToTyped', () => {
     const real = convertDynamicEcoreToTyped(dynPkg);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const book = real.getEClassifier('Book') as any;
-    const op = book.getEOperations().toArray().find((o: { getName(): string }) => o.getName() === 'isOverdue');
+    const op = book
+      .getEOperations()
+      .toArray()
+      .find((o: { getName(): string }) => o.getName() === 'isOverdue');
     expect(op).toBeDefined();
     expect(op.getEParameters().size()).toBe(1);
     expect(op.getEParameters().get(0).getName()).toBe('asOf');
   });
 
-  it('recomputes EAllStructuralFeatures so inherited + own features are visible', () => {
+  it('makes inherited and own features visible in getEAllStructuralFeatures()', () => {
     const { dynPkg } = buildDynamicInstance();
     const real = convertDynamicEcoreToTyped(dynPkg);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -234,7 +242,9 @@ describe('convertDynamicEcoreToTyped', () => {
 
     const bookClass = new DynamicEObjectImpl(meta.eClass);
     set(bookClass, 'name', 'Book');
-    annotate(bookClass, 'http://www.eclipse.org/emf/2002/GenModel', { documentation: "A book, with an apostrophe's worth of trouble." });
+    annotate(bookClass, 'http://www.eclipse.org/emf/2002/GenModel', {
+      documentation: "A book, with an apostrophe's worth of trouble.",
+    });
     addTo(dynPkg, 'eClassifiers', bookClass);
 
     const titleAttr = new DynamicEObjectImpl(meta.eAttribute);
@@ -266,7 +276,10 @@ describe('convertDynamicEcoreToTyped', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookClassReal = book as any;
-    const titleReal = bookClassReal.getEStructuralFeatures().toArray().find((f: { getName(): string }) => f.getName() === 'title');
+    const titleReal = bookClassReal
+      .getEStructuralFeatures()
+      .toArray()
+      .find((f: { getName(): string }) => f.getName() === 'title');
     const titleDetails = titleReal.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')?.getDetails();
     expect(titleDetails && detailValue(titleDetails, 'documentation')).toBe('The title.');
 
@@ -277,7 +290,7 @@ describe('convertDynamicEcoreToTyped', () => {
     expect(scifiDetails && detailValue(scifiDetails, 'documentation')).toBe('Science fiction.');
   });
 
-  it('copies changeable/volatile/transient/derived/unsettable flags onto the real feature - a real, previously-missed gap (see NOTES.md)', () => {
+  it('copies the changeable, volatile, transient, derived and unsettable flags', () => {
     const meta = buildEcoreMetaSchema();
     const set = <T extends EObject>(obj: T, featureName: string, value: unknown): void => {
       const f = obj.eClass().getEStructuralFeature(featureName)!;
@@ -301,9 +314,7 @@ describe('convertDynamicEcoreToTyped', () => {
     set(widget, 'name', 'Widget');
     addTo(dynPkg, 'eClassifiers', widget);
 
-    // Matches real Ecore.ecore's own shape for a derived feature exactly
-    // (e.g. ETypedElement.required): changeable=false, volatile=true,
-    // transient=true, derived=true.
+    // The flags of a derived feature such as ETypedElement.required.
     const requiredAttr = new DynamicEObjectImpl(meta.eAttribute);
     set(requiredAttr, 'name', 'required');
     set(requiredAttr, 'eType', eBoolean);
@@ -324,7 +335,7 @@ describe('convertDynamicEcoreToTyped', () => {
     expect(requiredReal.isDerived()).toBe(true);
   });
 
-  it('copies lowerBound/upperBound for operations and their parameters - a real, previously-missed gap (see NOTES.md)', () => {
+  it('copies lowerBound and upperBound of operations and parameters', () => {
     const meta = buildEcoreMetaSchema();
     const set = <T extends EObject>(obj: T, featureName: string, value: unknown): void => {
       const f = obj.eClass().getEStructuralFeature(featureName)!;
@@ -348,10 +359,7 @@ describe('convertDynamicEcoreToTyped', () => {
     set(widget, 'name', 'Widget');
     addTo(dynPkg, 'eClassifiers', widget);
 
-    // Matches real Ecore.ecore's own EModelElement.getEAnnotation(source)
-    // exactly: no lowerBound declared at all (real EMF's own default is
-    // 0 - not required), meaning the operation's result may genuinely be
-    // absent.
+    // Like EModelElement.getEAnnotation(source): no lowerBound, so the result is optional.
     const findOp = new DynamicEObjectImpl(meta.eOperation);
     set(findOp, 'name', 'find');
     set(findOp, 'eType', eString);

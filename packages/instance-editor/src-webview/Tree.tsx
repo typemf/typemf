@@ -21,7 +21,15 @@ export interface TreeProps {
   onToggleExpand: (id: string) => void;
 }
 
-export function Tree({ root, resourceSet, objectRegistry, selectedId, onSelect, expandedIds, onToggleExpand }: TreeProps): React.JSX.Element {
+export function Tree({
+  root,
+  resourceSet,
+  objectRegistry,
+  selectedId,
+  onSelect,
+  expandedIds,
+  onToggleExpand,
+}: TreeProps): React.JSX.Element {
   return (
     <div className="tree">
       <TreeNode
@@ -173,7 +181,11 @@ function TreeNode({
 function ResolvedTreeNode(props: Omit<TreeNodeProps, 'obj'> & { objOrProxy: EObject }): React.JSX.Element {
   const resolved = useResolved(props.objOrProxy, props.resourceSet);
   if (!resolved) {
-    return <div className="tree-row tree-row-loading" style={{ paddingLeft: `${props.depth * 16 + 4}px` }}>Loading…</div>;
+    return (
+      <div className="tree-row tree-row-loading" style={{ paddingLeft: `${props.depth * 16 + 4}px` }}>
+        Loading…
+      </div>
+    );
   }
   return <TreeNode {...props} obj={resolved} />;
 }

@@ -3,10 +3,7 @@ import { EList } from './EList.js';
 import { EObject } from './EObject.js';
 import { ETypeParameter } from './ETypeParameter.js';
 
-
-
 export interface EGenericType extends EObject {
-
   getEUpperBound(): EGenericType | undefined;
   setEUpperBound(value: EGenericType | undefined): void;
 

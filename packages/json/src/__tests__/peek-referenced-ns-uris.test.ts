@@ -10,7 +10,7 @@ function encode(doc: unknown): Uint8Array {
 }
 
 describe('JsonSerializer.peekReferencedNsURIs', () => {
-  it('returns every nsURI in $namespaces, without needing any package registered', async () => {
+  it('returns every nsURI in $namespaces without a registered package', async () => {
     const content = encode({
       $namespaces: { lib: 'https://typemf.dev/samples/library', other: 'https://example.com/other' },
       $roots: [],
@@ -24,7 +24,7 @@ describe('JsonSerializer.peekReferencedNsURIs', () => {
     expect(await serializer.peekReferencedNsURIs(content)).toEqual([]);
   });
 
-  it('real round-trip: a document actually written by this serializer peeks back its own real nsURI', async () => {
+  it('returns the nsURI of a document written by the serializer', async () => {
     const { libraryPackage, libraryClass } = buildSampleMetamodel();
     const library = createInstanceOf(libraryClass);
     const rs = new ResourceSetImpl();

@@ -30,7 +30,6 @@ import { EReference } from '../types/EReference.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
-
 export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
   createEAttribute(): EAttribute {
     return new EAttributeImpl();

@@ -1,9 +1,4 @@
-import {
-  createInstanceOf,
-  EObject,
-  ResourceSetImpl,
-  URI,
-} from '@typemf/core';
+import { createInstanceOf, EObject, ResourceSetImpl, URI } from '@typemf/core';
 import { registerJsonFormat } from '@typemf/json';
 import { registerXmiFormat } from '@typemf/xmi';
 import { readFile, mkdtemp, rm } from 'node:fs/promises';
@@ -13,17 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { NodeFileUriConverter } from '../node-file-uri-converter.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 
-/**
- * The actual point of building @typemf/node before @typemf/generator: every
- * XMI/JSON test up to this point has round-tripped through an in-memory
- * UriConverter fixture, never touching a real file. This test writes an
- * honest-to-goodness .xmi file to a real path on disk, using Node's own
- * `fs` module directly (bypassing our own converter entirely) to read the
- * bytes back and assert on them - the closest this test suite can get to
- * "does this look like a file a real EMF tool produced" without an actual
- * Eclipse instance available to open it in.
- */
-describe('End-to-end: a real .xmi file on a real filesystem path', () => {
+describe('NodeFileUriConverter with XMI and JSON resources', () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -34,7 +19,7 @@ describe('End-to-end: a real .xmi file on a real filesystem path', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('writes a real .xmi file that matches EMF conventions, and reloads it correctly', async () => {
+  it('writes an .xmi file in EMF format and reloads it', async () => {
     const { libraryPackage, libraryClass, bookClass, audioBookClass, booksRef, titleAttr, narratorAttr } =
       buildSampleMetamodel();
 
@@ -85,7 +70,7 @@ describe('End-to-end: a real .xmi file on a real filesystem path', () => {
     expect(reloadedBooks[1]!.eGet(narratorAttr)).toBe('Scott Brick');
   });
 
-  it('supports both .json and .xmi files in the same real directory, referencing each other', async () => {
+  it('resolves a reference from a .json file into an .xmi file', async () => {
     const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
 
     const resourceSet = new ResourceSetImpl();

@@ -7,13 +7,7 @@ import { loadEcorePackage } from '../ecore-loader.js';
 import { generate } from '../generate.js';
 import { typescriptTemplateSet } from '../typescript-template-set.js';
 
-/**
- * A small, real .ecore file - not our own bootstrap seed graph, an
- * actual file on disk, written in real Ecore's own XMI conventions
- * (name-based fragments, xsi:type dispatch) - the same shape
- * loadEcorePackage needs to handle for the real Ecore.ecore file itself,
- * just far smaller so a bug here is easy to localize.
- */
+/** A small .ecore file in EMF's XMI conventions (name-based fragments, xsi:type). */
 const SAMPLE_ECORE = `<?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0"
     xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -33,7 +27,7 @@ const SAMPLE_ECORE = `<?xml version="1.0" encoding="UTF-8"?>
 </ecore:EPackage>
 `;
 
-describe('loadEcorePackage - a real .ecore file on disk', () => {
+describe('loadEcorePackage', () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -44,7 +38,7 @@ describe('loadEcorePackage - a real .ecore file on disk', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('loads package-level properties, classes, inheritance, and containment references', async () => {
+  it('loads package properties, classes, inheritance and containment references', async () => {
     const path = join(dir, 'library.ecore');
     await writeFile(path, SAMPLE_ECORE, 'utf-8');
 
@@ -58,9 +52,12 @@ describe('loadEcorePackage - a real .ecore file on disk', () => {
     expect(book.getName()).toBe('Book');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookClass = book as any;
-    expect(bookClass.getEStructuralFeatures().toArray().map((f: { getName(): string }) => f.getName())).toContain(
-      'title'
-    );
+    expect(
+      bookClass
+        .getEStructuralFeatures()
+        .toArray()
+        .map((f: { getName(): string }) => f.getName())
+    ).toContain('title');
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const audioBook = pkg.getEClassifier('AudioBook') as any;
@@ -77,7 +74,7 @@ describe('loadEcorePackage - a real .ecore file on disk', () => {
     expect(booksRef.getEType()).toBe(book);
   });
 
-  it('throws a clear error for a nonexistent file', async () => {
+  it('throws for a missing file', async () => {
     await expect(loadEcorePackage(join(dir, 'does-not-exist.ecore'))).rejects.toThrow();
   });
 });
@@ -126,7 +123,11 @@ describe('loadEcorePackage - references to Ecore classifiers', () => {
 
   it('throws for a reference to a classifier outside this package and Ecore', async () => {
     const path = join(dir, 'library.ecore');
-    await writeFile(path, ECORE_TYPES_ECORE.replace('http://www.eclipse.org/emf/2002/Ecore#//EString', 'https://example.org/other#//Text'), 'utf-8');
+    await writeFile(
+      path,
+      ECORE_TYPES_ECORE.replace('http://www.eclipse.org/emf/2002/Ecore#//EString', 'https://example.org/other#//Text'),
+      'utf-8'
+    );
 
     await expect(loadEcorePackage(path)).rejects.toThrow(/Cannot resolve the classifier reference/);
   });

@@ -1,10 +1,4 @@
-import {
-  createInstanceOf,
-  EObject,
-  ResourceSetImpl,
-  URI,
-  UriConverter,
-} from '@typemf/core';
+import { createInstanceOf, EObject, ResourceSetImpl, URI, UriConverter } from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { registerJsonFormat } from '../json-resource-factory.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
@@ -39,7 +33,7 @@ function newResourceSet(converter: UriConverter): ResourceSetImpl {
 }
 
 describe('JsonSerializer', () => {
-  it('round-trips attributes and containment, and writes a readable $namespaces/$roots document', async () => {
+  it('round-trips attributes and containment and writes $namespaces and $roots', async () => {
     const { libraryPackage, libraryClass, bookClass, booksRef, titleAttr, publishedAttr } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
@@ -56,7 +50,6 @@ describe('JsonSerializer', () => {
 
     await resource.save();
 
-    // Inspect the raw bytes to confirm the wire shape, not just that reload works.
     const raw = JSON.parse(new TextDecoder().decode(await converter.readBinary(uri)));
     expect(raw.$namespaces).toEqual({ lib: 'https://typemf.dev/samples/library' });
     expect(raw.$roots[0].$eClass).toEqual({ namespace: 'lib', name: 'Library' });
@@ -67,7 +60,8 @@ describe('JsonSerializer', () => {
     freshSet.getPackageRegistry().register(libraryPackage);
     const reloaded = await freshSet.getResource(uri, true);
     const reloadedLibrary = reloaded!.getContents().get(0);
-    const reloadedBook = (reloadedLibrary.eGet(booksRef) as Iterable<EObject>)[Symbol.iterator]().next().value as EObject;
+    const reloadedBook = (reloadedLibrary.eGet(booksRef) as Iterable<EObject>)[Symbol.iterator]().next()
+      .value as EObject;
     expect(reloadedBook.eGet(titleAttr)).toBe('Dune');
     expect(reloadedBook.eGet(publishedAttr)).toBeInstanceOf(Date);
     expect((reloadedBook.eGet(publishedAttr) as Date).toISOString()).toBe('1965-08-01T00:00:00.000Z');
@@ -101,8 +95,8 @@ describe('JsonSerializer', () => {
     expect(reloadedFeatured).toBe(reloadedBooks[0]); // same object identity, not a copy
   });
 
-  it('falls back to a positional pointer when the target has no ID attribute set', async () => {
-    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+  it('falls back to a positional path when the target has no ID', async () => {
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
     rs.getPackageRegistry().register(libraryPackage);
@@ -127,7 +121,7 @@ describe('JsonSerializer', () => {
     expect(reloadedLibrary.eGet(featuredBookRef)).toBe(reloadedBooks[0]);
   });
 
-  it('creates a cross-resource proxy and resolves it lazily via ResourceSet, including a forward reference before the target document is loaded', async () => {
+  it('creates a cross-resource proxy and resolves it lazily, also before the target is loaded', async () => {
     const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
@@ -167,8 +161,8 @@ describe('JsonSerializer', () => {
     expect(freshSet.getResources()).toHaveLength(2);
   });
 
-  it('emits $eClass on a $ref only when the target\'s actual type differs from the declared feature type (polymorphism)', async () => {
-    const { libraryPackage, libraryClass, bookClass, audioBookClass, booksRef, featuredBookRef, titleAttr, narratorAttr } =
+  it("writes $eClass on a $ref only when the target's type differs from the feature type", async () => {
+    const { libraryPackage, libraryClass, audioBookClass, booksRef, featuredBookRef, titleAttr, narratorAttr } =
       buildSampleMetamodel();
     const converter = new InMemoryUriConverter();
     const rs = newResourceSet(converter);
@@ -199,7 +193,7 @@ describe('JsonSerializer', () => {
     freshSet.getPackageRegistry().register(libraryPackage);
     const loadedB = await freshSet.getResource(uriB, true);
     const proxy = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
-    // Correct even before resolving - the proxy itself already knows it's an AudioBook.
+    // The proxy already has the target's class.
     expect(proxy.eClass()).toBe(audioBookClass);
 
     const resolved = await freshSet.resolve(proxy);

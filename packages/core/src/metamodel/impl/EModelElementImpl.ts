@@ -7,10 +7,7 @@ import { EList } from '../types/EList.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
-
-
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
-
   private _eAnnotationsCache: BasicEList<EAnnotation> | undefined;
 
   private get _eAnnotations(): BasicEList<EAnnotation> {
@@ -20,7 +17,6 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
     return this._eAnnotationsCache;
   }
 
-
   eClass(): EClass {
     return getEcorePackageRef().getEModelElement();
   }
@@ -29,12 +25,15 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
     return this._eAnnotations;
   }
   getEAnnotation(source: string): EAnnotation | undefined {
-    return this.getEAnnotations().filter(ann => ann.getSource() === source).at(0);
+    return this.getEAnnotations()
+      .filter((ann) => ann.getSource() === source)
+      .at(0);
   }
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 0: return this._eAnnotations;
+      case 0:
+        return this._eAnnotations;
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }
@@ -58,6 +57,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
       default:
+        void value;
         throw new Error(`Feature ${featureId} on EModelElement is many-valued or unknown.`);
     }
   }
@@ -73,7 +73,8 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 0: return this._eAnnotationsCache !== undefined && this._eAnnotationsCache.size() !== 0;
+      case 0:
+        return this._eAnnotationsCache !== undefined && this._eAnnotationsCache.size() !== 0;
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
     }
@@ -81,7 +82,9 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-      case 0: this._eAnnotationsCache?.clear(); return;
+      case 0:
+        this._eAnnotationsCache?.clear();
+        return;
 
       default:
         throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);

@@ -1,4 +1,11 @@
-import { EcorePackageImpl, EClass, EObject, ProxyEObjectImpl, isEClassifier, resolveAgainstPackage } from '@typemf/core';
+import {
+  EcorePackageImpl,
+  EClass,
+  EObject,
+  ProxyEObjectImpl,
+  isEClassifier,
+  resolveAgainstPackage,
+} from '@typemf/core';
 
 const CLASSIFIER_PREFIX = 'ecore:';
 const MEMBER_PREFIX = 'ecore-member:';
@@ -85,7 +92,8 @@ export function wellKnownEcoreId(obj: EObject): string | undefined {
   if (hasContainingClass(obj)) {
     const containingClass = obj.getEContainingClass();
     const ownId = ownIdWithin(obj);
-    if (!containingClass || containingClass.getEPackage() !== EcorePackageImpl.eINSTANCE || ownId === undefined) return undefined;
+    if (!containingClass || containingClass.getEPackage() !== EcorePackageImpl.eINSTANCE || ownId === undefined)
+      return undefined;
     return `${MEMBER_PREFIX}${containingClass.getClassifierID()}.${ownId}`;
   }
   return undefined;
@@ -97,9 +105,9 @@ export function wellKnownEcoreObject(id: string): EObject | undefined {
   if (id.startsWith(MEMBER_PREFIX)) {
     const [classifierPart, ownIdPart] = id.slice(MEMBER_PREFIX.length).split('.');
     const classifierID = Number(classifierPart);
-    const containingClass = [...EcorePackageImpl.eINSTANCE.getEClassifiers()].find((c) => c.getClassifierID() === classifierID) as
-      | EClass
-      | undefined;
+    const containingClass = [...EcorePackageImpl.eINSTANCE.getEClassifiers()].find(
+      (c) => c.getClassifierID() === classifierID
+    ) as EClass | undefined;
     if (!containingClass || !ownIdPart) return undefined;
     const allMembers = [...containingClass.getEAllStructuralFeatures(), ...containingClass.getEAllOperations()];
     return allMembers.find((m) => ownIdWithin(m as unknown as HasContainingClassAndOwnId) === ownIdPart);

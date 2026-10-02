@@ -5,14 +5,10 @@ import { EClass } from '../types/EClass.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
-
-
 export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {
-
   private _key: string | undefined;
 
   private _value: string | undefined;
-
 
   eClass(): EClass {
     return getEcorePackageRef().getEStringToStringMapEntry();
@@ -33,8 +29,10 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
 
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 0: return this._key;
-      case 1: return this._value;
+      case 0:
+        return this._key;
+      case 1:
+        return this._value;
       default:
         throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
@@ -49,7 +47,15 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 1: {
@@ -59,7 +65,15 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       default:
@@ -69,9 +83,14 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 0: this._key = value as string | undefined; return;
-      case 1: this._value = value as string | undefined; return;
+      case 0:
+        this._key = value as string | undefined;
+        return;
+      case 1:
+        this._value = value as string | undefined;
+        return;
       default:
+        void value;
         throw new Error(`Feature ${featureId} on EStringToStringMapEntry is many-valued or unknown.`);
     }
   }
@@ -84,8 +103,10 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 0: return this._key !== undefined;
-      case 1: return this._value !== undefined;
+      case 0:
+        return this._key !== undefined;
+      case 1:
+        return this._value !== undefined;
       default:
         throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
     }
@@ -93,23 +114,37 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 0: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._key;
         this._key = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 1: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._value;
         this._value = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 

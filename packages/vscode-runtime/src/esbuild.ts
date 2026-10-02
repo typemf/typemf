@@ -26,14 +26,17 @@ export function typemfShared(options: TypeMfSharedOptions = {}): Plugin {
       if (build.initialOptions.format !== 'cjs') {
         throw new Error("typemfShared requires esbuild's format to be 'cjs'.");
       }
-      const packageJsonPath = options.packageJsonPath ?? resolve(build.initialOptions.absWorkingDir ?? process.cwd(), 'package.json');
+      const packageJsonPath =
+        options.packageJsonPath ?? resolve(build.initialOptions.absWorkingDir ?? process.cwd(), 'package.json');
       const ranges = readRanges(packageJsonPath);
       const names = [...BUILTIN_SHARED_MODULES, ...(options.modules ?? [])];
       const filter = new RegExp(`^(${names.map(escapeRegExp).join('|')})$`);
 
       build.onResolve({ filter }, (args) => {
         if (!ranges.has(args.path)) {
-          return { errors: [{ text: `Shared module '${args.path}' is imported but not listed in ${packageJsonPath}.` }] };
+          return {
+            errors: [{ text: `Shared module '${args.path}' is imported but not listed in ${packageJsonPath}.` }],
+          };
         }
         return { path: args.path, namespace: 'typemf-shared' };
       });

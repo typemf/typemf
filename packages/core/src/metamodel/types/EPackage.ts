@@ -3,10 +3,7 @@ import { EFactory } from './EFactory.js';
 import { EList } from './EList.js';
 import { ENamedElement } from './ENamedElement.js';
 
-
-
 export interface EPackage extends ENamedElement {
-
   getNsURI(): string | undefined;
   setNsURI(value: string | undefined): void;
 

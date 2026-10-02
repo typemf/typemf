@@ -14,7 +14,9 @@ interface EClassQuickPickItem extends vscode.QuickPickItem {
 export async function pickEClass(packages: readonly EPackage[]): Promise<EClass | undefined> {
   const classes = instantiableClasses(packages);
   if (classes.length === 0) {
-    void vscode.window.showWarningMessage('No concrete (non-abstract, non-interface) classes are available to create an instance of.');
+    void vscode.window.showWarningMessage(
+      'No concrete (non-abstract, non-interface) classes are available to create an instance of.'
+    );
     return undefined;
   }
 
@@ -24,6 +26,8 @@ export async function pickEClass(packages: readonly EPackage[]): Promise<EClass 
     eClass,
   }));
 
-  const picked = await vscode.window.showQuickPick(items, { placeHolder: 'Select the root class for the new instance' });
+  const picked = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Select the root class for the new instance',
+  });
   return picked?.eClass;
 }

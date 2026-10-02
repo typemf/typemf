@@ -3,7 +3,7 @@ import { NamespaceTable } from '../namespace-table.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 
 describe('NamespaceTable', () => {
-  it('assigns a prefix from the package\'s own nsPrefix on first use', () => {
+  it("assigns a prefix from the package's own nsPrefix on first use", () => {
     const { libraryPackage } = buildSampleMetamodel();
     const table = new NamespaceTable();
     expect(table.prefixFor(libraryPackage)).toBe('lib');
@@ -19,11 +19,10 @@ describe('NamespaceTable', () => {
     expect(Object.keys(table.toJSON())).toHaveLength(1);
   });
 
-  it('disambiguates a genuine collision between two different nsURIs wanting the same prefix', () => {
+  it('disambiguates two nsURIs with the same nsPrefix', () => {
     const { libraryPackage: pkgA } = buildSampleMetamodel();
     const { libraryPackage: pkgB } = buildSampleMetamodel();
     pkgB.setNsURI('https://typemf.dev/samples/library-v2');
-    // Same nsPrefix ("lib") on purpose, different nsURI - a real collision.
 
     const table = new NamespaceTable();
     const prefixA = table.prefixFor(pkgA);
@@ -34,7 +33,7 @@ describe('NamespaceTable', () => {
     expect(table.resolve('lib1')).toBe('https://typemf.dev/samples/library-v2');
   });
 
-  it('round-trips via the constructor + toJSON()', () => {
+  it('round-trips through the constructor and toJSON()', () => {
     const seed = { lib: 'https://typemf.dev/samples/library' };
     const table = new NamespaceTable(seed);
     expect(table.toJSON()).toEqual(seed);

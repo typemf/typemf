@@ -3,7 +3,11 @@ import { encodeAttributeValue } from '@typemf/json';
 import { ApplyEditRequest, WireValue } from './host-message-protocol.js';
 import { WebviewObjectRegistry } from './webview-object-registry.js';
 
-function encodeWireValue(value: unknown, feature: Notification['feature'], registry: WebviewObjectRegistry): WireValue | undefined {
+function encodeWireValue(
+  value: unknown,
+  feature: Notification['feature'],
+  registry: WebviewObjectRegistry
+): WireValue | undefined {
   if (value === undefined) return undefined;
   if (feature && isEReference(feature)) {
     const id = registry.hostIdFor(value as EObject);
@@ -37,8 +41,17 @@ export interface RelayFailure {
   reason: string;
 }
 
-export function relayNotification(notification: Notification, registry: WebviewObjectRegistry, requestId: string): ApplyEditRequest | RelayFailure | undefined {
-  if (notification.eventType !== 'SET' && notification.eventType !== 'UNSET' && notification.eventType !== 'ADD' && notification.eventType !== 'REMOVE') {
+export function relayNotification(
+  notification: Notification,
+  registry: WebviewObjectRegistry,
+  requestId: string
+): ApplyEditRequest | RelayFailure | undefined {
+  if (
+    notification.eventType !== 'SET' &&
+    notification.eventType !== 'UNSET' &&
+    notification.eventType !== 'ADD' &&
+    notification.eventType !== 'REMOVE'
+  ) {
     return undefined; // not one of the four event types this project's own eNotify call sites ever fire
   }
 
@@ -54,7 +67,8 @@ export function relayNotification(notification: Notification, registry: WebviewO
   // robust than a positional index, which could have drifted if another edit happened concurrently
   // between this notification firing and the host actually applying it.
   const rawValue = notification.eventType === 'REMOVE' ? notification.oldValue : notification.newValue;
-  const value = notification.eventType === 'UNSET' ? undefined : encodeWireValue(rawValue, notification.feature, registry);
+  const value =
+    notification.eventType === 'UNSET' ? undefined : encodeWireValue(rawValue, notification.feature, registry);
   if (notification.eventType !== 'UNSET' && value === undefined) {
     return {
       reason: `Could not relay an edit to feature '${notification.feature?.getName() ?? '(unknown)'}': its new value could not be encoded. The change was applied locally but not sent to the real document.`,

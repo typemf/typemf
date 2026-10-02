@@ -25,7 +25,10 @@ import { WebviewObjectRegistry } from './webview-object-registry.js';
  */
 export class EditRelay {
   private readonly pending = new Map<string, { resolve: () => void; reject: (err: Error) => void }>();
-  private readonly pendingChildCreation = new Map<string, { resolve: (childId: string) => void; reject: (err: Error) => void }>();
+  private readonly pendingChildCreation = new Map<
+    string,
+    { resolve: (childId: string) => void; reject: (err: Error) => void }
+  >();
   private nextRequestId = 1;
   /**
    * One-shot, per-object suppression for "add child": after the host has already created and
@@ -74,7 +77,14 @@ export class EditRelay {
     const requestId = String(this.nextRequestId++);
     return new Promise<string>((resolve, reject) => {
       this.pendingChildCreation.set(requestId, { resolve, reject });
-      const request: CreateChildRequest = { type: 'typemf/createChild', requestId, parentId, featureId, classId, position };
+      const request: CreateChildRequest = {
+        type: 'typemf/createChild',
+        requestId,
+        parentId,
+        featureId,
+        classId,
+        position,
+      };
       this.transport.postMessage(request);
     });
   }

@@ -16,7 +16,7 @@ class FakeTransport implements PostMessageTransport {
 }
 
 describe('AncestorChainQuery', () => {
-  it('sends an AncestorChainRequest carrying the given id, and resolves with chainIds once a matching response arrives', async () => {
+  it('sends an AncestorChainRequest and resolves with the chain of the matching response', async () => {
     const transport = new FakeTransport();
     const query = new AncestorChainQuery(transport);
 
@@ -24,7 +24,11 @@ describe('AncestorChainQuery', () => {
     const request = transport.lastRequest();
     expect(request.id).toBe('book-id');
 
-    query.handleMessage({ type: 'typemf/ancestorChainResult', requestId: request.requestId, chainIds: ['library-id', 'book-id'] });
+    query.handleMessage({
+      type: 'typemf/ancestorChainResult',
+      requestId: request.requestId,
+      chainIds: ['library-id', 'book-id'],
+    });
 
     expect(await pending).toEqual(['library-id', 'book-id']);
   });
@@ -35,12 +39,16 @@ describe('AncestorChainQuery', () => {
 
     const pending = query.query('unknown-id');
     const request = transport.lastRequest();
-    query.handleMessage({ type: 'typemf/ancestorChainError', requestId: request.requestId, message: 'no object known' });
+    query.handleMessage({
+      type: 'typemf/ancestorChainError',
+      requestId: request.requestId,
+      message: 'no object known',
+    });
 
     await expect(pending).rejects.toThrow('no object known');
   });
 
-  it('a response with an unrelated requestId is ignored', async () => {
+  it('ignores a response with another requestId', async () => {
     const transport = new FakeTransport();
     const query = new AncestorChainQuery(transport);
 
@@ -53,7 +61,7 @@ describe('AncestorChainQuery', () => {
     expect(await pending).toEqual(['right']);
   });
 
-  it('handleMessage ignores unrelated message types without throwing', () => {
+  it('handleMessage ignores unrelated message types', () => {
     const query = new AncestorChainQuery(new FakeTransport());
     expect(() => query.handleMessage({ type: 'something/else' })).not.toThrow();
     expect(() => query.handleMessage(null)).not.toThrow();

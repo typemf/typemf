@@ -54,18 +54,18 @@ describe('concreteSubtypesOf', () => {
     expect(names).toEqual(['Circle', 'Pentagon', 'Square']);
   });
 
-  it('excludes an abstract subtype, even though it genuinely is a subtype', () => {
+  it('excludes abstract subtypes', () => {
     const { pkg, shape } = buildFixture();
     const names = concreteSubtypesOf(shape, [pkg]).map((c) => c.getName());
     expect(names).not.toContain('Polygon');
   });
 
-  it('includes a multi-level (grandchild) concrete subtype, not just direct children', () => {
+  it('includes indirect subtypes', () => {
     const { pkg, shape, pentagon } = buildFixture();
     expect(concreteSubtypesOf(shape, [pkg])).toContain(pentagon);
   });
 
-  it('a concrete class is its own subtype (isSuperTypeOf is reflexive) - included when queried against itself', () => {
+  it('includes the class itself when it is concrete', () => {
     const { pkg, circle } = buildFixture();
     expect(concreteSubtypesOf(circle, [pkg])).toEqual([circle]);
   });

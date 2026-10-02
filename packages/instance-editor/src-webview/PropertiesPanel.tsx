@@ -12,7 +12,12 @@ export interface PropertiesPanelProps {
   showDerivedFeatures: boolean;
 }
 
-export function PropertiesPanel({ obj, environment, onFollowReference, showDerivedFeatures }: PropertiesPanelProps): React.JSX.Element {
+export function PropertiesPanel({
+  obj,
+  environment,
+  onFollowReference,
+  showDerivedFeatures,
+}: PropertiesPanelProps): React.JSX.Element {
   // Re-renders this whole panel (and so every FeatureEditor below it) whenever the selected
   // object's own data changes - including from the very eSet() call one of those editors just
   // made itself. Must be called unconditionally, before the early return below (React's own
@@ -62,7 +67,12 @@ export function PropertiesPanel({ obj, environment, onFollowReference, showDeriv
                   {/* A feature this object can't actually report a value for (a read-only/
                       impl-only one - see trySet's own reasoning in snapshot-serializer.ts) is
                       skipped rather than shown broken; eGet itself is what would throw. */}
-                  <SafeFeatureEditor obj={obj} feature={feature} environment={environment} onFollowReference={onFollowReference} />
+                  <SafeFeatureEditor
+                    obj={obj}
+                    feature={feature}
+                    environment={environment}
+                    onFollowReference={onFollowReference}
+                  />
                 </td>
               </tr>
             );

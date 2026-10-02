@@ -1,8 +1,5 @@
 /**
- * A small "library" metamodel, hand-built the same way EcoreParser would
- * build one after reading a .ecore file with no generated code involved -
- * i.e. this is exactly the shape of metamodel DynamicEObjectImpl/
- * DynamicEFactoryImpl are meant to work against.
+ * A dynamic "library" metamodel without generated code:
  *
  *   EPackage "library" (nsURI: https://typemf.dev/samples/library)
  *     EClass Book (abstract: false)
@@ -38,10 +35,7 @@ export interface SampleMetamodel {
 }
 
 export function buildSampleMetamodel(): SampleMetamodel {
-  // See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(),
-  // which needs Ecore's own metaclass system bootstrapped first - accessing the singleton here
-  // (a real usage pattern, unlike constructing raw metaclasses with no loader involved at all)
-  // triggers that safely before anything below touches a single setter.
+  // Ecore must be initialized before metaclass instances can be created.
   void EcorePackageImpl.eINSTANCE;
   const eStringType = new EDataTypeImpl();
   eStringType.setName('EString');

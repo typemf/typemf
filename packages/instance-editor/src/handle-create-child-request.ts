@@ -9,21 +9,30 @@ import { ObjectIdMap } from './object-id-map.js';
  * document the moment this returns; nothing provisional or detached about it. Same
  * `{ objectIds }` narrowing as the other handlers, for the same reason.
  */
-export function handleCreateChildRequest(request: CreateChildRequest, document: { objectIds: ObjectIdMap }): CreateChildResponse | CreateChildError {
-  const fail = (message: string): CreateChildError => ({ type: 'typemf/createChildError', requestId: request.requestId, message });
+export function handleCreateChildRequest(
+  request: CreateChildRequest,
+  document: { objectIds: ObjectIdMap }
+): CreateChildResponse | CreateChildError {
+  const fail = (message: string): CreateChildError => ({
+    type: 'typemf/createChildError',
+    requestId: request.requestId,
+    message,
+  });
 
   const parent = document.objectIds.objectFor(request.parentId);
   if (!parent) return fail(`No object known for id '${request.parentId}'.`);
 
   const feature = document.objectIds.objectFor(request.featureId) as EStructuralFeature | undefined;
   if (!feature || !isEReference(feature)) return fail(`No reference feature known for id '${request.featureId}'.`);
-  if (!feature.isContainment()) return fail(`Feature '${feature.getName()}' is not a containment reference - cannot create a child through it.`);
+  if (!feature.isContainment())
+    return fail(`Feature '${feature.getName()}' is not a containment reference - cannot create a child through it.`);
 
   const eClass = document.objectIds.objectFor(request.classId) as EClass | undefined;
   if (!eClass) return fail(`No class known for id '${request.classId}'.`);
 
   const factory = eClass.getEPackage()?.getEFactoryInstance();
-  if (!factory) return fail(`'${eClass.getName()}''s EPackage has no EFactoryInstance registered - cannot construct an instance.`);
+  if (!factory)
+    return fail(`'${eClass.getName()}''s EPackage has no EFactoryInstance registered - cannot construct an instance.`);
 
   const child = factory.create(eClass);
 

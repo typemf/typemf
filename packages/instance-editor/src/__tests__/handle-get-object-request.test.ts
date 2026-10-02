@@ -1,4 +1,12 @@
-import { createInstanceOf, DynamicEFactoryImpl, EAttributeImpl, EcorePackageImpl, EClassImpl, EDataTypeImpl, EPackageImpl } from '@typemf/core';
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EAttributeImpl,
+  EcorePackageImpl,
+  EClassImpl,
+  EDataTypeImpl,
+  EPackageImpl,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { handleGetObjectRequest } from '../handle-get-object-request.js';
 import { ObjectIdMap } from '../object-id-map.js';
@@ -27,7 +35,7 @@ function buildBook() {
 }
 
 describe('handleGetObjectRequest', () => {
-  it('returns a GetObjectResponse with the real snapshot for a known id', () => {
+  it('returns a snapshot for a known id', () => {
     const { book } = buildBook();
     const objectIds = new ObjectIdMap();
     const id = objectIds.idFor(book);
@@ -42,10 +50,13 @@ describe('handleGetObjectRequest', () => {
     }
   });
 
-  it('returns a clear GetObjectError for an id this document\'s ObjectIdMap never issued', () => {
+  it('returns a GetObjectError for an unknown id', () => {
     const objectIds = new ObjectIdMap();
 
-    const response = handleGetObjectRequest({ type: 'typemf/getObject', requestId: 'r2', id: 'not-a-real-id' }, { objectIds });
+    const response = handleGetObjectRequest(
+      { type: 'typemf/getObject', requestId: 'r2', id: 'not-a-real-id' },
+      { objectIds }
+    );
 
     expect(response.type).toBe('typemf/getObjectError');
     expect(response.requestId).toBe('r2');
@@ -54,7 +65,7 @@ describe('handleGetObjectRequest', () => {
     }
   });
 
-  it('the response snapshot resolves back through the SAME ObjectIdMap the document owns', () => {
+  it("uses the document's ObjectIdMap for the snapshot ids", () => {
     const { book, bookClass } = buildBook();
     const objectIds = new ObjectIdMap();
     const id = objectIds.idFor(book);

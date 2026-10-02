@@ -13,7 +13,7 @@ const GENMODEL = 'http://www.eclipse.org/emf/2002/GenModel';
 const doc = (source: string, text: string) =>
   `<eAnnotations source="${source}"><details key="documentation" value="${text}"/></eAnnotations>`;
 
-/** A real .ecore file with documentation on every kind of element that gets a doc comment, in both sources. */
+/** An .ecore file with documentation in both sources on every kind of element that gets a doc comment. */
 const ECORE_SRC = `<?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0"
     xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -47,11 +47,11 @@ const ECORE_SRC = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-/** `comment` is IMMEDIATELY above `declaration` - no blank line in between (that used to be there). */
+/** `comment` is directly above `declaration`. */
 const documents = (content: string, comment: string, declaration: string) =>
   expect(content).toMatch(new RegExp(`${escapeRe(comment)}\\n${escapeRe(declaration)}`));
 
-describe('documentation, loaded from a real .ecore file', () => {
+describe('documentation from an .ecore file', () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -69,7 +69,7 @@ describe('documentation, loaded from a real .ecore file', () => {
     return (p: string) => files.find((f) => f.path === p)!.content;
   }
 
-  it('a class: both sources present -> typemf wins, and the GenModel text appears nowhere', async () => {
+  it('a class uses the typemf documentation over the others', async () => {
     const out = await generated();
     for (const path of ['types/Book.ts', 'impl/BookImpl.ts']) {
       documents(out(path), '/** Class doc - typemf WINS. */', 'export ');
@@ -77,17 +77,29 @@ describe('documentation, loaded from a real .ecore file', () => {
     }
   });
 
-  it('a feature: Ecore-only documentation is used as the fallback', async () => {
-    documents(await generated().then((o) => o('types/Book.ts')), '  /** Feature doc from Ecore only. */', '  getTitle()');
+  it('a feature falls back to the Ecore documentation', async () => {
+    documents(
+      await generated().then((o) => o('types/Book.ts')),
+      '  /** Feature doc from Ecore only. */',
+      '  getTitle()'
+    );
   });
 
-  it('a feature: an empty typemf documentation falls back to GenModel', async () => {
-    documents(await generated().then((o) => o('types/Book.ts')), '  /** Feature doc - empty typemf falls back. */', '  getIsbn()');
+  it('a feature with an empty typemf documentation falls back to GenModel', async () => {
+    documents(
+      await generated().then((o) => o('types/Book.ts')),
+      '  /** Feature doc - empty typemf falls back. */',
+      '  getIsbn()'
+    );
   });
 
-  it('GenModel documentation is not read: a feature documented only there gets no comment', async () => {
+  it('GenModel documentation is not read', async () => {
     const path = join(dir, 'gm.ecore');
-    await writeFile(path, ECORE_SRC.replace(doc(ECORE, 'Feature doc from Ecore only.'), doc(GENMODEL, 'GenModel doc.')), 'utf-8');
+    await writeFile(
+      path,
+      ECORE_SRC.replace(doc(ECORE, 'Feature doc from Ecore only.'), doc(GENMODEL, 'GenModel doc.')),
+      'utf-8'
+    );
     const files = generate(await loadEcorePackage(path), typescriptTemplateSet, {});
     const book = files.find((f) => f.path === 'types/Book.ts')!.content;
     expect(book).not.toContain('GenModel doc.');
@@ -95,18 +107,22 @@ describe('documentation, loaded from a real .ecore file', () => {
   });
 
   it('a feature with no documentation in either source gets no comment', async () => {
-    expect(await generated().then((o) => o('types/Book.ts'))).not.toMatch(/\*\/\n\n?  getPlain\(\)/);
+    expect(await generated().then((o) => o('types/Book.ts'))).not.toMatch(/\*\/\n\n? {2}getPlain\(\)/);
   });
 
-  it('an operation: typemf documentation (operation annotations now reach the generator)', async () => {
+  it('an operation uses the typemf documentation', async () => {
     documents(await generated().then((o) => o('types/Book.ts')), '  /** Operation doc from typemf. */', '  shout()');
   });
 
-  it('an enum: multi-line typemf documentation becomes a full JSDoc block', async () => {
-    documents(await generated().then((o) => o('types/Genre.ts')), '/**\n * Enum doc from typemf.\n * Second line.\n */', 'export enum Genre');
+  it('an enum turns multi-line documentation into a JSDoc block', async () => {
+    documents(
+      await generated().then((o) => o('types/Genre.ts')),
+      '/**\n * Enum doc from typemf.\n * Second line.\n */',
+      'export enum Genre'
+    );
   });
 
-  it('the package: Ecore-only documentation, on both the interface and the implementation', async () => {
+  it('the package documentation appears on the interface and the implementation', async () => {
     const out = await generated();
     documents(out('DocsPackage.ts'), '/** Package doc from Ecore. */', 'export interface DocsPackage');
     documents(out('impl/DocsPackageImpl.ts'), '/** Package doc from Ecore. */', 'export class DocsPackageImpl');

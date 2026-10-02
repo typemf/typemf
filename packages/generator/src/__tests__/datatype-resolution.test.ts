@@ -1,8 +1,21 @@
-import { DynamicEFactoryImpl, EAnnotationImpl, EAttributeImpl, EClassImpl, EcorePackageImpl, EDataTypeImpl, EGenericTypeImpl, EOperationImpl, EPackageImpl, EParameterImpl, ETypeParameterImpl, setDetailValue, type EClassifier, type EGenericType } from '@typemf/core';
+import {
+  DynamicEFactoryImpl,
+  EAnnotationImpl,
+  EAttributeImpl,
+  EClassImpl,
+  EcorePackageImpl,
+  EDataTypeImpl,
+  EGenericTypeImpl,
+  EOperationImpl,
+  EPackageImpl,
+  EParameterImpl,
+  ETypeParameterImpl,
+  setDetailValue,
+  type EClassifier,
+  type EGenericType,
+} from '@typemf/core';
 
-// See NOTES.md's point 6/7 write-ups: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely, once, at module
-// load, before any test below constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -31,9 +44,8 @@ function dataType(
   const dt = new EDataTypeImpl();
   dt.setName(name);
   if (opts.instanceClassName !== undefined) dt.setInstanceClassName(opts.instanceClassName);
-  // Shorthand for the two annotations that together describe a datatype: `type` is the TEXT (annotation
-  // with source .../generator); when `from` or `internal-from` is also given, the same details also form
-  // the IMPORT annotation (source .../generator/import) whose `type` is the symbol to import.
+  // `type` goes into the generator annotation; with `from` or `internal-from`, the details also form
+  // the import annotation.
   if (opts.annotation) {
     const { type, ...rest } = opts.annotation;
     if (type !== undefined) {
@@ -60,7 +72,10 @@ function dataType(
 const str = () => dataType('EString', { annotation: { type: 'string' } });
 
 /** A generic type: `classifier<args...>`; an `undefined` argument is an unbound one (`<eTypeArguments/>`). */
-function generic(classifier: EClassifier | undefined, ...args: Array<EGenericType | EClassifier | undefined>): EGenericTypeImpl {
+function generic(
+  classifier: EClassifier | undefined,
+  ...args: Array<EGenericType | EClassifier | undefined>
+): EGenericTypeImpl {
   const gt = new EGenericTypeImpl();
   if (classifier) gt.setEClassifier(classifier);
   for (const arg of args) {
@@ -77,32 +92,34 @@ function attrTyped(name: string, gt: EGenericTypeImpl): EAttributeImpl {
   return a;
 }
 
-describe('EDataType resolution - three layers, no built-in mappings', () => {
+describe('EDataType resolution', () => {
   afterEach(() => importCollector.clear());
 
-  it('layer 1: the type annotation is used as written, and beats instanceClassName and the name', () => {
+  it('uses the type annotation over instanceClassName and the name', () => {
     const dt = dataType('EString', { instanceClassName: 'java.lang.String', annotation: { type: 'MyString' } });
     expect(resolveDataTypeTs(dt)).toEqual({ text: 'MyString' });
   });
 
-  it('layer 1 is not interpreted: any text, spaces and unions included, is emitted as written', () => {
-    expect(tsScalarType(dataType('EIntegerObject', { annotation: { type: 'number | undefined' } }))).toBe('number | undefined');
+  it('emits the type annotation as written', () => {
+    expect(tsScalarType(dataType('EIntegerObject', { annotation: { type: 'number | undefined' } }))).toBe(
+      'number | undefined'
+    );
     expect(tsScalarType(dataType('EByteArray', { annotation: { type: 'number []' } }))).toBe('number []');
     expect(importCollector.isEmpty()).toBe(true);
   });
 
-  it('layer 1 WITHOUT internal-from registers nothing to import', () => {
+  it('registers no import for a type annotation without internal-from', () => {
     expect(tsScalarType(dataType('EJavaObject', { annotation: { type: 'unknown' } }))).toBe('unknown');
     expect(importCollector.isEmpty()).toBe(true);
   });
 
-  it('layer 1 WITH internal-from registers the type as a used import, used as written', () => {
+  it('registers an import for a type annotation with internal-from', () => {
     const dt = dataType('EMoney', { annotation: { type: 'Money', 'internal-from': './types/Money' } });
     expect(tsScalarType(dt)).toBe('Money');
     expect(importCollector.render('root', {})).toBe("import { Money } from './types/Money';");
   });
 
-  it('a relative internal-from is relative to the package ROOT, re-expressed per importing folder', () => {
+  it('resolves a relative internal-from against the package root for each importing folder', () => {
     tsScalarType(dataType('EMoney', { annotation: { type: 'Money', 'internal-from': './types/Money.js' } }));
     expect(importCollector.render('root', {})).toContain("from './types/Money.js'");
     expect(importCollector.render('types', {})).toContain("from './Money.js'");
@@ -110,23 +127,25 @@ describe('EDataType resolution - three layers, no built-in mappings', () => {
     expect(importCollector.render('util', {})).toContain("from '../types/Money.js'");
   });
 
-  it('a non-relative internal-from is a bare module specifier, used as written from every folder', () => {
+  it('uses a non-relative internal-from as written in every folder', () => {
     tsScalarType(dataType('EBig', { annotation: { type: 'Big', from: 'big.js' } }));
     for (const location of ['root', 'types', 'impl', 'util'] as const) {
       expect(importCollector.render(location, {})).toBe("import { Big } from 'big.js';");
     }
   });
 
-  it('layer 2: instanceClassName as written, when there is no annotation - never interpreted or mapped', () => {
-    expect(resolveDataTypeTs(dataType('EString', { instanceClassName: 'java.lang.String' })).text).toBe('java.lang.String');
+  it('uses instanceClassName as written when there is no annotation', () => {
+    expect(resolveDataTypeTs(dataType('EString', { instanceClassName: 'java.lang.String' })).text).toBe(
+      'java.lang.String'
+    );
     expect(resolveDataTypeTs(dataType('EInt', { instanceClassName: 'int' })).text).toBe('int');
   });
 
-  it('layer 2 beats layer 3', () => {
+  it('prefers instanceClassName over the name', () => {
     expect(resolveDataTypeTs(dataType('EString', { instanceClassName: 'Whatever' })).text).toBe('Whatever');
   });
 
-  it('layer 3: the name as written - no datatype name is special (EString stays EString without an annotation)', () => {
+  it('uses the name as written otherwise, also for EString', () => {
     for (const name of ['EString', 'EInt', 'EBoolean', 'EDate', 'ECustom']) {
       expect(resolveDataTypeTs(dataType(name)).text).toBe(name);
     }
@@ -154,7 +173,7 @@ describe('EDataType resolution - three layers, no built-in mappings', () => {
     expect(importCollector.render('impl', {})).toContain("import { Money } from '../types/Money';");
   });
 
-  it('unknown is never emitted as `unknown | undefined`, for attributes or operation returns', () => {
+  it('never emits `unknown | undefined`', () => {
     const json = dataType('EJavaObject', { annotation: { type: 'unknown' } });
     const op = new EOperationImpl();
     op.setName('anything');
@@ -164,10 +183,12 @@ describe('EDataType resolution - three layers, no built-in mappings', () => {
     expect(tsOptionalScalarType(str())).toBe('string | undefined');
   });
 
-  it('an absent type (the loader leaves EObject-typed features unset) emits EObject AND registers its import', () => {
+  it('emits and imports EObject for a feature without a type', () => {
     expect(tsScalarType(undefined)).toBe('EObject');
     expect(importCollector.render('impl', {})).toBe("import { EObject } from '@typemf/core';");
-    expect(importCollector.render('impl', { 'generate-ecore': true })).toBe("import { EObject } from '../types/EObject.js';");
+    expect(importCollector.render('impl', { 'generate-ecore': true })).toBe(
+      "import { EObject } from '../types/EObject.js';"
+    );
   });
 });
 
@@ -180,13 +201,13 @@ describe('import collector: one name, several requests', () => {
     expect(importCollector.render('impl', {})).toBe("import { A, B } from '../types/Shared';");
   });
 
-  it('the same name wanted from genuinely different modules is a real collision, reported clearly', () => {
+  it('reports the same name from different modules as a collision', () => {
     tsScalarType(dataType('EA', { annotation: { type: 'Thing', 'internal-from': './types/One' } }));
     tsScalarType(dataType('EB', { annotation: { type: 'Thing', 'internal-from': './types/Two' } }));
     expect(() => importCollector.render('impl', {})).toThrow(/"Thing" was requested from .*One.* and .*Two/);
   });
 
-  it('an annotation-supplied import and a template-supplied foundational one for the SAME module are one import when self-hosting (real Ecore.ecore: EEList -> EList)', () => {
+  it('merges an annotation import and a template import of the same module in generate-ecore mode', () => {
     tsScalarType(dataType('EEList', { annotation: { type: 'EList', 'internal-from': './types/EList' } }));
     importCollector.add({ name: 'EList', location: 'types', foundational: true });
     // Spelled without ".js" by the annotation, with it by the template - still the one module.
@@ -194,7 +215,7 @@ describe('import collector: one name, several requests', () => {
     expect(importCollector.render('types', { 'generate-ecore': true })).toBe("import { EList } from './EList';");
   });
 
-  it('...but in ordinary mode the template\'s EList comes from @typemf/core, which really is a different source - a collision', () => {
+  it("reports a collision in ordinary mode, where the template's EList comes from @typemf/core", () => {
     tsScalarType(dataType('EEList', { annotation: { type: 'EList', 'internal-from': './types/EList' } }));
     importCollector.add({ name: 'EList', location: 'types', foundational: true });
     expect(() => importCollector.render('impl', {})).toThrow(/"EList" was requested from/);
@@ -205,15 +226,18 @@ describe('generic datatypes: type parameters and type arguments', () => {
   afterEach(() => importCollector.clear());
 
   const javaClass = () =>
-    dataType('EJavaClass', { annotation: { type: 'TypeScriptClass', 'internal-from': './types/TypeScriptClass' }, typeParameters: ['T'] });
+    dataType('EJavaClass', {
+      annotation: { type: 'TypeScriptClass', 'internal-from': './types/TypeScriptClass' },
+      typeParameters: ['T'],
+    });
 
-  it('used with no generic type at all: every parameter is unbound -> unknown', () => {
+  it('without a generic type every parameter is unknown', () => {
     const attr = new EAttributeImpl();
     attr.setEType(javaClass());
     expect(tsScalarType(attr)).toBe('TypeScriptClass<unknown>');
   });
 
-  it('used with an explicitly empty type argument (<eTypeArguments/>): unknown', () => {
+  it('an empty type argument is unknown', () => {
     expect(tsScalarType(attrTyped('a', generic(javaClass(), undefined)))).toBe('TypeScriptClass<unknown>');
   });
 
@@ -221,15 +245,20 @@ describe('generic datatypes: type parameters and type arguments', () => {
     expect(tsScalarType(attrTyped('a', generic(javaClass(), str())))).toBe('TypeScriptClass<string>');
   });
 
-  it('a bound EClass argument is the class\'s name', () => {
+  it("a bound EClass argument is the class's name", () => {
     const c = new EClassImpl();
     c.setName('Refund');
     expect(tsScalarType(attrTyped('a', generic(javaClass(), c)))).toBe('TypeScriptClass<Refund>');
   });
 
   it('type arguments nest: EEList<EJavaClass<EString>>', () => {
-    const eelist = dataType('EEList', { annotation: { type: 'EList', 'internal-from': './types/EList' }, typeParameters: ['E'] });
-    expect(tsScalarType(attrTyped('a', generic(eelist, generic(javaClass(), str()))))).toBe('EList<TypeScriptClass<string>>');
+    const eelist = dataType('EEList', {
+      annotation: { type: 'EList', 'internal-from': './types/EList' },
+      typeParameters: ['E'],
+    });
+    expect(tsScalarType(attrTyped('a', generic(eelist, generic(javaClass(), str()))))).toBe(
+      'EList<TypeScriptClass<string>>'
+    );
   });
 
   it('several parameters are filled positionally; missing or unbound ones are unknown', () => {
@@ -239,7 +268,7 @@ describe('generic datatypes: type parameters and type arguments', () => {
     expect(tsScalarType(attrTyped('a', generic(emap, str(), str())))).toBe('EMap<string, string>');
   });
 
-  it('a type argument that refers to an enclosing type parameter is that parameter\'s name', () => {
+  it("a type argument that refers to an enclosing type parameter is that parameter's name", () => {
     const eelist = dataType('EEList', { annotation: { type: 'EList' }, typeParameters: ['E'] });
     const outerParam = new ETypeParameterImpl();
     outerParam.setName('T');
@@ -266,11 +295,13 @@ describe('generic datatypes: type parameters and type arguments', () => {
     expect(tsScalarType(param)).toBe('TypeScriptClass<unknown>');
   });
 
-  it('emitting a generic datatype registers its own import once, and the argument datatypes\' imports too', () => {
+  it("emitting a generic datatype registers its own import once, and the argument datatypes' imports too", () => {
     const money = dataType('EMoney', { annotation: { type: 'Money', 'internal-from': './types/Money' } });
     tsScalarType(attrTyped('a', generic(javaClass(), money)));
     expect(importCollector.render('impl', {})).toBe(
-      ["import { Money } from '../types/Money';", "import { TypeScriptClass } from '../types/TypeScriptClass';"].join('\n')
+      ["import { Money } from '../types/Money';", "import { TypeScriptClass } from '../types/TypeScriptClass';"].join(
+        '\n'
+      )
     );
   });
 
@@ -279,7 +310,10 @@ describe('generic datatypes: type parameters and type arguments', () => {
     refund.setName('Refund');
     const eelist = dataType('EEList', { annotation: { type: 'EList' }, typeParameters: ['E'] });
     const attr = attrTyped('a', generic(eelist, generic(javaClass(), refund)));
-    expect(genericArgumentClassifiers(attr.getEGenericType()).map((c) => c.getName())).toEqual(['EJavaClass', 'Refund']);
+    expect(genericArgumentClassifiers(attr.getEGenericType()).map((c) => c.getName())).toEqual([
+      'EJavaClass',
+      'Refund',
+    ]);
     expect(referencedApiTypes([attr])).toEqual(['Refund']);
     expect(referencedApiTypes([attr], 'Refund')).toEqual([]);
   });
@@ -347,7 +381,7 @@ function buildPaymentMetamodel() {
   return pkg;
 }
 
-describe('End-to-end: layered EDataType resolution and generics in generated code', () => {
+describe('EDataType resolution in generated code', () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -359,7 +393,7 @@ describe('End-to-end: layered EDataType resolution and generics in generated cod
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('emits the resolved TS type at every occurrence - attribute, many-valued attribute, operation return and parameter', () => {
+  it('emits the resolved type for attributes, operation returns and parameters', () => {
     const files = generate(buildPaymentMetamodel(), typescriptTemplateSet, {});
     const types = files.find((f) => f.path === 'types/Payment.ts')!.content;
     const impl = files.find((f) => f.path === 'impl/PaymentImpl.ts')!.content;
@@ -375,7 +409,7 @@ describe('End-to-end: layered EDataType resolution and generics in generated cod
     }
   });
 
-  it('a generic datatype is emitted with its type arguments: unbound -> unknown, bound -> the bound type, everywhere', () => {
+  it('emits generic datatypes with their type arguments', () => {
     const files = generate(buildPaymentMetamodel(), typescriptTemplateSet, {});
     const types = files.find((f) => f.path === 'types/Payment.ts')!.content;
     const impl = files.find((f) => f.path === 'impl/PaymentImpl.ts')!.content;
@@ -407,14 +441,14 @@ describe('End-to-end: layered EDataType resolution and generics in generated cod
     }
   });
 
-  it('in generate-ecore mode the annotation-supplied imports are unchanged (they are not foundational names)', () => {
+  it('keeps annotation imports unchanged in generate-ecore mode', () => {
     const files = generate(buildPaymentMetamodel(), typescriptTemplateSet, { 'generate-ecore': true });
     const impl = files.find((f) => f.path === 'impl/PaymentImpl.ts')!.content;
     expect(impl).toContain("import { Money } from '../types/Money.js';");
     expect(impl).toContain("import { TypeScriptClass } from '../types/TypeScriptClass.js';");
   });
 
-  it('the generated code type-checks with zero errors once the imported modules exist', async () => {
+  it('type-checks once the imported modules exist', async () => {
     const files = generate(buildPaymentMetamodel(), typescriptTemplateSet, {});
     for (const file of files) {
       const tsPath = join(dir, file.path);
@@ -422,11 +456,23 @@ describe('End-to-end: layered EDataType resolution and generics in generated cod
       await writeFile(tsPath, file.content, 'utf-8');
     }
     // The files the annotations' internal-from point at - user-supplied, not generated.
-    await writeFile(join(dir, 'types', 'Money.ts'), 'export type Money = { amount: number; currency: string };\n', 'utf-8');
-    await writeFile(join(dir, 'types', 'TypeScriptClass.ts'), 'export type TypeScriptClass<T> = new (...args: never[]) => T;\n', 'utf-8');
+    await writeFile(
+      join(dir, 'types', 'Money.ts'),
+      'export type Money = { amount: number; currency: string };\n',
+      'utf-8'
+    );
+    await writeFile(
+      join(dir, 'types', 'TypeScriptClass.ts'),
+      'export type TypeScriptClass<T> = new (...args: never[]) => T;\n',
+      'utf-8'
+    );
 
     const program = ts.createProgram(
-      [...files.map((f) => join(dir, f.path)), join(dir, 'types', 'Money.ts'), join(dir, 'types', 'TypeScriptClass.ts')],
+      [
+        ...files.map((f) => join(dir, f.path)),
+        join(dir, 'types', 'Money.ts'),
+        join(dir, 'types', 'TypeScriptClass.ts'),
+      ],
       {
         target: ts.ScriptTarget.ES2022,
         module: ts.ModuleKind.ESNext,

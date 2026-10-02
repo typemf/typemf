@@ -33,12 +33,15 @@ function buildFixture() {
 }
 
 describe('handleConcreteSubtypesRequest', () => {
-  it('returns the ids of every concrete subtype, resolvable back to the real classes', () => {
+  it('returns the ids of every concrete subtype', () => {
     const { shape, circle, square, resourceSet } = buildFixture();
     const objectIds = new ObjectIdMap();
     const classId = objectIds.idFor(shape);
 
-    const response = handleConcreteSubtypesRequest({ type: 'typemf/concreteSubtypes', requestId: 'r1', classId }, { objectIds, resourceSet });
+    const response = handleConcreteSubtypesRequest(
+      { type: 'typemf/concreteSubtypes', requestId: 'r1', classId },
+      { objectIds, resourceSet }
+    );
 
     expect(response.type).toBe('typemf/concreteSubtypesResult');
     if (response.type === 'typemf/concreteSubtypesResult') {
@@ -47,10 +50,9 @@ describe('handleConcreteSubtypesRequest', () => {
     }
   });
 
-  it('scopes the search to the document\'s own resourceSet registry, not any other', () => {
+  it("searches only the registry of the document's resource set", () => {
     const { shape, resourceSet } = buildFixture();
-    // A second, completely separate registry/resourceSet with its own, unrelated concrete class -
-    // must never show up in a query scoped to the FIRST document's own resourceSet.
+    // An unrelated registry with its own concrete class.
     const otherPkg = new EPackageImpl();
     otherPkg.setName('other');
     otherPkg.setNsURI('https://example.com/other');
@@ -61,7 +63,10 @@ describe('handleConcreteSubtypesRequest', () => {
 
     const objectIds = new ObjectIdMap();
     const classId = objectIds.idFor(shape);
-    const response = handleConcreteSubtypesRequest({ type: 'typemf/concreteSubtypes', requestId: 'r2', classId }, { objectIds, resourceSet });
+    const response = handleConcreteSubtypesRequest(
+      { type: 'typemf/concreteSubtypes', requestId: 'r2', classId },
+      { objectIds, resourceSet }
+    );
 
     expect(response.type).toBe('typemf/concreteSubtypesResult');
     if (response.type === 'typemf/concreteSubtypesResult') {
@@ -72,7 +77,10 @@ describe('handleConcreteSubtypesRequest', () => {
   it('returns a ConcreteSubtypesError for an unknown classId', () => {
     const { resourceSet } = buildFixture();
     const objectIds = new ObjectIdMap();
-    const response = handleConcreteSubtypesRequest({ type: 'typemf/concreteSubtypes', requestId: 'r3', classId: 'not-real' }, { objectIds, resourceSet });
+    const response = handleConcreteSubtypesRequest(
+      { type: 'typemf/concreteSubtypes', requestId: 'r3', classId: 'not-real' },
+      { objectIds, resourceSet }
+    );
     expect(response.type).toBe('typemf/concreteSubtypesError');
   });
 });

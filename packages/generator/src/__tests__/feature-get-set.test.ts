@@ -1,4 +1,12 @@
-import { EAnnotationImpl, EAttributeImpl, EClassImpl, EPackageImpl, setDetailValue, type EClassifier, type EStructuralFeature } from '@typemf/core';
+import {
+  EAnnotationImpl,
+  EAttributeImpl,
+  EClassImpl,
+  EPackageImpl,
+  setDetailValue,
+  type EClassifier,
+  type EStructuralFeature,
+} from '@typemf/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -7,7 +15,12 @@ import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadEcorePackage } from '../ecore-loader.js';
 import { generate } from '../generate.js';
-import { featureGetter, featureSetter, findFeatureAnnotationProblems, isReadOnlyFeature } from '../typescript-filters.js';
+import {
+  featureGetter,
+  featureSetter,
+  findFeatureAnnotationProblems,
+  isReadOnlyFeature,
+} from '../typescript-filters.js';
 import { typescriptTemplateSet } from '../typescript-template-set.js';
 import { annotatedDataType } from './sample-metamodel.js';
 
@@ -16,9 +29,7 @@ const FEATURE = 'https://typemf.dev/generator/feature';
 const IMPORT = 'https://typemf.dev/generator/import';
 
 function annotate(target: EStructuralFeature, source: string, details: Record<string, string>): void {
-  // Merges into an EXISTING annotation of the same source if there is one - getEAnnotation(source)
-  // returns only the first annotation with that source, so `get` and `set` must live in ONE object
-  // (exactly as the real https://typemf.dev/generator/feature convention requires).
+  // `get` and `set` must be details of the same annotation.
   const existing = [...target.getEAnnotations()].find((a) => a.getSource() === source);
   const a = existing ?? new EAnnotationImpl();
   a.setSource(source);
@@ -28,14 +39,13 @@ function annotate(target: EStructuralFeature, source: string, details: Record<st
 
 const str = annotatedDataType('EString', 'string');
 
-function feature(name: string, opts: { many?: boolean; get?: string; set?: string; derived?: string } = {}): EAttributeImpl {
+function feature(name: string, opts: { many?: boolean; get?: string; set?: string } = {}): EAttributeImpl {
   const f = new EAttributeImpl();
   f.setName(name);
   f.setEType(str);
   if (opts.many) f.setUpperBound(-1);
   if (opts.get !== undefined) annotate(f, FEATURE, { get: opts.get });
   if (opts.set !== undefined) annotate(f, FEATURE, { set: opts.set });
-  if (opts.derived !== undefined) annotate(f, GENERATOR, { type: opts.derived }); // unrelated helper unused; placeholder no-op
   return f;
 }
 
@@ -51,7 +61,7 @@ describe('featureGetter / featureSetter: reading the annotation', () => {
     expect(featureGetter(f)).toBeUndefined();
   });
 
-  it('a `get`/`set` under a DIFFERENT source is ignored - no fallback layer (unlike documentation/body)', () => {
+  it('ignores `get` and `set` in other annotation sources', () => {
     const f = new EAttributeImpl();
     f.setName('x');
     annotate(f, GENERATOR, { get: 'ignored', set: 'ignored' });
@@ -60,14 +70,14 @@ describe('featureGetter / featureSetter: reading the annotation', () => {
     expect(featureSetter(f)).toBeUndefined();
   });
 
-  it('isReadOnlyFeature: true for a getter with no setter; false once a setter is added', () => {
+  it('isReadOnlyFeature is true only for a getter without a setter', () => {
     expect(isReadOnlyFeature(feature('x', { get: 'return 1;' }))).toBe(true);
     expect(isReadOnlyFeature(feature('x', { get: 'return 1;', set: 'this.raw = value;' }))).toBe(false);
-    expect(isReadOnlyFeature(feature('x'))).toBe(false); // an ordinary field-backed feature is NOT read-only
+    expect(isReadOnlyFeature(feature('x'))).toBe(false);
   });
 });
 
-describe('validation: a `set` on a many-valued feature is a no-op (many-valued features never have a setter)', () => {
+describe('findFeatureAnnotationProblems', () => {
   function pkgWith(f: EAttributeImpl) {
     const c = new EClassImpl();
     c.setName('C');
@@ -84,28 +94,26 @@ describe('validation: a `set` on a many-valued feature is a no-op (many-valued f
     return p;
   }
 
-  it('reports it', () => {
+  it('reports a `set` on a many-valued feature', () => {
     const problems = findFeatureAnnotationProblems(pkgWith(feature('tags', { many: true, set: 'this.raw = value;' })));
     expect(problems).toHaveLength(1);
     expect(problems[0]).toMatch(/C\.tags.*set.*many-valued/);
   });
 
-  it('a `set` on a single-valued feature, or a `get` on a many-valued one, is fine', () => {
+  it('accepts a `set` on a single-valued and a `get` on a many-valued feature', () => {
     expect(findFeatureAnnotationProblems(pkgWith(feature('title', { set: 'this.raw = value;' })))).toEqual([]);
     expect(findFeatureAnnotationProblems(pkgWith(feature('tags', { many: true, get: 'return this._x;' })))).toEqual([]);
   });
 });
 
-const xmlEscape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
-// `get` and `set` share ONE annotation with source https://typemf.dev/generator/feature - like every
-// other single-per-element mechanism here (body, dispatch, documentation), getEAnnotation(source)
-// returns only the FIRST matching annotation, so both details must live in the SAME element (exactly
-// the shape the user's own EEnumerator example used for several details under one import annotation).
-const GET = (body: string) => `<eAnnotations source="${FEATURE}"><details key="get" value="${xmlEscape(body)}"/></eAnnotations>`;
-const SET = (body: string) => `<eAnnotations source="${FEATURE}"><details key="set" value="${xmlEscape(body)}"/></eAnnotations>`;
+const xmlEscape = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
+const GET = (body: string) =>
+  `<eAnnotations source="${FEATURE}"><details key="get" value="${xmlEscape(body)}"/></eAnnotations>`;
 const GET_SET = (get: string, set: string) =>
   `<eAnnotations source="${FEATURE}"><details key="get" value="${xmlEscape(get)}"/><details key="set" value="${xmlEscape(set)}"/></eAnnotations>`;
-const IMP = (type: string, from: string) => `<eAnnotations source="${IMPORT}"><details key="type" value="${type}"/><details key="internal-from" value="${from}"/></eAnnotations>`;
+const IMP = (type: string, from: string) =>
+  `<eAnnotations source="${IMPORT}"><details key="type" value="${type}"/><details key="internal-from" value="${from}"/></eAnnotations>`;
 
 function model(features: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -125,7 +133,7 @@ function model(features: string): string {
 `;
 }
 
-describe('generated code, from a real .ecore file', () => {
+describe('generated code for custom getters and setters', () => {
   let dir: string;
   let outDir: string;
 
@@ -146,7 +154,7 @@ describe('generated code, from a real .ecore file', () => {
     return { files, content: (p: string) => files.find((f) => f.path === p)!.content };
   }
 
-  it('single-valued, get only: no field, getter is the custom body, no setter emitted, eGet delegates, eSet/eUnset omitted', async () => {
+  it('single-valued with get: no field and no setter; eGet calls the getter', async () => {
     const xml = model(`
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="raw" eType="#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="shout" eType="#//EString">${GET("return (this.getRaw() ?? '').toUpperCase();")}</eStructuralFeatures>`);
@@ -155,20 +163,19 @@ describe('generated code, from a real .ecore file', () => {
     const impl = content('impl/BoxImpl.ts');
     expect(iface).toContain('getShout(): string | undefined;');
     expect(iface).not.toContain('setShout');
-    expect(impl).not.toMatch(/_shout\b/); // no field at all
+    expect(impl).not.toMatch(/_shout\b/);
     expect(impl).toContain("return (this.getRaw() ?? '').toUpperCase();");
-    expect(impl).toMatch(/case \d+: return this\.getShout\(\);/); // eGet delegates
-    // eSet has no case for it - only the default branch mentions its feature id nowhere for "shout"
+    expect(impl).toMatch(/case \d+: return this\.getShout\(\);/);
     const eSetBlock = impl.slice(impl.indexOf('eSet(feature'), impl.indexOf('eBasicSetValue('));
     expect(eSetBlock).not.toContain('Shout');
     const eUnsetBlock = impl.slice(impl.indexOf('eUnset(feature'));
     expect(eUnsetBlock).not.toContain('Shout');
   });
 
-  it('single-valued, get + set: both bodies used, eSet delegates to the setter, eIsSet calls the getter', async () => {
+  it('single-valued with get and set: eSet calls the setter, eIsSet the getter', async () => {
     const xml = model(`
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="raw" eType="#//EString"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shout" eType="#//EString">${GET_SET("return this.getRaw();", "this.setRaw((value ?? '').toLowerCase());")}</eStructuralFeatures>`);
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shout" eType="#//EString">${GET_SET('return this.getRaw();', "this.setRaw((value ?? '').toLowerCase());")}</eStructuralFeatures>`);
     const { content } = await generated(xml);
     const iface = content('types/Box.ts');
     const impl = content('impl/BoxImpl.ts');
@@ -178,12 +185,7 @@ describe('generated code, from a real .ecore file', () => {
     expect(impl).toMatch(/case \d+: return this\.getShout\(\) !== undefined;/);
   });
 
-  it('many-valued with a custom getter: NO plain field, a generation-keyed cache instead, getter body used, eGet delegates, eIsSet uses size()', async () => {
-    // BasicEList is BOTH the symbol every generated class imports unconditionally (foundational) AND
-    // what a custom many-valued getter needs to construct a fresh EList - real only when self-hosting
-    // (generate-ecore: true), the actual motivating case (EClass.getEAllStructuralFeatures); an
-    // ordinary-mode getter needing to build a NEW list has the same problem the "from"/"internal-from"
-    // split exists to solve for datatypes, not yet extended to body imports - see the reply.
+  it('many-valued with get: a cache instead of a field; eIsSet uses size()', async () => {
     const xml = model(`
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="raw" eType="#//EString" upperBound="-1"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="upper" eType="#//EString" upperBound="-1">${GET(
@@ -191,9 +193,7 @@ describe('generated code, from a real .ecore file', () => {
     )}${IMP('BasicEList', './impl/BasicEList.js')}</eStructuralFeatures>`);
     const { content } = await generated(xml, { 'generate-ecore': true });
     const impl = content('impl/BoxImpl.ts');
-    // No plain field (there is nothing to lazily build-once the old way) - but a generation-keyed
-    // CACHE, which is different: see structural-generation caching, added this session.
-    expect(impl).not.toMatch(/private get _upper\(\)/); // the OLD lazy-list-builder shape, not this one
+    expect(impl).not.toMatch(/private get _upper\(\)/);
     expect(impl).toMatch(/private _upperCache: EList<string> \| undefined;/);
     expect(impl).toMatch(/private _upperCacheGeneration = -1;/);
     expect(impl).toContain('for (const r of this.getRaw()) result.add(r.toUpperCase());');
@@ -203,7 +203,7 @@ describe('generated code, from a real .ecore file', () => {
     expect(impl).toContain("import { BasicEList } from './BasicEList.js';");
   });
 
-  it('an ordinary field-backed feature (no get/set annotation) is completely unaffected', async () => {
+  it('a feature without get or set is backed by a field', async () => {
     const xml = model(`<eStructuralFeatures xsi:type="ecore:EAttribute" name="plain" eType="#//EString"/>`);
     const { content } = await generated(xml);
     const impl = content('impl/BoxImpl.ts');
@@ -211,9 +211,7 @@ describe('generated code, from a real .ecore file', () => {
     expect(impl).toMatch(/case \d+: return this\._plain;/);
   });
 
-  it('the pre-existing formula-derived features (many/required/container/eReferenceType) now delegate through eGet too - the same bug, fixed the same way', async () => {
-    // EStructuralFeature itself carries these trivialDerivedFormula features in real Ecore.ecore;
-    // reproduce the shape directly instead of depending on the fixture.
+  it('eGet calls the getter of a derived feature with a built-in formula', async () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="fs2" nsURI="https://typemf.dev/test/fs2" nsPrefix="fs2">
@@ -224,10 +222,10 @@ describe('generated code, from a real .ecore file', () => {
   </eClassifiers>
 </ecore:EPackage>`;
     const impl = (await generated(xml)).content('impl/WidgetImpl.ts');
-    expect(impl).toMatch(/case \d+: return this\.getMany\(\);/); // NOT `return this._many;`
+    expect(impl).toMatch(/case \d+: return this\.getMany\(\);/);
   });
 
-  it('type-checks with zero errors, and ACTUALLY RUNS correctly (get, get+set, many-valued get all execute)', async () => {
+  it('type-checks and runs the custom getters and setters', async () => {
     const xml = model(`
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="raw" eType="#//EString" upperBound="-1"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="count" eType="#//EInt">${GET('return this.getRaw().size();')}</eStructuralFeatures>
@@ -235,21 +233,23 @@ describe('generated code, from a real .ecore file', () => {
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="raw2" eType="#//EString"/>`);
     const { files } = await generated(xml);
 
-    // Files must exist on disk before createProgram can read them - write first, THEN type-check.
     for (const file of files) {
       const tsPath = join(outDir, file.path);
       await mkdir(dirname(tsPath), { recursive: true });
       await writeFile(tsPath, file.content, 'utf-8');
     }
-    const program = ts.createProgram(files.map((f) => join(outDir, f.path)), {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      noEmit: true,
-    });
+    const program = ts.createProgram(
+      files.map((f) => join(outDir, f.path)),
+      {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        noEmit: true,
+      }
+    );
     const diagnostics = ts.getPreEmitDiagnostics(program);
     const formatted = ts.formatDiagnosticsWithColorAndContext(diagnostics, {
       getCurrentDirectory: () => outDir,
@@ -261,23 +261,26 @@ describe('generated code, from a real .ecore file', () => {
     const jsPaths = new Map<string, string>();
     for (const file of files) {
       const jsPath = join(outDir, file.path.replace(/\.ts$/, '.js'));
-      const { outputText } = ts.transpileModule(file.content, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
+      const { outputText } = ts.transpileModule(file.content, {
+        compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+      });
       await writeFile(jsPath, outputText, 'utf-8');
       jsPaths.set(file.path, jsPath);
     }
-    // One factory per PACKAGE (not per class) - "FsFactoryImpl", from the package name "fs", not "BoxFactoryImpl".
-    expect(jsPaths.has('impl/FsFactoryImpl.ts'), [...jsPaths.keys()].join(', ')).toBe(true);
-
-    const { FsFactoryImpl } = (await import(jsPaths.get('impl/FsFactoryImpl.ts')!)) as { FsFactoryImpl: new () => { create(c: unknown): unknown } };
-    const { FsPackageImpl } = (await import(jsPaths.get('impl/FsPackageImpl.ts')!)) as { FsPackageImpl: { eINSTANCE: { getBox(): unknown } } };
+    const { FsFactoryImpl } = (await import(jsPaths.get('impl/FsFactoryImpl.ts')!)) as {
+      FsFactoryImpl: new () => { create(c: unknown): unknown };
+    };
+    const { FsPackageImpl } = (await import(jsPaths.get('impl/FsPackageImpl.ts')!)) as {
+      FsPackageImpl: { eINSTANCE: { getBox(): unknown } };
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const box: any = new FsFactoryImpl().create(FsPackageImpl.eINSTANCE.getBox());
     box.getRaw().add('a');
     box.getRaw().add('b');
-    expect(box.getCount()).toBe(2); // computed getter reading another feature
-    expect(box.getLabel()).toBeUndefined(); // custom getter, backed by a DIFFERENT field (raw2), unset
+    expect(box.getCount()).toBe(2);
+    expect(box.getLabel()).toBeUndefined();
     box.setLabel('  Hello  ');
-    expect(box.getLabel()).toBe('Hello'); // custom setter ran, custom getter reflects it
-    expect(box.getRaw2()).toBe('Hello'); // and really did write to raw2 via its own public setter
+    expect(box.getLabel()).toBe('Hello');
+    expect(box.getRaw2()).toBe('Hello');
   });
 });

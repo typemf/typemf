@@ -14,19 +14,26 @@ import type { TypeMfRuntimeApi } from './api.js';
  * kept in its own file rather than folded into those, the same reasoning extension.ts's own
  * `import type` split was built around.
  */
-export async function loadConfiguredEcoreMappings(workspaceFolders: readonly vscode.WorkspaceFolder[], runtime: TypeMfRuntimeApi): Promise<void> {
+export async function loadConfiguredEcoreMappings(
+  workspaceFolders: readonly vscode.WorkspaceFolder[],
+  runtime: TypeMfRuntimeApi
+): Promise<void> {
   const firstFolder = workspaceFolders[0];
 
   // getConfiguration's second argument is what makes workspaceFolderValue resolve to the RIGHT
   // folder's own settings in a multi-root workspace - and "always resolve relative paths against
   // the first workspace folder" (decided earlier) means that's also the one folder whose
   // workspaceFolderValue is relevant here, not any other folder's.
-  const inspected = vscode.workspace.getConfiguration('typemf', firstFolder?.uri).inspect<EcoreMappingEntry[]>('ecoreMappings');
+  const inspected = vscode.workspace
+    .getConfiguration('typemf', firstFolder?.uri)
+    .inspect<EcoreMappingEntry[]>('ecoreMappings');
   const mappings = resolveMappings(inspected ?? {});
   if (mappings.length === 0) return;
 
   if (!firstFolder) {
-    console.warn(`typemf.ecoreMappings: ${mappings.length} entr${mappings.length === 1 ? 'y' : 'ies'} configured, but no workspace folder is open to resolve relative paths against - skipping.`);
+    console.warn(
+      `typemf.ecoreMappings: ${mappings.length} entr${mappings.length === 1 ? 'y' : 'ies'} configured, but no workspace folder is open to resolve relative paths against - skipping.`
+    );
     return;
   }
 
@@ -60,12 +67,16 @@ export async function loadConfiguredEcoreMappings(workspaceFolders: readonly vsc
       // "index out of bounds" one from the catch block.
       const root = contents && !contents.isEmpty() ? contents.get(0) : undefined;
       if (!root || !isEPackage(root)) {
-        console.warn(`typemf.ecoreMappings: entry for '${mapping.nsURI}' (${mapping.ecoreFile}) did not load a valid EPackage - skipping.`);
+        console.warn(
+          `typemf.ecoreMappings: entry for '${mapping.nsURI}' (${mapping.ecoreFile}) did not load a valid EPackage - skipping.`
+        );
         continue;
       }
       runtime.packageRegistry.register(root);
     } catch (err) {
-      console.warn(`typemf.ecoreMappings: failed to load entry for '${mapping.nsURI}' (${mapping.ecoreFile}): ${(err as Error).message}`);
+      console.warn(
+        `typemf.ecoreMappings: failed to load entry for '${mapping.nsURI}' (${mapping.ecoreFile}): ${(err as Error).message}`
+      );
     }
   }
 }

@@ -16,7 +16,7 @@ class FakeTransport implements PostMessageTransport {
 }
 
 describe('ConcreteSubtypesQuery', () => {
-  it('sends a ConcreteSubtypesRequest carrying the given classId, and resolves with classIds once a matching response arrives', async () => {
+  it('sends a ConcreteSubtypesRequest and resolves with the classes of the matching response', async () => {
     const transport = new FakeTransport();
     const query = new ConcreteSubtypesQuery(transport);
 
@@ -24,7 +24,11 @@ describe('ConcreteSubtypesQuery', () => {
     const request = transport.lastRequest();
     expect(request.classId).toBe('shape-class-id');
 
-    query.handleMessage({ type: 'typemf/concreteSubtypesResult', requestId: request.requestId, classIds: ['circle-id', 'square-id'] });
+    query.handleMessage({
+      type: 'typemf/concreteSubtypesResult',
+      requestId: request.requestId,
+      classIds: ['circle-id', 'square-id'],
+    });
 
     expect(await pending).toEqual(['circle-id', 'square-id']);
   });
@@ -35,12 +39,16 @@ describe('ConcreteSubtypesQuery', () => {
 
     const pending = query.query('unknown-class');
     const request = transport.lastRequest();
-    query.handleMessage({ type: 'typemf/concreteSubtypesError', requestId: request.requestId, message: 'no class known' });
+    query.handleMessage({
+      type: 'typemf/concreteSubtypesError',
+      requestId: request.requestId,
+      message: 'no class known',
+    });
 
     await expect(pending).rejects.toThrow('no class known');
   });
 
-  it('a response with an unrelated requestId is ignored', async () => {
+  it('ignores a response with another requestId', async () => {
     const transport = new FakeTransport();
     const query = new ConcreteSubtypesQuery(transport);
 
@@ -53,7 +61,7 @@ describe('ConcreteSubtypesQuery', () => {
     expect(await pending).toEqual(['right']);
   });
 
-  it('handleMessage ignores unrelated message types without throwing', () => {
+  it('handleMessage ignores unrelated message types', () => {
     const query = new ConcreteSubtypesQuery(new FakeTransport());
     expect(() => query.handleMessage({ type: 'something/else' })).not.toThrow();
     expect(() => query.handleMessage(null)).not.toThrow();

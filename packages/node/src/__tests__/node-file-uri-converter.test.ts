@@ -23,7 +23,7 @@ describe('NodeFileUriConverter', () => {
     expect(converter.canHandle(URI.parse('mem:model'))).toBe(false);
   });
 
-  it('writes and reads back real bytes from a real file', async () => {
+  it('writes and reads a file', async () => {
     const converter = new NodeFileUriConverter();
     const uri = URI.createFileURI(join(dir, 'model.txt'));
     const content = new TextEncoder().encode('hello from a real file');
@@ -44,7 +44,7 @@ describe('NodeFileUriConverter', () => {
     expect(new TextDecoder().decode(readBack)).toBe('nested content');
   });
 
-  it('exists() reflects real filesystem state', async () => {
+  it('exists() reports whether the file exists', async () => {
     const converter = new NodeFileUriConverter();
     const uri = URI.createFileURI(join(dir, 'maybe.txt'));
 
@@ -53,7 +53,7 @@ describe('NodeFileUriConverter', () => {
     expect(await converter.exists(uri)).toBe(true);
   });
 
-  it('ignores a fragment on the URI when resolving the filesystem path', async () => {
+  it('ignores the URI fragment', async () => {
     const converter = new NodeFileUriConverter();
     const baseUri = URI.createFileURI(join(dir, 'model.txt'));
     await converter.writeBinary(baseUri, new TextEncoder().encode('base content'));
@@ -63,7 +63,7 @@ describe('NodeFileUriConverter', () => {
     expect(new TextDecoder().decode(readBack)).toBe('base content');
   });
 
-  it('throws a clear error for a non-file scheme', async () => {
+  it('throws for a non-file scheme', async () => {
     const converter = new NodeFileUriConverter();
     await expect(converter.readBinary(URI.parse('mem:whatever'))).rejects.toThrow(/cannot handle scheme 'mem'/);
   });

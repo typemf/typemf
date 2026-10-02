@@ -21,7 +21,11 @@ export function handleConcreteSubtypesRequest(
 ): ConcreteSubtypesResponse | ConcreteSubtypesError {
   const superType = document.objectIds.objectFor(request.classId) as EClass | undefined;
   if (!superType) {
-    return { type: 'typemf/concreteSubtypesError', requestId: request.requestId, message: `No class known for id '${request.classId}'.` };
+    return {
+      type: 'typemf/concreteSubtypesError',
+      requestId: request.requestId,
+      message: `No class known for id '${request.classId}'.`,
+    };
   }
 
   const packages = document.resourceSet.getPackageRegistry().getAllPackages();

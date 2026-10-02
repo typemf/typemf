@@ -1,4 +1,4 @@
-import { EAttributeImpl, EClassImpl, EDataTypeImpl, EPackageImpl } from '@typemf/core';
+import { EAttributeImpl, EClassImpl, EPackageImpl } from '@typemf/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,13 +8,7 @@ import { generate } from '../generate.js';
 import { typescriptTemplateSet } from '../typescript-template-set.js';
 import { annotatedDataType } from './sample-metamodel.js';
 
-/**
- * A tiny metamodel with one class having real lowerBound/upperBound
- * attributes and a derived "many" boolean attribute (matching Ecore's own
- * ETypedElement.many exactly) - proves the generated bean getter for
- * "many" actually computes upperBound === -1 || upperBound > 1 at runtime,
- * not just that the generated code type-checks.
- */
+/** A class with lowerBound/upperBound and the derived `many` and `required` of ETypedElement. */
 function buildDerivedFeatureMetamodel() {
   const eString = annotatedDataType('EString', 'string');
   const eInt = annotatedDataType('EInt', 'number');
@@ -52,7 +46,6 @@ function buildDerivedFeatureMetamodel() {
   required.setChangeable(false);
   widget.getEStructuralFeatures().add(required);
 
-
   const pkg = new EPackageImpl();
   pkg.setName('derivedtest');
   pkg.setNsURI('https://typemf.dev/test/derived');
@@ -66,7 +59,7 @@ function buildDerivedFeatureMetamodel() {
   return { pkg, widget, lowerBound, upperBound, many };
 }
 
-describe('trivial derived-feature formulas - real runtime verification', () => {
+describe('derived features with built-in formulas', () => {
   let dir: string;
 
   beforeEach(async () => {
@@ -78,7 +71,7 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('generates a "many" getter with no setter, and it computes correctly at runtime', async () => {
+  it('generate getters without setters that compute many and required', async () => {
     const { pkg } = buildDerivedFeatureMetamodel();
     const files = generate(pkg, typescriptTemplateSet, {});
 
@@ -90,7 +83,6 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
     expect(widgetTypes.content).not.toContain('setMany(');
     expect(widgetTypes.content).toContain('isMany()');
 
-    // Actually compile and run it.
     const jsPaths = new Map<string, string>();
     for (const file of files) {
       const jsPath = join(dir, file.path.replace(/\.ts$/, '.js'));
@@ -122,16 +114,12 @@ describe('trivial derived-feature formulas - real runtime verification', () => {
     widget.setUpperBound(-1);
     expect(widget.isMany()).toBe(true);
 
-    // required = lowerBound >= 1, with NO !many check - verified directly
-    // against real EMF's ETypedElementImpl.isRequired() source. An
-    // earlier version of this formula incorrectly included !many; this
-    // specific case (lowerBound=1 AND many=true, i.e. upperBound=-1) is
-    // exactly where that bug would have wrongly returned false.
+    // As in EMF, required is lowerBound >= 1, also for many-valued features.
     widget.setLowerBound(0);
     expect(widget.isRequired()).toBe(false);
 
     widget.setLowerBound(1);
     expect(widget.isRequired()).toBe(true);
-    expect(widget.isMany()).toBe(true); // still -1 from above - required AND many, the case the old formula got wrong
+    expect(widget.isMany()).toBe(true);
   });
 });

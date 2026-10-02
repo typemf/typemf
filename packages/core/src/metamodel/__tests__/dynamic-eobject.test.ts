@@ -9,9 +9,7 @@ import {
 } from '../../index.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
-// See NOTES.md's point 6 write-up: every generated setter routes through getEcorePackageRef(), which
-// needs Ecore's own metaclass system bootstrapped first - this triggers that safely before any test
-// in this file constructs a raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 describe('DynamicEObjectImpl / DynamicEFactoryImpl', () => {
@@ -96,12 +94,7 @@ describe('DynamicEObjectImpl / DynamicEFactoryImpl', () => {
     expect(book.eContainer()).toBe(library);
   });
 
-  it('does not duplicate a target re-added to a many-valued NON-containment reference list either', () => {
-    // Reference-list uniqueness (BasicEList.rejectsDuplicate) applies to
-    // ANY EReference, not just containment ones - the existing coverage
-    // above only ever exercised the containment case. A hand-built,
-    // self-contained fixture here rather than sample-metamodel.ts, which
-    // has no many-valued non-containment reference to reuse.
+  it('does not duplicate a target re-added to a many-valued non-containment reference', () => {
     const tagClass = new EClassImpl();
     tagClass.setName('Tag');
     const itemClass = new EClassImpl();
@@ -119,10 +112,6 @@ describe('DynamicEObjectImpl / DynamicEFactoryImpl', () => {
     pkg.setName('taggingtest');
     pkg.getEClassifiers().add(tagClass);
     pkg.getEClassifiers().add(itemClass);
-    // eClassifiers' eOpposite is never wired on the self-hosted bootstrap's own metaclass
-    // descriptions (a separate, pre-existing gap - confirmed directly, not assumed), so this needs
-    // to stay explicit; setEPackage is impl-only (EClass.eOperations was made changeable=false-aware
-    // this session), so casting is correct here, not a workaround.
     for (const c of pkg.getEClassifiers()) (c as EClassImpl).setEPackage(pkg);
     pkg.setEFactoryInstance(new DynamicEFactoryImpl());
 
@@ -133,10 +122,6 @@ describe('DynamicEObjectImpl / DynamicEFactoryImpl', () => {
     tags.add(tag);
     tags.add(tag);
     expect(tags.size()).toBe(1);
-    // Unlike containment, re-adding a non-containment reference target
-    // does NOT set a container - confirms this is genuinely exercising
-    // the reference-uniqueness path, not accidentally reusing the
-    // containment one.
     expect(tag.eContainer()).toBeUndefined();
   });
 
@@ -153,12 +138,6 @@ describe('DynamicEObjectImpl / DynamicEFactoryImpl', () => {
 
   it('maintains containment bookkeeping for a single-valued containment feature via eSet', () => {
     const { libraryClass, bookClass, titleAttr } = buildSampleMetamodel();
-    const libraryClassWithSingleContainment = libraryClass;
-    void libraryClassWithSingleContainment;
-
-    // featuredBook is deliberately non-containment in the sample model, so
-    // build a one-off containment single-valued reference here to exercise
-    // that branch of eSet() directly.
     const coverBookRef = new EReferenceImpl();
     coverBookRef.setName('coverFeature');
     coverBookRef.setEType(bookClass);

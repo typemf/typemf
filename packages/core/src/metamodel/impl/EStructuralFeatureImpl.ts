@@ -5,10 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { TypeScriptClass } from '../types/TypeScriptClass.js';
 
-
-
 export class EStructuralFeatureImpl extends ETypedElementImpl implements EStructuralFeature {
-
   private _changeable: boolean = true;
 
   private _volatile: boolean = false;
@@ -24,7 +21,6 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   private _derived: boolean = false;
 
   private _eContainingClass: EClass | undefined;
-
 
   private featureId = -1;
 
@@ -100,18 +96,24 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
     this._eContainingClass = value;
   }
 
-
-
   eGet(feature: EStructuralFeature): unknown {
     switch (feature.getFeatureID()) {
-      case 10: return this._changeable;
-      case 11: return this._volatile;
-      case 12: return this._transient;
-      case 13: return this._defaultValueLiteral;
-      case 14: return this._defaultValue;
-      case 15: return this._unsettable;
-      case 16: return this._derived;
-      case 17: return this._eContainingClass;
+      case 10:
+        return this._changeable;
+      case 11:
+        return this._volatile;
+      case 12:
+        return this._transient;
+      case 13:
+        return this._defaultValueLiteral;
+      case 14:
+        return this._defaultValue;
+      case 15:
+        return this._unsettable;
+      case 16:
+        return this._derived;
+      case 17:
+        return this._eContainingClass;
       default:
         return super.eGet(feature);
     }
@@ -126,7 +128,15 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 11: {
@@ -136,7 +146,15 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 12: {
@@ -146,7 +164,15 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 13: {
@@ -156,7 +182,15 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 15: {
@@ -166,7 +200,15 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       case 16: {
@@ -176,7 +218,15 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         this.eBasicSetValue(feature, value);
         this.eDidRemove(feature, oldValue);
         this.eDidAdd(feature, value);
-        this.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'SET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: value,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
       default:
@@ -187,14 +237,30 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
-      case 10: this._changeable = value as boolean; return;
-      case 11: this._volatile = value as boolean; return;
-      case 12: this._transient = value as boolean; return;
-      case 13: this._defaultValueLiteral = value as string | undefined; return;
-      case 14: this._defaultValue = value as unknown; return;
-      case 15: this._unsettable = value as boolean; return;
-      case 16: this._derived = value as boolean; return;
-      case 17: this._eContainingClass = value as EClass | undefined; return;
+      case 10:
+        this._changeable = value as boolean;
+        return;
+      case 11:
+        this._volatile = value as boolean;
+        return;
+      case 12:
+        this._transient = value as boolean;
+        return;
+      case 13:
+        this._defaultValueLiteral = value as string | undefined;
+        return;
+      case 14:
+        this._defaultValue = value as unknown;
+        return;
+      case 15:
+        this._unsettable = value as boolean;
+        return;
+      case 16:
+        this._derived = value as boolean;
+        return;
+      case 17:
+        this._eContainingClass = value as EClass | undefined;
+        return;
       default:
         super.eBasicSetValue(feature, value);
         return;
@@ -209,14 +275,22 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
 
   eIsSet(feature: EStructuralFeature): boolean {
     switch (feature.getFeatureID()) {
-      case 10: return this._changeable !== true;
-      case 11: return this._volatile !== false;
-      case 12: return this._transient !== false;
-      case 13: return this._defaultValueLiteral !== undefined;
-      case 14: return this._defaultValue !== undefined;
-      case 15: return this._unsettable !== false;
-      case 16: return this._derived !== false;
-      case 17: return this._eContainingClass !== undefined;
+      case 10:
+        return this._changeable !== true;
+      case 11:
+        return this._volatile !== false;
+      case 12:
+        return this._transient !== false;
+      case 13:
+        return this._defaultValueLiteral !== undefined;
+      case 14:
+        return this._defaultValue !== undefined;
+      case 15:
+        return this._unsettable !== false;
+      case 16:
+        return this._derived !== false;
+      case 17:
+        return this._eContainingClass !== undefined;
       default:
         return super.eIsSet(feature);
     }
@@ -224,83 +298,139 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
 
   eUnset(feature: EStructuralFeature): void {
     switch (feature.getFeatureID()) {
-
       case 10: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._changeable;
         this._changeable = true;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 11: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._volatile;
         this._volatile = false;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 12: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._transient;
         this._transient = false;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 13: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._defaultValueLiteral;
         this._defaultValueLiteral = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 14: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._defaultValue;
         this._defaultValue = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 15: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._unsettable;
         this._unsettable = false;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 16: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._derived;
         this._derived = false;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
-
 
       case 17: {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._eContainingClass;
         this._eContainingClass = undefined;
         this.eDidRemove(feature, oldValue);
-        this.eNotify({ eventType: 'UNSET', notifier: this, feature, oldValue, newValue: undefined, position: undefined, wasSet });
+        this.eNotify({
+          eventType: 'UNSET',
+          notifier: this,
+          feature,
+          oldValue,
+          newValue: undefined,
+          position: undefined,
+          wasSet,
+        });
         return;
       }
 

@@ -16,7 +16,7 @@ describe('runGeneration', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('writes real files, with outputDir resolved relative to the config directory, not the process cwd', async () => {
+  it('writes files to outputDir, relative to the config file', async () => {
     const { libraryPackage } = buildSampleMetamodel();
     const configDir = join(dir, 'some', 'nested', 'project');
     await mkdir(configDir, { recursive: true });
@@ -55,9 +55,6 @@ describe('runGeneration', () => {
     const configDir = join(dir, 'proj2');
     await mkdir(configDir, { recursive: true });
 
-    // The built-in typescript set doesn't currently read any option, but
-    // this proves options genuinely reach generate() unmodified rather
-    // than being silently dropped by the CLI layer.
     const result = await runGeneration(
       { ecoreFile: './m.ecore', outputDir: './out', templateSet: 'typescript', options: { unused: 'value' } },
       configDir,
@@ -66,10 +63,14 @@ describe('runGeneration', () => {
     expect(result.writtenPaths.length).toBeGreaterThan(0);
   });
 
-  it('propagates a clear error for an unknown template set', async () => {
+  it('throws for an unknown template set', async () => {
     const { libraryPackage } = buildSampleMetamodel();
     await expect(
-      runGeneration({ ecoreFile: './m.ecore', outputDir: './out', templateSet: 'java', options: {} }, dir, libraryPackage)
+      runGeneration(
+        { ecoreFile: './m.ecore', outputDir: './out', templateSet: 'java', options: {} },
+        dir,
+        libraryPackage
+      )
     ).rejects.toThrow(/Unknown template set 'java'/);
   });
 });

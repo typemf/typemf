@@ -1,9 +1,6 @@
 /**
- * A local copy of the Library/Book/AudioBook sample metamodel used in
- * @typemf/core's own test suite, rebuilt here from @typemf/core's public
- * exports only. Not shared across the package boundary on purpose - a
- * package's tests shouldn't reach into another package's internal
- * __tests__ directory, which isn't part of its published surface.
+ * The Library/Book/AudioBook sample metamodel of @typemf/core's tests,
+ * built from the public API.
  */
 import {
   DynamicEFactoryImpl,
@@ -15,9 +12,7 @@ import {
   EReferenceImpl,
 } from '@typemf/core';
 
-// See NOTES.md's point 6/7 write-ups: every generated setter routes through getEcorePackageRef(),
-// which needs Ecore's own metaclass system bootstrapped first - this triggers that safely, once,
-// at module load, before buildSampleMetamodel() constructs a single raw metaclass instance.
+// Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
 
 export function buildSampleMetamodel() {

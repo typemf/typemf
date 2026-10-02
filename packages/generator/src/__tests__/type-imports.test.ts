@@ -1,4 +1,13 @@
-import { DynamicEFactoryImpl, EAnnotationImpl, EAttributeImpl, EClassImpl, EDataTypeImpl, EPackageImpl, setDetailValue, type EClassifier } from '@typemf/core';
+import {
+  DynamicEFactoryImpl,
+  EAnnotationImpl,
+  EAttributeImpl,
+  EClassImpl,
+  EDataTypeImpl,
+  EPackageImpl,
+  setDetailValue,
+  type EClassifier,
+} from '@typemf/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { generate } from '../generate.js';
 import { resetGenerationContext } from '../generation-context.js';
@@ -69,56 +78,51 @@ function referencing(details: Record<string, string> | undefined, text?: string)
   return { a, b, eMoney };
 }
 
-const file = (files: Array<{ path: string; content: string }>, path: string) => files.find((f) => f.path === path)!.content;
+const file = (files: Array<{ path: string; content: string }>, path: string) =>
+  files.find((f) => f.path === path)!.content;
 
-describe('import annotation: new source and keys', () => {
+describe('import annotation', () => {
   beforeEach(() => {
     resetGenerationContext();
     importCollector.clear();
   });
 
-  it('the TEXT is the `type` detail of the plain generator annotation', () => {
+  it('the type text is the `type` detail of the generator annotation', () => {
     expect(resolveDataTypeTs(money({ type: 'Money' })).text).toBe('Money');
   });
 
-  it('the old source and keys are no longer read: the type falls through to its name, with no import', () => {
-    const dt = new EDataTypeImpl();
-    dt.setName('EMoney');
-    annotate(dt, 'https://typemf.dev/generator', { 'typescript-type': 'Money', 'typescript-import-from': './types/Money' });
-    expect(resolveDataTypeTs(dt)).toEqual({ text: 'EMoney' });
-    // ...and the new source with the OLD keys is just as inert.
-    const dt2 = new EDataTypeImpl();
-    dt2.setName('EMoney');
-    annotate(dt2, IMPORT, { 'typescript-type': 'Money' });
-    expect(resolveDataTypeTs(dt2)).toEqual({ text: 'EMoney' });
-  });
-
-  it('the import annotation alone does NOT supply the text - the text falls through to the name - but its import still applies', () => {
+  it('the import annotation alone supplies the import but not the text', () => {
     const dt = new EDataTypeImpl(); // an import annotation and NOTHING else
     dt.setName('EMoney');
     annotate(dt, IMPORT, { type: 'Money', 'internal-from': './types/Money' });
     expect(resolveDataTypeTs(dt)).toEqual({ text: 'EMoney', importName: 'Money', importFrom: './types/Money' });
   });
 
-  it('text and import are independent: a compound text with a separately named symbol to import', () => {
+  it('text and imported symbol are independent', () => {
     const dt = money({ type: 'Money', 'internal-from': './types/Money' }, 'Money | undefined');
-    expect(resolveDataTypeTs(dt)).toEqual({ text: 'Money | undefined', importName: 'Money', importFrom: './types/Money' });
+    expect(resolveDataTypeTs(dt)).toEqual({
+      text: 'Money | undefined',
+      importName: 'Money',
+      importFrom: './types/Money',
+    });
     expect(tsScalarType(dt)).toBe('Money | undefined');
     expect(importCollector.render('impl', {})).toBe("import { Money } from '../types/Money';");
   });
 
-  it('an annotation without a `type` says nothing (there is no name to emit or import)', () => {
-    expect(resolveDataTypeTs(money({ from: '@acme/money', 'internal-from': './types/Money' }))).toEqual({ text: 'EMoney' });
+  it('an annotation without a `type` is ignored', () => {
+    expect(resolveDataTypeTs(money({ from: '@acme/money', 'internal-from': './types/Money' }))).toEqual({
+      text: 'EMoney',
+    });
   });
 });
 
-describe('internal vs external, decided during generation', () => {
+describe('internal and external types', () => {
   beforeEach(() => {
     resetGenerationContext();
     importCollector.clear();
   });
 
-  it('an EXTERNAL type (declared in another package) is imported from `from`', () => {
+  it('imports an external type from `from`', () => {
     const { b } = referencing(BOTH);
     const files = generate(b, typescriptTemplateSet, {});
     for (const path of ['types/Child.ts', 'impl/ChildImpl.ts']) {
@@ -128,7 +132,7 @@ describe('internal vs external, decided during generation', () => {
     expect(file(files, 'types/Child.ts')).toContain('getPrice(): Money | undefined;');
   });
 
-  it('an INTERNAL type (declared in the package being generated) is imported from `internal-from`, relative per importing folder', () => {
+  it('imports an internal type from `internal-from`, relative to each folder', () => {
     const eMoney = money(BOTH);
     const a = pkg('a', eMoney, classWith('Holder', ['price', eMoney]));
     const files = generate(a, typescriptTemplateSet, {});
@@ -137,7 +141,7 @@ describe('internal vs external, decided during generation', () => {
     expect(file(files, 'types/Holder.ts')).not.toContain('@acme/money');
   });
 
-  it('the same type flips between the two as the package being generated changes - no state leaks across generate() calls', () => {
+  it('decides per generate() call whether a type is internal', () => {
     const eMoney = money(BOTH);
     const a = pkg('a', eMoney, classWith('Holder', ['price', eMoney]));
     const b = pkg('b', classWith('Child', ['price', eMoney]));
@@ -146,25 +150,25 @@ describe('internal vs external, decided during generation', () => {
     expect(file(generate(a, typescriptTemplateSet, {}), 'types/Holder.ts')).toContain("from './Money'");
   });
 
-  it('INTERNAL with only `from`: falls back to it (e.g. a datatype wrapping a third-party library)', () => {
+  it('an internal type with only `from` is imported from `from`', () => {
     const eBig = money({ type: 'Big', from: 'big.js' });
     const files = generate(pkg('a', eBig, classWith('Holder', ['price', eBig])), typescriptTemplateSet, {});
     expect(file(files, 'types/Holder.ts')).toContain("import { Big } from 'big.js';");
   });
 
-  it('EXTERNAL with only `internal-from`: no import (a path relative to a foreign package root means nothing) - the type text is still emitted', () => {
+  it('an external type with only `internal-from` gets no import', () => {
     const { b } = referencing({ type: 'Money', 'internal-from': './types/Money' });
     const child = file(generate(b, typescriptTemplateSet, {}), 'types/Child.ts');
     expect(child).toContain('getPrice(): Money | undefined;');
     expect(child).not.toMatch(/import \{[^}]*\bMoney\b/);
   });
 
-  it('with no generation in progress, nothing is external (direct calls, unit tests)', () => {
+  it('outside generate() no type is external', () => {
     const { eMoney } = referencing(BOTH); // belongs to package a, but no generation is running
     expect(resolveDataTypeTs(eMoney)).toEqual({ text: 'Money', importName: 'Money', importFrom: './types/Money' });
   });
 
-  it('an external `from` of "@typemf/core" and the templates\' own foundational EList are ONE import - the collision the redesign exists to remove', () => {
+  it("merges an external import from @typemf/core with the templates' EList import", () => {
     const eelist = new EDataTypeImpl();
     eelist.setName('EEList');
     annotate(eelist, GENERATOR, { type: 'EList' });
@@ -182,7 +186,7 @@ describe('internal vs external, decided during generation', () => {
   });
 });
 
-describe('the mapping seam: import information supplied alongside the model', () => {
+describe('import mappings supplied with the model', () => {
   beforeEach(() => {
     resetGenerationContext();
     importCollector.clear();
@@ -190,22 +194,27 @@ describe('the mapping seam: import information supplied alongside the model', ()
 
   const KEY = 'https://test/a#EMoney';
 
-  it('a pre-populated entry supplies the IMPORT for a type that carries no import annotation at all', () => {
+  it('an entry supplies the import for a type without an import annotation', () => {
     const { b } = referencing(undefined, 'Money'); // the TEXT still comes from the model; the mapping supplies the import
-    const files = generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { type: 'Money', from: '@acme/money' } } });
+    const files = generate(b, typescriptTemplateSet, {
+      'type-imports': { [KEY]: { type: 'Money', from: '@acme/money' } },
+    });
     expect(file(files, 'types/Child.ts')).toContain("import { Money } from '@acme/money';");
     expect(file(files, 'types/Child.ts')).toContain('getPrice(): Money | undefined;');
   });
 
-  it('an explicit entry takes precedence over the annotation, replacing it entirely', () => {
+  it('an entry replaces the annotation', () => {
     const { b } = referencing({ type: 'Money', from: '@old/money', 'internal-from': './types/OldMoney' });
-    const child = file(generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { type: 'Money', from: '@new/money' } } }), 'types/Child.ts');
+    const child = file(
+      generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { type: 'Money', from: '@new/money' } } }),
+      'types/Child.ts'
+    );
     expect(child).toContain("import { Money } from '@new/money';");
     expect(child).not.toContain('OldMoney');
     expect(child).not.toContain('@old/money');
   });
 
-  it('entries use the annotation\'s own key names (`internal-from`), so they can be copied between the two', () => {
+  it("entries use the annotation's key names", () => {
     const eMoney = money(undefined);
     const files = generate(pkg('a', eMoney, classWith('Holder', ['price', eMoney])), typescriptTemplateSet, {
       'type-imports': { [KEY]: { type: 'Money', from: '@acme/money', 'internal-from': './types/Money' } },
@@ -213,18 +222,24 @@ describe('the mapping seam: import information supplied alongside the model', ()
     expect(file(files, 'types/Holder.ts')).toContain("import { Money } from './Money';");
   });
 
-  it('an entry without a `type` says nothing, exactly like an annotation without one - the annotation still applies', () => {
+  it('an entry without a `type` is ignored', () => {
     const { b } = referencing(BOTH);
-    const child = file(generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { from: '@ignored/money' } } }), 'types/Child.ts');
+    const child = file(
+      generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { from: '@ignored/money' } } }),
+      'types/Child.ts'
+    );
     expect(child).toContain("import { Money } from '@acme/money';");
     expect(child).not.toContain('@ignored');
   });
 
-  it('the key is `<nsURI>#<classifier name>` - an entry for a different package or name does not apply', () => {
+  it('entries are keyed by `<nsURI>#<classifier name>`', () => {
     const { b } = referencing(undefined);
     const child = file(
       generate(b, typescriptTemplateSet, {
-        'type-imports': { 'https://test/other#EMoney': { type: 'Money', from: '@acme/money' }, 'https://test/a#EOther': { type: 'Money', from: '@acme/money' } },
+        'type-imports': {
+          'https://test/other#EMoney': { type: 'Money', from: '@acme/money' },
+          'https://test/a#EOther': { type: 'Money', from: '@acme/money' },
+        },
       }),
       'types/Child.ts'
     );

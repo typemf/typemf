@@ -1,0 +1,41 @@
+{
+  "name": "library-extension",
+  "displayName": "TypeMF Example: Library Extension",
+  "description": "Extends the classes of the library-model example extension.",
+  "version": "1.0.0",
+  "publisher": "typemf-examples",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "extensionDependencies": [
+    "typemf.vscode-runtime",
+    "typemf-examples.library-model"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "libraryExtension.createSample",
+        "title": "TypeMF Example: Create Sample Library"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node esbuild.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@typemf/core": "workspace:^",
+    "@typemf/vscode-runtime": "workspace:*",
+    "@types/vscode": "^1.100.0",
+    "esbuild": "^0.24.0",
+    "library-model": "workspace:^"
+  }
+}

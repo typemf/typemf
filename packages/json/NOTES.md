@@ -5,7 +5,7 @@
 Deserialization is two-phase by design: every object in the document is constructed first
 (attributes + containment only), then every non-containment reference is wired in a second
 pass. This is what makes same-resource forward references (an object referencing another one
-that appears *later* in the JSON) work correctly regardless of key/array order - the target is
+that appears _later_ in the JSON) work correctly regardless of key/array order - the target is
 guaranteed to already exist by the time phase 2 runs. If a future change makes deserialization
 streaming/incremental, this two-phase structure needs to be preserved deliberately, not
 optimized away.
@@ -28,7 +28,7 @@ future generator output agree with it rather than each independently guessing.
 `EMap` is still tracked as deferred in `@typemf/core`'s own `NOTES.md` - nothing here handles
 it either, consistently. `EOperation`s are signature-only everywhere in TMF (no `eInvoke`), so
 there's nothing for a serializer to do with them; not a gap, just noted for completeness.
-Many-valued *attributes* (as opposed to many-valued references, which are tested) aren't
+Many-valued _attributes_ (as opposed to many-valued references, which are tested) aren't
 exercised by any current test - the code path exists (`feature.isMany()` is checked uniformly
 for both attributes and references) but hasn't been proven against a concrete example.
 
