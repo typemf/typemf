@@ -14,7 +14,7 @@ import {
 import React, { useState } from 'react';
 import { displayLabel } from '../src/display-label.js';
 import { uriForId } from '../src/snapshot-serializer.js';
-import { useResolved, useResolvedList } from './hooks.js';
+import { useObjectVersion, useResolved, useResolvedList } from './hooks.js';
 import { WebviewEnvironment } from './webview-environment.js';
 
 export interface FeatureEditorProps {
@@ -213,82 +213,90 @@ function ManyValuedAttributeEditor({ obj, feature }: AttributeEditorProps): Reac
   );
 }
 
+interface ReferenceEditorProps extends Omit<FeatureEditorProps, 'feature'> {
+  feature: EReference;
+}
+
 /**
- * Still read-only for wiring/creating a NON-containment reference from scratch (a genuinely
- * separate, substantial piece of UI in its own right) - but "follow" (jump to the referenced
- * object in the tree), "remove" (list.remove(), or eUnset() for a single-valued one), and now
- * "add child" (for a containment feature) are all real, working actions.
- *
- * Every item goes through useResolved/useResolvedList, not a bare item.eIsProxy() check - the
- * real fix for a real, reported bug: a still-unresolved item used to show "…" permanently, since
- * nothing ever triggered resolution or a re-render once it completed. This affects containment
- * lists shown here too (e.g. EPackage.eClassifiers, EClass.eAnnotations) exactly the same way a
- * non-containment reference would - both come back from eGet() as (possibly still-proxy) EObject
- * values, and this editor doesn't distinguish the two.
+ * Shows the value of a reference. Each target can be followed (selected in the tree) and removed;
+ * a containment gets an "Add" button and any other reference a "Link" button. Unresolved proxies
+ * are shown as "…" until they are resolved.
  */
-function ReferenceEditor({
+function ReferenceEditor({ feature, ...props }: FeatureEditorProps): React.JSX.Element {
+  // FeatureEditor only dispatches here for an EReference.
+  const reference = feature as EReference;
+  return reference.isMany() ? (
+    <ManyReferenceEditor feature={reference} {...props} />
+  ) : (
+    <SingleReferenceEditor feature={reference} {...props} />
+  );
+}
+
+function ManyReferenceEditor({
   obj,
-  feature: rawFeature,
+  feature,
   environment,
   onFollowReference,
-}: FeatureEditorProps): React.JSX.Element {
-  // Always a real EReference here - FeatureEditor's own dispatch only ever calls this after
-  // isEReference(feature) was already true; FeatureEditorProps itself stays typed at the broader
-  // EStructuralFeature since every other widget genuinely needs that wider type.
-  const feature = rawFeature as EReference;
+}: ReferenceEditorProps): React.JSX.Element {
   const { resourceSet } = environment;
-  const value = obj.eGet(feature);
-
-  if (feature.isMany()) {
-    const list = value as EList<EObject>;
-    const items = [...list];
-    const resolvedItems = useResolvedList(items, resourceSet);
-    return (
-      <div className="feature-list">
-        {resolvedItems.length > 0 && (
-          <ul className="feature-reference-list">
-            {resolvedItems.map((item, index) => (
-              <li className="feature-reference-row" key={index}>
-                <span className="feature-reference-label">{item.eIsProxy() ? '…' : displayLabel(item)}</span>
-                {!item.eIsProxy() && (
-                  <button
-                    className="feature-reference-follow"
-                    onClick={() => onFollowReference(item)}
-                    aria-label="Follow reference"
-                    title="Select in tree"
-                  >
-                    {'→'}
-                  </button>
-                )}
-                {!feature.isDerived() && (
-                  <button
-                    className="feature-reference-remove"
-                    onClick={() => list.remove(items[index]!)} // items[index], not the (possibly since-resolved) `item` - list.remove() must match the exact element the list itself still holds
-                    aria-label="Remove"
-                    title="Remove"
-                  >
-                    {'✕'}
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        {resolvedItems.length === 0 && <span className="feature-readonly-empty">(none)</span>}
-        {/* Derived means read-only in every case (see FeatureEditor's own top-level check) -
+  const list = obj.eGet(feature) as EList<EObject>;
+  const version = useObjectVersion(obj);
+  const items = [...list];
+  const resolvedItems = useResolvedList(list, version, resourceSet);
+  return (
+    <div className="feature-list">
+      {resolvedItems.length > 0 && (
+        <ul className="feature-reference-list">
+          {resolvedItems.map((item, index) => (
+            <li className="feature-reference-row" key={index}>
+              <span className="feature-reference-label">{item.eIsProxy() ? '…' : displayLabel(item)}</span>
+              {!item.eIsProxy() && (
+                <button
+                  className="feature-reference-follow"
+                  onClick={() => onFollowReference(item)}
+                  aria-label="Follow reference"
+                  title="Select in tree"
+                >
+                  {'→'}
+                </button>
+              )}
+              {!feature.isDerived() && (
+                <button
+                  className="feature-reference-remove"
+                  onClick={() => list.remove(items[index]!)} // the element the list holds, not the resolved one
+                  aria-label="Remove"
+                  title="Remove"
+                >
+                  {'✕'}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {resolvedItems.length === 0 && <span className="feature-readonly-empty">(none)</span>}
+      {/* Derived means read-only in every case (see FeatureEditor's own top-level check) -
             add/link is a mutation affordance same as remove, so it's suppressed here too, not
             just the single-valued "+ Link"/"+ Add" case below. */}
-        {!feature.isDerived() &&
-          (feature.isContainment() ? (
-            <AddChildButton obj={obj} feature={feature} environment={environment} />
-          ) : (
-            <LinkReferenceButton obj={obj} feature={feature} environment={environment} />
-          ))}
-      </div>
-    );
-  }
+      {!feature.isDerived() &&
+        (feature.isContainment() ? (
+          <AddChildButton obj={obj} feature={feature} environment={environment} />
+        ) : (
+          <LinkReferenceButton obj={obj} feature={feature} environment={environment} />
+        ))}
+    </div>
+  );
+}
 
-  const resolvedSingle = useResolved(value as EObject | undefined, resourceSet);
+function SingleReferenceEditor({
+  obj,
+  feature,
+  environment,
+  onFollowReference,
+}: ReferenceEditorProps): React.JSX.Element {
+  const { resourceSet } = environment;
+  const value = obj.eGet(feature) as EObject | undefined;
+  const resolvedSingle = useResolved(value, resourceSet);
   if (value === undefined) {
     return (
       <div className="feature-list">

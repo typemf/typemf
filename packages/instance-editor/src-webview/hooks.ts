@@ -1,20 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { EObject, ResourceSet } from '@typemf/core';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { EList, EObject, ResourceSet } from '@typemf/core';
 import { uriForId } from '../src/snapshot-serializer.js';
 
 /**
- * Forces a re-render whenever `obj`'s own data changes (any feature). The real fix for a real
- * bug: eSet() mutates the EObject directly, entirely outside React's own rendering system - a
- * controlled <input value={...}> whose value is computed from obj.eGet(feature) would otherwise
- * never see that value change, since nothing triggers React to re-render and re-evaluate it.
- * Concretely, this is why typing into a feature editor didn't work at all: the DOM briefly shows
- * the keystroke (native browser behavior before React reconciles), then React's next render pass
- * reverts it, since the (still stale, pre-edit) `value` prop is the only thing React trusts.
- *
- * useSyncExternalStore, not a hand-rolled forceUpdate counter in a plain useState - the correct,
- * idiomatic React 18 primitive for "subscribe to an external, mutable data source and re-render
- * on change," avoiding the tearing issues a naive forceUpdate pattern can have under concurrent
- * rendering.
+ * Re-renders the component whenever a feature of `obj` changes, and returns a counter that
+ * increases with every change. EObjects change outside of React, so components that show their
+ * values need this to stay current.
  */
 export function useObjectVersion(obj: EObject | undefined): number {
   const versionRef = useRef(0);
@@ -32,124 +23,87 @@ export function useObjectVersion(obj: EObject | undefined): number {
 }
 
 /**
- * Resolves `objOrProxy` if it's still an unresolved proxy, otherwise returns it immediately -
- * undefined while a real fetch is pending. Explicit pending-state via useState/useEffect, not
- * React Suspense (throw-a-pending-promise): simpler, no Suspense boundaries needed anywhere in
- * this app. A deliberate choice for this first implementation - Suspense was the other real
- * option considered when this was first discussed, not obviously wrong, just not what's built
- * here.
+ * Returns `objOrProxy` itself if it is not a proxy, otherwise its resolved target. Returns
+ * `undefined` while resolving and if resolving fails.
  */
 export function useResolved(objOrProxy: EObject | undefined, resourceSet: ResourceSet): EObject | undefined {
-  const [resolved, setResolved] = useState<EObject | undefined>(
-    objOrProxy && !objOrProxy.eIsProxy() ? objOrProxy : undefined
-  );
+  const [result, setResult] = useState<{ for: EObject; value: EObject | undefined }>();
 
   useEffect(() => {
-    if (!objOrProxy) {
-      setResolved(undefined);
-      return;
-    }
-    if (!objOrProxy.eIsProxy()) {
-      setResolved(objOrProxy);
-      return;
-    }
+    if (!objOrProxy?.eIsProxy()) return;
     let cancelled = false;
-    setResolved(undefined);
     resourceSet
       .resolve(objOrProxy)
-      .then((r) => {
-        if (!cancelled) setResolved(r);
+      .then((value) => {
+        if (!cancelled) setResult({ for: objOrProxy, value });
       })
       .catch(() => {
-        if (!cancelled) setResolved(undefined);
+        if (!cancelled) setResult({ for: objOrProxy, value: undefined });
       });
     return () => {
       cancelled = true;
     };
   }, [objOrProxy, resourceSet]);
 
-  return resolved;
+  if (!objOrProxy?.eIsProxy()) return objOrProxy;
+  return result?.for === objOrProxy ? result.value : undefined;
 }
 
 /**
- * Resolves every item of `items` that's still a proxy, re-rendering as each one completes -
- * ReferenceEditor's own multi-valued case (FeatureEditor.tsx) needs this, not useResolved: a
- * many-valued reference (e.g. EPackage.eClassifiers, EClass.eAnnotations) is a *list* of
- * possibly-still-proxy items, each needing its own resolution, not one single object. The real
- * fix for a real, reported bug: ReferenceEditor previously checked item.eIsProxy() directly,
- * synchronously, with nothing to ever trigger resolution or a re-render once it completed - a
- * proxy item showed "…" forever, never becoming its real display label, however long the panel
- * stayed open. Returns objects in the same order as `items`; a still-unresolved (or failed-to-
- * resolve) entry stays as its own original proxy in the result, exactly like useResolved's own
- * undefined-while-pending convention, just per-item instead of for one value - the caller decides
- * how to render that (ReferenceEditor's own "…" placeholder, unchanged).
+ * Returns the items of `list` with every proxy replaced by its resolved target. Until the proxies
+ * are resolved, and for proxies that fail to resolve, the proxy itself is returned. `version` must
+ * change whenever the list changes; use {@link useObjectVersion} of the list's owner.
  */
-export function useResolvedList(items: EObject[], resourceSet: ResourceSet): EObject[] {
-  const [resolved, setResolved] = useState<EObject[]>(items);
-  const prevItemsRef = useRef<EObject[]>([]);
+export function useResolvedList(list: EList<EObject>, version: number, resourceSet: ResourceSet): EObject[] {
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` stands for the list contents
+  const items = useMemo(() => [...list], [list, version]);
+  const [result, setResult] = useState<{ for: EObject[]; value: EObject[] }>();
 
   useEffect(() => {
-    // items is a fresh array every render (the caller spreads an EList each time), so bail out
-    // here, inside the effect, unless its own contents actually differ element-wise from last
-    // time - avoids re-resolving (and the resulting setState/render loop) on every unrelated
-    // re-render this component happens to go through.
-    const prev = prevItemsRef.current;
-    const changed = items.length !== prev.length || items.some((item, i) => item !== prev[i]);
-    if (!changed) return;
-    prevItemsRef.current = items;
-
-    setResolved(items);
     const proxies = items.filter((item) => item.eIsProxy());
     if (proxies.length === 0) return;
-
     let cancelled = false;
     Promise.all(
       proxies.map((proxy) =>
         resourceSet
           .resolve(proxy)
-          .then((r) => [proxy, r] as const)
+          .then((resolved) => [proxy, resolved] as const)
           .catch(() => [proxy, undefined] as const)
       )
     ).then((pairs) => {
       if (cancelled) return;
       const byProxy = new Map(pairs);
-      setResolved(items.map((item) => byProxy.get(item) ?? item));
+      setResult({ for: items, value: items.map((item) => byProxy.get(item) ?? item) });
     });
     return () => {
       cancelled = true;
     };
-  });
+  }, [items, resourceSet]);
 
-  return resolved;
+  return result?.for === items ? result.value : items;
 }
 
-/** The one place an object is ever resolved from a bare id rather than an EObject/proxy value -
- *  only the document's own root, delivered that way in the typemf/init message (see
- *  handle-ready-message.ts's own reasoning: nothing else identifies the root any other way). */
+/** Loads the object with the host id `id`. Returns `undefined` while loading and if loading fails. */
 export function useResolvedById(id: string | undefined, resourceSet: ResourceSet): EObject | undefined {
-  const [resolved, setResolved] = useState<EObject | undefined>(undefined);
+  const [result, setResult] = useState<{ for: string; value: EObject | undefined }>();
 
   useEffect(() => {
-    if (!id) {
-      setResolved(undefined);
-      return;
-    }
+    if (!id) return;
     let cancelled = false;
-    setResolved(undefined);
     resourceSet
       .getResource(uriForId(id), true)
       .then((resource) => {
         if (cancelled) return;
         const contents = resource?.getContents();
-        setResolved(contents && !contents.isEmpty() ? contents.get(0) : undefined);
+        setResult({ for: id, value: contents && !contents.isEmpty() ? contents.get(0) : undefined });
       })
       .catch(() => {
-        if (!cancelled) setResolved(undefined);
+        if (!cancelled) setResult({ for: id, value: undefined });
       });
     return () => {
       cancelled = true;
     };
   }, [id, resourceSet]);
 
-  return resolved;
+  return id !== undefined && result?.for === id ? result.value : undefined;
 }

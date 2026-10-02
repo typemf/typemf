@@ -1,5 +1,5 @@
 import { EObject } from '@typemf/core';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { PropertiesPanel } from './PropertiesPanel.js';
 import { Tree } from './Tree.js';
 import { useResolvedById } from './hooks.js';
@@ -15,17 +15,9 @@ export function App({ environment, rootId, showDerivedFeatures }: AppProps): Rea
   const { resourceSet, objectRegistry, ancestorChainQuery } = environment;
   const root = useResolvedById(rootId, resourceSet);
   const [selected, setSelected] = useState<EObject | undefined>(undefined);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // The root is recorded under rootId, so it starts expanded.
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(rootId ? [rootId] : []));
   const selectedId = selected ? objectRegistry.hostIdFor(selected) : undefined;
-
-  // The root starts expanded, same as before this was lifted out of Tree's own per-node state -
-  // added once, the first moment its id is actually known (rootId alone isn't enough; the root
-  // itself has to have been resolved for hostIdFor to work).
-  useEffect(() => {
-    if (!root) return;
-    const id = objectRegistry.hostIdFor(root);
-    if (id) setExpandedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
-  }, [root, objectRegistry]);
 
   const toggleExpand = (id: string): void => {
     setExpandedIds((prev) => {
