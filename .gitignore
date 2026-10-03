@@ -7,3 +7,4 @@ ecore-workspace/ecore-output
 examples/library-model/src/generated
 REVIEW.md
 TODO.md
+*.vsix

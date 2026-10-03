@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch TypeMF Extensions",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-runtime-extension",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/instance-editor",
+        "--extensionDevelopmentPath=${workspaceFolder}/examples/library-model",
+        "--extensionDevelopmentPath=${workspaceFolder}/examples/library-extension"
+      ],
+      "outFiles": ["${workspaceFolder}/packages/*/dist/**/*.cjs", "${workspaceFolder}/examples/*/dist/**/*.cjs"],
+      "preLaunchTask": "typemf: build extensions"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # tags and GitHub releases
+  pull-requests: write # "Version Packages" PR
+  id-token: write # npm trusted publishing
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # With pending changesets: opens or updates the "Version Packages" PR.
+      # Without: publishes every package whose version is not on npm yet.
+      - id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm changeset publish
+          title: Version Packages
+          commit: Version Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Only needed until trusted publishing is configured for every package on npmjs.com.
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # The extensions are private packages: changesets versions them but doesn't publish them.
+      # The runtime goes first because the instance editor depends on it.
+      - name: Publish extensions
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          for extension in vscode-runtime-extension instance-editor; do
+            vsix="$PWD/$extension.vsix"
+            (cd "packages/$extension" && pnpm exec vsce package --no-dependencies --out "$vsix")
+            pnpm exec vsce publish --packagePath "$vsix" --skip-duplicate
+            pnpm exec ovsx publish "$vsix" --skip-duplicate
+          done
+
+      - if: steps.changesets.outputs.published == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: '*.vsix'

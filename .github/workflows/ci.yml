@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm format:check
+
+      - name: Package extensions
+        run: |
+          for extension in vscode-runtime-extension instance-editor; do
+            (cd "packages/$extension" && pnpm exec vsce package --no-dependencies --out "../../$extension.vsix")
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: '*.vsix'
