@@ -2,7 +2,6 @@ import {
   DynamicEFactoryImpl,
   EAttributeImpl,
   EClassImpl,
-  EClassifierImpl,
   EDataTypeImpl,
   EPackageImpl,
   EReferenceImpl,
@@ -464,7 +463,6 @@ export function buildEcoreMetaSchema() {
   pkg.setNsPrefix('ecore');
   for (const d of primitives.values()) pkg.getEClassifiers().add(d);
   for (const c of allClasses) pkg.getEClassifiers().add(c);
-  for (const classifier of pkg.getEClassifiers()) (classifier as EClassifierImpl).setEPackage(pkg);
   pkg.setEFactoryInstance(new DynamicEFactoryImpl());
 
   // Pass 5: assign real, unique featureIDs to every feature (also

@@ -5921,6 +5921,46 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._ETypeParameter.eBootstrapList(Ids.EClass.eSuperTypes).add(this._ENamedElement);
 
+    // Pass 4b: opposites. Set after all bootstrap adds, so those adds don't trigger inverse updates.
+    // Opposites in another package are not emitted.
+    this._EAnnotation_eModelElement.eBasicSetValue(Ids.EReference.eOpposite, this._EModelElement_eAnnotations);
+
+    this._EClass_eOperations.eBasicSetValue(Ids.EReference.eOpposite, this._EOperation_eContainingClass);
+
+    this._EClass_eStructuralFeatures.eBasicSetValue(
+      Ids.EReference.eOpposite,
+      this._EStructuralFeature_eContainingClass
+    );
+
+    this._EClassifier_ePackage.eBasicSetValue(Ids.EReference.eOpposite, this._EPackage_eClassifiers);
+
+    this._EEnum_eLiterals.eBasicSetValue(Ids.EReference.eOpposite, this._EEnumLiteral_eEnum);
+
+    this._EEnumLiteral_eEnum.eBasicSetValue(Ids.EReference.eOpposite, this._EEnum_eLiterals);
+
+    this._EFactory_ePackage.eBasicSetValue(Ids.EReference.eOpposite, this._EPackage_eFactoryInstance);
+
+    this._EModelElement_eAnnotations.eBasicSetValue(Ids.EReference.eOpposite, this._EAnnotation_eModelElement);
+
+    this._EOperation_eContainingClass.eBasicSetValue(Ids.EReference.eOpposite, this._EClass_eOperations);
+
+    this._EOperation_eParameters.eBasicSetValue(Ids.EReference.eOpposite, this._EParameter_eOperation);
+
+    this._EPackage_eFactoryInstance.eBasicSetValue(Ids.EReference.eOpposite, this._EFactory_ePackage);
+
+    this._EPackage_eClassifiers.eBasicSetValue(Ids.EReference.eOpposite, this._EClassifier_ePackage);
+
+    this._EPackage_eSubpackages.eBasicSetValue(Ids.EReference.eOpposite, this._EPackage_eSuperPackage);
+
+    this._EPackage_eSuperPackage.eBasicSetValue(Ids.EReference.eOpposite, this._EPackage_eSubpackages);
+
+    this._EParameter_eOperation.eBasicSetValue(Ids.EReference.eOpposite, this._EOperation_eParameters);
+
+    this._EStructuralFeature_eContainingClass.eBasicSetValue(
+      Ids.EReference.eOpposite,
+      this._EClass_eStructuralFeatures
+    );
+
     // Pass 5 (recompute EAll* caches, ordinary mode only) removed - stale post-swap.
     // @typemf/core's own EClassImpl is now itself generated code (see NOTES.md's point 6/7
     // write-ups), using the same automatic, get-bodied caching (EObjectImpl.getModelGeneration(),

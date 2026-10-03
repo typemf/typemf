@@ -10,8 +10,20 @@
     }
   ],
   "commit": false,
-  "ignore": [],
-  "fixed": [],
+  "ignore": ["library-model", "library-extension"],
+  "fixed": [
+    [
+      "@typemf/core",
+      "@typemf/xmi",
+      "@typemf/json",
+      "@typemf/node",
+      "@typemf/generator",
+      "@typemf/vscode-runtime",
+      "vscode-runtime",
+      "instance-editor"
+    ]
+  ],
   "linked": [],
+  "privatePackages": { "version": true, "tag": false },
   "updateInternalDependencies": "patch"
 }

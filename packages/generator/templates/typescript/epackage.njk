@@ -354,6 +354,17 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endif %}
 {% endfor %}
 
+    // Pass 4b: opposites. Set after all bootstrap adds, so those adds don't trigger inverse updates.
+    // Opposites in another package are not emitted.
+{% for classifier in eClassesOf(package) %}
+{% for feature in classifier.getEStructuralFeatures() %}
+{% set opposite = feature.getEOpposite() if isEReference(feature) else undefined %}
+{% if opposite and opposite.getEContainingClass().getEPackage() == package %}
+{{ bootstrapSet("this._" + classifier.getName() + "_" + feature.getName(), "setEOpposite", "Ids.EReference.eOpposite", "this._" + opposite.getEContainingClass().getName() + "_" + opposite.getName()) }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
     // Pass 5 (recompute EAll* caches, ordinary mode only) removed - stale post-swap.
     // @typemf/core's own EClassImpl is now itself generated code (see NOTES.md's point 6/7
     // write-ups), using the same automatic, get-bodied caching (EObjectImpl.getModelGeneration(),

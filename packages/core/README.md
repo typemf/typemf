@@ -1,87 +1,81 @@
 # @typemf/core
 
-First working slice of the `typemf` rebuild: `metamodel/api` (interfaces)
-and `metamodel/impl` (implementations), covering the full Ecore-equivalent
-type chain (`EObject` → `EModelElement` → `ENamedElement` → `ETypedElement`
-→ `EClassifier`/`EStructuralFeature` → `EClass`/`EAttribute`/`EReference`/
-`EEnum`/... → `EPackage`/`EFactory`), plus the two additions agreed on
-during planning:
+The Ecore metamodel and runtime of TypeMF, the TypeScript port of the
+[Eclipse Modeling Framework](https://eclipse.dev/emf/) (EMF).
 
-- **`EAnnotation`** - arbitrary source-namespaced metadata on any
-  `EModelElement`, which the original TMF had no equivalent of at all.
-- **`DynamicEObjectImpl` / `DynamicEFactoryImpl`** - a generic, map-backed
-  `EObject` that works for _any_ `EClass` with zero generated code, built
-  specifically so a `.ecore` file parsed at runtime (no codegen step) can be
-  instantiated and edited reflectively. Containment bookkeeping
-  (`eContainer`/`eContents`/`eAllContents`) is fully generic on
-  `EObjectImpl` and comes "for free" to both this class and any future
-  generated `*Gen` class, since it's derived entirely from `eGet`.
+- The Ecore metamodel: `EPackage`, `EClass`, `EAttribute`, `EReference`, `EEnum`, `EDataType`,
+  `EOperation`, `EAnnotation`, generics, and the `EcorePackage`/`EcoreFactory` singletons.
+- `EObject` with reflective access (`eGet`, `eSet`, `eIsSet`, `eUnset`), containment
+  (`eContainer`, `eContents`, `eAllContents`) and change notifications (`onDidChange`).
+- Dynamic objects: `DynamicEFactoryImpl` creates instances of any `EClass` without generated code.
+- Resources: `ResourceSet`, `Resource`, `URI`, proxies for cross-document references, and the
+  registries for packages, resource factories and URI converters.
 
-See `NOTES.md` for design decisions that were deliberately deferred rather
-than either skipped silently or over-built prematurely (EMap, reflection
-over the metamodel itself, opposite/inverse maintenance).
+Model code is generated with `@typemf/generator`. Serialization formats are in `@typemf/xmi` and
+`@typemf/json`, file access in Node.js in `@typemf/node`.
 
-## Layout
-
-```
-src/
-  metamodel/
-    api/            interfaces only, no runtime code
-    impl/           concrete classes
-    __tests__/      vitest suite + a shared sample metamodel fixture
-  index.ts          public entry point (barrel export)
-```
-
-## Commands
+## Installation
 
 ```bash
-npm install
-npm test          # vitest run - 25 tests, all passing
-npm run typecheck # tsc --noEmit
-npm run build     # typecheck + tsup (emits dist/ as ESM + CJS + .d.ts)
+npm install @typemf/core
 ```
 
-## Try it
+## Example
+
+Build a metamodel with the Ecore factory and create an instance of it reflectively:
 
 ```ts
-import { EAttributeImpl, EClassImpl, EDataTypeImpl, EPackageImpl, DynamicEFactoryImpl } from '@typemf/core';
+import { DynamicEFactoryImpl, EcorePackageImpl } from '@typemf/core';
 
-const eString = new EDataTypeImpl();
-eString.setName('EString');
+const ecore = EcorePackageImpl.eINSTANCE;
+const factory = ecore.getEFactoryInstance();
 
-const bookClass = new EClassImpl();
-bookClass.setName('Book');
-
-const titleAttr = new EAttributeImpl();
-titleAttr.setName('title');
-titleAttr.setEType(eString);
-titleAttr.setID(true);
-titleAttr.setFeatureID(0);
-titleAttr.setEContainingClass(bookClass);
-bookClass.getEStructuralFeatures().add(titleAttr);
-bookClass.recomputeAllLists();
-
-const pkg = new EPackageImpl();
+const pkg = factory.createEPackage();
 pkg.setName('library');
-pkg.getEClassifiers().add(bookClass);
-bookClass.setEPackage(pkg);
-
-// This is the line EcoreParser will eventually do automatically for a
-// purely parsed (no generated code) package.
+pkg.setNsURI('https://example.org/library');
+pkg.setNsPrefix('library');
 pkg.setEFactoryInstance(new DynamicEFactoryImpl());
 
-const book = bookClass.createInstance(); // -> a DynamicEObjectImpl
-book.eSet(titleAttr, 'Dune');
-console.log(book.eGet(titleAttr)); // "Dune"
-console.log(book.fullId()); // "Book_Dune"
+const book = factory.createEClass();
+book.setName('Book');
+const title = factory.createEAttribute();
+title.setName('title');
+title.setEType(ecore.getEString());
+book.getEStructuralFeatures().add(title);
+pkg.getEClassifiers().add(book);
+
+const dune = pkg.getEFactoryInstance().create(book);
+dune.eSet(title, 'Dune');
+dune.eGet(title); // 'Dune'
 ```
 
-See `src/metamodel/__tests__/sample-metamodel.ts` for a fuller example with
-inheritance and containment.
+`EcorePackageImpl.eINSTANCE` must be accessed before any other Ecore object is created; it
+initializes the Ecore metamodel.
 
-## Not included yet
+## Loading and saving
 
-Only `metamodel/api` and `metamodel/impl` are built here. `ecore/` (the
-XML parser discussed separately - native `DOMParser` in-browser,
-`@xmldom/xmldom` in Node, one shared tree-walker), `registry/` (the
-`EPackage.Registry`), and `json/` (the serializer) are the next slices.
+A `ResourceSet` needs a URI converter for the URI scheme and a resource factory for the file
+extension:
+
+```ts
+import { ResourceSetImpl, URI } from '@typemf/core';
+import { NodeFileUriConverter } from '@typemf/node';
+import { registerXmiFormat } from '@typemf/xmi';
+
+const resourceSet = new ResourceSetImpl();
+resourceSet.getUriConverterRegistry().register(new NodeFileUriConverter());
+registerXmiFormat(resourceSet.getResourceFactoryRegistry());
+resourceSet.getPackageRegistry().register(pkg);
+
+const resource = await resourceSet.getResource(URI.createFileURI('/path/to/library.xmi'), true);
+resource.getContents(); // root objects
+await resource.save();
+```
+
+## Limitations
+
+- `EMap` is not supported.
+
+## License
+
+Apache-2.0

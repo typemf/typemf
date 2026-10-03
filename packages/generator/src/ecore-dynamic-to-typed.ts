@@ -4,7 +4,6 @@ import {
   EClass,
   setDetailValue,
   EClassifier,
-  EClassifierImpl,
   EClassImpl,
   EcorePackageImpl,
   EDataTypeImpl,
@@ -299,7 +298,6 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   for (const real of classifierMap.values()) {
     if (real) realPkg.getEClassifiers().add(real);
   }
-  for (const c of realPkg.getEClassifiers()) (c as EClassifierImpl).setEPackage(realPkg);
 
   return realPkg;
 }

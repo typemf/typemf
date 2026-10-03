@@ -1,6 +1,5 @@
 import {
   DynamicEFactoryImpl,
-  EClassifierImpl,
   EcorePackageImpl,
   EPackage,
   EPackageRegistryImpl,
@@ -54,18 +53,6 @@ export async function loadLocalEcorePackage(fileUri: { fsPath: string }): Promis
   // since nothing in this package's own test suite ever went on to construct an instance from a
   // classifier this function returned.
   root.setEFactoryInstance(new DynamicEFactoryImpl());
-
-  // EClassifier.getEPackage() reads a separate, independently-set field, not something derived
-  // from eContainer() - confirmed directly (eContainer() correctly returns the real owner;
-  // getEPackage() doesn't). A real, structural gap in the model itself, not specific to this
-  // function - the third place this exact issue has now surfaced (also the self-hosted bootstrap
-  // and ecore-dynamic-to-typed.ts), which is why the real fix belongs in the model
-  // (EClassifier.ePackage should be a derived getter computed from eContainer(), not an
-  // independently-set field) rather than a fourth scattered workaround - tracked as a follow-up,
-  // not silently left unfixed. This is the immediate, local fix to unblock testing now.
-  for (const classifier of root.getEClassifiers()) {
-    (classifier as EClassifierImpl).setEPackage(root);
-  }
 
   // Every feature given a real, unique featureID here - a second real, confirmed bug found via
   // the same "new instance of a dynamic model freezes" reproduction: a plain .ecore file never

@@ -3,6 +3,7 @@ import {
   createInstanceOf,
   DynamicEFactoryImpl,
   EClassImpl,
+  EcoreFactoryImpl,
   EcorePackageImpl,
   EList,
   EObject,
@@ -201,5 +202,56 @@ describe('opposite (inverse) reference maintenance', () => {
     expect(list(research, m.employeesRef).toArray()).toEqual([alice]);
     expect(alice.eGet(m.departmentRef)).toBe(research);
     expect(alice.eContainer()).toBe(research);
+  });
+});
+
+describe('opposites of the Ecore metamodel', () => {
+  const ecore = EcorePackageImpl.eINSTANCE;
+  const factory = new EcoreFactoryImpl();
+
+  it('has an eOpposite on both ends of every bidirectional Ecore reference', () => {
+    expect(ecore.getEPackage_EClassifiers().getEOpposite()).toBe(ecore.getEClassifier_EPackage());
+    expect(ecore.getEClassifier_EPackage().getEOpposite()).toBe(ecore.getEPackage_EClassifiers());
+  });
+
+  it('sets the back-reference when a child is added', () => {
+    const pkg = factory.createEPackage();
+    const subpackage = factory.createEPackage();
+    const eClass = factory.createEClass();
+    const attribute = factory.createEAttribute();
+    const operation = factory.createEOperation();
+    const parameter = factory.createEParameter();
+    const eEnum = factory.createEEnum();
+    const literal = factory.createEEnumLiteral();
+
+    pkg.getESubpackages().add(subpackage);
+    pkg.getEClassifiers().add(eClass);
+    eClass.getEStructuralFeatures().add(attribute);
+    eClass.getEOperations().add(operation);
+    operation.getEParameters().add(parameter);
+    eEnum.getELiterals().add(literal);
+
+    expect(subpackage.getESuperPackage()).toBe(pkg);
+    expect(eClass.getEPackage()).toBe(pkg);
+    expect(attribute.getEContainingClass()).toBe(eClass);
+    expect(operation.getEContainingClass()).toBe(eClass);
+    expect(parameter.getEOperation()).toBe(operation);
+    expect(literal.getEEnum()).toBe(eEnum);
+  });
+
+  it('clears the back-reference on remove and updates both packages on a move', () => {
+    const first = factory.createEPackage();
+    const second = factory.createEPackage();
+    const eClass = factory.createEClass();
+
+    first.getEClassifiers().add(eClass);
+    first.getEClassifiers().remove(eClass);
+    expect(eClass.getEPackage()).toBeUndefined();
+
+    first.getEClassifiers().add(eClass);
+    second.getEClassifiers().add(eClass);
+    expect(eClass.getEPackage()).toBe(second);
+    expect(first.getEClassifiers().isEmpty()).toBe(true);
+    expect(second.getEClassifiers().toArray()).toEqual([eClass]);
   });
 });

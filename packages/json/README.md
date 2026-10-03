@@ -1,65 +1,68 @@
 # @typemf/json
 
-The first `EObjectSerializer` implementation (`resource/serializer.ts` in
-`@typemf/core`) - a JSON persistence format for TMF instance documents,
-successor to the original TMF's `TJson`.
+JSON serialization for [`@typemf/core`](https://www.npmjs.com/package/@typemf/core).
 
-## Wire format
+## Installation
+
+```bash
+npm install @typemf/core @typemf/json
+```
+
+## Usage
+
+`registerJsonFormat` registers the format for the `json` file extension:
+
+```ts
+import { ResourceSetImpl, URI } from '@typemf/core';
+import { registerJsonFormat } from '@typemf/json';
+import { NodeFileUriConverter } from '@typemf/node';
+
+const resourceSet = new ResourceSetImpl();
+resourceSet.getUriConverterRegistry().register(new NodeFileUriConverter());
+registerJsonFormat(resourceSet.getResourceFactoryRegistry());
+resourceSet.getPackageRegistry().register(LibraryPackageImpl.eINSTANCE);
+
+const resource = await resourceSet.getResource(URI.createFileURI('/path/to/library.json'), true);
+```
+
+The `EPackage` of every namespace used in the file must be in the package registry before loading.
+
+## Format
 
 ```json
 {
-  "$namespaces": { "lib": "https://typemf.dev/samples/library" },
+  "$namespaces": { "library": "https://example.org/library" },
   "$roots": [
     {
-      "$eClass": { "namespace": "lib", "name": "Library" },
-      "books": [{ "$eClass": { "namespace": "lib", "name": "Book" }, "title": "Dune" }],
-      "featuredBook": { "$ref": "#Book_Dune" }
+      "$eClass": { "namespace": "library", "name": "Library" },
+      "name": "City Library",
+      "writers": [{ "$eClass": { "namespace": "library", "name": "Writer" }, "name": "Frank Herbert" }],
+      "books": [
+        {
+          "$eClass": { "namespace": "library", "name": "Book" },
+          "title": "Dune",
+          "pages": 412,
+          "author": { "$ref": "#Writer_Frank Herbert" }
+        }
+      ]
     }
   ]
 }
 ```
 
-- **`$namespaces`**: a document-scoped prefix table (like XML namespace
-  prefixes) so full nsURIs aren't repeated on every object.
-- **`$eClass`**: `{ namespace, name }` rather than a bare class name, so
-  classifiers resolve unambiguously even across multiple packages.
-- Containment features nest inline; non-containment (cross-reference)
-  features become `{ "$ref": "...", "$eClass"?: {...} }`.
-- **`$ref` addressing** (mirrors EMF's XMI `href`, one attribute for both
-  cases, distinguished by whether a document part precedes `#`):
-  - `"#fullId"` - same-resource, by ID attribute (e.g. `"#Book_Dune"`)
-  - `"#/0/books/2"` - same-resource, positional (used when the target has
-    no ID attribute)
-  - `"<uri>#<either form>"` - cross-resource; becomes a `ProxyEObjectImpl`,
-    resolved lazily via `ResourceSet.resolve()`
-- **`$eClass` on a `$ref`** is only present when the target's actual type
-  differs from the feature's statically declared type (mirrors XMI's
-  `xsi:type`, which is likewise only emitted when needed) - this is what
-  lets an unresolved proxy already report the correct (possibly more
-  derived) type before it's ever loaded.
-- **`EEnum` attributes** serialize as their literal's name (`"ACTIVE"`),
-  not its ordinal value - see the note in `json-serializer.ts` on what this
-  implies about the in-memory representation.
-- **`EDate` attributes** serialize as ISO 8601 strings.
+- `$namespaces` maps prefixes to nsURIs; `$eClass` names a class by prefix and name.
+- `$roots` holds the root objects. A document may have several.
+- Contained objects are nested. Other references are `{ "$ref": "..." }`:
+  - `#<id>`: an object in the same document, by ID
+  - `#/0/books/2`: an object in the same document, by position (for classes without an ID
+    attribute)
+  - `<uri>#<id or position>`: an object in another document, loaded on demand
+- A `$ref` carries `$eClass` only when the target's class differs from the declared type of the
+  reference.
+- `EDate` values are ISO 8601 strings.
 
-The actual fragment-addressing logic (`computeFragment`/`resolveFragment`,
-covering both the ID and positional forms) lives in `@typemf/core`, not
-here - it's format-agnostic, `ResourceSet.resolve()` needs the exact same
-logic for the cross-resource case, and `@typemf/xmi` will need it again.
+References between JSON and XMI documents work in both directions.
 
-## Usage
+## License
 
-```ts
-import { ResourceSetImpl, URI } from '@typemf/core';
-import { registerJsonFormat } from '@typemf/json';
-
-const resourceSet = new ResourceSetImpl();
-resourceSet.setUriConverter(myUriConverter); // e.g. from @typemf/node
-registerJsonFormat(resourceSet.getResourceFactoryRegistry());
-
-const resource = await resourceSet.getResource(URI.parse('file:///model.json'), true);
-```
-
-See `src/__tests__/json-serializer.test.ts` for a complete example
-including containment, both reference-addressing forms, polymorphism, and
-cross-resource lazy resolution.
+Apache-2.0
