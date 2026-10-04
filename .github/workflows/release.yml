@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch: {} # manual retry, e.g. after a one-off publish failure
 
 concurrency:
   group: release
@@ -29,6 +30,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+      # The registry version of one representative package, read before publishing, so the step
+      # below can tell whether a release actually happened. changesets/action@v1's own `published`
+      # output can't be trusted for this: it detects a publish by scanning stdout for the text
+      # "New tag: ...", which @changesets/cli's current, spinner-based publish output never prints
+      # - the fix for that (reading a structured output file instead) only landed in the action's
+      # still-unreleased v2. @typemf/core is published whenever any package is (all 8 share one
+      # version via the `fixed` setting in .changeset/config.json).
+      - id: before
+        run: echo "core-version=$(npm view @typemf/core version 2>/dev/null || echo none)" >> "$GITHUB_OUTPUT"
+
       # With pending changesets: opens or updates the "Version Packages" PR.
       # Without: publishes every package whose version is not on npm yet.
       - id: changesets
@@ -42,10 +53,22 @@ jobs:
           # Only needed until trusted publishing is configured for every package on npmjs.com.
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - id: after
+        run: echo "core-version=$(npm view @typemf/core version 2>/dev/null || echo none)" >> "$GITHUB_OUTPUT"
+
+      - id: release-check
+        run: |
+          if [ "${{ steps.before.outputs.core-version }}" != "${{ steps.after.outputs.core-version }}" ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # The extensions are private packages: changesets versions them but doesn't publish them.
-      # The runtime goes first because the instance editor depends on it.
+      # The runtime goes first because the instance editor depends on it. Also runs on a manual
+      # workflow_dispatch, as a retry path when a previous run published npm but not the extensions.
       - name: Publish extensions
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.release-check.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
@@ -57,7 +80,7 @@ jobs:
             pnpm exec ovsx publish "$vsix" --skip-duplicate
           done
 
-      - if: steps.changesets.outputs.published == 'true'
+      - if: steps.release-check.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: extensions
