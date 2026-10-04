@@ -1,0 +1,29 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "baseBranch": "main",
+  "access": "public",
+  "format": "auto",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "typemf/typemf"
+    }
+  ],
+  "commit": false,
+  "ignore": ["library-model", "library-extension"],
+  "fixed": [
+    [
+      "@typemf/core",
+      "@typemf/xmi",
+      "@typemf/json",
+      "@typemf/node",
+      "@typemf/generator",
+      "@typemf/vscode-runtime",
+      "vscode-runtime",
+      "instance-editor"
+    ]
+  ],
+  "linked": [],
+  "privatePackages": { "version": true, "tag": false },
+  "updateInternalDependencies": "patch"
+}

@@ -1,0 +1,90 @@
+{
+  "name": "instance-editor",
+  "displayName": "TypeMF Instance Editor",
+  "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore), for generated as well as dynamically loaded metamodels.",
+  "version": "0.5.0",
+  "publisher": "typemf",
+  "preview": true,
+  "license": "Apache-2.0",
+  "icon": "images/icon.png",
+  "private": true,
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "engines": {
+    "node": ">=22",
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "extensionDependencies": [
+    "typemf.vscode-runtime"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "typemf.instanceEditor",
+        "displayName": "TypeMF Instance Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.xmi"
+          },
+          {
+            "filenamePattern": "*.json"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "typemf.instanceEditor.ecoreDefault",
+        "displayName": "TypeMF Instance Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.ecore"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "typemf.newModelInstance",
+        "title": "TypeMF: New Model Instance"
+      }
+    ],
+    "configuration": {
+      "title": "TypeMF › Editor",
+      "properties": {
+        "typemf.showDerivedFeatures": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show derived EStructuralFeatures (computed, not independently stored) in the properties panel. Off by default, since a derived feature is read-only and usually just clutter."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/typemf/typemf.git",
+    "directory": "packages/instance-editor"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && node esbuild.extension.mjs && node esbuild.webview.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.webview.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@typemf/core": "workspace:*",
+    "@typemf/json": "workspace:*",
+    "@typemf/node": "workspace:*",
+    "@typemf/xmi": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@typemf/vscode-runtime": "workspace:*",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/vscode": "^1.100.0",
+    "esbuild": "^0.24.0"
+  }
+}

@@ -1,0 +1,52 @@
+{% set eFactoryClassifier = findEClassByName(package, "EFactory") %}
+{% file factoryClassName(package) + ".ts" %}
+export interface {{ factoryClassName(package) }} extends {{ useImport("EFactory", "types", {foundational: true}) }} {
+{% for classifier in concreteEClassesOf(package) %}
+  create{{ classifier.getName() }}(): {{ useImport(classifier.getName(), "types", {foundational: false}) }};
+{% endfor %}
+  create(eClass: {{ useImport("EClass", "types", {foundational: true}) }}): {{ useImport("EObject", "types", {foundational: true}) }};
+}
+{% endfile %}
+{% file "impl/" + factoryClassName(package) + "Impl.ts" %}
+{#-
+  EFactoryImpl is requested with foundational: true unconditionally, even
+  in the real Ecore.ecore self-hosting case where a classifier literally
+  named "EFactory" also exists (see findEClassByName above, matching real
+  EMF's own EcoreFactoryImpl extends EFactoryImpl design) - this is
+  deliberate, not an oversight: when that's true, it can only be because
+  generate-ecore is also true (a metamodel only ever declares a
+  classifier named "EFactory" when it IS Ecore.ecore), so foundational's
+  own generate-ecore-based resolution already produces the correct
+  relative import to this same run's own generated impl/EFactoryImpl.ts
+  - no separate branch needed. And since every concrete classifier
+  (including "EFactory" itself, when present) is requested under the
+  same name/location/file via the loop below, ImportCollector's own
+  deduplication - not a hand-written exclusion - is what prevents the
+  double-import the old, pre-refactor version of this template had to
+  guard against explicitly. #}
+export class {{ factoryClassName(package) }}Impl extends {{ useImport("EFactoryImpl", "impl", {foundational: true}) }} implements {{ useImport(factoryClassName(package), "root", {foundational: false}) }} {
+{% for classifier in concreteEClassesOf(package) %}
+  create{{ classifier.getName() }}(): {{ useImport(classifier.getName(), "types", {foundational: false}) }} {
+    return new {{ useImport(classifier.getName() + "Impl", "impl", {foundational: false}) }}();
+  }
+{% endfor %}
+
+  create(eClass: {{ useImport("EClass", "types", {foundational: true}) }}): {{ useImport("EObject", "types", {foundational: true}) }} {
+    switch (eClass.getClassifierID()) {
+{% for classifier in concreteEClassesOf(package) %}
+      case {{ useImport("Ids", "root", {file: packageClassName(package), foundational: false}) }}.{{ classifier.getName() }}.self:
+        return this.create{{ classifier.getName() }}();
+{% endfor %}
+      default:
+        {#- Not a locally-thrown error: delegates to whatever this factory's own
+            superclass considers unrecognized-classifier behavior (see
+            EFactoryImpl.create() in @typemf/core, or, when self-hosting, the
+            EFactory classifier's own `create` body in Ecore.ecore) - the base
+            EFactoryImpl.create() is the actual end of this chain, so the
+            "unknown classifier" error is thrown exactly once, in one place,
+            not duplicated per generated package. #}
+        return super.create(eClass);
+    }
+  }
+}
+{% endfile %}

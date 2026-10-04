@@ -1,0 +1,32 @@
+{% file "util/" + switchClassName(package) + ".ts" %}
+export abstract class {{ switchClassName(package) }}<T> {
+  doSwitch(eObject: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
+    switch (eObject.eClass().getClassifierID()) {
+{% for classifier in concreteEClassesOf(package) %}
+      case {{ useImport("Ids", "root", {file: packageClassName(package), foundational: false}) }}.{{ classifier.getName() }}.self: {
+        // {{ classifier.getName() }}
+{% for c in superTypeChain(classifier) %}
+        const result{{ loop.index }} = this.case{{ c.getName() }}(eObject as {{ useImport(c.getName(), "types", {foundational: false}) }});
+        if (result{{ loop.index }} !== undefined) return result{{ loop.index }};
+{% endfor %}
+        return this.defaultCase(eObject);
+      }
+{% endfor %}
+      default:
+        return this.defaultCase(eObject);
+    }
+  }
+
+{% for classifier in eClassesOf(package) %}
+  case{{ classifier.getName() }}(object: {{ useImport(classifier.getName(), "types", {foundational: false}) }}): T | undefined {
+    void object;
+    return undefined;
+  }
+{% endfor %}
+
+  defaultCase(object: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
+    void object;
+    return undefined;
+  }
+}
+{% endfile %}
