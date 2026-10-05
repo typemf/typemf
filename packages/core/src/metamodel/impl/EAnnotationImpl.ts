@@ -15,9 +15,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   private _detailsCache: BasicEList<EStringToStringMapEntry> | undefined;
 
   private get _details(): BasicEList<EStringToStringMapEntry> {
-    if (!this._detailsCache) {
-      this._detailsCache = new BasicEList<EStringToStringMapEntry>(this, getEcorePackageRef().getEAnnotation_Details());
-    }
+    this._detailsCache ??= new BasicEList<EStringToStringMapEntry>(this, getEcorePackageRef().getEAnnotation_Details());
     return this._detailsCache;
   }
 
@@ -26,18 +24,14 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   private _contentsCache: BasicEList<EObject> | undefined;
 
   private get _contents(): BasicEList<EObject> {
-    if (!this._contentsCache) {
-      this._contentsCache = new BasicEList<EObject>(this, getEcorePackageRef().getEAnnotation_Contents());
-    }
+    this._contentsCache ??= new BasicEList<EObject>(this, getEcorePackageRef().getEAnnotation_Contents());
     return this._contentsCache;
   }
 
   private _referencesCache: BasicEList<EObject> | undefined;
 
   private get _references(): BasicEList<EObject> {
-    if (!this._referencesCache) {
-      this._referencesCache = new BasicEList<EObject>(this, getEcorePackageRef().getEAnnotation_References());
-    }
+    this._referencesCache ??= new BasicEList<EObject>(this, getEcorePackageRef().getEAnnotation_References());
     return this._referencesCache;
   }
 
@@ -168,13 +162,13 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 2:
-        if (!this._detailsCache) this._detailsCache = new BasicEList<EStringToStringMapEntry>(this);
+        this._detailsCache ??= new BasicEList<EStringToStringMapEntry>(this);
         return this._detailsCache;
       case 4:
-        if (!this._contentsCache) this._contentsCache = new BasicEList<EObject>(this);
+        this._contentsCache ??= new BasicEList<EObject>(this);
         return this._contentsCache;
       case 5:
-        if (!this._referencesCache) this._referencesCache = new BasicEList<EObject>(this);
+        this._referencesCache ??= new BasicEList<EObject>(this);
         return this._referencesCache;
       default:
         return super.eBootstrapList(featureId);

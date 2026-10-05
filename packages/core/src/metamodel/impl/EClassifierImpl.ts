@@ -24,12 +24,10 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   private _eTypeParametersCache: BasicEList<ETypeParameter> | undefined;
 
   private get _eTypeParameters(): BasicEList<ETypeParameter> {
-    if (!this._eTypeParametersCache) {
-      this._eTypeParametersCache = new BasicEList<ETypeParameter>(
-        this,
-        getEcorePackageRef().getEClassifier_ETypeParameters()
-      );
-    }
+    this._eTypeParametersCache ??= new BasicEList<ETypeParameter>(
+      this,
+      getEcorePackageRef().getEClassifier_ETypeParameters()
+    );
     return this._eTypeParametersCache;
   }
 
@@ -183,7 +181,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 7:
-        if (!this._eTypeParametersCache) this._eTypeParametersCache = new BasicEList<ETypeParameter>(this);
+        this._eTypeParametersCache ??= new BasicEList<ETypeParameter>(this);
         return this._eTypeParametersCache;
       default:
         return super.eBootstrapList(featureId);

@@ -11,9 +11,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
   private _eBoundsCache: BasicEList<EGenericType> | undefined;
 
   private get _eBounds(): BasicEList<EGenericType> {
-    if (!this._eBoundsCache) {
-      this._eBoundsCache = new BasicEList<EGenericType>(this, getEcorePackageRef().getETypeParameter_EBounds());
-    }
+    this._eBoundsCache ??= new BasicEList<EGenericType>(this, getEcorePackageRef().getETypeParameter_EBounds());
     return this._eBoundsCache;
   }
 
@@ -60,7 +58,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 2:
-        if (!this._eBoundsCache) this._eBoundsCache = new BasicEList<EGenericType>(this);
+        this._eBoundsCache ??= new BasicEList<EGenericType>(this);
         return this._eBoundsCache;
       default:
         return super.eBootstrapList(featureId);

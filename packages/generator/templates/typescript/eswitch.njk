@@ -17,15 +17,18 @@ export abstract class {{ switchClassName(package) }}<T> {
     }
   }
 
+{#- `_object` (not `object`): every stub below always returns `undefined` without looking at
+    its argument - it exists purely as an override point for subclasses, which are free to
+    name their own parameter however they like (TypeScript overriding is structural, not
+    name-based). A leading underscore says so directly and avoids the `void object;` marker
+    statement a merely-unused `object` parameter would otherwise need. #}
 {% for classifier in eClassesOf(package) %}
-  case{{ classifier.getName() }}(object: {{ useImport(classifier.getName(), "types", {foundational: false}) }}): T | undefined {
-    void object;
+  case{{ classifier.getName() }}(_object: {{ useImport(classifier.getName(), "types", {foundational: false}) }}): T | undefined {
     return undefined;
   }
 {% endfor %}
 
-  defaultCase(object: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
-    void object;
+  defaultCase(_object: {{ useImport("EObject", "types", {foundational: true}) }}): T | undefined {
     return undefined;
   }
 }

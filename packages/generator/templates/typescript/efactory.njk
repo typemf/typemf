@@ -31,7 +31,7 @@ export class {{ factoryClassName(package) }}Impl extends {{ useImport("EFactoryI
   }
 {% endfor %}
 
-  create(eClass: {{ useImport("EClass", "types", {foundational: true}) }}): {{ useImport("EObject", "types", {foundational: true}) }} {
+  override create(eClass: {{ useImport("EClass", "types", {foundational: true}) }}): {{ useImport("EObject", "types", {foundational: true}) }} {
     switch (eClass.getClassifierID()) {
 {% for classifier in concreteEClassesOf(package) %}
       case {{ useImport("Ids", "root", {file: packageClassName(package), foundational: false}) }}.{{ classifier.getName() }}.self:

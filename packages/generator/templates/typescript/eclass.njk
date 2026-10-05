@@ -74,9 +74,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   private _{{ feature.getName() }}Cache: BasicEList<{{ tsScalarType(feature) }}> | undefined;
 
   private get _{{ feature.getName() }}(): BasicEList<{{ tsScalarType(feature) }}> {
-    if (!this._{{ feature.getName() }}Cache) {
-      this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature) }}>(this, get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
-    }
+    this._{{ feature.getName() }}Cache ??= new BasicEList<{{ tsScalarType(feature) }}>(this, get{{ packageClassName(package) }}Ref().get{{ eClass.getName() }}_{{ ucfirst(feature.getName()) }}());
     return this._{{ feature.getName() }}Cache;
   }
 {% else %}
@@ -359,7 +357,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if superClass %}
         return super.eGet(feature);
 {% else %}
-        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${String(feature.getFeatureID())}`);
 {% endif %}
     }
   }
@@ -404,7 +402,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
         super.eSet(feature, value);
         return;
 {% else %}
-        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${String(feature.getFeatureID())}`);
 {% endif %}
     }
   }
@@ -420,21 +418,29 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
       the first place - only its ID. Ordinary callers (eSet, generated
       bean setters) are unaffected; they still pass a real feature and
       get identical behavior. #}
-  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+{#- The `value` parameter is only genuinely used when some case below assigns it, or when
+    delegating to a superclass - for a class with no single-valued, non-computed features of
+    its own AND no supertype (e.g. a classifier with only many-valued features, or none at
+    all), the switch body below is just "default: throw", and `value` would otherwise be an
+    unused parameter. Naming it `_value` in exactly that case (tsc's noUnusedParameters, like
+    the conventional ESLint argsIgnorePattern, ignores a leading underscore) avoids that
+    without a `void value;` marker statement, which `no-meaningless-void-operator`-style lint
+    rules flag as pointless. #}
+{% set valueParam = "value" if (singleValuedFeatures(ownFeatures).length > 0 or superClass) else "_value" %}
+  eBasicSetValue(feature: EStructuralFeature | number, {{ valueParam }}: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
 {% for feature in singleValuedFeatures(ownFeatures) %}
 {% if not featureGetter(feature) %}
-      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = value as {{ tsOptionalScalarType(feature) }}; return;
+      case {{ feature.getFeatureID() }}: this._{{ feature.getName() }} = {{ valueParam }} as {{ tsOptionalScalarType(feature) }}; return;
 {% endif %}
 {% endfor %}
       default:
 {% if superClass %}
-        super.eBasicSetValue(feature, value);
+        super.eBasicSetValue(feature, {{ valueParam }});
         return;
 {% else %}
-        void value;
-        throw new Error(`Feature ${featureId} on {{ eClass.getName() }} is many-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on {{ eClass.getName() }} is many-valued or unknown.`);
 {% endif %}
     }
   }
@@ -456,7 +462,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% for feature in ownFeatures %}
 {% if feature.isMany() and not featureGetter(feature) %}
       case {{ feature.getFeatureID() }}:
-        if (!this._{{ feature.getName() }}Cache) this._{{ feature.getName() }}Cache = new BasicEList<{{ tsScalarType(feature) }}>(this);
+        this._{{ feature.getName() }}Cache ??= new BasicEList<{{ tsScalarType(feature) }}>(this);
         return this._{{ feature.getName() }}Cache;
 {% endif %}
 {% endfor %}
@@ -464,7 +470,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if superClass %}
         return super.eBootstrapList(featureId);
 {% else %}
-        throw new Error(`Feature ${featureId} on {{ eClass.getName() }} is single-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on {{ eClass.getName() }} is single-valued or unknown.`);
 {% endif %}
     }
   }
@@ -514,7 +520,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if superClass %}
         return super.eIsSet(feature);
 {% else %}
-        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${String(feature.getFeatureID())}`);
 {% endif %}
     }
   }
@@ -551,7 +557,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
         super.eUnset(feature);
         return;
 {% else %}
-        throw new Error(`{{ eClass.getName() }} has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`{{ eClass.getName() }} has no feature with id ${String(feature.getFeatureID())}`);
 {% endif %}
     }
   }

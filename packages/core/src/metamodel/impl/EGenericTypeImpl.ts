@@ -14,12 +14,10 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   private _eTypeArgumentsCache: BasicEList<EGenericType> | undefined;
 
   private get _eTypeArguments(): BasicEList<EGenericType> {
-    if (!this._eTypeArgumentsCache) {
-      this._eTypeArgumentsCache = new BasicEList<EGenericType>(
-        this,
-        getEcorePackageRef().getEGenericType_ETypeArguments()
-      );
-    }
+    this._eTypeArgumentsCache ??= new BasicEList<EGenericType>(
+      this,
+      getEcorePackageRef().getEGenericType_ETypeArguments()
+    );
     return this._eTypeArgumentsCache;
   }
 
@@ -98,7 +96,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
       case 5:
         return this._eClassifier;
       default:
-        throw new Error(`EGenericType has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EGenericType has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 
@@ -185,7 +183,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
         return;
       }
       default:
-        throw new Error(`EGenericType has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EGenericType has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
@@ -204,17 +202,16 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
         this._eClassifier = value as EClassifier | undefined;
         return;
       default:
-        void value;
-        throw new Error(`Feature ${featureId} on EGenericType is many-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on EGenericType is many-valued or unknown.`);
     }
   }
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 1:
-        if (!this._eTypeArgumentsCache) this._eTypeArgumentsCache = new BasicEList<EGenericType>(this);
+        this._eTypeArgumentsCache ??= new BasicEList<EGenericType>(this);
         return this._eTypeArgumentsCache;
       default:
-        throw new Error(`Feature ${featureId} on EGenericType is single-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on EGenericType is single-valued or unknown.`);
     }
   }
 
@@ -234,7 +231,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
       case 5:
         return this._eClassifier !== undefined;
       default:
-        throw new Error(`EGenericType has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EGenericType has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 
@@ -313,7 +310,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
       }
 
       default:
-        throw new Error(`EGenericType has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EGenericType has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 }

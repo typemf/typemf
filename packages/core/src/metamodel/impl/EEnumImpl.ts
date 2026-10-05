@@ -11,9 +11,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   private _eLiteralsCache: BasicEList<EEnumLiteral> | undefined;
 
   private get _eLiterals(): BasicEList<EEnumLiteral> {
-    if (!this._eLiteralsCache) {
-      this._eLiteralsCache = new BasicEList<EEnumLiteral>(this, getEcorePackageRef().getEEnum_ELiterals());
-    }
+    this._eLiteralsCache ??= new BasicEList<EEnumLiteral>(this, getEcorePackageRef().getEEnum_ELiterals());
     return this._eLiteralsCache;
   }
 
@@ -77,7 +75,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 9:
-        if (!this._eLiteralsCache) this._eLiteralsCache = new BasicEList<EEnumLiteral>(this);
+        this._eLiteralsCache ??= new BasicEList<EEnumLiteral>(this);
         return this._eLiteralsCache;
       default:
         return super.eBootstrapList(featureId);

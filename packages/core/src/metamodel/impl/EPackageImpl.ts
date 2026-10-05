@@ -18,18 +18,14 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   private _eClassifiersCache: BasicEList<EClassifier> | undefined;
 
   private get _eClassifiers(): BasicEList<EClassifier> {
-    if (!this._eClassifiersCache) {
-      this._eClassifiersCache = new BasicEList<EClassifier>(this, getEcorePackageRef().getEPackage_EClassifiers());
-    }
+    this._eClassifiersCache ??= new BasicEList<EClassifier>(this, getEcorePackageRef().getEPackage_EClassifiers());
     return this._eClassifiersCache;
   }
 
   private _eSubpackagesCache: BasicEList<EPackage> | undefined;
 
   private get _eSubpackages(): BasicEList<EPackage> {
-    if (!this._eSubpackagesCache) {
-      this._eSubpackagesCache = new BasicEList<EPackage>(this, getEcorePackageRef().getEPackage_ESubpackages());
-    }
+    this._eSubpackagesCache ??= new BasicEList<EPackage>(this, getEcorePackageRef().getEPackage_ESubpackages());
     return this._eSubpackagesCache;
   }
 
@@ -195,10 +191,10 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 5:
-        if (!this._eClassifiersCache) this._eClassifiersCache = new BasicEList<EClassifier>(this);
+        this._eClassifiersCache ??= new BasicEList<EClassifier>(this);
         return this._eClassifiersCache;
       case 6:
-        if (!this._eSubpackagesCache) this._eSubpackagesCache = new BasicEList<EPackage>(this);
+        this._eSubpackagesCache ??= new BasicEList<EPackage>(this);
         return this._eSubpackagesCache;
       default:
         return super.eBootstrapList(featureId);
