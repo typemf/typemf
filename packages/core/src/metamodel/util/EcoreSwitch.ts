@@ -175,86 +175,65 @@ export abstract class EcoreSwitch<T> {
         return this.defaultCase(eObject);
     }
   }
-
-  caseEAttribute(object: EAttribute): T | undefined {
-    void object;
+  caseEAttribute(_object: EAttribute): T | undefined {
     return undefined;
   }
-  caseEAnnotation(object: EAnnotation): T | undefined {
-    void object;
+  caseEAnnotation(_object: EAnnotation): T | undefined {
     return undefined;
   }
-  caseEClass(object: EClass): T | undefined {
-    void object;
+  caseEClass(_object: EClass): T | undefined {
     return undefined;
   }
-  caseEClassifier(object: EClassifier): T | undefined {
-    void object;
+  caseEClassifier(_object: EClassifier): T | undefined {
     return undefined;
   }
-  caseEDataType(object: EDataType): T | undefined {
-    void object;
+  caseEDataType(_object: EDataType): T | undefined {
     return undefined;
   }
-  caseEEnum(object: EEnum): T | undefined {
-    void object;
+  caseEEnum(_object: EEnum): T | undefined {
     return undefined;
   }
-  caseEEnumLiteral(object: EEnumLiteral): T | undefined {
-    void object;
+  caseEEnumLiteral(_object: EEnumLiteral): T | undefined {
     return undefined;
   }
-  caseEFactory(object: EFactory): T | undefined {
-    void object;
+  caseEFactory(_object: EFactory): T | undefined {
     return undefined;
   }
-  caseEModelElement(object: EModelElement): T | undefined {
-    void object;
+  caseEModelElement(_object: EModelElement): T | undefined {
     return undefined;
   }
-  caseENamedElement(object: ENamedElement): T | undefined {
-    void object;
+  caseENamedElement(_object: ENamedElement): T | undefined {
     return undefined;
   }
-  caseEOperation(object: EOperation): T | undefined {
-    void object;
+  caseEOperation(_object: EOperation): T | undefined {
     return undefined;
   }
-  caseEPackage(object: EPackage): T | undefined {
-    void object;
+  caseEPackage(_object: EPackage): T | undefined {
     return undefined;
   }
-  caseEParameter(object: EParameter): T | undefined {
-    void object;
+  caseEParameter(_object: EParameter): T | undefined {
     return undefined;
   }
-  caseEReference(object: EReference): T | undefined {
-    void object;
+  caseEReference(_object: EReference): T | undefined {
     return undefined;
   }
-  caseEStructuralFeature(object: EStructuralFeature): T | undefined {
-    void object;
+  caseEStructuralFeature(_object: EStructuralFeature): T | undefined {
     return undefined;
   }
-  caseETypedElement(object: ETypedElement): T | undefined {
-    void object;
+  caseETypedElement(_object: ETypedElement): T | undefined {
     return undefined;
   }
-  caseEStringToStringMapEntry(object: EStringToStringMapEntry): T | undefined {
-    void object;
+  caseEStringToStringMapEntry(_object: EStringToStringMapEntry): T | undefined {
     return undefined;
   }
-  caseEGenericType(object: EGenericType): T | undefined {
-    void object;
+  caseEGenericType(_object: EGenericType): T | undefined {
     return undefined;
   }
-  caseETypeParameter(object: ETypeParameter): T | undefined {
-    void object;
+  caseETypeParameter(_object: ETypeParameter): T | undefined {
     return undefined;
   }
 
-  defaultCase(object: EObject): T | undefined {
-    void object;
+  defaultCase(_object: EObject): T | undefined {
     return undefined;
   }
 }

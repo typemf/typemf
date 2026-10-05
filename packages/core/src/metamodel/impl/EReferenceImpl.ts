@@ -21,9 +21,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   private _eKeysCache: BasicEList<EAttribute> | undefined;
 
   private get _eKeys(): BasicEList<EAttribute> {
-    if (!this._eKeysCache) {
-      this._eKeysCache = new BasicEList<EAttribute>(this, getEcorePackageRef().getEReference_EKeys());
-    }
+    this._eKeysCache ??= new BasicEList<EAttribute>(this, getEcorePackageRef().getEReference_EKeys());
     return this._eKeysCache;
   }
 
@@ -175,7 +173,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 23:
-        if (!this._eKeysCache) this._eKeysCache = new BasicEList<EAttribute>(this);
+        this._eKeysCache ??= new BasicEList<EAttribute>(this);
         return this._eKeysCache;
       default:
         return super.eBootstrapList(featureId);

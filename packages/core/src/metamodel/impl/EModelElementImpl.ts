@@ -11,9 +11,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   private _eAnnotationsCache: BasicEList<EAnnotation> | undefined;
 
   private get _eAnnotations(): BasicEList<EAnnotation> {
-    if (!this._eAnnotationsCache) {
-      this._eAnnotationsCache = new BasicEList<EAnnotation>(this, getEcorePackageRef().getEModelElement_EAnnotations());
-    }
+    this._eAnnotationsCache ??= new BasicEList<EAnnotation>(this, getEcorePackageRef().getEModelElement_EAnnotations());
     return this._eAnnotationsCache;
   }
 
@@ -35,7 +33,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
       case 0:
         return this._eAnnotations;
       default:
-        throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EModelElement has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 
@@ -50,24 +48,23 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
       }
 
       default:
-        throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EModelElement has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
-  eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
+  eBasicSetValue(feature: EStructuralFeature | number, _value: unknown): void {
     const featureId = typeof feature === 'number' ? feature : feature.getFeatureID();
     switch (featureId) {
       default:
-        void value;
-        throw new Error(`Feature ${featureId} on EModelElement is many-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on EModelElement is many-valued or unknown.`);
     }
   }
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 0:
-        if (!this._eAnnotationsCache) this._eAnnotationsCache = new BasicEList<EAnnotation>(this);
+        this._eAnnotationsCache ??= new BasicEList<EAnnotation>(this);
         return this._eAnnotationsCache;
       default:
-        throw new Error(`Feature ${featureId} on EModelElement is single-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on EModelElement is single-valued or unknown.`);
     }
   }
 
@@ -76,7 +73,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
       case 0:
         return this._eAnnotationsCache !== undefined && this._eAnnotationsCache.size() !== 0;
       default:
-        throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EModelElement has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 
@@ -87,7 +84,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
         return;
 
       default:
-        throw new Error(`EModelElement has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EModelElement has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 }

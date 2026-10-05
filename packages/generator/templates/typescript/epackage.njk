@@ -44,20 +44,61 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
 }
 {% endfile %}
 {% file "impl/" + pkgClass + "Impl.ts" %}
+{#- Every foundational Impl class below is only actually referenced in the body further down
+    when the package genuinely contains the classifier/feature/annotation kind it backs (e.g.
+    EEnumImpl is only `new`'d if some classifier here is an EEnum) - importing it unconditionally
+    produced an unused import, and therefore a lint error, for every package missing that kind
+    (e.g. a package with no EOperations never uses EOperationImpl/EParameterImpl at all). These
+    flags mirror that same condition once, up front, so each import below is requested only when
+    the body will actually use it. EFactoryImpl is never referenced in this file's body at all
+    (only efactory.njk's own generated file extends it) and so is not imported here regardless. #}
+{% set needsAttribute = false %}
+{% set needsReference = false %}
+{% set needsOperation = false %}
+{% set needsParameter = false %}
+{% set needsDataType = false %}
+{% set needsEnum = false %}
+{% set needsEnumLiteral = false %}
+{% set needsAnnotation = false %}
+{% if package.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% for classifier in package.getEClassifiers() %}
+{% if classifier.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if isEClass(classifier) %}
+{% for feature in classifier.getEStructuralFeatures() %}
+{% if isEReference(feature) %}{% set needsReference = true %}{% else %}{% set needsAttribute = true %}{% endif %}
+{% if feature.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% endfor %}
+{% for op in classifier.getEOperations() %}
+{% set needsOperation = true %}
+{% if op.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if op.getEParameters().size() > 0 %}{% set needsParameter = true %}{% endif %}
+{% for param in op.getEParameters() %}
+{% if param.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% endfor %}
+{% endfor %}
+{% elif isEEnum(classifier) %}
+{% set needsEnum = true %}
+{% for literal in classifier.getELiterals() %}
+{% set needsEnumLiteral = true %}
+{% if literal.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% endfor %}
+{% else %}
+{% set needsDataType = true %}
+{% endif %}
+{% endfor %}
 {% for name in metaclassAccessorCollisionTypeNames(package) %}
 {% set _ = useImport(name, "types", {foundational: true}) %}
 {% endfor %}
 {% set _ = useImport("EPackageImpl", "impl", {foundational: true}) %}
 {% set _ = useImport("EClassImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EAttributeImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EReferenceImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EOperationImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EParameterImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EDataTypeImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EEnumImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EEnumLiteralImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EAnnotationImpl", "impl", {foundational: true}) %}
-{% set _ = useImport("EFactoryImpl", "impl", {foundational: true}) %}
+{% if needsAttribute %}{% set _ = useImport("EAttributeImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsReference %}{% set _ = useImport("EReferenceImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsOperation %}{% set _ = useImport("EOperationImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsParameter %}{% set _ = useImport("EParameterImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsDataType %}{% set _ = useImport("EDataTypeImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsEnum %}{% set _ = useImport("EEnumImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsEnumLiteral %}{% set _ = useImport("EEnumLiteralImpl", "impl", {foundational: true}) %}{% endif %}
+{% if needsAnnotation %}{% set _ = useImport("EAnnotationImpl", "impl", {foundational: true}) %}{% endif %}
 {% set _ = useImport(pkgClass, "root", {foundational: false}) %}
 {% set _ = useImport("Ids", "root", {file: pkgClass, foundational: false}) %}
 {% set _ = useImport(factoryClassName(package), "root", {foundational: false}) %}

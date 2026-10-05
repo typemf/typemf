@@ -34,7 +34,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
       case 1:
         return this._value;
       default:
-        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EStringToStringMapEntry has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 
@@ -77,7 +77,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         return;
       }
       default:
-        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EStringToStringMapEntry has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
   eBasicSetValue(feature: EStructuralFeature | number, value: unknown): void {
@@ -90,14 +90,13 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         this._value = value as string | undefined;
         return;
       default:
-        void value;
-        throw new Error(`Feature ${featureId} on EStringToStringMapEntry is many-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on EStringToStringMapEntry is many-valued or unknown.`);
     }
   }
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:
-        throw new Error(`Feature ${featureId} on EStringToStringMapEntry is single-valued or unknown.`);
+        throw new Error(`Feature ${String(featureId)} on EStringToStringMapEntry is single-valued or unknown.`);
     }
   }
 
@@ -108,7 +107,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
       case 1:
         return this._value !== undefined;
       default:
-        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EStringToStringMapEntry has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 
@@ -149,7 +148,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
       }
 
       default:
-        throw new Error(`EStringToStringMapEntry has no feature with id ${feature.getFeatureID()}`);
+        throw new Error(`EStringToStringMapEntry has no feature with id ${String(feature.getFeatureID())}`);
     }
   }
 }

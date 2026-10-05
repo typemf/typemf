@@ -22,18 +22,14 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   private _eSuperTypesCache: BasicEList<EClass> | undefined;
 
   private get _eSuperTypes(): BasicEList<EClass> {
-    if (!this._eSuperTypesCache) {
-      this._eSuperTypesCache = new BasicEList<EClass>(this, getEcorePackageRef().getEClass_ESuperTypes());
-    }
+    this._eSuperTypesCache ??= new BasicEList<EClass>(this, getEcorePackageRef().getEClass_ESuperTypes());
     return this._eSuperTypesCache;
   }
 
   private _eOperationsCache: BasicEList<EOperation> | undefined;
 
   private get _eOperations(): BasicEList<EOperation> {
-    if (!this._eOperationsCache) {
-      this._eOperationsCache = new BasicEList<EOperation>(this, getEcorePackageRef().getEClass_EOperations());
-    }
+    this._eOperationsCache ??= new BasicEList<EOperation>(this, getEcorePackageRef().getEClass_EOperations());
     return this._eOperationsCache;
   }
 
@@ -67,24 +63,20 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   private _eStructuralFeaturesCache: BasicEList<EStructuralFeature> | undefined;
 
   private get _eStructuralFeatures(): BasicEList<EStructuralFeature> {
-    if (!this._eStructuralFeaturesCache) {
-      this._eStructuralFeaturesCache = new BasicEList<EStructuralFeature>(
-        this,
-        getEcorePackageRef().getEClass_EStructuralFeatures()
-      );
-    }
+    this._eStructuralFeaturesCache ??= new BasicEList<EStructuralFeature>(
+      this,
+      getEcorePackageRef().getEClass_EStructuralFeatures()
+    );
     return this._eStructuralFeaturesCache;
   }
 
   private _eGenericSuperTypesCache: BasicEList<EGenericType> | undefined;
 
   private get _eGenericSuperTypes(): BasicEList<EGenericType> {
-    if (!this._eGenericSuperTypesCache) {
-      this._eGenericSuperTypesCache = new BasicEList<EGenericType>(
-        this,
-        getEcorePackageRef().getEClass_EGenericSuperTypes()
-      );
-    }
+    this._eGenericSuperTypesCache ??= new BasicEList<EGenericType>(
+      this,
+      getEcorePackageRef().getEClass_EGenericSuperTypes()
+    );
     return this._eGenericSuperTypesCache;
   }
 
@@ -493,16 +485,16 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 10:
-        if (!this._eSuperTypesCache) this._eSuperTypesCache = new BasicEList<EClass>(this);
+        this._eSuperTypesCache ??= new BasicEList<EClass>(this);
         return this._eSuperTypesCache;
       case 11:
-        if (!this._eOperationsCache) this._eOperationsCache = new BasicEList<EOperation>(this);
+        this._eOperationsCache ??= new BasicEList<EOperation>(this);
         return this._eOperationsCache;
       case 21:
-        if (!this._eStructuralFeaturesCache) this._eStructuralFeaturesCache = new BasicEList<EStructuralFeature>(this);
+        this._eStructuralFeaturesCache ??= new BasicEList<EStructuralFeature>(this);
         return this._eStructuralFeaturesCache;
       case 22:
-        if (!this._eGenericSuperTypesCache) this._eGenericSuperTypesCache = new BasicEList<EGenericType>(this);
+        this._eGenericSuperTypesCache ??= new BasicEList<EGenericType>(this);
         return this._eGenericSuperTypesCache;
       default:
         return super.eBootstrapList(featureId);

@@ -74,7 +74,7 @@ export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
     return new ETypeParameterImpl();
   }
 
-  create(eClass: EClass): EObject {
+  override create(eClass: EClass): EObject {
     switch (eClass.getClassifierID()) {
       case Ids.EAttribute.self:
         return this.createEAttribute();

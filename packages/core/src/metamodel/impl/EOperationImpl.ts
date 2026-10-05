@@ -16,42 +16,34 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   private _eTypeParametersCache: BasicEList<ETypeParameter> | undefined;
 
   private get _eTypeParameters(): BasicEList<ETypeParameter> {
-    if (!this._eTypeParametersCache) {
-      this._eTypeParametersCache = new BasicEList<ETypeParameter>(
-        this,
-        getEcorePackageRef().getEOperation_ETypeParameters()
-      );
-    }
+    this._eTypeParametersCache ??= new BasicEList<ETypeParameter>(
+      this,
+      getEcorePackageRef().getEOperation_ETypeParameters()
+    );
     return this._eTypeParametersCache;
   }
 
   private _eParametersCache: BasicEList<EParameter> | undefined;
 
   private get _eParameters(): BasicEList<EParameter> {
-    if (!this._eParametersCache) {
-      this._eParametersCache = new BasicEList<EParameter>(this, getEcorePackageRef().getEOperation_EParameters());
-    }
+    this._eParametersCache ??= new BasicEList<EParameter>(this, getEcorePackageRef().getEOperation_EParameters());
     return this._eParametersCache;
   }
 
   private _eExceptionsCache: BasicEList<EClassifier> | undefined;
 
   private get _eExceptions(): BasicEList<EClassifier> {
-    if (!this._eExceptionsCache) {
-      this._eExceptionsCache = new BasicEList<EClassifier>(this, getEcorePackageRef().getEOperation_EExceptions());
-    }
+    this._eExceptionsCache ??= new BasicEList<EClassifier>(this, getEcorePackageRef().getEOperation_EExceptions());
     return this._eExceptionsCache;
   }
 
   private _eGenericExceptionsCache: BasicEList<EGenericType> | undefined;
 
   private get _eGenericExceptions(): BasicEList<EGenericType> {
-    if (!this._eGenericExceptionsCache) {
-      this._eGenericExceptionsCache = new BasicEList<EGenericType>(
-        this,
-        getEcorePackageRef().getEOperation_EGenericExceptions()
-      );
-    }
+    this._eGenericExceptionsCache ??= new BasicEList<EGenericType>(
+      this,
+      getEcorePackageRef().getEOperation_EGenericExceptions()
+    );
     return this._eGenericExceptionsCache;
   }
 
@@ -176,16 +168,16 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 11:
-        if (!this._eTypeParametersCache) this._eTypeParametersCache = new BasicEList<ETypeParameter>(this);
+        this._eTypeParametersCache ??= new BasicEList<ETypeParameter>(this);
         return this._eTypeParametersCache;
       case 12:
-        if (!this._eParametersCache) this._eParametersCache = new BasicEList<EParameter>(this);
+        this._eParametersCache ??= new BasicEList<EParameter>(this);
         return this._eParametersCache;
       case 13:
-        if (!this._eExceptionsCache) this._eExceptionsCache = new BasicEList<EClassifier>(this);
+        this._eExceptionsCache ??= new BasicEList<EClassifier>(this);
         return this._eExceptionsCache;
       case 14:
-        if (!this._eGenericExceptionsCache) this._eGenericExceptionsCache = new BasicEList<EGenericType>(this);
+        this._eGenericExceptionsCache ??= new BasicEList<EGenericType>(this);
         return this._eGenericExceptionsCache;
       default:
         return super.eBootstrapList(featureId);
