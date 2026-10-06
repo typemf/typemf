@@ -86,11 +86,13 @@ describe('NodeFileUriConverter', () => {
     });
 
     it('treats a backslash in the path as a separator, like a Windows fsPath URI would have', async () => {
-      // A URI built from a Windows fsPath ("c:\Users\...") stores it as-is - createFileURI only
-      // ever prepends "/", it doesn't know about backslashes. Simulated here (this suite also
-      // runs on POSIX) by writing through a forward-slash URI and reading back through an
-      // otherwise-identical one with backslashes in place of the later separators; fileURLToPath
-      // treats both the same way, on every platform (WHATWG URL's own "special scheme" rule).
+      // createFileURI itself now normalizes backslashes (CORE-06) - this instead covers a URI
+      // built some other way, e.g. URI.parse() on raw text that still has them (real "file:" URIs
+      // never do, but nothing stops a caller from handing one over anyway). Simulated here (this
+      // suite also runs on POSIX) by writing through a forward-slash URI and reading back through
+      // an otherwise-identical one with backslashes in place of the later separators;
+      // fileURLToPath treats both the same way, on every platform (WHATWG URL's own "special
+      // scheme" rule).
       const converter = new NodeFileUriConverter();
       const realPath = join(dir, 'nested', 'model.txt');
       await converter.writeBinary(URI.createFileURI(realPath), new TextEncoder().encode('backslash-separated'));

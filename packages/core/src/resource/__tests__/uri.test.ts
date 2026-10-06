@@ -38,6 +38,38 @@ describe('URI', () => {
     expect(URI.parse('mem:library-instance').getFileExtension()).toBeUndefined();
   });
 
+  describe('createFileURI - CORE-06 Windows paths and percent-encoding', () => {
+    it('normalizes a Windows drive path (backslashes) into a forward-slash, leading-slash URI path', () => {
+      const uri = URI.createFileURI('C:\\Users\\a\\model.ecore');
+      expect(uri.toString()).toBe('file:///C:/Users/a/model.ecore');
+      expect(uri.getFileExtension()).toBe('ecore');
+    });
+
+    it('percent-encodes a space in a path segment, without touching the drive letter\u2019s colon', () => {
+      const uri = URI.createFileURI('C:\\Users\\a b\\model.ecore');
+      expect(uri.toString()).toBe('file:///C:/Users/a%20b/model.ecore');
+    });
+
+    it('percent-encodes a space in a POSIX path the same way', () => {
+      const uri = URI.createFileURI('/home/a b/model.ecore');
+      expect(uri.toString()).toBe('file:///home/a%20b/model.ecore');
+    });
+
+    it('leaves a path with nothing to escape unchanged', () => {
+      const uri = URI.createFileURI('/home/user/model.ecore');
+      expect(uri.toString()).toBe('file:///home/user/model.ecore');
+    });
+
+    it('resolve()/deresolve() still work correctly against an encoded, Windows-sourced base', () => {
+      const base = URI.createFileURI('C:\\workspaces\\project\\city.xmi');
+      const target = URI.createFileURI('C:\\workspaces\\project\\a b\\campus.xmi');
+
+      const relative = target.deresolve(base);
+      expect(relative.toString()).toBe('a%20b/campus.xmi');
+      expect(relative.resolve(base).toString()).toBe(target.toString());
+    });
+  });
+
   it('withFragment/trimFragment produce new URIs without mutating the original', () => {
     const base = URI.parse('https://typemf.dev/samples/library.json');
     const withFragment = base.withFragment('Book_Dune');

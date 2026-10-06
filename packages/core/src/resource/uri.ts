@@ -26,10 +26,25 @@ export class URI {
     return new URI(undefined, false, path as string, fragment);
   }
 
-  /** Convenience for the common case of wrapping a filesystem path. */
+  /**
+   * Convenience for the common case of wrapping a filesystem path (CORE-06). Backslashes become
+   * forward slashes first - a Windows `fsPath` ("C:\Users\a b\m.xmi") has none of its own, so this
+   * is purely "native path -> URI path" translation, matching real EMF's own `URI.createFileURI`;
+   * it naturally also makes a drive-letter path absolute, the same way a POSIX path already was,
+   * with no separate case needed (`C:/...` doesn't start with "/" yet, so it gets one prepended,
+   * same as any other non-absolute input). Each path segment is then percent-encoded (a reserved
+   * character - most commonly a space in a real file path - would otherwise corrupt `resolve`/
+   * `deresolve`'s own segment splitting, or the URI text once serialized into an `href`); `:` is
+   * deliberately left unescaped (valid unencoded in a URI path segment, and this is exactly what
+   * keeps a drive letter readable as "C:" rather than "C%3A", matching Eclipse's own Windows file
+   * URIs). `getPath()`/`toString()` return this encoded form - decoding back to a native path is
+   * `@typemf/node`'s own job (NODE-01's `fileURLToPath`), not this class's.
+   */
   static createFileURI(path: string): URI {
-    const normalized = path.startsWith('/') ? path : `/${path}`;
-    return new URI('file', true, normalized, undefined);
+    const normalized = path.replace(/\\/g, '/');
+    const absolute = normalized.startsWith('/') ? normalized : `/${normalized}`;
+    const encoded = absolute.split('/').map(encodePathSegment).join('/');
+    return new URI('file', true, encoded, undefined);
   }
 
   /** Undefined for a relative reference - see the class doc comment. */
@@ -130,4 +145,12 @@ function normalizePath(path: string): string {
     }
   }
   return result.join('/');
+}
+
+/** Percent-encodes every character in `segment` outside the RFC 3986 `pchar` set (unreserved +
+ *  sub-delims + ":" + "@") - most commonly a space in a real file path. Never encodes "/" itself
+ *  (only ever called on one already-split segment, never the full path) or already-safe
+ *  characters, so an ordinary path with nothing to escape round-trips unchanged. */
+function encodePathSegment(segment: string): string {
+  return segment.replace(/[^A-Za-z0-9\-._~!$&'()*+,;=:@]/g, (ch) => encodeURIComponent(ch));
 }
