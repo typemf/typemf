@@ -12,6 +12,7 @@ import { EParameterImpl } from './EParameterImpl.js';
 import { EReferenceImpl } from './EReferenceImpl.js';
 import { EStringToStringMapEntryImpl } from './EStringToStringMapEntryImpl.js';
 import { ETypeParameterImpl } from './ETypeParameterImpl.js';
+import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EcoreFactory } from '../EcoreFactory.js';
 import { Ids } from '../EcorePackage.js';
 import { EAnnotation } from '../types/EAnnotation.js';
@@ -31,6 +32,14 @@ import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
 export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
+  /** The one canonical factory instance - real EMF's own `EcoreFactory.eINSTANCE`, which this project
+   *  ports onto the Impl class rather than the interface (TypeScript interfaces have no statics).
+   *  Reading this also constructs the package singleton on first use (CORE-01), via the same
+   *  lazy initializer EcorePackageImpl.eINSTANCE itself goes through. */
+  static get eINSTANCE(): EcoreFactory {
+    return getEcorePackageRef().getEFactoryInstance() as EcoreFactory;
+  }
+
   createEAttribute(): EAttribute {
     return new EAttributeImpl();
   }

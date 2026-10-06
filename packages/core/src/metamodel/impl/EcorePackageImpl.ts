@@ -18,7 +18,7 @@ import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
 import { ETypeParameterImpl } from './ETypeParameterImpl.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
 import { EcoreFactoryImpl } from './EcoreFactoryImpl.js';
-import { setEcorePackageRef } from './EcorePackageRef.js';
+import { registerEcorePackageInitializer, setEcorePackageRef } from './EcorePackageRef.js';
 import { EcoreFactory } from '../EcoreFactory.js';
 import { EcorePackage, Ids } from '../EcorePackage.js';
 import { EAnnotation } from '../types/EAnnotation.js';
@@ -6384,3 +6384,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     return this._EInvocationTargetException;
   }
 }
+
+// CORE-01: lets getXxxRef() construct the singleton itself, on first use, instead of only ever
+// throwing when nothing has touched EcorePackageImpl.eINSTANCE/.init() yet. A side effect of
+// this module being evaluated at all - see registerEcorePackageInitializer's own doc comment
+// in EcorePackageRef.ts.
+registerEcorePackageInitializer(() => {
+  void EcorePackageImpl.eINSTANCE;
+});

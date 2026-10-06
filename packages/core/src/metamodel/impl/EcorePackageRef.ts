@@ -30,13 +30,45 @@ import type { EcorePackage } from '../EcorePackage.js';
  */
 let ref: EcorePackage | undefined;
 
+/**
+ * Set once, as a module-scope side effect of EcorePackageImpl.ts's own module
+ * being evaluated (see the call at the bottom of that file) - never a direct import of
+ * EcorePackageImpl here, for the exact same circularity reason the class doc
+ * comment above explains. Lets getEcorePackageRef() (CORE-01) construct the
+ * singleton itself, on first use, instead of only ever throwing when nothing has touched
+ * EcorePackageImpl.eINSTANCE/.init() yet.
+ */
+let initializer: (() => void) | undefined;
+let initializing = false;
+
 export function setEcorePackageRef(pkg: EcorePackage): void {
   ref = pkg;
 }
 
+export function registerEcorePackageInitializer(init: () => void): void {
+  initializer = init;
+}
+
 export function getEcorePackageRef(): EcorePackage {
+  // The `!initializing` guard turns a reentrant call before the constructor reaches its own
+  // setEcorePackageRef(this) - which should never genuinely happen; the
+  // constructor calls that first, before anything else that could call back in here - into the
+  // ordinary "not ready yet" error below instead of unbounded recursion.
+  if (!ref && initializer && !initializing) {
+    initializing = true;
+    try {
+      initializer();
+    } finally {
+      initializing = false;
+    }
+  }
   if (!ref) {
-    throw new Error('getEcorePackageRef() called before the EcorePackage singleton finished constructing itself.');
+    throw new Error(
+      'getEcorePackageRef() called before the EcorePackage singleton finished constructing itself, and no ' +
+        "initializer was registered to construct it on demand - this means EcorePackageImpl.ts's own module " +
+        'was never evaluated at all (an unusual bundler/tree-shaking setup). Call EcorePackageImpl.eINSTANCE ' +
+        'or .init() yourself first, or check that this package is marked side-effectful.'
+    );
   }
   return ref;
 }
