@@ -1,5 +1,22 @@
 # @typemf/json
 
+## 0.7.0
+
+### Patch Changes
+
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Add `EObject.eResource()` (CORE-08) - the Resource an object is part of, if any: its own if it's a root, otherwise its nearest containing root's. Matches real EMF's own public API, which this project previously worked around with a free function (`getResourceOf`, still exported, now a thin wrapper) kept outside the metamodel specifically to avoid this.
+
+  `@typemf/xmi` and `@typemf/json` now call `target.eResource()` directly instead of importing `getResourceOf`.
+
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix loading not reporting problems the EMF way (XMI-04, JSON-04): both formats now record a diagnostic on `Resource.getErrors()`/`getWarnings()` and keep loading the rest of the document, instead of silently dropping data or throwing and aborting the whole load.
+
+  - An unknown attribute/element (XMI) or key (JSON) is a warning - the value is dropped (as before; it would be lost on the next save regardless), but it's now visible instead of silent.
+  - An unresolved same-document/same-resource reference is an error - the feature is left unset instead of the load throwing.
+  - `@typemf/json` additionally reports invalid JSON, or a document missing a `$roots` array, as an error with zero roots instead of throwing a raw `SyntaxError`/`TypeError`.
+
+- Updated dependencies [[`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177)]:
+  - @typemf/core@0.7.0
+
 ## 0.6.0
 
 ### Patch Changes

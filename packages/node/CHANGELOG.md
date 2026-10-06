@@ -1,5 +1,16 @@
 # @typemf/node
 
+## 0.7.0
+
+### Patch Changes
+
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix `NodeFileUriConverter` failing to open a file whose URI doesn't look like a plain, already-decoded POSIX path: a Windows `fsPath`-derived URI (`c:\Users\...`) or a percent-encoded one (`a%20b`) previously used the URI's raw path text as-is, producing a path like `/c:\Users\...` that doesn't exist, or leaving `%20` undecoded.
+
+  `pathFor` now converts through Node's own `fileURLToPath` instead of reading the URI's path directly - it already handles both cases correctly per platform (treating a backslash as a path separator, the same way the WHATWG URL parser does for every "special" scheme including `file`, and decoding percent-escapes).
+
+- Updated dependencies [[`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177), [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177)]:
+  - @typemf/core@0.7.0
+
 ## 0.6.0
 
 ### Patch Changes
