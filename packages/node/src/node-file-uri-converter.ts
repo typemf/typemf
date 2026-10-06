@@ -1,6 +1,7 @@
 import { URI, UriConverter } from '@typemf/core';
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * The Node-only, fs-backed UriConverter discussed back when @typemf/core's
@@ -40,10 +41,20 @@ export class NodeFileUriConverter implements UriConverter {
     }
   }
 
+  /**
+   * NODE-01: a URI's own `getPath()` is unusable directly as a filesystem path on every
+   * platform/caller combination - a URI built from a Windows `fsPath` ("c:\Users\...") has a
+   * `path` of "/c:\Users\..." (createFileURI only ever prepends "/"; it doesn't know about drive
+   * letters or backslashes), and a URI parsed from real "file:" text keeps its percent-encoding
+   * ("a%20b") rather than decoding it. `fileURLToPath` is Node's own, already-correct, per-platform
+   * answer to exactly this problem - it treats backslashes as path separators (the WHATWG URL
+   * parser does this for every "special" scheme, "file" included) and decodes percent-escapes -
+   * so this converts through it instead of reading `getPath()` by hand.
+   */
   private pathFor(uri: URI): string {
     if (uri.getScheme() !== 'file') {
       throw new Error(`NodeFileUriConverter cannot handle scheme '${uri.getScheme()}' (only 'file').`);
     }
-    return uri.trimFragment().getPath();
+    return fileURLToPath(uri.trimFragment().toString());
   }
 }

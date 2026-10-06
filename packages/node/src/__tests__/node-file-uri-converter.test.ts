@@ -73,4 +73,31 @@ describe('NodeFileUriConverter', () => {
     const uri = URI.createFileURI(join(dir, 'does-not-exist.txt'));
     await expect(converter.readBinary(uri)).rejects.toThrow();
   });
+
+  describe('NODE-01: paths that are not a plain, already-decoded POSIX path', () => {
+    it('decodes a percent-encoded path (a URI parsed from real "file:" text keeps its escapes)', async () => {
+      const converter = new NodeFileUriConverter();
+      const realPath = join(dir, 'a b.txt');
+      await converter.writeBinary(URI.createFileURI(realPath), new TextEncoder().encode('percent-encoded'));
+
+      const encodedUri = URI.parse(`file://${join(dir, 'a%20b.txt')}`);
+      const readBack = await converter.readBinary(encodedUri);
+      expect(new TextDecoder().decode(readBack)).toBe('percent-encoded');
+    });
+
+    it('treats a backslash in the path as a separator, like a Windows fsPath URI would have', async () => {
+      // A URI built from a Windows fsPath ("c:\Users\...") stores it as-is - createFileURI only
+      // ever prepends "/", it doesn't know about backslashes. Simulated here (this suite also
+      // runs on POSIX) by writing through a forward-slash URI and reading back through an
+      // otherwise-identical one with backslashes in place of the later separators; fileURLToPath
+      // treats both the same way, on every platform (WHATWG URL's own "special scheme" rule).
+      const converter = new NodeFileUriConverter();
+      const realPath = join(dir, 'nested', 'model.txt');
+      await converter.writeBinary(URI.createFileURI(realPath), new TextEncoder().encode('backslash-separated'));
+
+      const backslashUri = URI.parse(`file://${dir}\\nested\\model.txt`);
+      const readBack = await converter.readBinary(backslashUri);
+      expect(new TextDecoder().decode(readBack)).toBe('backslash-separated');
+    });
+  });
 });
