@@ -208,6 +208,86 @@ describe('opposite (inverse) reference maintenance', () => {
   });
 });
 
+describe('opposite (inverse) reference maintenance - notifications (CORE-09)', () => {
+  it('many-to-many: adding on one side fires ADD on the opposite end too, not just the written side', () => {
+    const m = buildOppositeMetamodel();
+    const alice = m.newPerson();
+    const apollo = m.newProject();
+    const notifications: string[] = [];
+    alice.onDidChange((n) => notifications.push(`${n.eventType} ${n.feature?.getName()} ${n.position}`));
+
+    list(apollo, m.membersRef).add(alice);
+
+    // Written directly: ADD on apollo.members (already covered elsewhere). What CORE-09 was
+    // about: alice's own projectsRef - updated only as a side effect of the opposite - used to
+    // get no notification of its own at all.
+    expect(notifications).toEqual(['ADD projects 0']);
+  });
+
+  it('many-to-many: removing on one side fires REMOVE on the opposite end too', () => {
+    const m = buildOppositeMetamodel();
+    const alice = m.newPerson();
+    const apollo = m.newProject();
+    list(apollo, m.membersRef).add(alice);
+    const notifications: string[] = [];
+    alice.onDidChange((n) => notifications.push(`${n.eventType} ${n.feature?.getName()} ${n.position}`));
+
+    list(apollo, m.membersRef).remove(alice);
+
+    expect(notifications).toEqual(['REMOVE projects 0']);
+  });
+
+  it('one-to-one: setting one side fires SET on the opposite end, and on a displaced former partner', () => {
+    const m = buildOppositeMetamodel();
+    const alice = m.newPerson();
+    const bob = m.newPerson();
+    const carol = m.newPerson();
+    bob.eSet(m.mentorRef, alice); // alice.mentee = bob
+
+    const aliceNotifications: string[] = [];
+    const bobNotifications: string[] = [];
+    alice.onDidChange((n) => aliceNotifications.push(`${n.eventType} ${n.feature?.getName()}`));
+    bob.onDidChange((n) => bobNotifications.push(`${n.eventType} ${n.feature?.getName()}`));
+
+    // Carol takes alice as mentor: alice's own mentee changes (bob -> carol) as a side effect -
+    // used to fire nothing on alice at all. Bob is displaced (loses his mentor) - used to fire
+    // nothing on bob either.
+    carol.eSet(m.mentorRef, alice);
+
+    expect(aliceNotifications).toEqual(['SET mentee']);
+    expect(bobNotifications).toEqual(['SET mentor']);
+  });
+
+  it('containment: moving a child to another container fires REMOVE on the old container', () => {
+    const m = buildOppositeMetamodel();
+    const sales = m.newDepartment();
+    const research = m.newDepartment();
+    const alice = m.newPerson();
+    list(sales, m.employeesRef).add(alice);
+    const salesNotifications: string[] = [];
+    sales.onDidChange((n) => salesNotifications.push(`${n.eventType} ${n.feature?.getName()} ${n.position}`));
+
+    list(research, m.employeesRef).add(alice);
+
+    // sales.employees loses alice as a side effect of the move - used to fire nothing at all.
+    expect(salesNotifications).toEqual(['REMOVE employees 0']);
+  });
+
+  it('containment: setting the back-pointer to a new container fires REMOVE on the old one', () => {
+    const m = buildOppositeMetamodel();
+    const sales = m.newDepartment();
+    const research = m.newDepartment();
+    const alice = m.newPerson();
+    alice.eSet(m.departmentRef, sales);
+    const salesNotifications: string[] = [];
+    sales.onDidChange((n) => salesNotifications.push(`${n.eventType} ${n.feature?.getName()} ${n.position}`));
+
+    alice.eSet(m.departmentRef, research);
+
+    expect(salesNotifications).toEqual(['REMOVE employees 0']);
+  });
+});
+
 describe('opposites of the Ecore metamodel', () => {
   const ecore = EcorePackageImpl.eINSTANCE;
   const factory = new EcoreFactoryImpl();

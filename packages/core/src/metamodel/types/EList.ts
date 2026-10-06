@@ -40,6 +40,15 @@ export interface EList<T> extends Iterable<T> {
   /** Removes every element, with the same side effects as removing each one. */
   clear(): void;
 
+  /**
+   * Moves the element at `fromIndex` to `toIndex`, shifting the elements between them. Returns
+   * the moved element. A live list fires a single MOVE notification, not a REMOVE followed by an
+   * ADD - the element never actually left the list, just changed position (CORE-12).
+   *
+   * @throws RangeError if `fromIndex` is out of bounds.
+   */
+  move(fromIndex: number, toIndex: number): T;
+
   /** Whether `item` is in the list (compared with `===`). */
   contains(item: T): boolean;
 

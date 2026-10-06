@@ -96,11 +96,21 @@ describe('the write path end to end', () => {
     const reconstructedBook = resource!.getContents().get(0);
     const reconstructedTitleFeature = reconstructedBook.eClass().getEStructuralFeature('title')!;
 
+    // Nothing yet, in particular, from reconstruction itself: resolving bookClass eagerly adds
+    // titleAttr to bookClass.eStructuralFeatures (a real containment with an eOpposite back to
+    // EStructuralFeature.eContainingClass), which fires a SET on titleAttr once CORE-09 is fixed
+    // - titleAttr was already reconstructed-and-attached by that point (it's resolved as
+    // bookClass's own reference, finishing before bookClass's list.add() runs), so without
+    // EditRelay's own reconstruction suppression this reconstruction bookkeeping would relay as
+    // if it were a real edit.
+    expect(sentMessages.filter(isApplyEditRequest)).toHaveLength(0);
+
     reconstructedBook.eSet(reconstructedTitleFeature, 'New Title');
 
     // Let the notification and its microtask run.
     await Promise.resolve();
 
+    expect(sentMessages.filter(isApplyEditRequest)).toHaveLength(1); // exactly the real edit above
     const request = sentMessages.find(isApplyEditRequest);
     expect(request).toBeDefined();
     expect(request?.eventType).toBe('SET');

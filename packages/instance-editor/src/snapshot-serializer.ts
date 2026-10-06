@@ -137,7 +137,20 @@ export class SnapshotSerializer implements EObjectSerializer {
     private readonly editRelay?: EditRelay
   ) {}
 
+  /**
+   * Wrapped in the EditRelay's own blanket, reentrant reconstruction suppression (when one is
+   * attached at all) - see its own doc comment for the real, confirmed gap this closes: an
+   * already-reconstructed-and-attached child object's opposite feature can change as a side
+   * effect of a LATER sibling's own reconstruction (e.g. a parent's containment list gaining a
+   * child it already resolved), which must never relay as if it were a real edit.
+   */
   async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
+    return this.editRelay
+      ? this.editRelay.suppressDuringReconstruction(() => this.doDeserialize(content, resource))
+      : this.doDeserialize(content, resource);
+  }
+
+  private async doDeserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
     const resourceSet = resource.getResourceSet();
     if (!resourceSet) {
       throw new Error('SnapshotSerializer requires a ResourceSet, to resolve the eClass and any references.');

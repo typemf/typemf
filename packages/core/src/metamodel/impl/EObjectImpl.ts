@@ -271,12 +271,38 @@ export abstract class EObjectImpl implements EObject {
     // package contains this not-yet-loaded classifier") is already fully known from context,
     // independent of whatever the proxy's own document eventually turns out to say.
     if (feature.isMany()) {
-      this.eBasicList(feature).basicAdd(otherEnd);
+      const list = this.eBasicList(feature);
+      const sizeBefore = list.size();
+      list.basicAdd(otherEnd);
+      // A no-op if otherEnd was already present (reference lists are unique) - no real change,
+      // so no notification (CORE-09: the opposite end otherwise got no ADD at all, even when a
+      // change genuinely happened).
+      if (list.size() > sizeBefore) {
+        this.eNotify({
+          eventType: 'ADD',
+          notifier: this,
+          feature,
+          oldValue: undefined,
+          newValue: otherEnd,
+          position: list.size() - 1,
+          wasSet: true,
+        });
+      }
     } else {
       const oldValue = this.eGet(feature);
       if (oldValue === otherEnd) return;
+      const wasSet = this.eIsSet(feature);
       this.eBasicSetValue(feature, otherEnd);
       this.eDidRemove(feature, oldValue);
+      this.eNotify({
+        eventType: 'SET',
+        notifier: this,
+        feature,
+        oldValue,
+        newValue: otherEnd,
+        position: undefined,
+        wasSet,
+      });
     }
     if (feature.isContainment()) otherEnd.eBasicMoveInto(this, feature);
   }
@@ -333,11 +359,42 @@ export abstract class EObjectImpl implements EObject {
     this.eBasicSetContainer(undefined, undefined);
   }
 
+  /**
+   * CORE-09: every caller of this (eInverseRemove's own "opposite stopped referencing me", and
+   * eBasicMoveInto/eBasicDetachFromContainer clearing an old container or its opposite) silently
+   * mutated storage with no notification - the affected object's own listeners (and the instance
+   * editor's webview relay) never found out, even though a real change happened. Fires the same
+   * REMOVE/SET a plain eSet()/BasicEList.remove() would have, for whichever of those the normal
+   * path this bypasses (deliberately, to avoid re-triggering containment/opposite bookkeeping
+   * recursively) would otherwise have fired.
+   */
   private eBasicRemoveValue(feature: EStructuralFeature, value: EObjectImpl): void {
     if (feature.isMany()) {
-      this.eBasicList(feature).basicRemove(value);
+      const list = this.eBasicList(feature);
+      const position = list.indexOf(value);
+      if (list.basicRemove(value)) {
+        this.eNotify({
+          eventType: 'REMOVE',
+          notifier: this,
+          feature,
+          oldValue: value,
+          newValue: undefined,
+          position,
+          wasSet: true,
+        });
+      }
     } else if (this.eGet(feature) === value) {
+      const wasSet = this.eIsSet(feature);
       this.eBasicSetValue(feature, undefined);
+      this.eNotify({
+        eventType: 'SET',
+        notifier: this,
+        feature,
+        oldValue: value,
+        newValue: undefined,
+        position: undefined,
+        wasSet,
+      });
     }
   }
 
