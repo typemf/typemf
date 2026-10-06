@@ -5,7 +5,7 @@ import { EObject } from '../../metamodel/types/EObject.js';
 import { EReference } from '../../metamodel/types/EReference.js';
 import { buildSampleMetamodel } from '../../metamodel/__tests__/sample-metamodel.js';
 import { computeFragment } from '../eobject-address.js';
-import { ProxyEObjectImpl } from '../proxy-eobject-impl.js';
+import { createProxy, getProxyURI } from '../proxy.js';
 import { Resource } from '../resource.js';
 import { ResourceFactory } from '../resource-factory.js';
 import { ResourceImpl } from '../resource-impl.js';
@@ -76,7 +76,7 @@ function buildFixtureIo(bookClass: EClass, libraryClass: EClass) {
       } else {
         const { $ref, $refResource } = raw as { $ref: string; $refResource: string };
         const proxyEClass = refFeature.getEType() as EClass;
-        obj.eSet(feature, new ProxyEObjectImpl(proxyEClass, URI.parse($refResource).withFragment($ref)));
+        obj.eSet(feature, createProxy(proxyEClass, URI.parse($refResource).withFragment($ref)));
       }
     }
     return obj;
@@ -226,11 +226,11 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     resourceSet.getPackageRegistry().register(pkg);
 
     // No ResourceFactory is registered, so loading a document would throw.
-    const classifierProxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//Library`));
+    const classifierProxy = createProxy(bookClass, URI.parse(`${nsURI}#//Library`));
     const resolvedClassifier = await resourceSet.resolve(classifierProxy);
     expect(resolvedClassifier).toBe(libraryClass);
 
-    const featureProxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//Library/books`));
+    const featureProxy = createProxy(bookClass, URI.parse(`${nsURI}#//Library/books`));
     const resolvedFeature = await resourceSet.resolve(featureProxy);
     expect((resolvedFeature as EReference).getName()).toBe('books');
   });
@@ -243,7 +243,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const resourceSet = new ResourceSetImpl();
     resourceSet.getPackageRegistry().register(pkg);
 
-    const proxy = new ProxyEObjectImpl(bookClass, URI.parse(`${nsURI}#//NoSuchClassifier`));
+    const proxy = createProxy(bookClass, URI.parse(`${nsURI}#//NoSuchClassifier`));
     await expect(resourceSet.resolve(proxy)).rejects.toThrow(/did not match anything in the registered package/);
   });
 
@@ -329,7 +329,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
           obj.eSet(feature, deserializeWithPositionalRefs(raw as Record<string, unknown>, resource));
         } else {
           const { $ref } = raw as { $ref: string };
-          obj.eSet(feature, new ProxyEObjectImpl(bookClass, URI.parse($ref)));
+          obj.eSet(feature, createProxy(bookClass, URI.parse($ref)));
         }
       }
       return obj;
@@ -361,7 +361,7 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const loadedB = await freshSet.getResource(uriB, true);
     const proxy = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
     expect(proxy.eIsProxy()).toBe(true);
-    expect((proxy as ProxyEObjectImpl).getProxyURI().toString()).toBe('mem:library-a#/0/books/0');
+    expect(getProxyURI(proxy)!.toString()).toBe('mem:library-a#/0/books/0');
 
     const resolved = await freshSet.resolve(proxy);
     expect(resolved.eIsProxy()).toBe(false);
@@ -453,10 +453,77 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const targetResource = resourceSet.createResource(URI.parse('custom:target'));
     await targetResource.save(); // writes the marker bytes via the converter
 
-    const proxy = new ProxyEObjectImpl(bookClass, URI.parse('custom:target#CUSTOM:0'));
+    const proxy = createProxy(bookClass, URI.parse('custom:target#CUSTOM:0'));
     const resolved = await resourceSet.resolve(proxy);
     expect(resolved.eIsProxy()).toBe(false);
     expect(resolved.eGet(titleAttr)).toBe('Dune');
+  });
+
+  it('resolveFeature() writes the resolved object back into the referencing feature and fires RESOLVE', async () => {
+    const sample = buildSampleMetamodel();
+    const { bookClass, libraryClass, booksRef, featuredBookRef, titleAttr } = sample;
+    const { factory } = buildFixtureIo(bookClass, libraryClass);
+    const converter = new InMemoryUriConverter();
+
+    const resourceSet = new ResourceSetImpl();
+    resourceSet.getUriConverterRegistry().register(converter);
+    resourceSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+
+    const uriA = URI.parse('mem:library-a');
+    const resourceA = resourceSet.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(item: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+    await resourceA.save();
+
+    const uriB = URI.parse('mem:library-b');
+    const resourceB = resourceSet.createResource(uriB);
+    const libraryB = createInstanceOf(libraryClass);
+    libraryB.eSet(featuredBookRef, book);
+    resourceB.getContents().add(libraryB);
+    await resourceB.save();
+
+    const freshSet = new ResourceSetImpl();
+    freshSet.getUriConverterRegistry().register(converter);
+    freshSet.getResourceFactoryRegistry().registerForProtocol('mem', factory);
+    const loadedB = await freshSet.getResource(uriB, true);
+    const loadedLibraryB = loadedB!.getContents().get(0);
+
+    const beforeResolve = loadedLibraryB.eGet(featuredBookRef) as EObject;
+    expect(beforeResolve.eIsProxy()).toBe(true);
+
+    const notifications: unknown[] = [];
+    loadedLibraryB.onDidChange((n) => notifications.push(n));
+
+    const resolved = await freshSet.resolveFeature(loadedLibraryB, featuredBookRef);
+
+    expect((resolved as EObject).eIsProxy()).toBe(false);
+    // The container's OWN stored reference is now the resolved object - a later, plain eGet
+    // sees it too, with no further resolve() call needed.
+    expect(loadedLibraryB.eGet(featuredBookRef)).toBe(resolved);
+    expect(notifications).toEqual([
+      {
+        eventType: 'RESOLVE',
+        notifier: loadedLibraryB,
+        feature: featuredBookRef,
+        oldValue: beforeResolve,
+        newValue: resolved,
+        position: undefined,
+        wasSet: true,
+      },
+    ]);
+  });
+
+  it('resolveFeature() is a no-op for an already-resolved feature', async () => {
+    const { bookClass, titleAttr } = buildSampleMetamodel();
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+
+    const resourceSet = new ResourceSetImpl();
+    const result = await resourceSet.resolveFeature(book, titleAttr);
+    expect(result).toBe('Dune');
   });
 });
 

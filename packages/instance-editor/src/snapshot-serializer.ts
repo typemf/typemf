@@ -9,7 +9,7 @@ import {
   isEEnum,
   isEReference,
   isEStructuralFeature,
-  ProxyEObjectImpl,
+  createProxy,
   Resource,
   ResourceFactory,
   ResourceFactoryRegistry,
@@ -88,7 +88,7 @@ function needsEagerOwnFeatures(obj: EObject): boolean {
   // dereferenced by @typemf/json's encodeAttributeValue/decodeAttributeValue the moment a value
   // for that feature is processed (checking for EDate, EEnum, ...) - regardless of whether the
   // feature's own containing class needs DynamicEFactoryImpl or not. Found as a real, confirmed
-  // crash (`eType?.getName is not a function` - a still-unresolved ProxyEObjectImpl, which has no
+  // crash (`eType?.getName is not a function` - a still-unresolved proxy, which has no
   // getName() at all, only the base EObject interface) while investigating the Ecore.ecore hang,
   // not anticipated: any attribute using a genuinely custom (non-well-known) datatype or enum
   // would hit this in production too, not just in this specific test fixture. Small, bounded
@@ -114,11 +114,11 @@ function needsEagerOwnFeatures(obj: EObject): boolean {
  * Reconstructs one real, live object from its ObjectSnapshot - attributes decoded via
  * @typemf/json's own conventions (the same ones the real, on-disk format uses, so a value
  * round-tripping through the webview stays consistent), every reference (containment included, per
- * the "include containments as references" decision) as an unresolved ProxyEObjectImpl, resolved
+ * the "include containments as references" decision) as an unresolved proxy, resolved
  * lazily later only if actually needed.
  *
  * eClassId is the one exception to "lazy": constructing ANY EObject (even a proxy placeholder)
- * needs a real EClass immediately - ProxyEObjectImpl's own constructor takes one directly, not
+ * needs a real EClass immediately - createProxy() takes one directly, not
  * another proxy - so this resolves it eagerly via the exact same resourceSet.resolve() mechanism,
  * before constructing anything else. Confirmed as the deliberate choice, not an oversight: every
  * object opened for the first time costs at least two round trips (itself, then its class) rather
@@ -158,7 +158,7 @@ export class SnapshotSerializer implements EObjectSerializer {
       // EClass" metaclass, always available with no round trip - used only as the proxy's own
       // placeholder type (an EClass proxy's "declared type" is always EClass itself, unlike an
       // ordinary reference, which uses whatever the feature declares).
-      const eClassProxy = new ProxyEObjectImpl(EcorePackageImpl.eINSTANCE.getEClass(), uriForId(snapshot.eClassId));
+      const eClassProxy = createProxy(EcorePackageImpl.eINSTANCE.getEClass(), uriForId(snapshot.eClassId));
       eClass = (await resourceSet.resolve(eClassProxy)) as EClass;
     }
 
@@ -224,7 +224,7 @@ export class SnapshotSerializer implements EObjectSerializer {
       if (wellKnown) return wellKnown;
       const alreadyReconstructed = this.registry.objectFor(id);
       if (alreadyReconstructed) return alreadyReconstructed;
-      const proxy = new ProxyEObjectImpl(declaredType, uriForId(id));
+      const proxy = createProxy(declaredType, uriForId(id));
       return eager ? resourceSet.resolve(proxy) : proxy;
     };
 

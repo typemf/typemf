@@ -10,7 +10,7 @@ import {
   EObject,
   EPackageImpl,
   EReferenceImpl,
-  ProxyEObjectImpl,
+  createProxy,
   URI,
 } from '../../index.js';
 // Ecore must be initialized before metaclass instances can be created.
@@ -263,24 +263,23 @@ describe('opposite maintenance with an unresolved proxy', () => {
   const ecore = EcorePackageImpl.eINSTANCE;
   const factory = new EcoreFactoryImpl();
 
-  it('adding an unresolved proxy to a containment feature with an eOpposite does not throw', () => {
+  it('adding an unresolved proxy to a containment feature with an eOpposite does not throw, and sets the opposite too', () => {
     const pkg = factory.createEPackage();
-    const proxy = new ProxyEObjectImpl(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as unknown as EClassifier;
+    const proxy = createProxy(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as EClassifier;
 
     expect(() => pkg.getEClassifiers().add(proxy)).not.toThrow();
     expect(pkg.getEClassifiers().toArray()).toEqual([proxy]);
-    // Containment itself is still tracked, even though the opposite feature (ePackage) is not -
-    // the proxy has no real storage for it until resolved.
     expect(proxy.eContainer()).toBe(pkg);
+    // Unlike a throwing proxy, a real (if not-yet-resolved) instance can have its opposite
+    // feature set correctly - this is already known from context, independent of whatever the
+    // proxy's own document eventually says.
+    expect(proxy.getEPackage()).toBe(pkg);
   });
 
   it('a second unresolved proxy is still added after the first', () => {
     const pkg = factory.createEPackage();
-    const first = new ProxyEObjectImpl(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as unknown as EClassifier;
-    const second = new ProxyEObjectImpl(
-      ecore.getEClass(),
-      URI.parse('typemf-host:/2#self')
-    ) as unknown as EClassifier;
+    const first = createProxy(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as EClassifier;
+    const second = createProxy(ecore.getEClass(), URI.parse('typemf-host:/2#self')) as EClassifier;
 
     pkg.getEClassifiers().add(first);
     pkg.getEClassifiers().add(second);

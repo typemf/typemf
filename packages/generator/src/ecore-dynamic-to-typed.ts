@@ -19,8 +19,8 @@ import {
   EParameterImpl,
   EReferenceImpl,
   EStructuralFeature,
+  getProxyURI,
   isEClassifier,
-  ProxyEObjectImpl,
   resolveAgainstPackage,
   type EGenericType,
   type ETypedElement,
@@ -110,7 +110,7 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
    */
   function classifierOf(dynClassifier: EObject): EClassifier | undefined {
     if (classifierMap.has(dynClassifier)) return classifierMap.get(dynClassifier);
-    const uri = dynClassifier.eIsProxy() ? (dynClassifier as ProxyEObjectImpl).getProxyURI() : undefined;
+    const uri = dynClassifier.eIsProxy() ? getProxyURI(dynClassifier) : undefined;
     const ecore = EcorePackageImpl.eINSTANCE;
     if (uri && uri.trimFragment().toString() === ecore.getNsURI()) {
       const fragment = uri.getFragment() ?? '';

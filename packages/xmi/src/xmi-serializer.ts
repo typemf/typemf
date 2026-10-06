@@ -6,10 +6,11 @@ import {
   EReference,
   EStructuralFeature,
   isEClassifier,
-  ProxyEObjectImpl,
   Resource,
   URI,
   computeFragment as coreComputeFragment,
+  createProxy,
+  getProxyURI,
   getResourceOf,
   type EObjectSerializer,
 } from '@typemf/core';
@@ -307,11 +308,14 @@ function encodeReferenceValue(
   const declared = feature.getEType() as EClass | undefined;
 
   if (target.eIsProxy()) {
-    const proxy = target as ProxyEObjectImpl;
-    const actual = proxy.eClass();
+    const actual = target.eClass();
     const xsiType =
       declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
-    return { value: proxy.getProxyURI().toString(), crossDocument: true, xsiType };
+    const proxyURI = getProxyURI(target);
+    if (!proxyURI) {
+      throw new Error(`eIsProxy() is true but no proxy URI is on record for this ${actual.getName()}.`);
+    }
+    return { value: proxyURI.toString(), crossDocument: true, xsiType };
   }
 
   const targetResource = getResourceOf(target);
@@ -702,7 +706,7 @@ function completeObject(
     const xsiType = child.getAttributeNS(XSI_NS, 'type');
     const declared = refFeature.getEType() as EClass;
     const proxyEClass = xsiType ? resolvePrefixedName(xsiType, child, ctx.packageRegistry) : declared;
-    const proxy = new ProxyEObjectImpl(proxyEClass, URI.parse(href));
+    const proxy = createProxy(proxyEClass, URI.parse(href));
     if (feature.isMany()) {
       const list = obj.eGet(feature) as { add(v: EObject): void };
       list.add(proxy);
@@ -721,7 +725,7 @@ function completeObject(
  * the read-side gap that had never been exercised until parsing a real, externally-authored file).
  * Each whitespace-separated fragment is classified independently: one that parses as an absolute
  * URI (a real scheme, e.g. "http://www.eclipse.org/emf/2002/Ecore#//EString") is cross-document,
- * resolved as a ProxyEObjectImpl exactly like the href-child-element case; anything else is a
+ * resolved as a proxy exactly like the href-child-element case; anything else is a
  * same-document fragment, resolved immediately via resolveEmfFragment, since every possible
  * same-document target already exists by this point.
  */
@@ -746,7 +750,7 @@ function decodeAttributeFormReference(
     if (isAbsoluteUri(fragment)) {
       const declared = feature.getEType() as EClass;
       const proxyEClass = typeToken ? resolvePrefixedName(typeToken, contextElement, packageRegistry) : declared;
-      return new ProxyEObjectImpl(proxyEClass, URI.parse(fragment));
+      return createProxy(proxyEClass, URI.parse(fragment));
     }
 
     // Real EMF-authored files always write same-document attribute-form

@@ -1,11 +1,4 @@
-import {
-  EcorePackageImpl,
-  EClass,
-  EObject,
-  ProxyEObjectImpl,
-  isEClassifier,
-  resolveAgainstPackage,
-} from '@typemf/core';
+import { EcorePackageImpl, EClass, EObject, getProxyURI, isEClassifier, resolveAgainstPackage } from '@typemf/core';
 
 const CLASSIFIER_PREFIX = 'ecore:';
 const MEMBER_PREFIX = 'ecore-member:';
@@ -76,11 +69,10 @@ export function wellKnownEcoreId(obj: EObject): string | undefined {
   // in-memory data), then recursing on the real, resolved object, which the rest of this function
   // already knows how to handle correctly.
   if (obj.eIsProxy()) {
-    // Never falls through to a type-specific method below for a proxy, even an unrecognized
-    // proxy implementation - the whole point of this check.
-    if (!(obj instanceof ProxyEObjectImpl)) return undefined;
-    const proxyURI = obj.getProxyURI();
-    if (proxyURI.trimFragment().toString() !== EcorePackageImpl.eINSTANCE.getNsURI()) return undefined;
+    // Never falls through to a type-specific method below for a proxy, even an unresolvable one
+    // (no proxy URI on record at all) - the whole point of this check.
+    const proxyURI = getProxyURI(obj);
+    if (!proxyURI || proxyURI.trimFragment().toString() !== EcorePackageImpl.eINSTANCE.getNsURI()) return undefined;
     const fragment = proxyURI.getFragment();
     const resolved = fragment ? resolveAgainstPackage(EcorePackageImpl.eINSTANCE, fragment) : undefined;
     return resolved ? wellKnownEcoreId(resolved) : undefined;

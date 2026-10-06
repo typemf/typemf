@@ -1,4 +1,5 @@
 import { EObject } from '../metamodel/types/EObject.js';
+import { EStructuralFeature } from '../metamodel/types/EStructuralFeature.js';
 import { EPackageRegistry } from '../registry/epackage-registry.js';
 import { Resource } from './resource.js';
 import { ResourceFactoryRegistry } from './resource-factory-registry.js';
@@ -47,4 +48,15 @@ export interface ResourceSet {
    * The EMF-EcoreUtil.resolve() equivalent.
    */
   resolve(proxy: EObject): Promise<EObject>;
+
+  /**
+   * Resolves `container`'s current value for `feature` if it is an unresolved proxy, and writes
+   * the resolved object back into that same feature - the piece plain resolve() deliberately
+   * leaves undone (see its own doc comment: it only locates and returns the target). Fires a
+   * RESOLVE notification (distinct from SET - this is a load completing, not an edit) when the
+   * value actually changes. A no-op, returning the current value unchanged, for an already-
+   * resolved value or a many-valued feature (whose own items are resolved individually via
+   * plain resolve(), not through this method).
+   */
+  resolveFeature(container: EObject, feature: EStructuralFeature): Promise<unknown>;
 }
