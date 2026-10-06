@@ -158,7 +158,7 @@ describe('XmiSerializer', () => {
     await resourceB.save();
 
     const rawB = new TextDecoder().decode(await converter.readBinary(uriB));
-    expect(rawB).toContain('<featuredBook href="mem:library-a.xmi#Dune"/>');
+    expect(rawB).toContain('<featuredBook href="library-a.xmi#Dune"/>');
     expect(rawB).not.toContain('featuredBook="'); // not the attribute form
 
     const freshSet = newResourceSet(converter);
@@ -173,6 +173,87 @@ describe('XmiSerializer', () => {
     expect(resolved.eIsProxy()).toBe(false);
     expect(resolved.eGet(titleAttr)).toBe('Dune');
     expect(freshSet.getResources()).toHaveLength(2);
+  });
+
+  it('writes and reads a relative href across directories, in both directions', async () => {
+    // Two documents in different directories, referencing each other - EMF's own default href
+    // form, not the full file:// paths every earlier test above already covers.
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(libraryPackage);
+
+    const uriA = URI.parse('mem:a/sub/library-a.xmi');
+    const resourceA = rs.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(v: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+
+    const uriB = URI.parse('mem:b/library-b.xmi');
+    const resourceB = rs.createResource(uriB);
+    const libraryB = createInstanceOf(libraryClass);
+    libraryB.eSet(featuredBookRef, book);
+    resourceB.getContents().add(libraryB);
+
+    await resourceA.save();
+    await resourceB.save();
+
+    const rawB = new TextDecoder().decode(await converter.readBinary(uriB));
+    expect(rawB).toContain('<featuredBook href="../a/sub/library-a.xmi#Dune"/>');
+
+    // Reading the relative href back resolves against library-b.xmi's own URI, not library-a's.
+    const freshSet = newResourceSet(converter);
+    freshSet.getPackageRegistry().register(libraryPackage);
+    const loadedB = await freshSet.getResource(uriB, true);
+    const featuredBook = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    expect(featuredBook.eIsProxy()).toBe(true);
+
+    const resolved = await freshSet.resolve(featuredBook);
+    expect(resolved.eIsProxy()).toBe(false);
+    expect(resolved.eGet(titleAttr)).toBe('Dune');
+  });
+
+  it('reads a relative cross-document reference written the attribute-form way (externally-authored)', async () => {
+    // Our own writer always uses the href-child-element form for a non-containment reference
+    // (see the "not the attribute form" assertion above) - this is the OTHER convention real,
+    // externally-authored XMI uses just as often (e.g. "featured="other.xmi#Dune""), hand-written
+    // here since nothing in this suite produces it.
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(libraryPackage);
+
+    const uriA = URI.parse('mem:a/sub/library-a.xmi');
+    const resourceA = rs.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(v: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+    await resourceA.save();
+
+    const uriB = URI.parse('mem:b/library-b.xmi');
+    await converter.writeBinary(
+      uriB,
+      new TextEncoder().encode(
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+          '<lib:Library xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+          'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+          'xmlns:lib="https://typemf.dev/samples/library" featuredBook="../a/sub/library-a.xmi#Dune"/>'
+      )
+    );
+
+    const freshSet = newResourceSet(converter);
+    freshSet.getPackageRegistry().register(libraryPackage);
+    const loadedB = await freshSet.getResource(uriB, true);
+    const featuredBook = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    expect(featuredBook.eIsProxy()).toBe(true);
+
+    const resolved = await freshSet.resolve(featuredBook);
+    expect(resolved.eIsProxy()).toBe(false);
+    expect(resolved.eGet(titleAttr)).toBe('Dune');
   });
 
   it('emits xsi:type on the href element for a polymorphic cross-document reference', async () => {
@@ -200,7 +281,7 @@ describe('XmiSerializer', () => {
     await resourceB.save();
 
     const rawB = new TextDecoder().decode(await converter.readBinary(uriB));
-    expect(rawB).toContain('<featuredBook xsi:type="lib:AudioBook" href="mem:library-a.xmi#Dune"/>');
+    expect(rawB).toContain('<featuredBook xsi:type="lib:AudioBook" href="library-a.xmi#Dune"/>');
 
     const freshSet = newResourceSet(converter);
     freshSet.getPackageRegistry().register(libraryPackage);

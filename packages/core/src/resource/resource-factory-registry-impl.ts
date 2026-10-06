@@ -20,6 +20,7 @@ export class ResourceFactoryRegistryImpl implements ResourceFactoryRegistry {
       const byExtension = this.factoriesByExtension.get(extension);
       if (byExtension) return byExtension;
     }
-    return this.factoriesByProtocol.get(uri.getScheme());
+    const scheme = uri.getScheme();
+    return scheme === undefined ? undefined : this.factoriesByProtocol.get(scheme);
   }
 }

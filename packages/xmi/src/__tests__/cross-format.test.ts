@@ -102,7 +102,7 @@ describe('Cross-format references (JSON <-> XMI)', () => {
 
     // The fragment uses the JSON syntax of the target document ("Book_Dune", not "Dune").
     const rawXmi = new TextDecoder().decode(await converter.readBinary(xmiUri));
-    expect(rawXmi).toContain('<featuredBook href="mem:library.json#Book_Dune"/>');
+    expect(rawXmi).toContain('<featuredBook href="library.json#Book_Dune"/>');
 
     const freshSet = newResourceSet(converter);
     freshSet.getPackageRegistry().register(libraryPackage);
