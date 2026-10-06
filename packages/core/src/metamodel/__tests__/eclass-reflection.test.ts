@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EAttributeImpl } from '../impl/EAttributeImpl.js';
 import { EClassImpl } from '../impl/EClassImpl.js';
+import { DynamicEObjectImpl } from '../impl/DynamicEObjectImpl.js';
 import { createInstanceOf } from '../impl/metamodel-helpers.js';
 import { EDataTypeImpl } from '../impl/EDataTypeImpl.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
@@ -138,6 +139,40 @@ describe('EClass reflection - diamond inheritance', () => {
     expect(base.isSuperTypeOf(sprite)).toBe(true);
     expect(movable.isSuperTypeOf(sprite)).toBe(true);
     expect(named.isSuperTypeOf(sprite)).toBe(true);
+  });
+
+  // CORE-05: Movable.position and Named.label each have their own, independently-assigned
+  // featureID (1) - correct within their own declaring class, but colliding if Sprite's
+  // getFeatureID(feature) just returned that raw value instead of each feature's own distinct
+  // position within Sprite's own getEAllStructuralFeatures().
+  it("getFeatureID(feature) returns feature's position in getEAllStructuralFeatures(), not its own, per-declaring-class featureID", () => {
+    const { sprite, movable, named, idAttr, positionAttr, labelAttr } = buildDiamondMetamodel();
+    expect(movable.getFeatureID(positionAttr)).toBe(1);
+    expect(named.getFeatureID(labelAttr)).toBe(1); // same raw id as Movable.position - fine, different class
+
+    const all = [...sprite.getEAllStructuralFeatures()];
+    expect(sprite.getFeatureID(idAttr)).toBe(all.indexOf(idAttr));
+    expect(sprite.getFeatureID(positionAttr)).toBe(all.indexOf(positionAttr));
+    expect(sprite.getFeatureID(labelAttr)).toBe(all.indexOf(labelAttr));
+    expect(sprite.getFeatureID(positionAttr)).not.toBe(sprite.getFeatureID(labelAttr));
+  });
+
+  it('getEStructuralFeature(id) is the exact inverse of getFeatureID(feature)', () => {
+    const { sprite, idAttr, positionAttr, labelAttr } = buildDiamondMetamodel();
+    for (const feature of [idAttr, positionAttr, labelAttr]) {
+      expect(sprite.getEStructuralFeature(sprite.getFeatureID(feature))).toBe(feature);
+    }
+  });
+
+  it('a dynamic instance keeps both diamond branches apart instead of one overwriting the other', () => {
+    const { sprite, positionAttr, labelAttr } = buildDiamondMetamodel();
+    const instance = new DynamicEObjectImpl(sprite);
+
+    instance.eSet(positionAttr, 'top-left');
+    instance.eSet(labelAttr, 'Player');
+
+    expect(instance.eGet(positionAttr)).toBe('top-left');
+    expect(instance.eGet(labelAttr)).toBe('Player');
   });
 });
 

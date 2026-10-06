@@ -47,18 +47,13 @@
     <eOperations name="getEStructuralFeature" eType="#//EStructuralFeature">
       <eParameters name="featureID" eType="#//EInt"/>
       <eAnnotations source="https://typemf.dev/generator">
-        <details key="body" value="return this.getEAllStructuralFeatures().filter(feature => this.getFeatureID(feature) === featureIDOrFeatureName).at(0);"/>
+        <details key="body" value="const features = this.getEAllStructuralFeatures(); return featureIDOrFeatureName &gt;= 0 &amp;&amp; featureIDOrFeatureName &lt; features.size() ? features.get(featureIDOrFeatureName) : undefined;"/>
       </eAnnotations>
     </eOperations>
     <eOperations name="getFeatureID" eType="#//EInt">
       <eParameters name="feature" eType="#//EStructuralFeature"/>
       <eAnnotations source="https://typemf.dev/generator">
-        <details key="body" value="return (feature as EStructuralFeatureImpl).getFeatureID();"/>
-      </eAnnotations>
-      <eAnnotations source="https://typemf.dev/generator/import">
-        <details key="type" value="EStructuralFeatureImpl"/>
-        <details key="from" value="@typemf/core"/>
-        <details key="internal-from" value="./impl/EStructuralFeatureImpl"/>
+        <details key="body" value="return this.getEAllStructuralFeatures().indexOf(feature);"/>
       </eAnnotations>
     </eOperations>
     <eOperations name="getEStructuralFeature" eType="#//EStructuralFeature">

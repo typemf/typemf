@@ -4997,7 +4997,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
         entry.eBasicSetValue(
           Ids.EStringToStringMapEntry.value,
-          'return this.getEAllStructuralFeatures().filter(feature => this.getFeatureID(feature) === featureIDOrFeatureName).at(0);'
+          'const features = this.getEAllStructuralFeatures(); return featureIDOrFeatureName >= 0 && featureIDOrFeatureName < features.size() ? features.get(featureIDOrFeatureName) : undefined;'
         );
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
@@ -5036,32 +5036,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
         entry.eBasicSetValue(
           Ids.EStringToStringMapEntry.value,
-          'return (feature as EStructuralFeatureImpl).getFeatureID();'
+          'return this.getEAllStructuralFeatures().indexOf(feature);'
         );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op3.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EStructuralFeatureImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EStructuralFeatureImpl');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EClass_op3.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
