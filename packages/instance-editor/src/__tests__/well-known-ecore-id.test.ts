@@ -1,4 +1,4 @@
-import { EAttributeImpl, EcorePackageImpl, EClassImpl, EPackageImpl, ProxyEObjectImpl, URI } from '@typemf/core';
+import { EAttributeImpl, EcorePackageImpl, EClassImpl, EPackageImpl, createProxy, URI } from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { wellKnownEcoreId, wellKnownEcoreObject } from '../well-known-ecore-id.js';
 
@@ -93,7 +93,7 @@ describe('wellKnownEcoreId / wellKnownEcoreObject', () => {
   // An unresolved proxy reports its declared eClass but has none of a classifier's methods.
   it('gives an unresolved proxy into Ecore the id of its target', () => {
     const eString = EcorePackageImpl.eINSTANCE.getEString();
-    const proxy = new ProxyEObjectImpl(
+    const proxy = createProxy(
       EcorePackageImpl.eINSTANCE.getEDataType(),
       URI.parse(`${EcorePackageImpl.eINSTANCE.getNsURI()}#//EString`)
     );
@@ -104,7 +104,7 @@ describe('wellKnownEcoreId / wellKnownEcoreObject', () => {
 
   it('gives an unresolved proxy to a feature of an Ecore classifier the id of its target', () => {
     const nameFeature = EcorePackageImpl.eINSTANCE.getEPackage().getEStructuralFeature('name')!;
-    const proxy = new ProxyEObjectImpl(
+    const proxy = createProxy(
       EcorePackageImpl.eINSTANCE.getEAttribute(),
       URI.parse(`${EcorePackageImpl.eINSTANCE.getNsURI()}#//EPackage/name`)
     );
@@ -112,16 +112,13 @@ describe('wellKnownEcoreId / wellKnownEcoreObject', () => {
   });
 
   it('returns undefined for an unresolved proxy into another document', () => {
-    const proxy = new ProxyEObjectImpl(
-      new EClassImpl(),
-      URI.parse('https://example.com/some-other-metamodel#//SomeClass')
-    );
+    const proxy = createProxy(new EClassImpl(), URI.parse('https://example.com/some-other-metamodel#//SomeClass'));
     expect(() => wellKnownEcoreId(proxy)).not.toThrow();
     expect(wellKnownEcoreId(proxy)).toBeUndefined();
   });
 
   it('returns undefined for an unresolved proxy into Ecore with an unknown fragment', () => {
-    const proxy = new ProxyEObjectImpl(
+    const proxy = createProxy(
       new EClassImpl(),
       URI.parse(`${EcorePackageImpl.eINSTANCE.getNsURI()}#//NoSuchClassifier`)
     );

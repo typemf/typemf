@@ -1,5 +1,6 @@
 import {
   createInstanceOf,
+  createProxy,
   DynamicEFactoryImpl,
   EAttributeImpl,
   EcorePackageImpl,
@@ -322,9 +323,7 @@ describe('the write path end to end', () => {
     const reconstructedBook = resource!.getContents().get(0);
     const reconstructedFeature = reconstructedBook.eClass().getEStructuralFeature('favoriteAuthor')!;
 
-    const resolvedAuthor = await webviewResourceSet.resolve(
-      new (await import('@typemf/core')).ProxyEObjectImpl(authorClass, uriForId(authorId))
-    );
+    const resolvedAuthor = await webviewResourceSet.resolve(createProxy(authorClass, uriForId(authorId)));
     reconstructedBook.eSet(reconstructedFeature, resolvedAuthor);
     await Promise.resolve();
 

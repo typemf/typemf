@@ -8,6 +8,7 @@ import {
   EDataTypeImpl,
   EEnumImpl,
   EEnumLiteralImpl,
+  EcoreFactoryImpl,
   EPackageImpl,
   EReferenceImpl,
   ResourceSetImpl,
@@ -288,5 +289,40 @@ describe('SnapshotSerializer', () => {
     }
     expect(literals.map((l) => l.getName())).toEqual(literalNames);
     expect(literals.map((l) => l.getLiteral())).toEqual(literalNames);
+  });
+
+  // Regression test for a bug GEN-13's opposite fix exposed: the root here is an EPackage, which
+  // isn't eager (needsEagerOwnFeatures), so its classifiers are reconstructed as unresolved
+  // proxies - CORE-02's bug ("eInverseAdd calls eGet on the proxy") threw on the second add, and
+  // SnapshotSerializer's trySet() silently swallowed it, so only the first classifier ever made
+  // it into the list. This is the host-side proof that opening a .ecore file with more than one
+  // classifier shows all of them, not just the first.
+  it('reconstructs every classifier of an EPackage, not just the first', async () => {
+    const ecoreFactory = new EcoreFactoryImpl();
+    const pkg = ecoreFactory.createEPackage();
+    pkg.setName('mapping');
+    const mappingModel = ecoreFactory.createEClass();
+    mappingModel.setName('MappingModel');
+    const mapping = ecoreFactory.createEClass();
+    mapping.setName('Mapping');
+    pkg.getEClassifiers().add(mappingModel);
+    pkg.getEClassifiers().add(mapping);
+
+    const hostIds = new ObjectIdMap();
+    const converter = new FakeHostUriConverter();
+    converter.set(hostIds.idFor(pkg), encodeSnapshot(snapshotObject(pkg, hostIds)));
+    // mappingModel and mapping are never registered - they stay unresolved proxies, same as a
+    // real webview that hasn't expanded the tree node for either of them yet.
+
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(converter);
+
+    const resource = await webviewResourceSet.getResource(uriForId(hostIds.idFor(pkg)), true);
+    const reconstructedPkg = resource!.getContents().get(0);
+    const reconstructedClassifiersFeature = reconstructedPkg.eClass().getEStructuralFeature('eClassifiers')!;
+    const classifiers = reconstructedPkg.eGet(reconstructedClassifiersFeature) as Iterable<{ eIsProxy(): boolean }>;
+
+    expect([...classifiers]).toHaveLength(2);
   });
 });

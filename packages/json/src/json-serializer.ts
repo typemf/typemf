@@ -6,8 +6,9 @@ import {
   EPackageRegistry,
   EReference,
   EStructuralFeature,
+  createProxy,
+  getProxyURI,
   getResourceOf,
-  ProxyEObjectImpl,
   resolveFragment,
   Resource,
   type EObjectSerializer,
@@ -36,7 +37,7 @@ interface RefJson {
  * references become { $ref, $eClass? }, where $ref is:
  *   - "#fullId"           same-resource, by ID attribute
  *   - "#/0/books/2"        same-resource, positional (JSON Pointer-shaped)
- *   - "<uri>#<either form>" cross-resource - becomes a ProxyEObjectImpl
+ *   - "<uri>#<either form>" cross-resource - becomes an unresolved proxy
  * and the optional $eClass on a $ref is only present when the target's
  * actual EClass differs from the feature's statically declared type
  * (mirrors XMI's xsi:type, which is likewise only emitted when needed).
@@ -139,8 +140,11 @@ function serializeReferenceValue(
 
   if (target.eIsProxy()) {
     // Round-trip an already-unresolved proxy as-is, no need to load it.
-    const proxy = target as ProxyEObjectImpl;
-    return buildRefJson(proxy.getProxyURI().toString(), proxy.eClass(), feature, namespaces);
+    const proxyURI = getProxyURI(target);
+    if (!proxyURI) {
+      throw new Error(`eIsProxy() is true but no proxy URI is on record for this ${target.eClass().getName()}.`);
+    }
+    return buildRefJson(proxyURI.toString(), target.eClass(), feature, namespaces);
   }
 
   const targetResource = getResourceOf(target);
@@ -314,7 +318,7 @@ function resolveRef(refJson: RefJson, feature: EReference, roots: EObject[], ctx
   // Cross-resource: never loaded eagerly - a proxy, resolved later via
   // ResourceSet.resolve() (which uses the identical resolveFragment()).
   const uri = URI.parse(refString);
-  return new ProxyEObjectImpl(overrideEClass ?? declaredEClass, uri);
+  return createProxy(overrideEClass ?? declaredEClass, uri);
 }
 
 export function decodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {

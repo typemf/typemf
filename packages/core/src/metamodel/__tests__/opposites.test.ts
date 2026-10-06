@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createInstanceOf,
   DynamicEFactoryImpl,
+  EClassifier,
   EClassImpl,
   EcoreFactoryImpl,
   EcorePackageImpl,
@@ -9,6 +10,8 @@ import {
   EObject,
   EPackageImpl,
   EReferenceImpl,
+  createProxy,
+  URI,
 } from '../../index.js';
 // Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
@@ -253,5 +256,34 @@ describe('opposites of the Ecore metamodel', () => {
     expect(eClass.getEPackage()).toBe(second);
     expect(first.getEClassifiers().isEmpty()).toBe(true);
     expect(second.getEClassifiers().toArray()).toEqual([eClass]);
+  });
+});
+
+describe('opposite maintenance with an unresolved proxy', () => {
+  const ecore = EcorePackageImpl.eINSTANCE;
+  const factory = new EcoreFactoryImpl();
+
+  it('adding an unresolved proxy to a containment feature with an eOpposite does not throw, and sets the opposite too', () => {
+    const pkg = factory.createEPackage();
+    const proxy = createProxy(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as EClassifier;
+
+    expect(() => pkg.getEClassifiers().add(proxy)).not.toThrow();
+    expect(pkg.getEClassifiers().toArray()).toEqual([proxy]);
+    expect(proxy.eContainer()).toBe(pkg);
+    // Unlike a throwing proxy, a real (if not-yet-resolved) instance can have its opposite
+    // feature set correctly - this is already known from context, independent of whatever the
+    // proxy's own document eventually says.
+    expect(proxy.getEPackage()).toBe(pkg);
+  });
+
+  it('a second unresolved proxy is still added after the first', () => {
+    const pkg = factory.createEPackage();
+    const first = createProxy(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as EClassifier;
+    const second = createProxy(ecore.getEClass(), URI.parse('typemf-host:/2#self')) as EClassifier;
+
+    pkg.getEClassifiers().add(first);
+    pkg.getEClassifiers().add(second);
+
+    expect(pkg.getEClassifiers().toArray()).toEqual([first, second]);
   });
 });

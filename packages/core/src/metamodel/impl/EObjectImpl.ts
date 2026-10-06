@@ -24,6 +24,7 @@ let fallbackIdCounter = 0;
 export abstract class EObjectImpl implements EObject {
   private _eContainer: EObject | undefined;
   private _eContainingFeature: EStructuralFeature | undefined;
+  private _eProxy = false;
   private frozen = false;
 
   /**
@@ -216,6 +217,11 @@ export abstract class EObjectImpl implements EObject {
    * own opposite (still pointing at `this`) is cleared in turn.
    */
   eInverseAdd(otherEnd: EObjectImpl, feature: EReference): void {
+    // this may still be an unresolved proxy here - that's fine: it is a real instance with real
+    // (currently default) storage, so eGet/eBasicSetValue work normally. Setting its opposite
+    // feature even while unresolved is correct, not just harmless: that information (e.g. "which
+    // package contains this not-yet-loaded classifier") is already fully known from context,
+    // independent of whatever the proxy's own document eventually turns out to say.
     if (feature.isMany()) {
       this.eBasicList(feature).basicAdd(otherEnd);
     } else {
@@ -302,7 +308,18 @@ export abstract class EObjectImpl implements EObject {
   }
 
   eIsProxy(): boolean {
-    return false;
+    return this._eProxy;
+  }
+
+  /**
+   * Internal - flips the proxy flag. Not part of the public EObject interface, same as
+   * eBasicSetContainer/eBasicSetValue; only `resource/proxy.ts`'s createProxy() calls this, right
+   * after constructing a real instance of the target EClass through its own factory - a proxy is
+   * not a separate class, just an ordinary, freshly-constructed instance flagged as a stand-in
+   * until something resolves it.
+   */
+  eSetProxy(flag: boolean): void {
+    this._eProxy = flag;
   }
 
   fullId(): string {

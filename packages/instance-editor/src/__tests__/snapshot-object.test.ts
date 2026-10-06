@@ -6,9 +6,18 @@ import {
   EClassImpl,
   EDataTypeImpl,
   EPackageImpl,
+  EPackageRegistryImpl,
   EReferenceImpl,
+  isENamedElement,
+  ResourceSetImpl,
+  URI,
 } from '@typemf/core';
-import { describe, expect, it } from 'vitest';
+import { registerXmiFormat } from '@typemf/xmi';
+import { NodeFileUriConverter } from '@typemf/node';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ObjectIdMap } from '../object-id-map.js';
 import { snapshotObject } from '../snapshot-object.js';
 
@@ -140,5 +149,59 @@ describe('snapshotObject', () => {
 
     const snapshot = snapshotObject(book, new ObjectIdMap());
     expect(snapshot.attributes.tags).toEqual(['sci-fi', 'classic']);
+  });
+});
+
+describe('snapshotObject of a .ecore file opened as an instance', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'snapshot-ecore-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  // Same loading path InstanceEditorProvider.openExistingInstance uses for a *.ecore file (the
+  // package is viewed reflectively, as data - distinct from loadLocalEcorePackage, which is for
+  // picking a root class from a .ecore file, not for viewing one). A classifier with no
+  // structural features of its own (a self-closed <eClassifiers .../> element) must still appear
+  // in the snapshot - this is the regression this test guards.
+  it('lists every classifier, including one with no structural features of its own', async () => {
+    const path = join(dir, 'mapping.ecore');
+    writeFileSync(
+      path,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="mapping" nsURI="http://roar-net.com/mapping" nsPrefix="map">
+  <eClassifiers xsi:type="ecore:EClass" name="MappingModel"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Mapping">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ecore" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="variability" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+</ecore:EPackage>
+`
+    );
+
+    const packageRegistry = new EPackageRegistryImpl();
+    packageRegistry.register(EcorePackageImpl.eINSTANCE);
+    const resourceSet = new ResourceSetImpl(packageRegistry);
+    registerXmiFormat(resourceSet.getResourceFactoryRegistry());
+    resourceSet.getUriConverterRegistry().register(new NodeFileUriConverter());
+
+    const resource = await resourceSet.getResource(URI.createFileURI(path), true);
+    const pkg = resource!.getContents().get(0);
+
+    const ids = new ObjectIdMap();
+    const snapshot = snapshotObject(pkg, ids);
+
+    const classifierIds = snapshot.references.eClassifiers as string[];
+    expect(classifierIds).toHaveLength(2);
+    const names = classifierIds.map((id) => {
+      const obj = ids.objectFor(id);
+      return isENamedElement(obj) ? obj.getName() : undefined;
+    });
+    expect(names).toEqual(['MappingModel', 'Mapping']);
   });
 });

@@ -5,7 +5,7 @@ import {
   EObject,
   EReference,
   EStructuralFeature,
-  ProxyEObjectImpl,
+  createProxy,
   isEClass,
   isEDataType,
   isEEnum,
@@ -404,7 +404,7 @@ function AddChildButton({
     }
     const candidates: EClass[] = [];
     for (const id of classIds) {
-      const resolved = await resourceSet.resolve(new ProxyEObjectImpl(declaredType, uriForId(id)));
+      const resolved = await resourceSet.resolve(createProxy(declaredType, uriForId(id)));
       if (isEClass(resolved)) candidates.push(resolved);
     }
     setState({ kind: 'picking', candidates });
@@ -503,7 +503,7 @@ function LinkReferenceButton({
   const resolveCandidates = async (candidateIds: string[]): Promise<EObject[]> => {
     const candidates: EObject[] = [];
     for (const id of candidateIds) {
-      const resolved = await resourceSet.resolve(new ProxyEObjectImpl(declaredType, uriForId(id)));
+      const resolved = await resourceSet.resolve(createProxy(declaredType, uriForId(id)));
       if (resolved) candidates.push(resolved);
     }
     return candidates;

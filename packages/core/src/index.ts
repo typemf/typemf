@@ -58,7 +58,7 @@ export * from './registry/epackage-registry-impl.js';
 // resource
 export * from './resource/diagnostic.js';
 export * from './resource/eobject-address.js';
-export * from './resource/proxy-eobject-impl.js';
+export * from './resource/proxy.js';
 export * from './resource/resource.js';
 export * from './resource/resource-factory.js';
 export * from './resource/resource-factory-registry.js';
