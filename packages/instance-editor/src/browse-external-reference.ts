@@ -1,7 +1,8 @@
-import { EClass, URI } from '@typemf/core';
+import { EClass } from '@typemf/core';
 import * as vscode from 'vscode';
 import { findTypeCompatibleObjects, findTypeCompatibleObjectsInPackage } from './find-type-compatible-objects.js';
 import { InstanceDocument } from './instance-document.js';
+import { resolveDocumentIdentity } from './resolve-document-identity.js';
 import { resolveMissingPackages } from './resolve-missing-packages.js';
 
 const BROWSE_ITEM = { label: '$(folder-opened) Browse for a file...' };
@@ -63,7 +64,7 @@ export async function browseExternalReferenceCandidates(
   const fileUri = picked?.[0];
   if (!fileUri) return { candidateIds: [], cancelled: true };
 
-  const externalUri = URI.createFileURI(fileUri.fsPath);
+  const externalUri = resolveDocumentIdentity(fileUri.scheme, fileUri.fsPath, fileUri.toString());
   const bytes = await vscode.workspace.fs.readFile(fileUri);
   const resource = document.resourceSet.createResource(externalUri);
 

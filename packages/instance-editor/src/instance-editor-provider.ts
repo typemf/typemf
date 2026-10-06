@@ -23,6 +23,8 @@ import {
 } from './host-message-protocol.js';
 import { InstanceDocument } from './instance-document.js';
 import { resolveNewInstanceSpec } from './new-instance-spec-uri.js';
+import { registerIfNew } from './register-if-new.js';
+import { resolveDocumentIdentity } from './resolve-document-identity.js';
 import { resolveMissingPackages } from './resolve-missing-packages.js';
 
 /** The standard VS Code webview nonce pattern (a random string, gating which <script> tags the
@@ -65,10 +67,17 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
 
   async openCustomDocument(
     uri: vscode.Uri,
-    _openContext: vscode.CustomDocumentOpenContext,
+    openContext: vscode.CustomDocumentOpenContext,
     _token: vscode.CancellationToken
   ): Promise<InstanceDocument> {
-    return uri.scheme === 'untitled' ? this.openNewInstance(uri) : this.openExistingInstance(uri);
+    // Hot exit / crash recovery (ED-02): openContext.backupId names a real file on disk holding
+    // whatever backupCustomDocument last wrote for this exact document - possibly-unsaved edits
+    // that would otherwise be silently lost, including for an untitled document, which still
+    // reaches this same uri.scheme === 'untitled' branch on restore and, without this check, used
+    // to always rebuild a brand new, empty instance from the uri's own new-instance spec instead
+    // (openNewInstance) - discarding the backup outright rather than ignoring it for lack of one.
+    if (openContext.backupId) return this.openFromContent(uri, vscode.Uri.parse(openContext.backupId));
+    return uri.scheme === 'untitled' ? this.openNewInstance(uri) : this.openFromContent(uri, uri);
   }
 
   /**
@@ -98,13 +107,16 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     // shared registry at all) triggers this editor's own "reopen with the right editor after
     // save" fix (saveCustomDocumentAs's own vscode.openWith call) - which goes through
     // openCustomDocument again, and since the file is real now (not untitled:), through
-    // openExistingInstance, not back through here. That flow resolves referenced metamodels
+    // openFromContent, not back through here. That flow resolves referenced metamodels
     // against this SAME shared registry, found this package missing (never having been told about
     // it), and fell back to the missing-package QuickPick - which, triggered from inside an
     // automatic, programmatic reopen rather than a direct user action, had nothing to resolve it
-    // and reported cancelled. A statically-registered package is already here, so this is a no-op
-    // for that case; only the dynamic one actually needed it.
-    this.runtime.packageRegistry.register(pkg);
+    // and reported cancelled.
+    //
+    // Only when nothing is registered under this nsURI yet (ED-06, see registerIfNew). A
+    // statically registered package is already here, so this is a no-op for that case; only the
+    // dynamic one actually needed registering at all, and only the first time.
+    registerIfNew(this.runtime.packageRegistry, pkg);
     // Uniform regardless of static/dynamic (the whole point of that framing): every EPackage,
     // generated or dynamically loaded, already has a real, working EFactoryInstance.
     const root = factory.create(eClass);
@@ -130,9 +142,19 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     return new InstanceDocument(uri, resourceSet, resource);
   }
 
-  private async openExistingInstance(uri: vscode.Uri): Promise<InstanceDocument> {
-    const fileUri = URI.createFileURI(uri.fsPath);
-    const bytes = await vscode.workspace.fs.readFile(uri);
+  /**
+   * Loads a serialized resource from contentUri - either `uri` itself, for a normal open, or a
+   * hot-exit backup's own real file (named by openContext.backupId) instead, for either an
+   * existing document whose last save predates its own crash or an untitled one that never had a
+   * real file at all (see openCustomDocument's own reasoning, ED-02) - and gives the result the
+   * SAME identity `uri` would always have gotten (resolveDocumentIdentity), regardless of which
+   * one content actually came from, so every save/revert after this one behaves exactly as if
+   * nothing had happened.
+   */
+  private async openFromContent(uri: vscode.Uri, contentUri: vscode.Uri): Promise<InstanceDocument> {
+    const identityUri = resolveDocumentIdentity(uri.scheme, uri.fsPath, uri.with({ fragment: '' }).toString());
+    const bytes = await vscode.workspace.fs.readFile(contentUri);
+    const restoringFromBackup = contentUri.toString() !== uri.toString();
 
     const documentRegistry = new EPackageRegistryImpl();
     const resourceSet = new ResourceSetImpl(
@@ -142,7 +164,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     );
     // A tracked-but-unloaded Resource - used first just to reach its own serializer for the peek
     // below, then loaded for real once documentRegistry is fully resolved. One Resource, not two.
-    const resource = resourceSet.createResource(fileUri);
+    const resource = resourceSet.createResource(identityUri);
+    // Temporarily pointed at the backup's own real file for the load itself - exactly the same
+    // swap-then-restore pattern backupCustomDocument itself already uses - then restored to
+    // identityUri below, once loaded, so nothing downstream ever sees the backup's path at all.
+    if (restoringFromBackup) resource.setURI(URI.createFileURI(contentUri.fsPath));
 
     const needed = await resource.getSerializer().peekReferencedNsURIs(bytes);
     const missing: string[] = [];
@@ -161,6 +187,7 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     }
 
     await resource.load();
+    if (restoringFromBackup) resource.setURI(identityUri);
 
     // When the loaded root is itself an EPackage (a .ecore file, e.g. Ecore.ecore itself) whose
     // own nsURI matches an already-registered, real package, give the root that same real
@@ -339,7 +366,7 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     // the old URI meant every save after the first one silently targeted the original (often
     // untitled:) URI instead, never reaching the real file on disk again. document.uri is updated
     // too, for the same reason (see its own, now-mutable declaration in instance-document.ts).
-    document.resource.setURI(URI.createFileURI(destination.fsPath));
+    document.resource.setURI(resolveDocumentIdentity(destination.scheme, destination.fsPath, destination.toString()));
     document.uri = destination;
     await document.resource.save();
 

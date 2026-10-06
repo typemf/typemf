@@ -42,11 +42,7 @@ describe('findTypeCompatibleObjectsInPackage', () => {
     const { pkg, booksRef } = buildFixture();
     const objectIds = new ObjectIdMap();
 
-    const candidateIds = findTypeCompatibleObjectsInPackage(
-      pkg,
-      EcorePackageImpl.eINSTANCE.getEReference(),
-      objectIds
-    );
+    const candidateIds = findTypeCompatibleObjectsInPackage(pkg, EcorePackageImpl.eINSTANCE.getEReference(), objectIds);
 
     expect(candidateIds.map((id) => objectIds.objectFor(id))).toEqual([booksRef]);
   });

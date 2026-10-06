@@ -8,6 +8,8 @@ import { loadConfiguredEcoreMappings } from './load-ecore-mappings.js';
 import { registerManifestModules } from './manifest-modules.js';
 import type { TypeMfRuntimeApi } from './api.js';
 import { TypeMfRuntime } from './typemf-runtime.js';
+import { vscodeWorkspaceFileSystem } from './vscode-workspace-file-system.js';
+import { WorkspaceFileSystemUriConverter } from './workspace-file-system-uri-converter.js';
 
 /** Versions of the TypeMF libraries bundled into the runtime extension. */
 export interface BuiltinModuleVersions {
@@ -27,7 +29,7 @@ export async function activateRuntime(
   versions: BuiltinModuleVersions
 ): Promise<TypeMfRuntimeApi> {
   const runtime = new TypeMfRuntime();
-  runtime.uriConverterRegistry.register(new node.NodeFileUriConverter());
+  runtime.uriConverterRegistry.register(new WorkspaceFileSystemUriConverter(vscodeWorkspaceFileSystem));
   runtime.modules.provide('@typemf/core', versions['@typemf/core'], core);
   runtime.modules.provide('@typemf/json', versions['@typemf/json'], json);
   runtime.modules.provide('@typemf/node', versions['@typemf/node'], node);
