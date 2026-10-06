@@ -1,7 +1,7 @@
 {
   "name": "@typemf/vscode-runtime",
   "description": "API, module host and esbuild plugin of the shared TypeMF runtime for VS Code extensions.",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
