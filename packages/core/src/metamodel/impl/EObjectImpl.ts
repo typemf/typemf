@@ -73,6 +73,21 @@ export abstract class EObjectImpl implements EObject {
   abstract eIsSet(feature: EStructuralFeature): boolean;
   abstract eUnset(feature: EStructuralFeature): void;
 
+  /**
+   * EMF rejects a feature that doesn't belong to this object's own class outright, rather than
+   * dispatching on `feature.getFeatureID()` alone - two unrelated classes' features can share the
+   * same id (each is only unique within its own declaring class, or - for a dynamic class with
+   * multiple supertypes, see CORE-05 - within `getEAllStructuralFeatures()`'s own position-based
+   * scheme), so reading or writing by id alone silently hits the wrong field when a caller passes
+   * a feature from some other EClass entirely. Every generated eGet/eSet/eIsSet/eUnset
+   * (eclass.njk) and DynamicEObjectImpl call this first, before dispatching on the id.
+   */
+  protected requireOwnFeature(feature: EStructuralFeature): void {
+    if (!this.eClass().getEAllStructuralFeatures().contains(feature)) {
+      throw new Error(`The feature '${feature.getName()}' is not a valid feature`);
+    }
+  }
+
   private listeners: Listener[] = [];
   private deliverFlag = true;
 

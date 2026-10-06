@@ -22,6 +22,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10:
         return this._eOperation;
@@ -31,6 +32,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       default:
         super.eSet(feature, value);
@@ -56,6 +58,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10:
         return this._eOperation !== undefined;
@@ -65,6 +68,7 @@ export class EParameterImpl extends ETypedElementImpl implements EParameter {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10: {
         const wasSet = this.eIsSet(feature);

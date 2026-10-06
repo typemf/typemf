@@ -97,6 +97,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10:
         return this._changeable;
@@ -120,6 +121,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10: {
         const oldValue = this.eGet(feature);
@@ -274,6 +276,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10:
         return this._changeable !== true;
@@ -297,6 +300,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10: {
         const wasSet = this.eIsSet(feature);

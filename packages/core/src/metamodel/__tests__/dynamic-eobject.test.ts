@@ -145,6 +145,7 @@ describe('DynamicEObjectImpl / DynamicEFactoryImpl', () => {
     coverBookRef.setUpperBound(1);
     coverBookRef.setFeatureID(99);
     coverBookRef.setEContainingClass(libraryClass);
+    libraryClass.getEStructuralFeatures().add(coverBookRef);
 
     const library = createInstanceOf(libraryClass);
     const book = createInstanceOf(bookClass);

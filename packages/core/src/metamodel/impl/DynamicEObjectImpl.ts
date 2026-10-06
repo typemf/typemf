@@ -33,10 +33,12 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     return this.values.get(this.dynamicEClass.getFeatureID(feature));
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     const id = this.dynamicEClass.getFeatureID(feature);
 
     if (feature.isMany()) {
@@ -58,6 +60,7 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     const id = this.dynamicEClass.getFeatureID(feature);
     if (feature.isMany()) {
       return (this.values.get(id) as BasicEList<unknown> | undefined)?.size() !== 0;
@@ -66,6 +69,7 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     const id = this.dynamicEClass.getFeatureID(feature);
     if (feature.isMany()) {
       this.requireList(feature).clear();

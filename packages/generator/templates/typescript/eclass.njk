@@ -339,6 +339,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% endfor %}
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if featureGetter(feature) or trivialDerivedFormula(feature) %}
@@ -363,6 +364,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
@@ -476,6 +478,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
@@ -526,6 +529,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
 {% for feature in ownFeatures %}
 {% if feature.isMany() and not featureGetter(feature) %}

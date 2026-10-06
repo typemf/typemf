@@ -20,6 +20,7 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1:
         return this._name;
@@ -29,6 +30,7 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1: {
         const oldValue = this.eGet(feature);
@@ -72,6 +74,7 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1:
         return this._name !== undefined;
@@ -81,6 +84,7 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1: {
         const wasSet = this.eIsSet(feature);

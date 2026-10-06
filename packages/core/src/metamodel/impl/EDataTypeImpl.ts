@@ -20,6 +20,7 @@ export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8:
         return this._serializable;
@@ -29,6 +30,7 @@ export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8: {
         const oldValue = this.eGet(feature);
@@ -72,6 +74,7 @@ export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8:
         return this._serializable !== true;
@@ -81,6 +84,7 @@ export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8: {
         const wasSet = this.eIsSet(feature);

@@ -345,6 +345,7 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8:
         return this._abstract;
@@ -394,6 +395,7 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8: {
         const oldValue = this.eGet(feature);
@@ -502,6 +504,7 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8:
         return this._abstract !== false;
@@ -551,6 +554,7 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 8: {
         const wasSet = this.eIsSet(feature);

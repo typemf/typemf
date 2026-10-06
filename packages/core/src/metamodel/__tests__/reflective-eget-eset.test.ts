@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { EAnnotationImpl } from '../impl/EAnnotationImpl.js';
 import { EAttributeImpl } from '../impl/EAttributeImpl.js';
 import { EClassImpl } from '../impl/EClassImpl.js';
+import { createInstanceOf } from '../impl/metamodel-helpers.js';
+import { DynamicEFactoryImpl } from '../impl/DynamicEFactoryImpl.js';
 import { EDataTypeImpl } from '../impl/EDataTypeImpl.js';
 import { EEnumImpl } from '../impl/EEnumImpl.js';
 import { EEnumLiteralImpl } from '../impl/EEnumLiteralImpl.js';
@@ -43,8 +45,9 @@ describe('reflective eGet/eSet - inherited features', () => {
   it('eGet throws for a feature the class does not have', () => {
     const attr = new EAttributeImpl();
     const bogus = new EAttributeImpl();
+    bogus.setName('bogus');
     (bogus as unknown as { setFeatureID(id: number): void }).setFeatureID(9999);
-    expect(() => attr.eGet(bogus)).toThrow(/has no feature with id/);
+    expect(() => attr.eGet(bogus)).toThrow(/The feature 'bogus' is not a valid feature/);
   });
 });
 
@@ -229,5 +232,62 @@ describe('reflective eGet - derived features', () => {
     expect(allFeatureNames).toEqual(['id', 'name']);
 
     expect(sub.eGet(feature(sub, 'eIDAttribute'))).toBe(subAttr);
+  });
+});
+
+describe('reflective eGet/eSet - a feature from an unrelated class with the same raw id', () => {
+  // Real-world repro: two classes with no relation to each other, each with one attribute at
+  // feature id 0 (A.name, B.title) - eGet/eSet/eIsSet/eUnset used to dispatch on
+  // feature.getFeatureID() alone, so passing A's feature to a B instance silently read/wrote B's
+  // OWN id-0 field instead of rejecting a feature that isn't B's.
+  function buildUnrelatedClasses() {
+    const ecore = EcorePackageImpl.eINSTANCE;
+    const factory = ecore.getEFactoryInstance()!;
+    const pkg = new EPackageImpl();
+    pkg.setName('p');
+    pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+
+    const eString = ecore.getEString();
+    const classA = (factory as unknown as { createEClass(): EClassImpl }).createEClass();
+    classA.setName('A');
+    const aName = new EAttributeImpl();
+    aName.setName('name');
+    aName.setEType(eString);
+    classA.getEStructuralFeatures().add(aName);
+
+    const classB = (factory as unknown as { createEClass(): EClassImpl }).createEClass();
+    classB.setName('B');
+    const bTitle = new EAttributeImpl();
+    bTitle.setName('title');
+    bTitle.setEType(eString);
+    classB.getEStructuralFeatures().add(bTitle);
+
+    pkg.getEClassifiers().add(classA);
+    pkg.getEClassifiers().add(classB);
+
+    expect(aName.getFeatureID()).toBe(bTitle.getFeatureID()); // same raw id, unrelated classes
+
+    const a = createInstanceOf(classA);
+    const b = createInstanceOf(classB);
+    a.eSet(aName, 'alice');
+    b.eSet(bTitle, 'dune');
+    return { aName, bTitle, a, b };
+  }
+
+  it('eGet rejects a feature belonging to a different class instead of reading the colliding id', () => {
+    const { aName, b } = buildUnrelatedClasses();
+    expect(() => b.eGet(aName)).toThrow(/The feature 'name' is not a valid feature/);
+  });
+
+  it('eSet rejects it instead of overwriting the colliding id', () => {
+    const { aName, bTitle, b } = buildUnrelatedClasses();
+    expect(() => b.eSet(aName, 'X')).toThrow(/The feature 'name' is not a valid feature/);
+    expect(b.eGet(bTitle)).toBe('dune'); // unchanged
+  });
+
+  it('eIsSet and eUnset reject it too', () => {
+    const { aName, b } = buildUnrelatedClasses();
+    expect(() => b.eIsSet(aName)).toThrow(/The feature 'name' is not a valid feature/);
+    expect(() => b.eUnset(aName)).toThrow(/The feature 'name' is not a valid feature/);
   });
 });
