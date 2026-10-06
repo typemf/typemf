@@ -240,4 +240,99 @@ describe('JsonSerializer', () => {
     const reloadedBooks = [...(reloadedLibrary.eGet(booksRef) as Iterable<EObject>)];
     expect(reloadedRelated).toEqual(reloadedBooks);
   });
+
+  describe('JSON-04: diagnostics instead of silent data loss or an aborted load', () => {
+    it('an unknown key is recorded as a warning, and the rest of the object still loads', async () => {
+      const { libraryPackage, bookClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unknown-key.json');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          JSON.stringify({
+            $namespaces: { lib: 'https://typemf.dev/samples/library' },
+            $roots: [{ $eClass: { namespace: 'lib', name: 'Book' }, title: 'Dune', publisher: 'Ace' }],
+          })
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const book = resource.getContents().get(0);
+      expect(book.eClass()).toBe(bookClass);
+      expect(book.eGet(titleAttr)).toBe('Dune');
+      expect(resource.getWarnings()).toHaveLength(1);
+      expect(resource.getWarnings()[0]!.message).toContain("Unknown key 'publisher'");
+    });
+
+    it('an unresolved reference is recorded as an error, left unset, and the rest of the document still loads', async () => {
+      const { libraryPackage, libraryClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unresolved-ref.json');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          JSON.stringify({
+            $namespaces: { lib: 'https://typemf.dev/samples/library' },
+            $roots: [
+              {
+                $eClass: { namespace: 'lib', name: 'Library' },
+                books: [{ $eClass: { namespace: 'lib', name: 'Book' }, title: 'Dune' }],
+                featuredBook: { $ref: '#does-not-exist' },
+              },
+            ],
+          })
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const library = resource.getContents().get(0);
+      expect(library.eClass()).toBe(libraryClass);
+      const books = [...(library.eGet(libraryClass.getEStructuralFeature('books')!) as Iterable<EObject>)];
+      expect(books).toHaveLength(1);
+      expect(books[0]!.eGet(titleAttr)).toBe('Dune');
+      expect(library.eIsSet(libraryClass.getEStructuralFeature('featuredBook')!)).toBe(false);
+      expect(resource.getErrors()).toHaveLength(1);
+      expect(resource.getErrors()[0]!.message).toContain("Unresolved reference '#does-not-exist'");
+    });
+
+    it('invalid JSON is recorded as an error instead of throwing, and loads no roots', async () => {
+      const { libraryPackage } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:invalid.json');
+      await converter.writeBinary(uri, new TextEncoder().encode('{ not valid json'));
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      expect(resource.getContents().toArray()).toEqual([]);
+      expect(resource.getErrors()).toHaveLength(1);
+      expect(resource.getErrors()[0]!.message).toContain('is not valid JSON');
+    });
+
+    it("a document with no '$roots' array is recorded as an error instead of throwing a TypeError", async () => {
+      const { libraryPackage } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:no-roots.json');
+      await converter.writeBinary(uri, new TextEncoder().encode(JSON.stringify({ oops: true })));
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      expect(resource.getContents().toArray()).toEqual([]);
+      expect(resource.getErrors()).toHaveLength(1);
+      expect(resource.getErrors()[0]!.message).toContain("missing or malformed '$roots'");
+    });
+  });
 });

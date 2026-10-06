@@ -150,7 +150,7 @@ export class XmiSerializer implements EObjectSerializer {
       );
     }
 
-    const ctx: DeserializeContext = { packageRegistry, resourceURI: resource.getURI() };
+    const ctx: DeserializeContext = { packageRegistry, resourceURI: resource.getURI(), resource };
     const elementToObj = new Map<Element, EObject>();
 
     // Pass 1: construct every object in the document (via its own
@@ -463,6 +463,11 @@ interface DeserializeContext {
   /** The document being read - anchors a relative href (EMF's default form between files in the
    *  same workspace) to an absolute URI before it becomes a proxy. */
   resourceURI: URI;
+  /** Where to record a problem instead of throwing and aborting the whole load (XMI-04): an
+   *  unknown attribute/element is a warning (data loss on the next save); an unresolved
+   *  same-document reference is an error (the feature is left unset, the rest of the document
+   *  still loads). */
+  resource: Resource;
 }
 
 function resolveElementEClass(element: Element, packageRegistry: EPackageRegistry): EClass {
@@ -636,7 +641,12 @@ function completeObject(
     const feature = allStructuralFeaturesOf(eClass)
       .filter((feature) => feature.getName() === attr.localName)
       .at(0);
-    if (!feature) continue;
+    if (!feature) {
+      ctx.resource.getWarnings().push({
+        message: `Unknown attribute '${attr.localName}' on <${element.tagName}> - '${eClass.getName()}' has no such feature. It will be lost if this document is saved again.`,
+      });
+      continue;
+    }
 
     if (!isReferenceFeature(feature)) {
       if (feature.isMany()) {
@@ -660,7 +670,7 @@ function completeObject(
     if (refFeature.isMany()) {
       const list = obj.eGet(refFeature) as { add(v: EObject): void };
       for (const r of resolved) list.add(r);
-    } else {
+    } else if (resolved.length > 0) {
       obj.eSet(refFeature, resolved[0]);
     }
   }
@@ -673,7 +683,12 @@ function completeObject(
     const feature = allStructuralFeaturesOf(eClass)
       .filter((feature) => feature.getName() === child.localName)
       .at(0);
-    if (!feature) continue;
+    if (!feature) {
+      ctx.resource.getWarnings().push({
+        message: `Unknown element <${child.tagName}> under <${element.tagName}> - '${eClass.getName()}' has no such feature. It will be lost if this document is saved again.`,
+      });
+      continue;
+    }
 
     if (!isReferenceFeature(feature)) {
       // Many-valued attribute, written as a repeated child element.
@@ -751,13 +766,13 @@ function decodeAttributeFormReference(
     ? tokens.filter((_, i) => i % 2 === 1).map((fragment, i) => ({ typeToken: tokens[i * 2], fragment }))
     : tokens.map((fragment) => ({ typeToken: undefined, fragment }));
 
-  return pairs.map(({ typeToken, fragment }) => {
+  return pairs.flatMap(({ typeToken, fragment }) => {
     const hashIndex = fragment.indexOf('#');
     const isRelativeCrossDocument = hashIndex > 0 && !isAbsoluteUri(fragment);
     if (isAbsoluteUri(fragment) || isRelativeCrossDocument) {
       const declared = feature.getEType() as EClass;
       const proxyEClass = typeToken ? resolvePrefixedName(typeToken, contextElement, ctx.packageRegistry) : declared;
-      return createProxy(proxyEClass, URI.parse(fragment).resolve(ctx.resourceURI));
+      return [createProxy(proxyEClass, URI.parse(fragment).resolve(ctx.resourceURI))];
     }
 
     // Real EMF-authored files always write same-document attribute-form
@@ -770,12 +785,14 @@ function decodeAttributeFormReference(
     const normalized = fragment.startsWith('#') ? fragment.slice(1) : fragment;
     const resolved = resolveEmfFragment(normalized, roots);
     if (!resolved) {
-      throw new Error(
-        `Unresolved same-document reference '${fragment}' on feature '${feature.getName()}': ` +
-          'no object matches this fragment in this document.'
-      );
+      // XMI-04: recorded as an error rather than thrown, so the rest of the document still loads
+      // (EMF's own behavior) - the feature is simply left unset for this value.
+      ctx.resource.getErrors().push({
+        message: `Unresolved same-document reference '${fragment}' on feature '${feature.getName()}': no object matches this fragment in this document.`,
+      });
+      return [];
     }
-    return resolved;
+    return [resolved];
   });
 }
 

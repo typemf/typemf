@@ -466,4 +466,86 @@ describe('XmiSerializer', () => {
 
     expect(xml).not.toContain('schemaLocation');
   });
+
+  describe('XMI-04: diagnostics instead of silent data loss or an aborted load', () => {
+    it('an unknown attribute is recorded as a warning, and the rest of the object still loads', async () => {
+      const { libraryPackage, bookClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unknown-attr.xmi');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<lib:Book xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+            'xmlns:lib="https://typemf.dev/samples/library" title="Dune" publisher="Ace"/>'
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const book = resource.getContents().get(0);
+      expect(book.eClass()).toBe(bookClass);
+      expect(book.eGet(titleAttr)).toBe('Dune');
+      expect(resource.getWarnings()).toHaveLength(1);
+      expect(resource.getWarnings()[0]!.message).toContain("Unknown attribute 'publisher'");
+    });
+
+    it('an unknown child element is recorded as a warning, and the rest of the object still loads', async () => {
+      const { libraryPackage, bookClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unknown-element.xmi');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<lib:Book xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+            'xmlns:lib="https://typemf.dev/samples/library" title="Dune"><publisher>Ace</publisher></lib:Book>'
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const book = resource.getContents().get(0);
+      expect(book.eClass()).toBe(bookClass);
+      expect(book.eGet(titleAttr)).toBe('Dune');
+      expect(resource.getWarnings()).toHaveLength(1);
+      expect(resource.getWarnings()[0]!.message).toContain('Unknown element <publisher>');
+    });
+
+    it('an unresolved same-document reference is recorded as an error, left unset, and the rest of the document still loads', async () => {
+      const { libraryPackage, libraryClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unresolved-ref.xmi');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<lib:Library xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+            'xmlns:lib="https://typemf.dev/samples/library" featuredBook="does-not-exist">' +
+            '<books title="Dune"/>' +
+            '</lib:Library>'
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const library = resource.getContents().get(0);
+      expect(library.eClass()).toBe(libraryClass);
+      const books = [...(library.eGet(libraryClass.getEStructuralFeature('books')!) as Iterable<EObject>)];
+      expect(books).toHaveLength(1);
+      expect(books[0]!.eGet(titleAttr)).toBe('Dune');
+      expect(library.eIsSet(libraryClass.getEStructuralFeature('featuredBook')!)).toBe(false);
+      expect(resource.getErrors()).toHaveLength(1);
+      expect(resource.getErrors()[0]!.message).toContain("Unresolved same-document reference 'does-not-exist'");
+    });
+  });
 });
