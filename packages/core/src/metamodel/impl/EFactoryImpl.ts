@@ -77,6 +77,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1:
         return this._ePackage;
@@ -86,6 +87,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1: {
         const oldValue = this.eGet(feature);
@@ -129,6 +131,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1:
         return this._ePackage !== undefined;
@@ -138,6 +141,7 @@ export class EFactoryImpl extends EModelElementImpl implements EFactory {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1: {
         const wasSet = this.eIsSet(feature);

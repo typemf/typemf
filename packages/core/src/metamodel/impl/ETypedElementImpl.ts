@@ -99,6 +99,7 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._ordered;
@@ -124,6 +125,7 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const oldValue = this.eGet(feature);
@@ -250,6 +252,7 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._ordered !== true;
@@ -274,6 +277,7 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const wasSet = this.eIsSet(feature);

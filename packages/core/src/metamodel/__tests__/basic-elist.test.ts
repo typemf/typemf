@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BasicEList } from '../../index.js';
+import { BasicEList, createInstanceOf, Notification } from '../../index.js';
+import { buildSampleMetamodel } from './sample-metamodel.js';
 
 describe('BasicEList', () => {
   it('supports basic add/get/size/contains/indexOf', () => {
@@ -50,5 +51,50 @@ describe('BasicEList', () => {
     const list = new BasicEList<number>();
     list.add(1);
     expect(() => list.get(5)).toThrow(RangeError);
+  });
+
+  describe('move() - CORE-12', () => {
+    it('reorders elements, returns the moved one, and leaves the rest shifted correctly', () => {
+      const list = new BasicEList<string>();
+      list.addAll(['a', 'b', 'c', 'd']);
+
+      expect(list.move(0, 2)).toBe('a');
+      expect(list.toArray()).toEqual(['b', 'c', 'a', 'd']);
+
+      expect(list.move(2, 0)).toBe('a');
+      expect(list.toArray()).toEqual(['a', 'b', 'c', 'd']);
+    });
+
+    it('throws a RangeError for an out-of-bounds fromIndex', () => {
+      const list = new BasicEList<number>();
+      list.add(1);
+      expect(() => list.move(5, 0)).toThrow(RangeError);
+    });
+
+    it('fires a MOVE notification (not REMOVE+ADD) on an owned list, carrying the old and new position', () => {
+      const { libraryClass, bookClass, booksRef } = buildSampleMetamodel();
+      const library = createInstanceOf(libraryClass);
+      const book1 = createInstanceOf(bookClass);
+      const book2 = createInstanceOf(bookClass);
+      const book3 = createInstanceOf(bookClass);
+      const books = library.eGet(booksRef) as BasicEList<unknown>;
+      books.add(book1);
+      books.add(book2);
+      books.add(book3);
+
+      const notifications: Notification[] = [];
+      library.onDidChange((n) => notifications.push(n));
+
+      books.move(0, 2);
+
+      expect(books.toArray()).toEqual([book2, book3, book1]);
+      expect(notifications).toHaveLength(1);
+      const [notification] = notifications;
+      expect(notification!.eventType).toBe('MOVE');
+      expect(notification!.feature).toBe(booksRef);
+      expect(notification!.oldValue).toBe(0); // old position
+      expect(notification!.newValue).toBe(book1); // the moved element
+      expect(notification!.position).toBe(2); // new position
+    });
   });
 });

@@ -24,6 +24,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._eBounds;
@@ -33,6 +34,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const list = this._eBounds;
@@ -66,6 +68,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._eBoundsCache !== undefined && this._eBoundsCache.size() !== 0;
@@ -75,6 +78,7 @@ export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParame
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         this._eBoundsCache?.clear();

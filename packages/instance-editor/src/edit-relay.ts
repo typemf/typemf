@@ -44,8 +44,38 @@ export class EditRelay {
    * other, later, genuine edit to the same object still relays normally.
    */
   private readonly suppressed = new Set<EObject>();
+  /**
+   * Blanket, reentrant suppression for the whole reconstruction of a snapshot graph - not just
+   * the object SnapshotSerializer.deserialize() is currently populating (attachTo's own "wire
+   * only once this object is fully populated" already covers that), but every OTHER object this
+   * same reconstruction touches too. A real, confirmed gap found running this: adding a freshly-
+   * reconstructed child to its freshly-reconstructed parent's containment list (e.g. bookClass's
+   * `eStructuralFeatures`) fires the matching opposite update on the CHILD (titleAttr's own
+   * `eContainingClass`, CORE-09's own fix) - and that child's attachTo was already wired, finishing
+   * before the parent's own list.add() call runs, since it's resolved as the parent's own
+   * reference first. Without this, that opposite update - pure reconstruction bookkeeping, not a
+   * real edit - gets relayed to the host as if it were one. A counter, not a flag: deserialize()
+   * calls nest (resolving one object's reference can trigger another resource's own deserialize()
+   * recursively), so suppression must stay active for the whole, possibly-nested span, not drop
+   * to false the instant the innermost call returns.
+   */
+  private suppressingReconstruction = 0;
 
   constructor(private readonly transport: PostMessageTransport) {}
+
+  /**
+   * Runs `fn` (SnapshotSerializer's own deserialize(), reconstructing one object and everything
+   * it eagerly needs) with every notification on every object suppressed for the duration - see
+   * suppressingReconstruction's own reasoning for why this has to be blanket, not per-object.
+   */
+  async suppressDuringReconstruction<T>(fn: () => Promise<T>): Promise<T> {
+    this.suppressingReconstruction++;
+    try {
+      return await fn();
+    } finally {
+      this.suppressingReconstruction--;
+    }
+  }
 
   suppressNext(obj: EObject): void {
     this.suppressed.add(obj);
@@ -118,6 +148,9 @@ export class EditRelay {
    */
   attachTo(obj: EObject, registry: WebviewObjectRegistry): Disposable {
     return obj.onDidChange((notification) => {
+      // Reconstruction bookkeeping, not a real edit - see suppressingReconstruction's own
+      // reasoning for why this has to be checked regardless of which object fired it.
+      if (this.suppressingReconstruction > 0) return;
       // See suppressed's own reasoning - checked (and cleared) first, before anything else, for
       // every single notification this object fires, not just ones from createChild's own flow.
       if (this.suppressed.delete(obj)) return;

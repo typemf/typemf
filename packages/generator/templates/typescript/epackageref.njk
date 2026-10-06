@@ -31,14 +31,44 @@ import type { {{ packageClassName(package) }} } from '../{{ packageClassName(pac
  */
 let ref: {{ packageClassName(package) }} | undefined;
 
+/**
+ * Set once, as a module-scope side effect of {{ packageClassName(package) }}Impl.ts's own module
+ * being evaluated (see the call at the bottom of that file) - never a direct import of
+ * {{ packageClassName(package) }}Impl here, for the exact same circularity reason the class doc
+ * comment above explains. Lets get{{ packageClassName(package) }}Ref() (CORE-01) construct the
+ * singleton itself, on first use, instead of only ever throwing when nothing has touched
+ * {{ packageClassName(package) }}Impl.eINSTANCE/.init() yet.
+ */
+let initializer: (() => void) | undefined;
+let initializing = false;
+
 export function set{{ packageClassName(package) }}Ref(pkg: {{ packageClassName(package) }}): void {
   ref = pkg;
 }
 
+export function register{{ packageClassName(package) }}Initializer(init: () => void): void {
+  initializer = init;
+}
+
 export function get{{ packageClassName(package) }}Ref(): {{ packageClassName(package) }} {
+  // The `!initializing` guard turns a reentrant call before the constructor reaches its own
+  // set{{ packageClassName(package) }}Ref(this) - which should never genuinely happen; the
+  // constructor calls that first, before anything else that could call back in here - into the
+  // ordinary "not ready yet" error below instead of unbounded recursion.
+  if (!ref && initializer && !initializing) {
+    initializing = true;
+    try {
+      initializer();
+    } finally {
+      initializing = false;
+    }
+  }
   if (!ref) {
     throw new Error(
-      'get{{ packageClassName(package) }}Ref() called before the {{ packageClassName(package) }} singleton finished constructing itself.'
+      'get{{ packageClassName(package) }}Ref() called before the {{ packageClassName(package) }} singleton finished constructing itself, and no ' +
+        'initializer was registered to construct it on demand - this means {{ packageClassName(package) }}Impl.ts\'s own module ' +
+        'was never evaluated at all (an unusual bundler/tree-shaking setup). Call {{ packageClassName(package) }}Impl.eINSTANCE ' +
+        'or .init() yourself first, or check that this package is marked side-effectful.'
     );
   }
   return ref;

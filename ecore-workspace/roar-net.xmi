@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<variability:FeatureModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:variability="https://ce.es.tuhh.de/roar-net/variability/v1.0" xsi:schemaLocation="https://ce.es.tuhh.de/roar-net/variability/v1.0 model.ecore" name="roar-net" version="1.0"><root id="myid" name="Root Feature"></root></variability:FeatureModel>

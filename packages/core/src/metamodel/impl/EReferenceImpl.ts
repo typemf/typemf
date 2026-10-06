@@ -58,6 +58,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18:
         return this._containment;
@@ -79,6 +80,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18: {
         const oldValue = this.eGet(feature);
@@ -181,6 +183,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18:
         return this._containment !== false;
@@ -200,6 +203,7 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18: {
         const wasSet = this.eIsSet(feature);

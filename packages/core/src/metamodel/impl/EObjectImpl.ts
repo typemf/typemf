@@ -1,3 +1,4 @@
+import type { Resource } from '../../resource/resource.js';
 import { Disposable } from '../types/Disposable.js';
 import { EClass } from '../types/EClass.js';
 import { EList } from '../types/EList.js';
@@ -14,6 +15,18 @@ interface Listener {
 
 let fallbackIdCounter = 0;
 
+/** Walks eContainer() up to the containment root - used by eResource() below, where only a root
+ *  ever carries its own _eDirectResource. */
+function findRoot(obj: EObject): EObject {
+  let current = obj;
+  let container = current.eContainer();
+  while (container) {
+    current = container;
+    container = current.eContainer();
+  }
+  return current;
+}
+
 /**
  * Abstract base for every model instance. eContainer/eContents/eAllContents
  * are fully generic here - they are derived entirely from eGet(), which is
@@ -26,6 +39,10 @@ export abstract class EObjectImpl implements EObject {
   private _eContainingFeature: EStructuralFeature | undefined;
   private _eProxy = false;
   private frozen = false;
+  /** Only ever set on a root (see eSetDirectResource) - a non-root's eResource() is found by
+   *  walking up to its root via eContainer() instead, exactly like real EMF's own
+   *  eDirectResource field. */
+  private _eDirectResource: Resource | undefined;
 
   /**
    * Marks this object (and, recursively, everything it contains) as no longer intended to be
@@ -72,6 +89,21 @@ export abstract class EObjectImpl implements EObject {
   abstract eSet(feature: EStructuralFeature, value: unknown): void;
   abstract eIsSet(feature: EStructuralFeature): boolean;
   abstract eUnset(feature: EStructuralFeature): void;
+
+  /**
+   * EMF rejects a feature that doesn't belong to this object's own class outright, rather than
+   * dispatching on `feature.getFeatureID()` alone - two unrelated classes' features can share the
+   * same id (each is only unique within its own declaring class, or - for a dynamic class with
+   * multiple supertypes, see CORE-05 - within `getEAllStructuralFeatures()`'s own position-based
+   * scheme), so reading or writing by id alone silently hits the wrong field when a caller passes
+   * a feature from some other EClass entirely. Every generated eGet/eSet/eIsSet/eUnset
+   * (eclass.njk) and DynamicEObjectImpl call this first, before dispatching on the id.
+   */
+  protected requireOwnFeature(feature: EStructuralFeature): void {
+    if (!this.eClass().getEAllStructuralFeatures().contains(feature)) {
+      throw new Error(`The feature '${feature.getName()}' is not a valid feature`);
+    }
+  }
 
   private listeners: Listener[] = [];
   private deliverFlag = true;
@@ -122,6 +154,22 @@ export abstract class EObjectImpl implements EObject {
 
   eContainingFeature(): EStructuralFeature | undefined {
     return this._eContainingFeature;
+  }
+
+  eResource(): Resource | undefined {
+    return (findRoot(this) as EObjectImpl)._eDirectResource;
+  }
+
+  /**
+   * Internal - not part of the public EObject API, same as eBasicSetContainer/eSetProxy. Called
+   * by Resource's own contents list (resource/resource-impl.ts) as an object enters/leaves
+   * getContents() - the only time an object's OWN eResource() is ever set directly; every other
+   * object's eResource() is found by walking up to its root instead (see eResource() above).
+   * Resetting a former root's own direct resource when it becomes contained elsewhere, or leaves
+   * a resource's contents, is resource-impl.ts's responsibility, not this method's.
+   */
+  eSetDirectResource(resource: Resource | undefined): void {
+    this._eDirectResource = resource;
   }
 
   /**
@@ -223,12 +271,38 @@ export abstract class EObjectImpl implements EObject {
     // package contains this not-yet-loaded classifier") is already fully known from context,
     // independent of whatever the proxy's own document eventually turns out to say.
     if (feature.isMany()) {
-      this.eBasicList(feature).basicAdd(otherEnd);
+      const list = this.eBasicList(feature);
+      const sizeBefore = list.size();
+      list.basicAdd(otherEnd);
+      // A no-op if otherEnd was already present (reference lists are unique) - no real change,
+      // so no notification (CORE-09: the opposite end otherwise got no ADD at all, even when a
+      // change genuinely happened).
+      if (list.size() > sizeBefore) {
+        this.eNotify({
+          eventType: 'ADD',
+          notifier: this,
+          feature,
+          oldValue: undefined,
+          newValue: otherEnd,
+          position: list.size() - 1,
+          wasSet: true,
+        });
+      }
     } else {
       const oldValue = this.eGet(feature);
       if (oldValue === otherEnd) return;
+      const wasSet = this.eIsSet(feature);
       this.eBasicSetValue(feature, otherEnd);
       this.eDidRemove(feature, oldValue);
+      this.eNotify({
+        eventType: 'SET',
+        notifier: this,
+        feature,
+        oldValue,
+        newValue: otherEnd,
+        position: undefined,
+        wasSet,
+      });
     }
     if (feature.isContainment()) otherEnd.eBasicMoveInto(this, feature);
   }
@@ -266,11 +340,61 @@ export abstract class EObjectImpl implements EObject {
     }
   }
 
+  /**
+   * Internal - detaches `this` from whatever containment feature currently holds it (clearing the
+   * old container's own feature value and opposite, same cleanup eBasicMoveInto does for a move
+   * into a new container), without moving it anywhere new. Not part of the public EObject API;
+   * used by Resource's own contents list (resource/resource-impl.ts) when an already-contained
+   * object becomes a document root instead - EMF semantics: adding moves the object, it never
+   * belongs to a container and a resource's roots at the same time.
+   */
+  eBasicDetachFromContainer(): void {
+    const oldContainer = this._eContainer;
+    const oldFeature = this._eContainingFeature;
+    if (oldContainer instanceof EObjectImpl && oldFeature && isReference(oldFeature)) {
+      oldContainer.eBasicRemoveValue(oldFeature, this);
+      const oldOpposite = oldFeature.getEOpposite();
+      if (oldOpposite) this.eBasicRemoveValue(oldOpposite, oldContainer);
+    }
+    this.eBasicSetContainer(undefined, undefined);
+  }
+
+  /**
+   * CORE-09: every caller of this (eInverseRemove's own "opposite stopped referencing me", and
+   * eBasicMoveInto/eBasicDetachFromContainer clearing an old container or its opposite) silently
+   * mutated storage with no notification - the affected object's own listeners (and the instance
+   * editor's webview relay) never found out, even though a real change happened. Fires the same
+   * REMOVE/SET a plain eSet()/BasicEList.remove() would have, for whichever of those the normal
+   * path this bypasses (deliberately, to avoid re-triggering containment/opposite bookkeeping
+   * recursively) would otherwise have fired.
+   */
   private eBasicRemoveValue(feature: EStructuralFeature, value: EObjectImpl): void {
     if (feature.isMany()) {
-      this.eBasicList(feature).basicRemove(value);
+      const list = this.eBasicList(feature);
+      const position = list.indexOf(value);
+      if (list.basicRemove(value)) {
+        this.eNotify({
+          eventType: 'REMOVE',
+          notifier: this,
+          feature,
+          oldValue: value,
+          newValue: undefined,
+          position,
+          wasSet: true,
+        });
+      }
     } else if (this.eGet(feature) === value) {
+      const wasSet = this.eIsSet(feature);
       this.eBasicSetValue(feature, undefined);
+      this.eNotify({
+        eventType: 'SET',
+        notifier: this,
+        feature,
+        oldValue: value,
+        newValue: undefined,
+        position: undefined,
+        wasSet,
+      });
     }
   }
 

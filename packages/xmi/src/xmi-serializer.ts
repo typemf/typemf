@@ -11,7 +11,6 @@ import {
   computeFragment as coreComputeFragment,
   createProxy,
   getProxyURI,
-  getResourceOf,
   type EObjectSerializer,
 } from '@typemf/core';
 import { allStructuralFeaturesOf, computeEmfFragment, resolveEmfFragment } from './emf-fragment.js';
@@ -76,7 +75,7 @@ export class XmiSerializer implements EObjectSerializer {
       ...namespaces.entries().map(([prefix, uri]): [string, string] => [`xmlns:${prefix}`, uri]),
     ];
     // xsi:schemaLocation="<nsURI> <path>" for the root's own package, when that package was
-    // itself loaded from a real, known file (getResourceOf - the same utility
+    // itself loaded from a real, known file (eResource() - the same call
     // encodeReferenceValue's own "is this local" check relies on) distinct from the document
     // being saved here - a dynamically-loaded .ecore file, the common case this project's own
     // "New Model Instance" dynamic mode produces. Matches the real, standard XMI/XSD convention
@@ -88,10 +87,10 @@ export class XmiSerializer implements EObjectSerializer {
     // them, and the root's own package is what the real, reported gap was actually about.
     const schemaLocationAttrs: Array<[string, string]> = [];
     const rootPackage = requirePackage(root.eClass());
-    const rootPackageResource = getResourceOf(rootPackage);
+    const rootPackageResource = rootPackage.eResource();
     if (rootPackageResource && rootPackageResource !== resource) {
-      const location = relativeOrAbsolutePath(resource.getURI(), rootPackageResource.getURI());
-      schemaLocationAttrs.push(['xsi:schemaLocation', `${rootPackage.getNsURI()} ${location}`]);
+      const location = rootPackageResource.getURI().deresolve(resource.getURI());
+      schemaLocationAttrs.push(['xsi:schemaLocation', `${rootPackage.getNsURI()} ${location.toString()}`]);
     }
     const allAttrs: Array<[string, string]> = [
       ['xmi:version', '2.0'],
@@ -150,7 +149,7 @@ export class XmiSerializer implements EObjectSerializer {
       );
     }
 
-    const ctx: DeserializeContext = { packageRegistry };
+    const ctx: DeserializeContext = { packageRegistry, resourceURI: resource.getURI(), resource };
     const elementToObj = new Map<Element, EObject>();
 
     // Pass 1: construct every object in the document (via its own
@@ -315,10 +314,10 @@ function encodeReferenceValue(
     if (!proxyURI) {
       throw new Error(`eIsProxy() is true but no proxy URI is on record for this ${actual.getName()}.`);
     }
-    return { value: proxyURI.toString(), crossDocument: true, xsiType };
+    return { value: proxyURI.deresolve(sourceResource.getURI()).toString(), crossDocument: true, xsiType };
   }
 
-  const targetResource = getResourceOf(target);
+  const targetResource = target.eResource();
   const actual = target.eClass();
   const xsiType =
     declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
@@ -328,7 +327,7 @@ function encodeReferenceValue(
   // check (`!targetResource || ...`) treated "not attached to any resource" as automatically
   // local, which is wrong for something like EcorePackage's own EJavaObject - a real, stable,
   // well-known classifier, always available, but never loaded via any real Resource.load() (it's
-  // part of the self-hosted, in-memory EcorePackageImpl.eINSTANCE), so getResourceOf() correctly
+  // part of the self-hosted, in-memory EcorePackageImpl.eINSTANCE), so eResource() correctly
   // (if misleadingly, for this purpose) returns undefined for it. Walking eContainer() against
   // `roots` directly, rather than trusting resource identity, is what actually decides this.
   if (isReachableFromRoots(target, roots)) {
@@ -345,8 +344,9 @@ function encodeReferenceValue(
   }
 
   if (targetResource) {
+    const targetDocumentURI = targetResource.getURI().deresolve(sourceResource.getURI());
     return {
-      value: `${targetResource.getURI().toString()}#${fragmentForTarget(target, targetResource, roots)}`,
+      value: `${targetDocumentURI.toString()}#${fragmentForTarget(target, targetResource, roots)}`,
       crossDocument: true,
       xsiType,
     };
@@ -459,6 +459,14 @@ function encodeAttributeValue(value: unknown, feature: EStructuralFeature): stri
 
 interface DeserializeContext {
   packageRegistry: EPackageRegistry;
+  /** The document being read - anchors a relative href (EMF's default form between files in the
+   *  same workspace) to an absolute URI before it becomes a proxy. */
+  resourceURI: URI;
+  /** Where to record a problem instead of throwing and aborting the whole load (XMI-04): an
+   *  unknown attribute/element is a warning (data loss on the next save); an unresolved
+   *  same-document reference is an error (the feature is left unset, the rest of the document
+   *  still loads). */
+  resource: Resource;
 }
 
 function resolveElementEClass(element: Element, packageRegistry: EPackageRegistry): EClass {
@@ -632,7 +640,12 @@ function completeObject(
     const feature = allStructuralFeaturesOf(eClass)
       .filter((feature) => feature.getName() === attr.localName)
       .at(0);
-    if (!feature) continue;
+    if (!feature) {
+      ctx.resource.getWarnings().push({
+        message: `Unknown attribute '${attr.localName}' on <${element.tagName}> - '${eClass.getName()}' has no such feature. It will be lost if this document is saved again.`,
+      });
+      continue;
+    }
 
     if (!isReferenceFeature(feature)) {
       if (feature.isMany()) {
@@ -652,11 +665,11 @@ function completeObject(
     // document entirely (see decodeAttributeFormReference's own reasoning) constructed as a proxy
     // instead, exactly like the href-child-element case just below.
     const refFeature = feature as EReference;
-    const resolved = decodeAttributeFormReference(attr.value, refFeature, element, roots, ctx.packageRegistry);
+    const resolved = decodeAttributeFormReference(attr.value, refFeature, element, roots, ctx);
     if (refFeature.isMany()) {
       const list = obj.eGet(refFeature) as { add(v: EObject): void };
       for (const r of resolved) list.add(r);
-    } else {
+    } else if (resolved.length > 0) {
       obj.eSet(refFeature, resolved[0]);
     }
   }
@@ -669,7 +682,12 @@ function completeObject(
     const feature = allStructuralFeaturesOf(eClass)
       .filter((feature) => feature.getName() === child.localName)
       .at(0);
-    if (!feature) continue;
+    if (!feature) {
+      ctx.resource.getWarnings().push({
+        message: `Unknown element <${child.tagName}> under <${element.tagName}> - '${eClass.getName()}' has no such feature. It will be lost if this document is saved again.`,
+      });
+      continue;
+    }
 
     if (!isReferenceFeature(feature)) {
       // Many-valued attribute, written as a repeated child element.
@@ -706,7 +724,7 @@ function completeObject(
     const xsiType = child.getAttributeNS(XSI_NS, 'type');
     const declared = refFeature.getEType() as EClass;
     const proxyEClass = xsiType ? resolvePrefixedName(xsiType, child, ctx.packageRegistry) : declared;
-    const proxy = createProxy(proxyEClass, URI.parse(href));
+    const proxy = createProxy(proxyEClass, URI.parse(href).resolve(ctx.resourceURI));
     if (feature.isMany()) {
       const list = obj.eGet(feature) as { add(v: EObject): void };
       list.add(proxy);
@@ -725,16 +743,17 @@ function completeObject(
  * the read-side gap that had never been exercised until parsing a real, externally-authored file).
  * Each whitespace-separated fragment is classified independently: one that parses as an absolute
  * URI (a real scheme, e.g. "http://www.eclipse.org/emf/2002/Ecore#//EString") is cross-document,
- * resolved as a proxy exactly like the href-child-element case; anything else is a
- * same-document fragment, resolved immediately via resolveEmfFragment, since every possible
- * same-document target already exists by this point.
+ * as is anything with a "#" that doesn't start with one and isn't itself a fragment (e.g.
+ * "other.xmi#Dune" - EMF's own relative-href form) - both resolved as a proxy exactly like the
+ * href-child-element case; anything else is a same-document fragment, resolved immediately via
+ * resolveEmfFragment, since every possible same-document target already exists by this point.
  */
 function decodeAttributeFormReference(
   rawValue: string,
   feature: EReference,
   contextElement: Element,
   roots: EObject[],
-  packageRegistry: EPackageRegistry
+  ctx: DeserializeContext
 ): EObject[] {
   const tokens = rawValue.split(/\s+/).filter((t) => t.length > 0);
   const paired =
@@ -746,11 +765,13 @@ function decodeAttributeFormReference(
     ? tokens.filter((_, i) => i % 2 === 1).map((fragment, i) => ({ typeToken: tokens[i * 2], fragment }))
     : tokens.map((fragment) => ({ typeToken: undefined, fragment }));
 
-  return pairs.map(({ typeToken, fragment }) => {
-    if (isAbsoluteUri(fragment)) {
+  return pairs.flatMap(({ typeToken, fragment }) => {
+    const hashIndex = fragment.indexOf('#');
+    const isRelativeCrossDocument = hashIndex > 0 && !isAbsoluteUri(fragment);
+    if (isAbsoluteUri(fragment) || isRelativeCrossDocument) {
       const declared = feature.getEType() as EClass;
-      const proxyEClass = typeToken ? resolvePrefixedName(typeToken, contextElement, packageRegistry) : declared;
-      return createProxy(proxyEClass, URI.parse(fragment));
+      const proxyEClass = typeToken ? resolvePrefixedName(typeToken, contextElement, ctx.packageRegistry) : declared;
+      return [createProxy(proxyEClass, URI.parse(fragment).resolve(ctx.resourceURI))];
     }
 
     // Real EMF-authored files always write same-document attribute-form
@@ -763,52 +784,15 @@ function decodeAttributeFormReference(
     const normalized = fragment.startsWith('#') ? fragment.slice(1) : fragment;
     const resolved = resolveEmfFragment(normalized, roots);
     if (!resolved) {
-      throw new Error(
-        `Unresolved same-document reference '${fragment}' on feature '${feature.getName()}': ` +
-          'no object matches this fragment in this document.'
-      );
+      // XMI-04: recorded as an error rather than thrown, so the rest of the document still loads
+      // (EMF's own behavior) - the feature is simply left unset for this value.
+      ctx.resource.getErrors().push({
+        message: `Unresolved same-document reference '${fragment}' on feature '${feature.getName()}': no object matches this fragment in this document.`,
+      });
+      return [];
     }
-    return resolved;
+    return [resolved];
   });
-}
-
-/**
- * A relative path from `fromUri` to `toUri` when both share a scheme (the common, same-workspace
- * case this is actually for), else `toUri`'s own full string form as a safe fallback - a portable,
- * hand-rolled computation (segment-by-segment common-prefix comparison, "../" for each remaining
- * `from` segment) rather than importing node:path, since this package is deliberately environment-
- * agnostic, not Node-specific.
- */
-function relativeOrAbsolutePath(fromUri: URI, toUri: URI): string {
-  if (fromUri.getScheme() !== toUri.getScheme()) return toUri.toString();
-
-  const fromSegments = fromUri
-    .getPath()
-    .split('/')
-    .filter((s) => s.length > 0);
-  const toSegments = toUri
-    .getPath()
-    .split('/')
-    .filter((s) => s.length > 0);
-  // The `to` file's own name is never a shared "directory" segment to compare away - compared
-  // against `from`'s own containing directory only.
-  const fromDir = fromSegments.slice(0, -1);
-  const toDir = toSegments.slice(0, -1);
-  const toFile = toSegments[toSegments.length - 1] ?? '';
-
-  let commonLength = 0;
-  while (
-    commonLength < fromDir.length &&
-    commonLength < toDir.length &&
-    fromDir[commonLength] === toDir[commonLength]
-  ) {
-    commonLength++;
-  }
-
-  const upSegments = fromDir.slice(commonLength).map(() => '..');
-  const downSegments = toDir.slice(commonLength);
-  const relativeSegments = [...upSegments, ...downSegments, toFile];
-  return relativeSegments.join('/');
 }
 
 function looksLikeTypeToken(token: string): boolean {

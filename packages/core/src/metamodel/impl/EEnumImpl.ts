@@ -41,6 +41,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 9:
         return this._eLiterals;
@@ -50,6 +51,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 9: {
         const list = this._eLiterals;
@@ -83,6 +85,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 9:
         return this._eLiteralsCache !== undefined && this._eLiteralsCache.size() !== 0;
@@ -92,6 +95,7 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 9:
         this._eLiteralsCache?.clear();

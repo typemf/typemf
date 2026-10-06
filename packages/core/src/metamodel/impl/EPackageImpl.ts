@@ -73,6 +73,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._nsURI;
@@ -92,6 +93,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const oldValue = this.eGet(feature);
@@ -202,6 +204,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._nsURI !== undefined;
@@ -221,6 +224,7 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const wasSet = this.eIsSet(feature);

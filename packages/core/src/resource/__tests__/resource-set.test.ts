@@ -551,3 +551,47 @@ describe('getResourceOf()', () => {
     expect(getResourceOf(orphan)).toBeUndefined();
   });
 });
+
+describe('EObject.eResource() (CORE-08)', () => {
+  it('a root answers its own Resource, and a contained object answers its root’s', () => {
+    const { libraryClass, bookClass, booksRef } = buildSampleMetamodel();
+    const library = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    (library.eGet(booksRef) as { add(item: unknown): void }).add(book);
+
+    const resource = new ResourceImpl(URI.parse('mem:lib.xmi'), {
+      serialize: async () => new Uint8Array(),
+      deserialize: async () => [],
+      peekReferencedNsURIs: async () => [],
+    });
+    resource.getContents().add(library);
+
+    expect(library.eResource()).toBe(resource);
+    expect(book.eResource()).toBe(resource);
+  });
+
+  it('is undefined for an object never added to any resource', () => {
+    const { bookClass } = buildSampleMetamodel();
+    const orphan = createInstanceOf(bookClass);
+    expect(orphan.eResource()).toBeUndefined();
+  });
+
+  it('follows a root moved to a different resource (CORE-07) - the old resource no longer claims it', () => {
+    const { libraryClass } = buildSampleMetamodel();
+    const library = createInstanceOf(libraryClass);
+    const noopSerializer = {
+      serialize: async () => new Uint8Array(),
+      deserialize: async () => [],
+      peekReferencedNsURIs: async () => [],
+    };
+    const resourceA = new ResourceImpl(URI.parse('mem:a.xmi'), noopSerializer);
+    const resourceB = new ResourceImpl(URI.parse('mem:b.xmi'), noopSerializer);
+    resourceA.getContents().add(library);
+    expect(library.eResource()).toBe(resourceA);
+
+    resourceB.getContents().add(library);
+
+    expect(library.eResource()).toBe(resourceB);
+    expect(resourceA.getContents().toArray()).toEqual([]);
+  });
+});

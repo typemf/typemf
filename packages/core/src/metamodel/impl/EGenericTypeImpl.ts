@@ -81,6 +81,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         return this._eUpperBound;
@@ -101,6 +102,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0: {
         const oldValue = this.eGet(feature);
@@ -216,6 +218,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         return this._eUpperBound !== undefined;
@@ -236,6 +239,7 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0: {
         const wasSet = this.eIsSet(feature);

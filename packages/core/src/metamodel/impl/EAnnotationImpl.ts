@@ -62,6 +62,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1:
         return this._source;
@@ -79,6 +80,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1: {
         const oldValue = this.eGet(feature);
@@ -176,6 +178,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1:
         return this._source !== undefined;
@@ -193,6 +196,7 @@ export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 1: {
         const wasSet = this.eIsSet(feature);

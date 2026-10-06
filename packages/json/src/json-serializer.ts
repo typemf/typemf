@@ -8,7 +8,6 @@ import {
   EStructuralFeature,
   createProxy,
   getProxyURI,
-  getResourceOf,
   resolveFragment,
   Resource,
   type EObjectSerializer,
@@ -64,7 +63,23 @@ export class JsonSerializer implements EObjectSerializer {
 
   async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
     const text = new TextDecoder().decode(content);
-    const doc = JSON.parse(text) as TypemfJsonDocument;
+    let doc: TypemfJsonDocument;
+    try {
+      doc = JSON.parse(text) as TypemfJsonDocument;
+    } catch (e) {
+      // JSON-04: a structurally wrong document is reported as an error instead of throwing a raw
+      // TypeError/SyntaxError that aborts the whole load with no context.
+      resource.getErrors().push({
+        message: `'${resource.getURI().toString()}' is not valid JSON: ${(e as Error).message}`,
+      });
+      return [];
+    }
+    if (doc === null || typeof doc !== 'object' || !Array.isArray(doc.$roots)) {
+      resource.getErrors().push({
+        message: `'${resource.getURI().toString()}' is not a valid @typemf/json document - missing or malformed '$roots' array.`,
+      });
+      return [];
+    }
     const namespaces = new NamespaceTable(doc.$namespaces);
 
     const packageRegistry = resource.getResourceSet()?.getPackageRegistry();
@@ -80,6 +95,7 @@ export class JsonSerializer implements EObjectSerializer {
       namespaces,
       packageRegistry,
       pendingRefs: [],
+      resource,
     };
 
     const roots: EObject[] = [];
@@ -147,7 +163,7 @@ function serializeReferenceValue(
     return buildRefJson(proxyURI.toString(), target.eClass(), feature, namespaces);
   }
 
-  const targetResource = getResourceOf(target);
+  const targetResource = target.eResource();
   const isLocal = !targetResource || targetResource === sourceResource;
 
   const fragment = fragmentForTarget(target, targetResource, roots);
@@ -235,11 +251,30 @@ interface DeserializeContext {
   packageRegistry: EPackageRegistry;
   /** Reference-wiring deferred until every object in the document has been constructed. */
   pendingRefs: Array<() => void>;
+  /** Where to record a problem instead of throwing and aborting the whole load (JSON-04): an
+   *  unknown key is a warning (data loss on the next save); an unresolved reference is an error
+   *  (the feature is left unset, the rest of the document still loads). */
+  resource: Resource;
 }
 
 function constructObject(json: Record<string, unknown>, roots: EObject[], ctx: DeserializeContext): EObject {
   const eClass = refToEClass(json.$eClass as EClassRef, ctx.namespaces, ctx.packageRegistry);
   const obj = createInstanceOf(eClass);
+
+  const knownNames = new Set(
+    eClass
+      .getEAllStructuralFeatures()
+      .toArray()
+      .map((f) => f.getName())
+  );
+  for (const key of Object.keys(json)) {
+    if (key === '$eClass') continue;
+    if (!knownNames.has(key)) {
+      ctx.resource.getWarnings().push({
+        message: `Unknown key '${key}' on an instance of '${eClass.getName()}' - not a feature of this class. It will be lost if this document is saved again.`,
+      });
+    }
+  }
 
   for (const feature of eClass.getEAllStructuralFeatures()) {
     const name = feature.getName();
@@ -288,14 +323,21 @@ function wireReference(
   if (feature.isMany()) {
     const list = obj.eGet(feature) as { add(v: EObject): void };
     for (const refJson of raw as RefJson[]) {
-      list.add(resolveRef(refJson, feature, roots, ctx));
+      const resolved = resolveRef(refJson, feature, roots, ctx);
+      if (resolved) list.add(resolved);
     }
   } else {
-    obj.eSet(feature, resolveRef(raw as RefJson, feature, roots, ctx));
+    const resolved = resolveRef(raw as RefJson, feature, roots, ctx);
+    if (resolved) obj.eSet(feature, resolved);
   }
 }
 
-function resolveRef(refJson: RefJson, feature: EReference, roots: EObject[], ctx: DeserializeContext): EObject {
+function resolveRef(
+  refJson: RefJson,
+  feature: EReference,
+  roots: EObject[],
+  ctx: DeserializeContext
+): EObject | undefined {
   const refString = refJson.$ref;
   const declaredEClass = feature.getEType() as EClass;
   const overrideEClass = refJson.$eClass
@@ -310,7 +352,12 @@ function resolveRef(refJson: RefJson, feature: EReference, roots: EObject[], ctx
     const fragment = refString.slice(1);
     const found = resolveFragment(fragment, roots);
     if (!found) {
-      throw new Error(`Unresolved reference '${refString}': no object matches this fragment in this document.`);
+      // JSON-04: recorded as an error rather than thrown, so the rest of the document still
+      // loads (matching @typemf/xmi's own XMI-04 fix) - the feature is left unset for this value.
+      ctx.resource.getErrors().push({
+        message: `Unresolved reference '${refString}' on feature '${feature.getName()}': no object matches this fragment in this document.`,
+      });
+      return undefined;
     }
     return found;
   }

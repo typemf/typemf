@@ -80,6 +80,14 @@ export class BasicEList<T> implements EList<T> {
     for (const item of removed) this.onRemoved(item, 0);
   }
 
+  move(fromIndex: number, toIndex: number): T {
+    const item = this.get(fromIndex); // throws RangeError for an out-of-bounds fromIndex
+    this.items.splice(fromIndex, 1);
+    this.items.splice(toIndex, 0, item);
+    this.onMoved(item, fromIndex, toIndex);
+    return item;
+  }
+
   contains(item: T): boolean {
     return this.items.includes(item);
   }
@@ -177,6 +185,25 @@ export class BasicEList<T> implements EList<T> {
         wasSet: true,
       });
     }
+  }
+
+  /**
+   * CORE-12: the element stays in the list throughout - no containment/opposite change, so
+   * unlike onAdded/onRemoved there's no eDidAdd/eDidRemove to call, only the notification
+   * (real EMF's own MOVE: oldValue is the OLD position, newValue is the moved element, position
+   * is the NEW position).
+   */
+  private onMoved(item: T, fromIndex: number, toIndex: number): void {
+    if (!this.owner || !this.feature) return;
+    this.owner.eNotify({
+      eventType: 'MOVE',
+      notifier: this.owner,
+      feature: this.feature,
+      oldValue: fromIndex,
+      newValue: item,
+      position: toIndex,
+      wasSet: true,
+    });
   }
 }
 

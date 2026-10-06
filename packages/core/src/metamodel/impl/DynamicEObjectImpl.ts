@@ -6,7 +6,10 @@ import { EObjectImpl } from './EObjectImpl.js';
 /**
  * Generic, map-backed EObject that works for any EClass with no generated
  * code at all - the "dynamic instantiation" path discussed for models
- * parsed straight from a .ecore file. Values are keyed by featureID rather
+ * parsed straight from a .ecore file. Values are keyed by the feature's
+ * position in dynamicEClass.getEAllStructuralFeatures() (EClass.getFeatureID(),
+ * not the feature's own, per-declaring-class getFeatureID() - see CORE-05: two
+ * features inherited from different supertypes can otherwise collide), rather
  * than by named fields, unlike a generated *Gen class.
  *
  * Containment and opposite maintenance (eDidAdd/eDidRemove, eInverseAdd/
@@ -20,7 +23,7 @@ export class DynamicEObjectImpl extends EObjectImpl {
     super();
     for (const feature of dynamicEClass.getEAllStructuralFeatures()) {
       if (feature.isMany()) {
-        this.values.set(feature.getFeatureID(), new BasicEList(this, feature));
+        this.values.set(this.dynamicEClass.getFeatureID(feature), new BasicEList(this, feature));
       }
     }
   }
@@ -30,11 +33,13 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eGet(feature: EStructuralFeature): unknown {
-    return this.values.get(feature.getFeatureID());
+    this.requireOwnFeature(feature);
+    return this.values.get(this.dynamicEClass.getFeatureID(feature));
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
-    const id = feature.getFeatureID();
+    this.requireOwnFeature(feature);
+    const id = this.dynamicEClass.getFeatureID(feature);
 
     if (feature.isMany()) {
       const list = this.requireList(feature);
@@ -55,7 +60,8 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
-    const id = feature.getFeatureID();
+    this.requireOwnFeature(feature);
+    const id = this.dynamicEClass.getFeatureID(feature);
     if (feature.isMany()) {
       return (this.values.get(id) as BasicEList<unknown> | undefined)?.size() !== 0;
     }
@@ -63,7 +69,8 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eUnset(feature: EStructuralFeature): void {
-    const id = feature.getFeatureID();
+    this.requireOwnFeature(feature);
+    const id = this.dynamicEClass.getFeatureID(feature);
     if (feature.isMany()) {
       this.requireList(feature).clear();
       return;
@@ -84,15 +91,16 @@ export class DynamicEObjectImpl extends EObjectImpl {
   }
 
   eBasicSetValue(feature: EStructuralFeature, value: unknown): void {
+    const id = this.dynamicEClass.getFeatureID(feature);
     if (value === undefined) {
-      this.values.delete(feature.getFeatureID());
+      this.values.delete(id);
     } else {
-      this.values.set(feature.getFeatureID(), value);
+      this.values.set(id, value);
     }
   }
 
   private requireList(feature: EStructuralFeature): BasicEList<unknown> {
-    const list = this.values.get(feature.getFeatureID());
+    const list = this.values.get(this.dynamicEClass.getFeatureID(feature));
     if (!(list instanceof BasicEList)) {
       throw new Error(
         `Feature '${feature.getName()}' is many-valued but has no backing EList - this DynamicEObjectImpl may have been constructed against a stale EClass (its structural features changed after construction).`

@@ -26,6 +26,7 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18:
         return this._iD;
@@ -38,6 +39,7 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18: {
         const oldValue = this.eGet(feature);
@@ -84,6 +86,7 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18:
         return this._iD !== false;
@@ -95,6 +98,7 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 18: {
         const wasSet = this.eIsSet(feature);

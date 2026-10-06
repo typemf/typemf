@@ -99,6 +99,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10:
         return this._eContainingClass;
@@ -116,6 +117,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 11: {
         const list = this._eTypeParameters;
@@ -185,6 +187,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10:
         return this._eContainingClass !== undefined;
@@ -202,6 +205,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 10: {
         const wasSet = this.eIsSet(feature);

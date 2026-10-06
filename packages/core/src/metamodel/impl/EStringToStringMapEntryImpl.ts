@@ -28,6 +28,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         return this._key;
@@ -39,6 +40,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0: {
         const oldValue = this.eGet(feature);
@@ -101,6 +103,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         return this._key !== undefined;
@@ -112,6 +115,7 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0: {
         const wasSet = this.eIsSet(feature);

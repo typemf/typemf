@@ -29,6 +29,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         return this._eAnnotations;
@@ -38,6 +39,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0: {
         const list = this._eAnnotations;
@@ -69,6 +71,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         return this._eAnnotationsCache !== undefined && this._eAnnotationsCache.size() !== 0;
@@ -78,6 +81,7 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 0:
         this._eAnnotationsCache?.clear();

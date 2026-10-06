@@ -158,7 +158,7 @@ describe('XmiSerializer', () => {
     await resourceB.save();
 
     const rawB = new TextDecoder().decode(await converter.readBinary(uriB));
-    expect(rawB).toContain('<featuredBook href="mem:library-a.xmi#Dune"/>');
+    expect(rawB).toContain('<featuredBook href="library-a.xmi#Dune"/>');
     expect(rawB).not.toContain('featuredBook="'); // not the attribute form
 
     const freshSet = newResourceSet(converter);
@@ -173,6 +173,87 @@ describe('XmiSerializer', () => {
     expect(resolved.eIsProxy()).toBe(false);
     expect(resolved.eGet(titleAttr)).toBe('Dune');
     expect(freshSet.getResources()).toHaveLength(2);
+  });
+
+  it('writes and reads a relative href across directories, in both directions', async () => {
+    // Two documents in different directories, referencing each other - EMF's own default href
+    // form, not the full file:// paths every earlier test above already covers.
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(libraryPackage);
+
+    const uriA = URI.parse('mem:a/sub/library-a.xmi');
+    const resourceA = rs.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(v: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+
+    const uriB = URI.parse('mem:b/library-b.xmi');
+    const resourceB = rs.createResource(uriB);
+    const libraryB = createInstanceOf(libraryClass);
+    libraryB.eSet(featuredBookRef, book);
+    resourceB.getContents().add(libraryB);
+
+    await resourceA.save();
+    await resourceB.save();
+
+    const rawB = new TextDecoder().decode(await converter.readBinary(uriB));
+    expect(rawB).toContain('<featuredBook href="../a/sub/library-a.xmi#Dune"/>');
+
+    // Reading the relative href back resolves against library-b.xmi's own URI, not library-a's.
+    const freshSet = newResourceSet(converter);
+    freshSet.getPackageRegistry().register(libraryPackage);
+    const loadedB = await freshSet.getResource(uriB, true);
+    const featuredBook = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    expect(featuredBook.eIsProxy()).toBe(true);
+
+    const resolved = await freshSet.resolve(featuredBook);
+    expect(resolved.eIsProxy()).toBe(false);
+    expect(resolved.eGet(titleAttr)).toBe('Dune');
+  });
+
+  it('reads a relative cross-document reference written the attribute-form way (externally-authored)', async () => {
+    // Our own writer always uses the href-child-element form for a non-containment reference
+    // (see the "not the attribute form" assertion above) - this is the OTHER convention real,
+    // externally-authored XMI uses just as often (e.g. "featured="other.xmi#Dune""), hand-written
+    // here since nothing in this suite produces it.
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(libraryPackage);
+
+    const uriA = URI.parse('mem:a/sub/library-a.xmi');
+    const resourceA = rs.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(v: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+    await resourceA.save();
+
+    const uriB = URI.parse('mem:b/library-b.xmi');
+    await converter.writeBinary(
+      uriB,
+      new TextEncoder().encode(
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+          '<lib:Library xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+          'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+          'xmlns:lib="https://typemf.dev/samples/library" featuredBook="../a/sub/library-a.xmi#Dune"/>'
+      )
+    );
+
+    const freshSet = newResourceSet(converter);
+    freshSet.getPackageRegistry().register(libraryPackage);
+    const loadedB = await freshSet.getResource(uriB, true);
+    const featuredBook = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    expect(featuredBook.eIsProxy()).toBe(true);
+
+    const resolved = await freshSet.resolve(featuredBook);
+    expect(resolved.eIsProxy()).toBe(false);
+    expect(resolved.eGet(titleAttr)).toBe('Dune');
   });
 
   it('emits xsi:type on the href element for a polymorphic cross-document reference', async () => {
@@ -200,7 +281,7 @@ describe('XmiSerializer', () => {
     await resourceB.save();
 
     const rawB = new TextDecoder().decode(await converter.readBinary(uriB));
-    expect(rawB).toContain('<featuredBook xsi:type="lib:AudioBook" href="mem:library-a.xmi#Dune"/>');
+    expect(rawB).toContain('<featuredBook xsi:type="lib:AudioBook" href="library-a.xmi#Dune"/>');
 
     const freshSet = newResourceSet(converter);
     freshSet.getPackageRegistry().register(libraryPackage);
@@ -384,5 +465,87 @@ describe('XmiSerializer', () => {
     const xml = new TextDecoder().decode(bytes);
 
     expect(xml).not.toContain('schemaLocation');
+  });
+
+  describe('XMI-04: diagnostics instead of silent data loss or an aborted load', () => {
+    it('an unknown attribute is recorded as a warning, and the rest of the object still loads', async () => {
+      const { libraryPackage, bookClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unknown-attr.xmi');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<lib:Book xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+            'xmlns:lib="https://typemf.dev/samples/library" title="Dune" publisher="Ace"/>'
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const book = resource.getContents().get(0);
+      expect(book.eClass()).toBe(bookClass);
+      expect(book.eGet(titleAttr)).toBe('Dune');
+      expect(resource.getWarnings()).toHaveLength(1);
+      expect(resource.getWarnings()[0]!.message).toContain("Unknown attribute 'publisher'");
+    });
+
+    it('an unknown child element is recorded as a warning, and the rest of the object still loads', async () => {
+      const { libraryPackage, bookClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unknown-element.xmi');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<lib:Book xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+            'xmlns:lib="https://typemf.dev/samples/library" title="Dune"><publisher>Ace</publisher></lib:Book>'
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const book = resource.getContents().get(0);
+      expect(book.eClass()).toBe(bookClass);
+      expect(book.eGet(titleAttr)).toBe('Dune');
+      expect(resource.getWarnings()).toHaveLength(1);
+      expect(resource.getWarnings()[0]!.message).toContain('Unknown element <publisher>');
+    });
+
+    it('an unresolved same-document reference is recorded as an error, left unset, and the rest of the document still loads', async () => {
+      const { libraryPackage, libraryClass, titleAttr } = buildSampleMetamodel();
+      const converter = new InMemoryUriConverter();
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(libraryPackage);
+      const uri = URI.parse('mem:unresolved-ref.xmi');
+      await converter.writeBinary(
+        uri,
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<lib:Library xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" ' +
+            'xmlns:lib="https://typemf.dev/samples/library" featuredBook="does-not-exist">' +
+            '<books title="Dune"/>' +
+            '</lib:Library>'
+        )
+      );
+
+      const resource = rs.createResource(uri);
+      await resource.load();
+
+      const library = resource.getContents().get(0);
+      expect(library.eClass()).toBe(libraryClass);
+      const books = [...(library.eGet(libraryClass.getEStructuralFeature('books')!) as Iterable<EObject>)];
+      expect(books).toHaveLength(1);
+      expect(books[0]!.eGet(titleAttr)).toBe('Dune');
+      expect(library.eIsSet(libraryClass.getEStructuralFeature('featuredBook')!)).toBe(false);
+      expect(resource.getErrors()).toHaveLength(1);
+      expect(resource.getErrors()[0]!.message).toContain("Unresolved same-document reference 'does-not-exist'");
+    });
   });
 });

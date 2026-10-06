@@ -7,6 +7,7 @@ import { EList } from '../types/EList.js';
 import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
+import { EObject } from '../types/EObject';
 import { TypeScriptClass } from '../types/TypeScriptClass';
 import { EObjectImpl } from './EObjectImpl';
 
@@ -82,10 +83,43 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     return this._eTypeParameters;
   }
   isInstance(object: unknown): boolean {
-    return object instanceof EObjectImpl;
+    switch (this.eClass().getName()) {
+      case 'EClass':
+        return object instanceof EObjectImpl && (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());
+      default:
+        switch (this.getName()) {
+          case 'EString':
+          case 'EChar':
+          case 'ECharacterObject':
+            return typeof object === 'string';
+          case 'EInt':
+          case 'EIntegerObject':
+          case 'ELong':
+          case 'ELongObject':
+          case 'EDouble':
+          case 'EDoubleObject':
+          case 'EFloat':
+          case 'EFloatObject':
+          case 'EShort':
+          case 'EShortObject':
+          case 'EByte':
+          case 'EByteObject':
+            return typeof object === 'number';
+          case 'EBigInteger':
+            return typeof object === 'bigint';
+          case 'EBoolean':
+          case 'EBooleanObject':
+            return typeof object === 'boolean';
+          case 'EDate':
+            return object instanceof Date;
+          default:
+            return object !== undefined && object !== null;
+        }
+    }
   }
 
   eGet(feature: EStructuralFeature): unknown {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._instanceClassName;
@@ -105,6 +139,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   }
 
   eSet(feature: EStructuralFeature, value: unknown): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const oldValue = this.eGet(feature);
@@ -189,6 +224,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   }
 
   eIsSet(feature: EStructuralFeature): boolean {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2:
         return this._instanceClassName !== undefined;
@@ -208,6 +244,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   }
 
   eUnset(feature: EStructuralFeature): void {
+    this.requireOwnFeature(feature);
     switch (feature.getFeatureID()) {
       case 2: {
         const wasSet = this.eIsSet(feature);

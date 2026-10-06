@@ -18,7 +18,7 @@ import { EStructuralFeatureImpl } from './EStructuralFeatureImpl.js';
 import { ETypeParameterImpl } from './ETypeParameterImpl.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
 import { EcoreFactoryImpl } from './EcoreFactoryImpl.js';
-import { setEcorePackageRef } from './EcorePackageRef.js';
+import { registerEcorePackageInitializer, setEcorePackageRef } from './EcorePackageRef.js';
 import { EcoreFactory } from '../EcoreFactory.js';
 import { EcorePackage, Ids } from '../EcorePackage.js';
 import { EAnnotation } from '../types/EAnnotation.js';
@@ -4997,7 +4997,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
         entry.eBasicSetValue(
           Ids.EStringToStringMapEntry.value,
-          'return this.getEAllStructuralFeatures().filter(feature => this.getFeatureID(feature) === featureIDOrFeatureName).at(0);'
+          'const features = this.getEAllStructuralFeatures(); return featureIDOrFeatureName >= 0 && featureIDOrFeatureName < features.size() ? features.get(featureIDOrFeatureName) : undefined;'
         );
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
@@ -5036,32 +5036,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
         entry.eBasicSetValue(
           Ids.EStringToStringMapEntry.value,
-          'return (feature as EStructuralFeatureImpl).getFeatureID();'
+          'return this.getEAllStructuralFeatures().indexOf(feature);'
         );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op3.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EStructuralFeatureImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EStructuralFeatureImpl');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EClass_op3.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -5301,13 +5277,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'return object instanceof EObjectImpl;');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'use-type-name');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EObjectImpl');
+        entry.eBasicSetValue(
+          Ids.EStringToStringMapEntry.value,
+          "switch (this.eClass().getName()) {\n  case 'EClass':\n    return object instanceof EObjectImpl && (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());\n  default:\n    switch (this.getName()) {\n      case 'EString':\n      case 'EChar':\n      case 'ECharacterObject':\n        return typeof object === 'string';\n      case 'EInt':\n      case 'EIntegerObject':\n      case 'ELong':\n      case 'ELongObject':\n      case 'EDouble':\n      case 'EDoubleObject':\n      case 'EFloat':\n      case 'EFloatObject':\n      case 'EShort':\n      case 'EShortObject':\n      case 'EByte':\n      case 'EByteObject':\n        return typeof object === 'number';\n      case 'EBigInteger':\n        return typeof object === 'bigint';\n      case 'EBoolean':\n      case 'EBooleanObject':\n        return typeof object === 'boolean';\n      case 'EDate':\n        return object instanceof Date;\n      default:\n        return object !== undefined && object !== null;\n    }\n}"
+        );
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -5332,6 +5305,30 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EObjectImpl');
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+    }
+    {
+      const annotation = new EAnnotationImpl();
+      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EObject');
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './types/EObject');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -6387,3 +6384,11 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     return this._EInvocationTargetException;
   }
 }
+
+// CORE-01: lets getXxxRef() construct the singleton itself, on first use, instead of only ever
+// throwing when nothing has touched EcorePackageImpl.eINSTANCE/.init() yet. A side effect of
+// this module being evaluated at all - see registerEcorePackageInitializer's own doc comment
+// in EcorePackageRef.ts.
+registerEcorePackageInitializer(() => {
+  void EcorePackageImpl.eINSTANCE;
+});

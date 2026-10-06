@@ -1,37 +1,24 @@
+import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
 import { EObject } from '../metamodel/types/EObject.js';
 import { Resource } from './resource.js';
 
 /**
- * Tracks which Resource a root EObject belongs to, without adding an
- * `eResource()` method to EObject itself. EMF's equivalent
- * (`InternalEObject.eResource()`) lives on an *internal* SPI interface, not
- * on the public `EObject` - matching that split here would still mean
- * `metamodel/impl` depending on `resource/`, inverting the layering we've
- * kept everywhere else (resource/ depends on metamodel/, never the other
- * way). A side-table keyed by the root object achieves the same lookup
- * without metamodel/ knowing resource/ exists at all.
- *
- * Only roots are tracked directly; a non-root object's resource is found by
- * walking eContainer() up to its root first. ResourceImpl calls
- * associateRoot/dissociateRoot as objects enter/leave getContents().
+ * Thin wrappers over EObject.eResource()/EObjectImpl.eSetDirectResource() - real EMF's own public
+ * API (CORE-08), not a side table kept outside the metamodel: `eSetDirectResource` is internal
+ * (same as `eBasicSetContainer`/`eSetProxy`), so these are the forms callers outside this file
+ * actually use. `associateRoot`/`dissociateRoot` are called by Resource's own contents list
+ * (resource-impl.ts) as an object enters/leaves getContents(); `getResourceOf` is a free-function
+ * convenience for the same `eResource()` call.
  */
-const resourceByRoot = new WeakMap<EObject, Resource>();
-
 export function associateRoot(root: EObject, resource: Resource): void {
-  resourceByRoot.set(root, resource);
+  (root as EObjectImpl).eSetDirectResource(resource);
 }
 
 export function dissociateRoot(root: EObject): void {
-  resourceByRoot.delete(root);
+  (root as EObjectImpl).eSetDirectResource(undefined);
 }
 
 /** Which Resource `obj` belongs to, if it's part of a loaded document at all. */
 export function getResourceOf(obj: EObject): Resource | undefined {
-  let current = obj;
-  let container = current.eContainer();
-  while (container) {
-    current = container;
-    container = current.eContainer();
-  }
-  return resourceByRoot.get(current);
+  return obj.eResource();
 }
