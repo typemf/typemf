@@ -1,28 +1,51 @@
 import { EList } from '../metamodel/types/EList.js';
 import { EObject } from '../metamodel/types/EObject.js';
 import { BasicEList } from '../metamodel/impl/BasicEList.js';
+import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
 import { Diagnostic } from './diagnostic.js';
 import { EObjectSerializer } from './serializer.js';
 import { Resource } from './resource.js';
 import { ResourceSet } from './resource-set.js';
-import { associateRoot, dissociateRoot } from './resource-utils.js';
+import { associateRoot, dissociateRoot, getResourceOf } from './resource-utils.js';
 import { URI } from './uri.js';
 import { UriConverter } from './uri-converter.js';
 
-/** getContents() as a live list that keeps resource-utils.ts's side-table in sync. */
+/**
+ * getContents() as a live, unique list that keeps resource-utils.ts's side-table in sync. EMF
+ * semantics: adding an object makes this resource its sole owner - if it was contained elsewhere,
+ * it is detached from that container first; if it was itself a root of a different resource, it
+ * is removed from that resource's own contents first. Adding an object already a root of *this*
+ * resource is a no-op, so a root can never appear twice.
+ */
 class ResourceContentsList extends BasicEList<EObject> {
   constructor(private readonly owningResource: Resource) {
     super();
   }
 
   override add(item: EObject): void {
+    if (this.contains(item)) return;
+    this.detachFromCurrentOwner(item);
     super.add(item);
     associateRoot(item, this.owningResource);
   }
 
   override addAt(index: number, item: EObject): void {
+    if (this.contains(item)) return;
+    this.detachFromCurrentOwner(item);
     super.addAt(index, item);
     associateRoot(item, this.owningResource);
+  }
+
+  private detachFromCurrentOwner(item: EObject): void {
+    const container = item.eContainer();
+    if (container) {
+      (item as EObjectImpl).eBasicDetachFromContainer();
+      return;
+    }
+    const oldResource = getResourceOf(item);
+    if (oldResource && oldResource !== this.owningResource) {
+      oldResource.getContents().remove(item);
+    }
   }
 
   override addAll(items: Iterable<EObject>): void {

@@ -266,6 +266,25 @@ export abstract class EObjectImpl implements EObject {
     }
   }
 
+  /**
+   * Internal - detaches `this` from whatever containment feature currently holds it (clearing the
+   * old container's own feature value and opposite, same cleanup eBasicMoveInto does for a move
+   * into a new container), without moving it anywhere new. Not part of the public EObject API;
+   * used by Resource's own contents list (resource/resource-impl.ts) when an already-contained
+   * object becomes a document root instead - EMF semantics: adding moves the object, it never
+   * belongs to a container and a resource's roots at the same time.
+   */
+  eBasicDetachFromContainer(): void {
+    const oldContainer = this._eContainer;
+    const oldFeature = this._eContainingFeature;
+    if (oldContainer instanceof EObjectImpl && oldFeature && isReference(oldFeature)) {
+      oldContainer.eBasicRemoveValue(oldFeature, this);
+      const oldOpposite = oldFeature.getEOpposite();
+      if (oldOpposite) this.eBasicRemoveValue(oldOpposite, oldContainer);
+    }
+    this.eBasicSetContainer(undefined, undefined);
+  }
+
   private eBasicRemoveValue(feature: EStructuralFeature, value: EObjectImpl): void {
     if (feature.isMany()) {
       this.eBasicList(feature).basicRemove(value);

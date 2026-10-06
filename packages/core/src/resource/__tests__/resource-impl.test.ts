@@ -7,6 +7,28 @@ import { EObjectSerializer } from '../serializer.js';
 import { URI } from '../uri.js';
 import { UriConverter } from '../uri-converter.js';
 
+function noopResourceDeps(): { converter: UriConverter; serializer: EObjectSerializer } {
+  return {
+    converter: {
+      canHandle: () => true,
+      readBinary: async () => new Uint8Array(),
+      writeBinary: async () => {},
+      exists: async () => true,
+    },
+    serializer: {
+      async serialize(): Promise<Uint8Array> {
+        return new Uint8Array();
+      },
+      async deserialize(): Promise<EObject[]> {
+        return [];
+      },
+      async peekReferencedNsURIs(): Promise<string[]> {
+        return [];
+      },
+    },
+  };
+}
+
 describe('ResourceImpl.load()', () => {
   it('deserializes again on each sequential call', async () => {
     const { bookClass } = buildSampleMetamodel();
@@ -72,5 +94,51 @@ describe('ResourceImpl.load()', () => {
     await Promise.all([first, second]);
 
     expect(deserializeCallCount).toBe(1);
+  });
+});
+
+describe('ResourceImpl.getContents() - CORE-07 content ownership', () => {
+  it('adding a root already owned by another resource removes it from that resource', () => {
+    const { bookClass } = buildSampleMetamodel();
+    const { converter, serializer } = noopResourceDeps();
+    const resourceA = new ResourceImpl(URI.parse('mem:a.bin'), serializer, converter);
+    const resourceB = new ResourceImpl(URI.parse('mem:b.bin'), serializer, converter);
+    const book = createInstanceOf(bookClass);
+
+    resourceA.getContents().add(book);
+    expect(resourceA.getContents().toArray()).toEqual([book]);
+
+    resourceB.getContents().add(book);
+    expect(resourceA.getContents().toArray()).toEqual([]);
+    expect(resourceB.getContents().toArray()).toEqual([book]);
+  });
+
+  it('adding a contained object as a root removes it from its container', () => {
+    const { libraryClass, bookClass } = buildSampleMetamodel();
+    const { converter, serializer } = noopResourceDeps();
+    const resource = new ResourceImpl(URI.parse('mem:library.bin'), serializer, converter);
+    const library = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    (library.eGet(libraryClass.getEStructuralFeature('books')!) as { add(item: EObject): void }).add(book);
+    expect(book.eContainer()).toBe(library);
+
+    resource.getContents().add(book);
+
+    expect(book.eContainer()).toBeUndefined();
+    const books = library.eGet(libraryClass.getEStructuralFeature('books')!) as { toArray(): EObject[] };
+    expect(books.toArray()).toEqual([]);
+    expect(resource.getContents().toArray()).toEqual([book]);
+  });
+
+  it('adding the same root twice does not duplicate it', () => {
+    const { bookClass } = buildSampleMetamodel();
+    const { converter, serializer } = noopResourceDeps();
+    const resource = new ResourceImpl(URI.parse('mem:dup.bin'), serializer, converter);
+    const book = createInstanceOf(bookClass);
+
+    resource.getContents().add(book);
+    resource.getContents().add(book);
+
+    expect(resource.getContents().toArray()).toEqual([book]);
   });
 });
