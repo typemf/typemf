@@ -5277,13 +5277,10 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'return object instanceof EObjectImpl;');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'use-type-name');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EObjectImpl');
+        entry.eBasicSetValue(
+          Ids.EStringToStringMapEntry.value,
+          "switch (this.eClass().getName()) {\n  case 'EClass':\n    return object instanceof EObjectImpl && (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());\n  default:\n    switch (this.getName()) {\n      case 'EString':\n      case 'EChar':\n      case 'ECharacterObject':\n        return typeof object === 'string';\n      case 'EInt':\n      case 'EIntegerObject':\n      case 'ELong':\n      case 'ELongObject':\n      case 'EDouble':\n      case 'EDoubleObject':\n      case 'EFloat':\n      case 'EFloatObject':\n      case 'EShort':\n      case 'EShortObject':\n      case 'EByte':\n      case 'EByteObject':\n        return typeof object === 'number';\n      case 'EBigInteger':\n        return typeof object === 'bigint';\n      case 'EBoolean':\n      case 'EBooleanObject':\n        return typeof object === 'boolean';\n      case 'EDate':\n        return object instanceof Date;\n      default:\n        return object !== undefined && object !== null;\n    }\n}"
+        );
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -5308,6 +5305,30 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EObjectImpl');
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
+    }
+    {
+      const annotation = new EAnnotationImpl();
+      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
+
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EObject');
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
+        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
+      }
+      {
+        const entry = new EStringToStringMapEntryImpl();
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './types/EObject');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);

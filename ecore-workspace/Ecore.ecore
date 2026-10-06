@@ -272,13 +272,17 @@
     <eOperations name="isInstance" eType="#//EBoolean">
       <eParameters name="object" eType="#//EJavaObject"/>
       <eAnnotations source="https://typemf.dev/generator">
-        <details key="body" value="return object instanceof EObjectImpl;"/>
-        <details key="use-type-name" value="EObjectImpl"/>
+        <details key="body" value="switch (this.eClass().getName()) {&#10;  case 'EClass':&#10;    return object instanceof EObjectImpl &amp;&amp; (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());&#10;  default:&#10;    switch (this.getName()) {&#10;      case 'EString':&#10;      case 'EChar':&#10;      case 'ECharacterObject':&#10;        return typeof object === 'string';&#10;      case 'EInt':&#10;      case 'EIntegerObject':&#10;      case 'ELong':&#10;      case 'ELongObject':&#10;      case 'EDouble':&#10;      case 'EDoubleObject':&#10;      case 'EFloat':&#10;      case 'EFloatObject':&#10;      case 'EShort':&#10;      case 'EShortObject':&#10;      case 'EByte':&#10;      case 'EByteObject':&#10;        return typeof object === 'number';&#10;      case 'EBigInteger':&#10;        return typeof object === 'bigint';&#10;      case 'EBoolean':&#10;      case 'EBooleanObject':&#10;        return typeof object === 'boolean';&#10;      case 'EDate':&#10;        return object instanceof Date;&#10;      default:&#10;        return object !== undefined &amp;&amp; object !== null;&#10;    }&#10;}"/>
       </eAnnotations>
         <eAnnotations source="https://typemf.dev/generator/import">
           <details key="type" value="EObjectImpl"/>
           <details key="from" value="@typemf/core"/>
           <details key="internal-from" value="./impl/EObjectImpl"/>
+        </eAnnotations>
+        <eAnnotations source="https://typemf.dev/generator/import">
+          <details key="type" value="EObject"/>
+          <details key="from" value="@typemf/core"/>
+          <details key="internal-from" value="./types/EObject"/>
         </eAnnotations>
       </eOperations>
     <eOperations name="getClassifierID" eType="#//EInt"/>
