@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createInstanceOf,
   DynamicEFactoryImpl,
+  EClassifier,
   EClassImpl,
   EcoreFactoryImpl,
   EcorePackageImpl,
@@ -9,6 +10,8 @@ import {
   EObject,
   EPackageImpl,
   EReferenceImpl,
+  ProxyEObjectImpl,
+  URI,
 } from '../../index.js';
 // Ecore must be initialized before metaclass instances can be created.
 void EcorePackageImpl.eINSTANCE;
@@ -253,5 +256,35 @@ describe('opposites of the Ecore metamodel', () => {
     expect(eClass.getEPackage()).toBe(second);
     expect(first.getEClassifiers().isEmpty()).toBe(true);
     expect(second.getEClassifiers().toArray()).toEqual([eClass]);
+  });
+});
+
+describe('opposite maintenance with an unresolved proxy', () => {
+  const ecore = EcorePackageImpl.eINSTANCE;
+  const factory = new EcoreFactoryImpl();
+
+  it('adding an unresolved proxy to a containment feature with an eOpposite does not throw', () => {
+    const pkg = factory.createEPackage();
+    const proxy = new ProxyEObjectImpl(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as unknown as EClassifier;
+
+    expect(() => pkg.getEClassifiers().add(proxy)).not.toThrow();
+    expect(pkg.getEClassifiers().toArray()).toEqual([proxy]);
+    // Containment itself is still tracked, even though the opposite feature (ePackage) is not -
+    // the proxy has no real storage for it until resolved.
+    expect(proxy.eContainer()).toBe(pkg);
+  });
+
+  it('a second unresolved proxy is still added after the first', () => {
+    const pkg = factory.createEPackage();
+    const first = new ProxyEObjectImpl(ecore.getEClass(), URI.parse('typemf-host:/1#self')) as unknown as EClassifier;
+    const second = new ProxyEObjectImpl(
+      ecore.getEClass(),
+      URI.parse('typemf-host:/2#self')
+    ) as unknown as EClassifier;
+
+    pkg.getEClassifiers().add(first);
+    pkg.getEClassifiers().add(second);
+
+    expect(pkg.getEClassifiers().toArray()).toEqual([first, second]);
   });
 });

@@ -131,4 +131,33 @@ describe('loadLocalEcorePackage', () => {
     expect(audioBook.eGet(titleFeature)).toBe('Dune (audio)');
     expect(audioBook.eGet(narratorFeature)).toBe('Simon Vance');
   });
+
+  it('loads every classifier even when one has no structural features of its own', async () => {
+    const path = join(dir, 'mapping.ecore');
+    writeFileSync(
+      path,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="mapping" nsURI="http://roar-net.com/mapping" nsPrefix="map">
+  <eClassifiers xsi:type="ecore:EClass" name="MappingModel"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Mapping">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ecore" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="variability" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+</ecore:EPackage>
+`
+    );
+
+    const pkg = await loadLocalEcorePackage({ fsPath: path });
+    const names = pkg.getEClassifiers().map((c) => c.getName());
+    expect(names).toEqual(['MappingModel', 'Mapping']);
+
+    const mappingModel = pkg.getEClassifiers().find((c) => c.getName() === 'MappingModel');
+    const mapping = pkg.getEClassifiers().find((c) => c.getName() === 'Mapping');
+    expect(isEClass(mappingModel) && isEClass(mapping)).toBe(true);
+    if (!isEClass(mappingModel) || !isEClass(mapping)) return;
+    expect(mappingModel.getEStructuralFeatures().size()).toBe(0);
+    expect(mappingModel.getEPackage()).toBe(pkg);
+    expect(mapping.getEPackage()).toBe(pkg);
+  });
 });

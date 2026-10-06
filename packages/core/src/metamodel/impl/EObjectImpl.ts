@@ -216,6 +216,10 @@ export abstract class EObjectImpl implements EObject {
    * own opposite (still pointing at `this`) is cleared in turn.
    */
   eInverseAdd(otherEnd: EObjectImpl, feature: EReference): void {
+    // An unresolved proxy has no real feature storage yet (eGet/eBasicSetValue both throw on
+    // one) - nothing to update until it is resolved. The forward-direction add that triggered
+    // this call still goes through; only this inverse bookkeeping is skipped.
+    if (this.eIsProxy()) return;
     if (feature.isMany()) {
       this.eBasicList(feature).basicAdd(otherEnd);
     } else {
