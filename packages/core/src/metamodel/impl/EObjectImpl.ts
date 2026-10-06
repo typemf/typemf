@@ -1,3 +1,4 @@
+import type { Resource } from '../../resource/resource.js';
 import { Disposable } from '../types/Disposable.js';
 import { EClass } from '../types/EClass.js';
 import { EList } from '../types/EList.js';
@@ -14,6 +15,18 @@ interface Listener {
 
 let fallbackIdCounter = 0;
 
+/** Walks eContainer() up to the containment root - used by eResource() below, where only a root
+ *  ever carries its own _eDirectResource. */
+function findRoot(obj: EObject): EObject {
+  let current = obj;
+  let container = current.eContainer();
+  while (container) {
+    current = container;
+    container = current.eContainer();
+  }
+  return current;
+}
+
 /**
  * Abstract base for every model instance. eContainer/eContents/eAllContents
  * are fully generic here - they are derived entirely from eGet(), which is
@@ -26,6 +39,10 @@ export abstract class EObjectImpl implements EObject {
   private _eContainingFeature: EStructuralFeature | undefined;
   private _eProxy = false;
   private frozen = false;
+  /** Only ever set on a root (see eSetDirectResource) - a non-root's eResource() is found by
+   *  walking up to its root via eContainer() instead, exactly like real EMF's own
+   *  eDirectResource field. */
+  private _eDirectResource: Resource | undefined;
 
   /**
    * Marks this object (and, recursively, everything it contains) as no longer intended to be
@@ -137,6 +154,22 @@ export abstract class EObjectImpl implements EObject {
 
   eContainingFeature(): EStructuralFeature | undefined {
     return this._eContainingFeature;
+  }
+
+  eResource(): Resource | undefined {
+    return (findRoot(this) as EObjectImpl)._eDirectResource;
+  }
+
+  /**
+   * Internal - not part of the public EObject API, same as eBasicSetContainer/eSetProxy. Called
+   * by Resource's own contents list (resource/resource-impl.ts) as an object enters/leaves
+   * getContents() - the only time an object's OWN eResource() is ever set directly; every other
+   * object's eResource() is found by walking up to its root instead (see eResource() above).
+   * Resetting a former root's own direct resource when it becomes contained elsewhere, or leaves
+   * a resource's contents, is resource-impl.ts's responsibility, not this method's.
+   */
+  eSetDirectResource(resource: Resource | undefined): void {
+    this._eDirectResource = resource;
   }
 
   /**

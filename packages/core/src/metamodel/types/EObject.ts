@@ -1,3 +1,4 @@
+import type { Resource } from '../../resource/resource.js';
 import { Disposable } from './Disposable.js';
 import { EClass } from './EClass.js';
 import { EList } from './EList.js';
@@ -20,6 +21,16 @@ export interface EObject {
 
   /** The containment feature this object was set/added into, if any. */
   eContainingFeature(): EStructuralFeature | undefined;
+
+  /**
+   * The Resource this object is part of, if any - its own, if it's a root, otherwise its nearest
+   * containing root's. `undefined` for an object that was never added to any Resource's
+   * getContents() (directly, or by containment under a root that was). Real EMF's own public API
+   * (`InternalEObject.eResource()`, called through the public `EObject` supertype); unlike EMF,
+   * this is declared directly on the public interface rather than split across an internal one,
+   * since this project has no equivalent internal/public SPI split to preserve.
+   */
+  eResource(): Resource | undefined;
 
   /** Direct containment children, across every containment feature. */
   eContents(): EList<EObject>;

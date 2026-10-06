@@ -11,7 +11,6 @@ import {
   computeFragment as coreComputeFragment,
   createProxy,
   getProxyURI,
-  getResourceOf,
   type EObjectSerializer,
 } from '@typemf/core';
 import { allStructuralFeaturesOf, computeEmfFragment, resolveEmfFragment } from './emf-fragment.js';
@@ -76,7 +75,7 @@ export class XmiSerializer implements EObjectSerializer {
       ...namespaces.entries().map(([prefix, uri]): [string, string] => [`xmlns:${prefix}`, uri]),
     ];
     // xsi:schemaLocation="<nsURI> <path>" for the root's own package, when that package was
-    // itself loaded from a real, known file (getResourceOf - the same utility
+    // itself loaded from a real, known file (eResource() - the same call
     // encodeReferenceValue's own "is this local" check relies on) distinct from the document
     // being saved here - a dynamically-loaded .ecore file, the common case this project's own
     // "New Model Instance" dynamic mode produces. Matches the real, standard XMI/XSD convention
@@ -88,7 +87,7 @@ export class XmiSerializer implements EObjectSerializer {
     // them, and the root's own package is what the real, reported gap was actually about.
     const schemaLocationAttrs: Array<[string, string]> = [];
     const rootPackage = requirePackage(root.eClass());
-    const rootPackageResource = getResourceOf(rootPackage);
+    const rootPackageResource = rootPackage.eResource();
     if (rootPackageResource && rootPackageResource !== resource) {
       const location = rootPackageResource.getURI().deresolve(resource.getURI());
       schemaLocationAttrs.push(['xsi:schemaLocation', `${rootPackage.getNsURI()} ${location.toString()}`]);
@@ -318,7 +317,7 @@ function encodeReferenceValue(
     return { value: proxyURI.deresolve(sourceResource.getURI()).toString(), crossDocument: true, xsiType };
   }
 
-  const targetResource = getResourceOf(target);
+  const targetResource = target.eResource();
   const actual = target.eClass();
   const xsiType =
     declared !== actual ? `${namespaces.prefixFor(requirePackage(actual))}:${actual.getName()}` : undefined;
@@ -328,7 +327,7 @@ function encodeReferenceValue(
   // check (`!targetResource || ...`) treated "not attached to any resource" as automatically
   // local, which is wrong for something like EcorePackage's own EJavaObject - a real, stable,
   // well-known classifier, always available, but never loaded via any real Resource.load() (it's
-  // part of the self-hosted, in-memory EcorePackageImpl.eINSTANCE), so getResourceOf() correctly
+  // part of the self-hosted, in-memory EcorePackageImpl.eINSTANCE), so eResource() correctly
   // (if misleadingly, for this purpose) returns undefined for it. Walking eContainer() against
   // `roots` directly, rather than trusting resource identity, is what actually decides this.
   if (isReachableFromRoots(target, roots)) {

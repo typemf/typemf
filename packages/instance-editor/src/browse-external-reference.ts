@@ -19,8 +19,8 @@ import { resolveMissingPackages } from './resolve-missing-packages.js';
  * runs for whatever the picked file needs that genuinely isn't registered yet. The loaded
  * resource, and everything in it, then stays alive for as long as anything in the current
  * document's own object graph actually references it - ordinary JS reachability, no extra
- * bookkeeping needed (see ResourceImpl's own getResourceOf/resourceByRoot for how a reference's
- * own cross-document save path depends on this later).
+ * bookkeeping needed (see EObject.eResource() for how a reference's own cross-document save path
+ * depends on this later).
  */
 export async function browseExternalReferenceCandidates(
   document: Pick<InstanceDocument, 'resourceSet' | 'objectIds'>,

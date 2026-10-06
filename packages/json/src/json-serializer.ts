@@ -8,7 +8,6 @@ import {
   EStructuralFeature,
   createProxy,
   getProxyURI,
-  getResourceOf,
   resolveFragment,
   Resource,
   type EObjectSerializer,
@@ -164,7 +163,7 @@ function serializeReferenceValue(
     return buildRefJson(proxyURI.toString(), target.eClass(), feature, namespaces);
   }
 
-  const targetResource = getResourceOf(target);
+  const targetResource = target.eResource();
   const isLocal = !targetResource || targetResource === sourceResource;
 
   const fragment = fragmentForTarget(target, targetResource, roots);
