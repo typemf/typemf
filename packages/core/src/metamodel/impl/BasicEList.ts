@@ -188,7 +188,7 @@ export class BasicEList<T> implements EList<T> {
   }
 
   /**
-   * CORE-12: the element stays in the list throughout - no containment/opposite change, so
+   * The element stays in the list throughout - no containment/opposite change, so
    * unlike onAdded/onRemoved there's no eDidAdd/eDidRemove to call, only the notification
    * (real EMF's own MOVE: oldValue is the OLD position, newValue is the moved element, position
    * is the NEW position).

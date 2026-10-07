@@ -4,7 +4,7 @@ import { Resource } from './resource.js';
 
 /**
  * Thin wrappers over EObject.eResource()/EObjectImpl.eSetDirectResource() - real EMF's own public
- * API (CORE-08), not a side table kept outside the metamodel: `eSetDirectResource` is internal
+ * API, not a side table kept outside the metamodel: `eSetDirectResource` is internal
  * (same as `eBasicSetContainer`/`eSetProxy`), so these are the forms callers outside this file
  * actually use. `associateRoot`/`dissociateRoot` are called by Resource's own contents list
  * (resource-impl.ts) as an object enters/leaves getContents(); `getResourceOf` is a free-function

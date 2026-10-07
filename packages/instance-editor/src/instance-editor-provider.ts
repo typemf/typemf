@@ -83,7 +83,7 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     openContext: vscode.CustomDocumentOpenContext,
     _token: vscode.CancellationToken
   ): Promise<InstanceDocument> {
-    // Hot exit / crash recovery (ED-02): openContext.backupId names a real file on disk holding
+    // Hot exit / crash recovery: openContext.backupId names a real file on disk holding
     // whatever backupCustomDocument last wrote for this exact document - possibly-unsaved edits
     // that would otherwise be silently lost, including for an untitled document, which still
     // reaches this same uri.scheme === 'untitled' branch on restore and, without this check, used
@@ -126,7 +126,7 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     // automatic, programmatic reopen rather than a direct user action, had nothing to resolve it
     // and reported cancelled.
     //
-    // Only when nothing is registered under this nsURI yet (ED-06, see registerIfNew). A
+    // Only when nothing is registered under this nsURI yet (see registerIfNew). A
     // statically registered package is already here, so this is a no-op for that case; only the
     // dynamic one actually needed registering at all, and only the first time.
     registerIfNew(this.runtime.packageRegistry, pkg);
@@ -159,7 +159,7 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
    * Loads a serialized resource from contentUri - either `uri` itself, for a normal open, or a
    * hot-exit backup's own real file (named by openContext.backupId) instead, for either an
    * existing document whose last save predates its own crash or an untitled one that never had a
-   * real file at all (see openCustomDocument's own reasoning, ED-02) - and gives the result the
+   * real file at all (see openCustomDocument's own reasoning) - and gives the result the
    * SAME identity `uri` would always have gotten (resolveDocumentIdentity), regardless of which
    * one content actually came from, so every save/revert after this one behaves exactly as if
    * nothing had happened.

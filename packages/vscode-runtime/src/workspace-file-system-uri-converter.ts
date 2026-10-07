@@ -13,7 +13,7 @@ export interface WorkspaceFileSystem {
 }
 
 /**
- * A UriConverter backed by VS Code's own file system API instead of Node's `fs` (ED-05), so
+ * A UriConverter backed by VS Code's own file system API instead of Node's `fs`, so
  * documents on any registered file system provider - GitHub repositories opened through vscode.dev
  * or "Remote Repositories", remote workspaces - open and save like local files. Handles every
  * absolute URI: VS Code reports an unknown scheme as a file system error when it is actually used,

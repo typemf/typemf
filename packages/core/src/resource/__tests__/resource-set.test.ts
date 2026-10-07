@@ -552,7 +552,7 @@ describe('getResourceOf()', () => {
   });
 });
 
-describe('EObject.eResource() (CORE-08)', () => {
+describe('EObject.eResource()', () => {
   it('a root answers its own Resource, and a contained object answers its root’s', () => {
     const { libraryClass, bookClass, booksRef } = buildSampleMetamodel();
     const library = createInstanceOf(libraryClass);
@@ -576,7 +576,7 @@ describe('EObject.eResource() (CORE-08)', () => {
     expect(orphan.eResource()).toBeUndefined();
   });
 
-  it('follows a root moved to a different resource (CORE-07) - the old resource no longer claims it', () => {
+  it('follows a root moved to a different resource - the old resource no longer claims it', () => {
     const { libraryClass } = buildSampleMetamodel();
     const library = createInstanceOf(libraryClass);
     const noopSerializer = {

@@ -141,7 +141,7 @@ describe('EClass reflection - diamond inheritance', () => {
     expect(named.isSuperTypeOf(sprite)).toBe(true);
   });
 
-  // CORE-05: Movable.position and Named.label each have their own, independently-assigned
+  // Movable.position and Named.label each have their own, independently-assigned
   // featureID (1) - correct within their own declaring class, but colliding if Sprite's
   // getFeatureID(feature) just returned that raw value instead of each feature's own distinct
   // position within Sprite's own getEAllStructuralFeatures().

@@ -98,7 +98,7 @@ describe('the write path end to end', () => {
 
     // Nothing yet, in particular, from reconstruction itself: resolving bookClass eagerly adds
     // titleAttr to bookClass.eStructuralFeatures (a real containment with an eOpposite back to
-    // EStructuralFeature.eContainingClass), which fires a SET on titleAttr once CORE-09 is fixed
+    // EStructuralFeature.eContainingClass), which fires a SET on titleAttr
     // - titleAttr was already reconstructed-and-attached by that point (it's resolved as
     // bookClass's own reference, finishing before bookClass's list.add() runs), so without
     // EditRelay's own reconstruction suppression this reconstruction bookkeeping would relay as

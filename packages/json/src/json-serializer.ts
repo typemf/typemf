@@ -67,7 +67,7 @@ export class JsonSerializer implements EObjectSerializer {
     try {
       doc = JSON.parse(text) as TypemfJsonDocument;
     } catch (e) {
-      // JSON-04: a structurally wrong document is reported as an error instead of throwing a raw
+      // A structurally wrong document is reported as an error instead of throwing a raw
       // TypeError/SyntaxError that aborts the whole load with no context.
       resource.getErrors().push({
         message: `'${resource.getURI().toString()}' is not valid JSON: ${(e as Error).message}`,
@@ -251,7 +251,7 @@ interface DeserializeContext {
   packageRegistry: EPackageRegistry;
   /** Reference-wiring deferred until every object in the document has been constructed. */
   pendingRefs: Array<() => void>;
-  /** Where to record a problem instead of throwing and aborting the whole load (JSON-04): an
+  /** Where to record a problem instead of throwing and aborting the whole load: an
    *  unknown key is a warning (data loss on the next save); an unresolved reference is an error
    *  (the feature is left unset, the rest of the document still loads). */
   resource: Resource;
@@ -352,8 +352,8 @@ function resolveRef(
     const fragment = refString.slice(1);
     const found = resolveFragment(fragment, roots);
     if (!found) {
-      // JSON-04: recorded as an error rather than thrown, so the rest of the document still
-      // loads (matching @typemf/xmi's own XMI-04 fix) - the feature is left unset for this value.
+      // Recorded as an error rather than thrown, so the rest of the document still
+      // loads (as @typemf/xmi does) - the feature is left unset for this value.
       ctx.resource.getErrors().push({
         message: `Unresolved reference '${refString}' on feature '${feature.getName()}': no object matches this fragment in this document.`,
       });

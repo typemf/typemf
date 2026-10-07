@@ -51,7 +51,7 @@ export class EditRelay {
    * same reconstruction touches too. A real, confirmed gap found running this: adding a freshly-
    * reconstructed child to its freshly-reconstructed parent's containment list (e.g. bookClass's
    * `eStructuralFeatures`) fires the matching opposite update on the CHILD (titleAttr's own
-   * `eContainingClass`, CORE-09's own fix) - and that child's attachTo was already wired, finishing
+   * `eContainingClass`) - and that child's attachTo was already wired, finishing
    * before the parent's own list.add() call runs, since it's resolved as the parent's own
    * reference first. Without this, that opposite update - pure reconstruction bookkeeping, not a
    * real edit - gets relayed to the host as if it were one. A counter, not a flag: deserialize()

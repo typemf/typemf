@@ -42,7 +42,7 @@ export class NodeFileUriConverter implements UriConverter {
   }
 
   /**
-   * NODE-01: a URI's own `getPath()` is unusable directly as a filesystem path on every
+   * A URI's own `getPath()` is unusable directly as a filesystem path on every
    * platform/caller combination - a URI built from a Windows `fsPath` ("c:\Users\...") has a
    * `path` of "/c:\Users\..." (createFileURI only ever prepends "/"; it doesn't know about drive
    * letters or backslashes), and a URI parsed from real "file:" text keeps its percent-encoding

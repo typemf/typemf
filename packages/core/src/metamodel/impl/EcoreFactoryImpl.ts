@@ -34,7 +34,7 @@ import { ETypeParameter } from '../types/ETypeParameter.js';
 export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
   /** The one canonical factory instance - real EMF's own `EcoreFactory.eINSTANCE`, which this project
    *  ports onto the Impl class rather than the interface (TypeScript interfaces have no statics).
-   *  Reading this also constructs the package singleton on first use (CORE-01), via the same
+   *  Reading this also constructs the package singleton on first use, via the same
    *  lazy initializer EcorePackageImpl.eINSTANCE itself goes through. */
   static get eINSTANCE(): EcoreFactory {
     return getEcorePackageRef().getEFactoryInstance() as EcoreFactory;

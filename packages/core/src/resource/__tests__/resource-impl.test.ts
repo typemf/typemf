@@ -97,7 +97,7 @@ describe('ResourceImpl.load()', () => {
   });
 });
 
-describe('ResourceImpl.getContents() - CORE-07 content ownership', () => {
+describe('ResourceImpl.getContents() content ownership', () => {
   it('adding a root already owned by another resource removes it from that resource', () => {
     const { bookClass } = buildSampleMetamodel();
     const { converter, serializer } = noopResourceDeps();

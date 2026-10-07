@@ -462,7 +462,7 @@ interface DeserializeContext {
   /** The document being read - anchors a relative href (EMF's default form between files in the
    *  same workspace) to an absolute URI before it becomes a proxy. */
   resourceURI: URI;
-  /** Where to record a problem instead of throwing and aborting the whole load (XMI-04): an
+  /** Where to record a problem instead of throwing and aborting the whole load: an
    *  unknown attribute/element is a warning (data loss on the next save); an unresolved
    *  same-document reference is an error (the feature is left unset, the rest of the document
    *  still loads). */
@@ -784,7 +784,7 @@ function decodeAttributeFormReference(
     const normalized = fragment.startsWith('#') ? fragment.slice(1) : fragment;
     const resolved = resolveEmfFragment(normalized, roots);
     if (!resolved) {
-      // XMI-04: recorded as an error rather than thrown, so the rest of the document still loads
+      // Recorded as an error rather than thrown, so the rest of the document still loads
       // (EMF's own behavior) - the feature is simply left unset for this value.
       ctx.resource.getErrors().push({
         message: `Unresolved same-document reference '${fragment}' on feature '${feature.getName()}': no object matches this fragment in this document.`,

@@ -6385,7 +6385,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   }
 }
 
-// CORE-01: lets getXxxRef() construct the singleton itself, on first use, instead of only ever
+// Lets getXxxRef() construct the singleton itself, on first use, instead of only ever
 // throwing when nothing has touched EcorePackageImpl.eINSTANCE/.init() yet. A side effect of
 // this module being evaluated at all - see registerEcorePackageInitializer's own doc comment
 // in EcorePackageRef.ts.

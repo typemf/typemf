@@ -38,7 +38,7 @@ describe('URI', () => {
     expect(URI.parse('mem:library-instance').getFileExtension()).toBeUndefined();
   });
 
-  describe('createFileURI - CORE-06 Windows paths and percent-encoding', () => {
+  describe('createFileURI with Windows paths and percent-encoding', () => {
     it('normalizes a Windows drive path (backslashes) into a forward-slash, leading-slash URI path', () => {
       const uri = URI.createFileURI('C:\\Users\\a\\model.ecore');
       expect(uri.toString()).toBe('file:///C:/Users/a/model.ecore');

@@ -467,7 +467,7 @@ describe('XmiSerializer', () => {
     expect(xml).not.toContain('schemaLocation');
   });
 
-  describe('XMI-04: diagnostics instead of silent data loss or an aborted load', () => {
+  describe('diagnostics instead of silent data loss or an aborted load', () => {
     it('an unknown attribute is recorded as a warning, and the rest of the object still loads', async () => {
       const { libraryPackage, bookClass, titleAttr } = buildSampleMetamodel();
       const converter = new InMemoryUriConverter();

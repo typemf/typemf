@@ -3,7 +3,7 @@ import { EPackage, EPackageRegistry } from '@typemf/core';
 /**
  * Registers pkg into registry unless something is already registered under the same nsURI -
  * EPackageRegistry.register() has no "don't overwrite" option of its own, so calling it
- * unconditionally for a package that might not actually be new (ED-06) silently replaces whatever
+ * unconditionally for a package that might not actually be new silently replaces whatever
  * another extension - or an earlier resolution of the exact same dynamic metamodel, re-loaded
  * fresh via loadLocalEcorePackage every time and so never the same EPackage object twice - had
  * already registered under that nsURI, breaking every other open document still holding a

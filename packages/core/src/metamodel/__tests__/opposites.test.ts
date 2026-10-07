@@ -208,7 +208,7 @@ describe('opposite (inverse) reference maintenance', () => {
   });
 });
 
-describe('opposite (inverse) reference maintenance - notifications (CORE-09)', () => {
+describe('opposite (inverse) reference maintenance - notifications', () => {
   it('many-to-many: adding on one side fires ADD on the opposite end too, not just the written side', () => {
     const m = buildOppositeMetamodel();
     const alice = m.newPerson();
@@ -218,9 +218,8 @@ describe('opposite (inverse) reference maintenance - notifications (CORE-09)', (
 
     list(apollo, m.membersRef).add(alice);
 
-    // Written directly: ADD on apollo.members (already covered elsewhere). What CORE-09 was
-    // about: alice's own projectsRef - updated only as a side effect of the opposite - used to
-    // get no notification of its own at all.
+    // Written directly: ADD on apollo.members (already covered elsewhere). The point here:
+    // alice's own projectsRef, updated only as a side effect of the opposite, notifies too.
     expect(notifications).toEqual(['ADD projects 0']);
   });
 

@@ -8,7 +8,7 @@ import { EObjectImpl } from './EObjectImpl.js';
  * code at all - the "dynamic instantiation" path discussed for models
  * parsed straight from a .ecore file. Values are keyed by the feature's
  * position in dynamicEClass.getEAllStructuralFeatures() (EClass.getFeatureID(),
- * not the feature's own, per-declaring-class getFeatureID() - see CORE-05: two
+ * not the feature's own, per-declaring-class getFeatureID(): two
  * features inherited from different supertypes can otherwise collide), rather
  * than by named fields, unlike a generated *Gen class.
  *

@@ -43,7 +43,7 @@ export interface EList<T> extends Iterable<T> {
   /**
    * Moves the element at `fromIndex` to `toIndex`, shifting the elements between them. Returns
    * the moved element. A live list fires a single MOVE notification, not a REMOVE followed by an
-   * ADD - the element never actually left the list, just changed position (CORE-12).
+   * ADD - the element never actually left the list, just changed position.
    *
    * @throws RangeError if `fromIndex` is out of bounds.
    */

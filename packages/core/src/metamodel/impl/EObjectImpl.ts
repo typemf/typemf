@@ -94,7 +94,7 @@ export abstract class EObjectImpl implements EObject {
    * EMF rejects a feature that doesn't belong to this object's own class outright, rather than
    * dispatching on `feature.getFeatureID()` alone - two unrelated classes' features can share the
    * same id (each is only unique within its own declaring class, or - for a dynamic class with
-   * multiple supertypes, see CORE-05 - within `getEAllStructuralFeatures()`'s own position-based
+   * multiple supertypes, within `getEAllStructuralFeatures()`'s own position-based
    * scheme), so reading or writing by id alone silently hits the wrong field when a caller passes
    * a feature from some other EClass entirely. Every generated eGet/eSet/eIsSet/eUnset
    * (eclass.njk) and DynamicEObjectImpl call this first, before dispatching on the id.
@@ -275,8 +275,7 @@ export abstract class EObjectImpl implements EObject {
       const sizeBefore = list.size();
       list.basicAdd(otherEnd);
       // A no-op if otherEnd was already present (reference lists are unique) - no real change,
-      // so no notification (CORE-09: the opposite end otherwise got no ADD at all, even when a
-      // change genuinely happened).
+      // so no notification.
       if (list.size() > sizeBefore) {
         this.eNotify({
           eventType: 'ADD',
@@ -360,7 +359,7 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * CORE-09: every caller of this (eInverseRemove's own "opposite stopped referencing me", and
+   * Every caller of this (eInverseRemove's own "opposite stopped referencing me", and
    * eBasicMoveInto/eBasicDetachFromContainer clearing an old container or its opposite) silently
    * mutated storage with no notification - the affected object's own listeners (and the instance
    * editor's webview relay) never found out, even though a real change happened. Fires the same

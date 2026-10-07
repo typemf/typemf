@@ -27,7 +27,7 @@ export class URI {
   }
 
   /**
-   * Convenience for the common case of wrapping a filesystem path (CORE-06). Backslashes become
+   * Convenience for the common case of wrapping a filesystem path. Backslashes become
    * forward slashes first - a Windows `fsPath` ("C:\Users\a b\m.xmi") has none of its own, so this
    * is purely "native path -> URI path" translation, matching real EMF's own `URI.createFileURI`;
    * it naturally also makes a drive-letter path absolute, the same way a POSIX path already was,
@@ -38,7 +38,7 @@ export class URI {
    * deliberately left unescaped (valid unencoded in a URI path segment, and this is exactly what
    * keeps a drive letter readable as "C:" rather than "C%3A", matching Eclipse's own Windows file
    * URIs). `getPath()`/`toString()` return this encoded form - decoding back to a native path is
-   * `@typemf/node`'s own job (NODE-01's `fileURLToPath`), not this class's.
+   * `@typemf/node`'s job (via `fileURLToPath`), not this class's.
    */
   static createFileURI(path: string): URI {
     const normalized = path.replace(/\\/g, '/');

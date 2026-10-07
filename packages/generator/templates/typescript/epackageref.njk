@@ -35,7 +35,7 @@ let ref: {{ packageClassName(package) }} | undefined;
  * Set once, as a module-scope side effect of {{ packageClassName(package) }}Impl.ts's own module
  * being evaluated (see the call at the bottom of that file) - never a direct import of
  * {{ packageClassName(package) }}Impl here, for the exact same circularity reason the class doc
- * comment above explains. Lets get{{ packageClassName(package) }}Ref() (CORE-01) construct the
+ * comment above explains. Lets get{{ packageClassName(package) }}Ref() construct the
  * singleton itself, on first use, instead of only ever throwing when nothing has touched
  * {{ packageClassName(package) }}Impl.eINSTANCE/.init() yet.
  */

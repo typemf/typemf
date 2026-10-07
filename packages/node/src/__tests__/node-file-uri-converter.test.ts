@@ -74,7 +74,7 @@ describe('NodeFileUriConverter', () => {
     await expect(converter.readBinary(uri)).rejects.toThrow();
   });
 
-  describe('NODE-01: paths that are not a plain, already-decoded POSIX path', () => {
+  describe('paths that are not a plain, already-decoded POSIX path', () => {
     it('decodes a percent-encoded path (a URI parsed from real "file:" text keeps its escapes)', async () => {
       const converter = new NodeFileUriConverter();
       const realPath = join(dir, 'a b.txt');
@@ -86,7 +86,7 @@ describe('NodeFileUriConverter', () => {
     });
 
     it('treats a backslash in the path as a separator, like a Windows fsPath URI would have', async () => {
-      // createFileURI itself now normalizes backslashes (CORE-06) - this instead covers a URI
+      // createFileURI itself now normalizes backslashes - this instead covers a URI
       // built some other way, e.g. URI.parse() on raw text that still has them (real "file:" URIs
       // never do, but nothing stops a caller from handing one over anyway). Simulated here (this
       // suite also runs on POSIX) by writing through a forward-slash URI and reading back through

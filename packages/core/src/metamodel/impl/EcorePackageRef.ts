@@ -34,7 +34,7 @@ let ref: EcorePackage | undefined;
  * Set once, as a module-scope side effect of EcorePackageImpl.ts's own module
  * being evaluated (see the call at the bottom of that file) - never a direct import of
  * EcorePackageImpl here, for the exact same circularity reason the class doc
- * comment above explains. Lets getEcorePackageRef() (CORE-01) construct the
+ * comment above explains. Lets getEcorePackageRef() construct the
  * singleton itself, on first use, instead of only ever throwing when nothing has touched
  * EcorePackageImpl.eINSTANCE/.init() yet.
  */

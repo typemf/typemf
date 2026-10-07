@@ -5,7 +5,7 @@ import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
 import { URI } from './uri.js';
 
 /** Which URI each currently-unresolved proxy stands in for. Not a field on EObjectImpl itself -
- *  unlike eResource()'s Resource (CORE-08, a type-only reference with no runtime footprint in
+ *  unlike eResource()'s Resource (a type-only reference with no runtime footprint in
  *  metamodel/), a URI is a real value a proxy needs to carry around, and metamodel/ has no
  *  business constructing or storing one of those itself. */
 const proxyURIs = new WeakMap<EObject, URI>();
