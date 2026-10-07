@@ -14,6 +14,7 @@ import {
   ResourceFactory,
   ResourceFactoryRegistry,
   ResourceImpl,
+  ResourceSet,
   EStructuralFeatureImpl,
   URI,
 } from '@typemf/core';
@@ -37,6 +38,14 @@ export function uriForId(id: string): URI {
   // serializer gets a say - a real, found gap in core's own resolve(), worked around here locally
   // rather than fixed at the source, since a non-empty-but-ignored fragment costs nothing.
   return URI.parse(`${HOST_SCHEME}:/${id}#self`);
+}
+
+/**
+ * The webview's object for the host id `id`. One of Ecore's own classifiers or members is returned
+ * directly; anything else is loaded from the host as an object of `declaredType`.
+ */
+export async function resolveHostObject(resourceSet: ResourceSet, declaredType: EClass, id: string): Promise<EObject> {
+  return wellKnownEcoreObject(id) ?? resourceSet.resolve(createProxy(declaredType, uriForId(id)));
 }
 
 const dynamicFactory = new DynamicEFactoryImpl();
