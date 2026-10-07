@@ -1,5 +1,31 @@
 # instance-editor
 
+## 0.8.0
+
+### Minor Changes
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - "Link external..." can now pick a candidate from any registered package (Ecore itself, or anything the `typemf.ecoreMappings` setting dynamically registers at activation), not just a file browsed from disk. When at least one package is registered, a picker lets you choose between them and "Browse for a file...", which falls back to the previous file-dialog behavior.
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Add undo and redo to the instance editor. Every edit (setting or unsetting a value, adding or removing a list element, adding a child) is now one step on VS Code's undo stack, so Ctrl+Z / Ctrl+Y work and the dirty marker clears when you undo back to the saved state. After an undo or redo the editor reloads its view from the document and keeps the tree's selection and expanded nodes.
+
+### Patch Changes
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Convert data values consistently and exactly.
+
+  - `ELong`/`ELongObject` and `EBigInteger` values are now `bigint`, so 64-bit values no longer lose precision above 2^53; `EBigDecimal` values are strings holding the exact decimal; `EDate` values are `Date` and `EByteArray` values are `Uint8Array` (hexadecimal in documents). Generated types change accordingly. **Breaking:** code that reads or writes an `ELong` attribute now uses `bigint`.
+  - `EFactory.createFromString()` throws for a literal that is not a valid value of the data type, including out-of-range integers, instead of returning `NaN` or a rounded number. Booleans are read case-insensitively, `INF`/`-INF`/`NaN` are accepted for floating-point types, and an enum literal is checked against the enum. `convertToString()` returns `undefined` for `undefined`/`null`.
+  - New `createFromString(eDataType, literal)` and `convertToString(eDataType, value)` functions convert with the factory of the data type's package, as EMF's `EcoreUtil` does. XMI and JSON now use them for every attribute value, so every data type converts the same way in both formats, including custom data types with their own factory. An invalid value in a document is recorded in `getErrors()` and leaves the attribute unset instead of aborting the load or storing a wrong value. JSON writes values it cannot represent exactly (a `bigint`, `NaN`, `Infinity`, a `Date`, bytes) as strings.
+  - `EClassifier.getDefaultValue()` returns `0n` for `ELong` and an enum's first literal for an enum. Generated defaults are checked: an invalid `defaultValueLiteral` of a primitive attribute is a generation error.
+  - The instance editor edits `bigint` attributes in a text field.
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix `openCustomDocument` ignoring `openContext.backupId`: after a crash or a VS Code restart with hot exit, an unsaved document (saved or still untitled) was silently reopened from its last-saved state, or as a brand new, empty instance, discarding the backup `backupCustomDocument` had already written for it. The backup's content is now loaded instead, while the document keeps the exact same identity (file path, or the untitled uri) a normal open would have given it.
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix a new model instance silently replacing an already-registered package: `openNewInstance` registered its (possibly dynamically loaded) package in the shared runtime registry unconditionally, overwriting whatever another extension, or an earlier new instance of the same dynamic metamodel, had registered under the same nsURI. It now registers only when nothing is registered under that nsURI yet.
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Keep the editor in sync with the file: reverting a document now reloads the editor view (it kept showing the discarded state before), and a document changed outside the editor (git checkout, another editor) is reloaded automatically unless it has unsaved changes. Undo steps recorded before such a reload are skipped with a warning instead of acting on objects that no longer exist.
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Open and save documents on virtual file systems, e.g. GitHub repositories opened through vscode.dev or "Remote Repositories": the runtime now registers a `UriConverter` backed by `vscode.workspace.fs` instead of Node's `fs`, handling every absolute URI. The editor no longer turns every picked or "Save As" destination into a `file:` URI from its `fsPath`; a non-`file:` destination keeps its own URI.
+
 ## 0.7.0
 
 ### Patch Changes

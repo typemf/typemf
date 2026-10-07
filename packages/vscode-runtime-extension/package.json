@@ -2,7 +2,7 @@
   "name": "vscode-runtime",
   "displayName": "TypeMF Runtime",
   "description": "Shared TypeMF runtime: one package registry and one instance of every shared model module for all TypeMF extensions.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "typemf",
   "preview": true,
   "icon": "images/icon.png",

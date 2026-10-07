@@ -1,5 +1,19 @@
 # @typemf/vscode-runtime
 
+## 0.8.0
+
+### Minor Changes
+
+- [#10](https://github.com/typemf/typemf/pull/10) [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223) Thanks [@bergerbd](https://github.com/bergerbd)! - Open and save documents on virtual file systems, e.g. GitHub repositories opened through vscode.dev or "Remote Repositories": the runtime now registers a `UriConverter` backed by `vscode.workspace.fs` instead of Node's `fs`, handling every absolute URI. The editor no longer turns every picked or "Save As" destination into a `file:` URI from its `fsPath`; a non-`file:` destination keeps its own URI.
+
+### Patch Changes
+
+- Updated dependencies [[`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223), [`131268d`](https://github.com/typemf/typemf/commit/131268d5bfe02c0870b61feb91a1323116601223)]:
+  - @typemf/core@0.8.0
+  - @typemf/json@0.8.0
+  - @typemf/xmi@0.8.0
+  - @typemf/node@0.8.0
+
 ## 0.7.0
 
 ### Patch Changes
