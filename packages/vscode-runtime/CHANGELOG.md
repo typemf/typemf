@@ -1,5 +1,15 @@
 # @typemf/vscode-runtime
 
+## 0.9.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @typemf/core@0.9.0
+  - @typemf/json@0.9.0
+  - @typemf/node@0.9.0
+  - @typemf/xmi@0.9.0
+
 ## 0.8.1
 
 ### Patch Changes
