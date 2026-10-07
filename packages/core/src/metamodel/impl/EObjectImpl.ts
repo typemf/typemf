@@ -104,8 +104,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal. Passes `notification` to the listeners registered for its feature or for all
-   * features, unless delivery is turned off. Called once per change by the code making it, not by
+   * Passes `notification` to the listeners registered for its feature or for all
+   * features, unless delivery is turned off. Called by generated code once per change, not by
    * eDidAdd/eDidRemove: a single SET calls both of those.
    */
   eNotify(notification: Notification): void {
@@ -129,20 +129,20 @@ export abstract class EObjectImpl implements EObject {
     return (findRoot(this) as EObjectImpl)._eDirectResource;
   }
 
-  /** Internal. Records the resource of a root; called by a resource's contents list. */
+  /** @internal Records the resource of a root; called by a resource's contents list. */
   eSetDirectResource(resource: Resource | undefined): void {
     this._eDirectResource = resource;
   }
 
-  /** Internal. Sets the container back-pointer, without touching the container's feature. */
+  /** @internal Sets the container back-pointer, without touching the container's feature. */
   eBasicSetContainer(container: EObject | undefined, feature: EStructuralFeature | undefined): void {
     this._eContainer = container;
     this._eContainingFeature = feature;
   }
 
   /**
-   * Internal. Stores the value of a single-valued feature without containment, opposite or
-   * notification side effects; `undefined` means unset.
+   * Stores the value of a single-valued feature without containment, opposite or notification side
+   * effects; `undefined` means unset. Implemented by generated code.
    */
   abstract eBasicSetValue(feature: EStructuralFeature, value: unknown): void;
 
@@ -155,13 +155,15 @@ export abstract class EObjectImpl implements EObject {
    */
   private static modelGeneration = 0;
 
+  /** The current model generation (see `modelGeneration`); read by generated caching code. */
   static getModelGeneration(): number {
     return EObjectImpl.modelGeneration;
   }
 
   /**
-   * Internal. Side effects of `value` having been stored into `feature` (the store has already
-   * happened): takes ownership for a containment and updates the opposite reference.
+   * Side effects of `value` having been stored into `feature` (the store has already happened):
+   * takes ownership for a containment and updates the opposite reference. Called by generated
+   * code.
    */
   eDidAdd(feature: EStructuralFeature | undefined, value: unknown): void {
     EObjectImpl.modelGeneration++;
@@ -173,8 +175,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal. Side effects of `value` having been removed from `feature` (the removal has already
-   * happened): releases containment and updates the opposite reference.
+   * Side effects of `value` having been removed from `feature` (the removal has already happened):
+   * releases containment and updates the opposite reference. Called by generated code.
    */
   eDidRemove(feature: EStructuralFeature | undefined, value: unknown): void {
     EObjectImpl.modelGeneration++;
@@ -185,7 +187,7 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal. `otherEnd` now references this object through the opposite of `feature`; makes
+   * @internal `otherEnd` now references this object through the opposite of `feature`; makes
    * `feature` reference `otherEnd` too. A single-valued `feature` drops its previous value, whose
    * own opposite is cleared in turn.
    */
@@ -228,7 +230,7 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal. `otherEnd` no longer references this object through the opposite of `feature`;
+   * @internal `otherEnd` no longer references this object through the opposite of `feature`;
    * removes `otherEnd` from `feature`.
    */
   eInverseRemove(otherEnd: EObjectImpl, feature: EReference): void {
@@ -259,7 +261,7 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal. Removes this object from its container without adding it anywhere; used when it
+   * @internal Removes this object from its container without adding it anywhere; used when it
    * becomes a root of a resource.
    */
   eBasicDetachFromContainer(): void {
@@ -342,7 +344,7 @@ export abstract class EObjectImpl implements EObject {
     return this._eProxy;
   }
 
-  /** Internal. Marks this object as a proxy; called by `createProxy()`. */
+  /** @internal Marks this object as a proxy; called by `createProxy()`. */
   eSetProxy(flag: boolean): void {
     this._eProxy = flag;
   }

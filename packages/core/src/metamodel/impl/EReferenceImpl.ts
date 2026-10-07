@@ -173,6 +173,8 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 23:

@@ -75,6 +75,8 @@ export class EEnumImpl extends EDataTypeImpl implements EEnum {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 9:

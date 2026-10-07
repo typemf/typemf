@@ -54,11 +54,13 @@ export class UnmodifiableEList<T> extends BasicEList<T> {
     return super.move(fromIndex, toIndex);
   }
 
+  /** @internal */
   override basicAdd(item: T): void {
     this.rejectChange();
     super.basicAdd(item);
   }
 
+  /** @internal */
   override basicRemove(item: T): boolean {
     this.rejectChange();
     return super.basicRemove(item);

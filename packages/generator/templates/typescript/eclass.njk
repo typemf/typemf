@@ -43,7 +43,7 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 {% else %}
 {% set _ = useImport("EObjectImpl", "impl", {foundational: true}) %}
 {% endif %}
-{% set _ = useImport("BasicEList", "impl", {foundational: true}) %}
+{% if options['generate-ecore'] or hasStoredManyValuedFeature(ownFeatures) %}{% set _ = useImport("BasicEList", "impl", {foundational: true}) %}{% endif %}
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
 {% set _ = useImport("EList", "types", {foundational: true}) %}
@@ -124,6 +124,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     return this.classifierId;
   }
 
+  /** Sets the classifier's ID; called by generated packages. */
   setClassifierID(id: number): void {
     this.classifierId = id;
   }
@@ -137,6 +138,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     return this.featureId;
   }
 
+  /** Sets the feature's ID; called by generated packages. */
   setFeatureID(id: number): void {
     this.featureId = id;
   }
@@ -147,6 +149,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     return this.containerClass;
   }
 
+  /** Sets the implementation class of the declaring class; called by generated packages. */
   setContainerClass(cls: {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined): void {
     this.containerClass = cls;
   }
@@ -159,6 +162,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     return this.operationId;
   }
 
+  /** Sets the operation's ID; called by generated packages. */
   setOperationID(id: number): void {
     this.operationId = id;
   }
@@ -426,18 +430,9 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     }
   }
 
-  {#- The many-valued analog of eBasicSetValue, for the identical reason:
-      bootstrap code needs to add to a list (eStructuralFeatures,
-      eAnnotations, eSuperTypes, ...) before the feature's own metaclass
-      exists to back the ordinary getter's lazy construction. Constructs
-      the cache with no feature reference when called this way - a real,
-      narrow, deliberate limitation: containment/opposite maintenance on
-      a list built this way is unavailable, since there's no feature to
-      derive it from. Acceptable specifically because only the metamodel's
-      own self-describing bootstrap instances (EClassImpl, EAttributeImpl,
-      etc., as constructed by {Pkg}PackageImpl) ever take this path -
-      ordinary domain instances always go through the normal, fully-
-      wired getter instead, never this one. #}
+{% if options['generate-ecore'] %}
+  {#- Ecore only: the bootstrap adds to lists before the metaclasses their getters need exist. #}
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
 {% for feature in ownFeatures %}
@@ -455,6 +450,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% endif %}
     }
   }
+{% endif %}
 
   eIsSet(feature: EStructuralFeature): boolean {
     this.requireOwnFeature(feature);

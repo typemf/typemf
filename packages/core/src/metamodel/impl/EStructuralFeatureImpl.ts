@@ -32,6 +32,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
     return this.featureId;
   }
 
+  /** Sets the feature's ID; called by generated packages. */
   setFeatureID(id: number): void {
     this.featureId = id;
   }
@@ -42,6 +43,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
     return this.containerClass;
   }
 
+  /** Sets the implementation class of the declaring class; called by generated packages. */
   setContainerClass(cls: TypeScriptClass<unknown> | undefined): void {
     this.containerClass = cls;
   }
@@ -280,6 +282,8 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

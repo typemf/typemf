@@ -2,12 +2,12 @@ import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
 import { EObject } from '../metamodel/types/EObject.js';
 import { Resource } from './resource.js';
 
-/** Records `resource` as the resource of the root object `root`; used by a resource's contents list. */
+/** @internal Records `resource` as the resource of the root object `root`; used by a resource's contents list. */
 export function associateRoot(root: EObject, resource: Resource): void {
   (root as EObjectImpl).eSetDirectResource(resource);
 }
 
-/** Clears the resource recorded for `root`; used by a resource's contents list. */
+/** @internal Clears the resource recorded for `root`; used by a resource's contents list. */
 export function dissociateRoot(root: EObject): void {
   (root as EObjectImpl).eSetDirectResource(undefined);
 }

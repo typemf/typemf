@@ -104,6 +104,7 @@ export class ResourceImpl implements Resource {
     return this.serializer;
   }
 
+  /** @internal */
   eSetResourceSet(resourceSet: ResourceSet | undefined): void {
     this.resourceSet = resourceSet;
   }

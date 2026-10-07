@@ -210,6 +210,8 @@ export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
         throw new Error(`Feature ${String(featureId)} on EGenericType is many-valued or unknown.`);
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 1:

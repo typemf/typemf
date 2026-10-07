@@ -1227,6 +1227,11 @@ export function jsString(value: string | undefined): string {
  * properties). Converting to a plain array here avoids relying on
  * behavior that was never actually verified.
  */
+/** Whether one of `features` is many-valued and stored in a list (has no custom getter). */
+export function hasStoredManyValuedFeature(features: Iterable<EStructuralFeature>): boolean {
+  return [...features].some((feature) => feature.isMany() && featureGetter(feature) === undefined);
+}
+
 /**
  * `element`'s annotations that belong in the runtime metamodel. EMF's GenModel annotations are
  * left out, and so are the generator's own (sources starting with https://typemf.dev/generator),

@@ -53,6 +53,6 @@ export interface Resource {
   /** Clears the contents and marks the resource as not loaded, without touching storage. */
   unload(): void;
 
-  /** Called by the resource set when it adds or removes this resource; not for other callers. */
+  /** @internal Called by the resource set when it adds or removes this resource. */
   eSetResourceSet(resourceSet: ResourceSet | undefined): void;
 }

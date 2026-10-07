@@ -54,6 +54,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
     return this.operationId;
   }
 
+  /** Sets the operation's ID; called by generated packages. */
   setOperationID(id: number): void {
     this.operationId = id;
   }
@@ -168,6 +169,8 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 11:

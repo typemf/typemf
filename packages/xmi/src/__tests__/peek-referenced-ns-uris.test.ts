@@ -1,5 +1,6 @@
-import { createInstanceOf, ResourceImpl, ResourceSetImpl, URI } from '@typemf/core';
+import { createInstanceOf, ResourceSetImpl, URI } from '@typemf/core';
 import { describe, expect, it } from 'vitest';
+import { registerXmiFormat } from '../xmi-resource-factory.js';
 import { XmiSerializer } from '../xmi-serializer.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 
@@ -35,8 +36,8 @@ describe('XmiSerializer.peekReferencedNsURIs', () => {
     const library = createInstanceOf(libraryClass);
     const rs = new ResourceSetImpl();
     rs.getPackageRegistry().register(libraryPackage);
-    const resource = new ResourceImpl(URI.parse('mem:lib.xmi'), serializer);
-    resource.eSetResourceSet(rs);
+    registerXmiFormat(rs.getResourceFactoryRegistry());
+    const resource = rs.createResource(URI.parse('mem:lib.xmi'));
     resource.getContents().add(library);
     const bytes = await serializer.serialize([library], resource);
 

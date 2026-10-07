@@ -79,6 +79,8 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

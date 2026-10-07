@@ -123,13 +123,13 @@ export class BasicEList<T> implements EList<T> {
     return this.items[Symbol.iterator]();
   }
 
-  /** Internal. Adds without containment, opposite or notification side effects. */
+  /** @internal Adds without containment, opposite or notification side effects. */
   basicAdd(item: T): void {
     if (this.rejectsDuplicate(item)) return;
     this.items.push(item);
   }
 
-  /** Internal. Removes without containment, opposite or notification side effects. */
+  /** @internal Removes without containment, opposite or notification side effects. */
   basicRemove(item: T): boolean {
     const index = this.items.indexOf(item);
     if (index === -1) return false;

@@ -96,6 +96,8 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         throw new Error(`Feature ${String(featureId)} on EStringToStringMapEntry is many-valued or unknown.`);
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

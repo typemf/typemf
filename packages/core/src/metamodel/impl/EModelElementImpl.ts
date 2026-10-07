@@ -61,6 +61,8 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
         throw new Error(`Feature ${String(featureId)} on EModelElement is many-valued or unknown.`);
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 0:

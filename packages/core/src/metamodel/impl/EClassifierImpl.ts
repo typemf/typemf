@@ -41,6 +41,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     return this.classifierId;
   }
 
+  /** Sets the classifier's ID; called by generated packages. */
   setClassifierID(id: number): void {
     this.classifierId = id;
   }
@@ -245,6 +246,8 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 7:
