@@ -567,7 +567,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'string');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EBigDecimal.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -599,7 +599,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'bigint');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EBigInteger.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -733,7 +733,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number []');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'Uint8Array');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EByteArray.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -829,7 +829,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'string []');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'string | undefined');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._ECharacterObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -849,7 +849,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'unknown');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'Date');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EDate.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -1264,7 +1264,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'bigint');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._ELong.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -1302,7 +1302,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number | undefined');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'bigint | undefined');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._ELongObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -2496,6 +2496,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.unique, true);
 
+    this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
+
     this._EDataType_serializable.setFeatureID(Ids.EDataType.serializable);
     this._EDataType_serializable.setContainerClass(EDataTypeImpl);
     this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EDataType);
@@ -3191,6 +3193,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.unique, true);
 
+    this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
+
     this._EReference_resolveProxies.setFeatureID(Ids.EReference.resolveProxies);
     this._EReference_resolveProxies.setContainerClass(EReferenceImpl);
     this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
@@ -3312,6 +3316,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
 
     this._EStructuralFeature_changeable.setFeatureID(Ids.EStructuralFeature.changeable);
     this._EStructuralFeature_changeable.setContainerClass(EStructuralFeatureImpl);
@@ -3569,6 +3575,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.unique, true);
 
+    this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
+
     this._ETypedElement_ordered.setFeatureID(Ids.ETypedElement.ordered);
     this._ETypedElement_ordered.setContainerClass(ETypedElementImpl);
     this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
@@ -3597,6 +3605,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
 
     this._ETypedElement_unique.setFeatureID(Ids.ETypedElement.unique);
     this._ETypedElement_unique.setContainerClass(ETypedElementImpl);
@@ -3655,6 +3665,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, '1');
 
     this._ETypedElement_upperBound.setFeatureID(Ids.ETypedElement.upperBound);
     this._ETypedElement_upperBound.setContainerClass(ETypedElementImpl);

@@ -53,8 +53,8 @@ export interface EObject {
   eSet(feature: EStructuralFeature, value: unknown): void;
 
   /**
-   * Whether `feature` holds a value: a single-valued feature that was set and not unset since, or
-   * a many-valued feature whose list is not empty.
+   * Whether `feature` differs from its unset state: a single-valued feature holds a value other
+   * than its default, a many-valued feature's list is not empty.
    *
    * @throws Error if `feature` is not one of `eClass().getEAllStructuralFeatures()`.
    */

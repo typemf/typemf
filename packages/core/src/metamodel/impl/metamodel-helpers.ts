@@ -1,4 +1,5 @@
 import { EClass } from '../types/EClass.js';
+import { EDataType } from '../types/EDataType.js';
 import { EList } from '../types/EList.js';
 import { EObject } from '../types/EObject.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
@@ -37,4 +38,27 @@ export function setDetailValue(details: EList<EStringToStringMapEntry>, key: str
   entry.setKey(key);
   entry.setValue(value);
   details.add(entry);
+}
+
+/**
+ * Converts `literal`, the string form used in documents, to a value of `eDataType` with the
+ * factory of the data type's package, as EMF's `EcoreUtil.createFromString`. Without a factory,
+ * returns `literal` unchanged.
+ *
+ * @throws Error if `literal` is not a valid value of `eDataType`.
+ */
+export function createFromString(eDataType: EDataType, literal: string): unknown {
+  const factory = eDataType.getEPackage()?.getEFactoryInstance();
+  return factory ? factory.createFromString(eDataType, literal) : literal;
+}
+
+/**
+ * Converts `value`, a value of `eDataType`, to the string form used in documents with the factory
+ * of the data type's package, as EMF's `EcoreUtil.convertToString`. Returns `undefined` for
+ * `undefined` or `null`; without a factory, uses `String(value)`.
+ */
+export function convertToString(eDataType: EDataType, value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  const factory = eDataType.getEPackage()?.getEFactoryInstance();
+  return factory ? factory.convertToString(eDataType, value) : String(value);
 }

@@ -374,7 +374,7 @@
       <eParameters name="object" eType="#//EJavaObject"/>
       <eAnnotations source="https://typemf.dev/generator">
         <details key="documentation" value="Whether `object` is a value of this type: for a class, a model object of this class or a subclass; for a data type, a JavaScript value of the matching kind."/>
-        <details key="body" value="switch (this.eClass().getName()) {&#10;  case 'EClass':&#10;    return object instanceof EObjectImpl &amp;&amp; (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());&#10;  default:&#10;    switch (this.getName()) {&#10;      case 'EString':&#10;      case 'EChar':&#10;      case 'ECharacterObject':&#10;        return typeof object === 'string';&#10;      case 'EInt':&#10;      case 'EIntegerObject':&#10;      case 'ELong':&#10;      case 'ELongObject':&#10;      case 'EDouble':&#10;      case 'EDoubleObject':&#10;      case 'EFloat':&#10;      case 'EFloatObject':&#10;      case 'EShort':&#10;      case 'EShortObject':&#10;      case 'EByte':&#10;      case 'EByteObject':&#10;        return typeof object === 'number';&#10;      case 'EBigInteger':&#10;        return typeof object === 'bigint';&#10;      case 'EBoolean':&#10;      case 'EBooleanObject':&#10;        return typeof object === 'boolean';&#10;      case 'EDate':&#10;        return object instanceof Date;&#10;      default:&#10;        return object !== undefined &amp;&amp; object !== null;&#10;    }&#10;}"/>
+        <details key="body" value="switch (this.eClass().getName()) {&#10;  case 'EClass':&#10;    return object instanceof EObjectImpl &amp;&amp; (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());&#10;  case 'EEnum':&#10;    return typeof object === 'string' &amp;&amp; (this as unknown as EEnum).getEEnumLiteralByLiteral(object) !== undefined;&#10;  default:&#10;    switch (this.getName()) {&#10;      case 'EString':&#10;      case 'EChar':&#10;      case 'ECharacterObject':&#10;      case 'EBigDecimal':&#10;        return typeof object === 'string';&#10;      case 'EInt':&#10;      case 'EIntegerObject':&#10;      case 'EDouble':&#10;      case 'EDoubleObject':&#10;      case 'EFloat':&#10;      case 'EFloatObject':&#10;      case 'EShort':&#10;      case 'EShortObject':&#10;      case 'EByte':&#10;      case 'EByteObject':&#10;        return typeof object === 'number';&#10;      case 'ELong':&#10;      case 'ELongObject':&#10;      case 'EBigInteger':&#10;        return typeof object === 'bigint';&#10;      case 'EBoolean':&#10;      case 'EBooleanObject':&#10;        return typeof object === 'boolean';&#10;      case 'EDate':&#10;        return object instanceof Date;&#10;      case 'EByteArray':&#10;        return object instanceof Uint8Array;&#10;      default:&#10;        return object !== undefined &amp;&amp; object !== null;&#10;    }&#10;}"/>
       </eAnnotations>
         <eAnnotations source="https://typemf.dev/generator/import">
           <details key="type" value="EObjectImpl"/>
@@ -385,6 +385,11 @@
           <details key="type" value="EObject"/>
           <details key="from" value="@typemf/core"/>
           <details key="internal-from" value="./types/EObject"/>
+        </eAnnotations>
+        <eAnnotations source="https://typemf.dev/generator/import">
+          <details key="type" value="EEnum"/>
+          <details key="from" value="@typemf/core"/>
+          <details key="internal-from" value="./types/EEnum"/>
         </eAnnotations>
       </eOperations>
     <eOperations name="getClassifierID" eType="#//EInt">
@@ -415,6 +420,14 @@
         changeable="false" volatile="true" transient="true" derived="true">
       <eAnnotations source="https://typemf.dev/generator">
         <details key="documentation" value="The value of an unset feature of this type, e.g. `0` for a numeric data type, `false` for `EBoolean` and `undefined` for a class."/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="switch (this.eClass().getName()) {&#10;  case 'EEnum': {&#10;    const first = (this as unknown as EEnum).getELiterals().toArray().at(0);&#10;    return first?.getLiteral();&#10;  }&#10;  case 'EDataType':&#10;    break;&#10;  default:&#10;    return undefined;&#10;}&#10;switch (this.getName()) {&#10;  case 'EBoolean':&#10;    return false;&#10;  case 'EInt':&#10;  case 'EFloat':&#10;  case 'EDouble':&#10;  case 'EShort':&#10;  case 'EByte':&#10;    return 0;&#10;  case 'ELong':&#10;    return 0n;&#10;  default:&#10;    return undefined;&#10;}"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="EEnum"/>
+        <details key="from" value="@typemf/core"/>
+        <details key="internal-from" value="./types/EEnum"/>
       </eAnnotations>
     </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="instanceTypeName" eType="#//EString"
@@ -538,7 +551,11 @@
       <eParameters name="literalValue" eType="#//EString"/>
       <eAnnotations source="https://typemf.dev/generator">
         <details key="documentation" value="Converts `literalValue`, the string form used in documents, to a value of `eDataType`.&#10;&#10;@throws Error if `eDataType` belongs to another package."/>
-        <details key="body" value="if (this.getEPackage() !== undefined &amp;&amp; eDataType.getEPackage() !== this.getEPackage()) {&#10;  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);&#10;}&#10;switch (eDataType.getName()) {&#10;  case 'EString':&#10;    return literalValue;&#10;  case 'EInt':&#10;  case 'EIntegerObject':&#10;  case 'ELong':&#10;  case 'ELongObject':&#10;  case 'EDouble':&#10;  case 'EDoubleObject':&#10;  case 'EFloat':&#10;  case 'EFloatObject':&#10;  case 'EShort':&#10;  case 'EShortObject':&#10;  case 'EByte':&#10;  case 'EByteObject':&#10;    return Number(literalValue);&#10;  case 'EBigInteger':&#10;    return BigInt(literalValue);&#10;  case 'EBoolean':&#10;  case 'EBooleanObject':&#10;    return literalValue === 'true';&#10;  case 'EChar':&#10;  case 'ECharacterObject':&#10;    return literalValue.charAt(0);&#10;  case 'EDate':&#10;    return new Date(literalValue);&#10;  default:&#10;    return literalValue;&#10;}"/>
+        <details key="body" value="if (this.getEPackage() !== undefined &amp;&amp; eDataType.getEPackage() !== this.getEPackage()) {&#10;  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);&#10;}&#10;const invalid = (): Error =&gt; new Error(`'${literalValue}' is not a valid value of the datatype '${eDataType.getName()}'.`);&#10;const text = literalValue.trim();&#10;const integer = (min?: bigint, max?: bigint): bigint =&gt; {&#10;  if (!/^[+-]?\d+$/.test(text)) throw invalid();&#10;  const value = BigInt(text);&#10;  if ((min !== undefined &amp;&amp; value &lt; min) || (max !== undefined &amp;&amp; value &gt; max)) throw invalid();&#10;  return value;&#10;};&#10;const decimal = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;&#10;if (isEEnum(eDataType)) {&#10;  const literal = eDataType.getEEnumLiteralByLiteral(literalValue);&#10;  if (literal === undefined) throw invalid();&#10;  return literal.getLiteral();&#10;}&#10;switch (eDataType.getName()) {&#10;  case 'EString':&#10;    return literalValue;&#10;  case 'EInt':&#10;  case 'EIntegerObject':&#10;    return Number(integer(-2147483648n, 2147483647n));&#10;  case 'EShort':&#10;  case 'EShortObject':&#10;    return Number(integer(-32768n, 32767n));&#10;  case 'EByte':&#10;  case 'EByteObject':&#10;    return Number(integer(-128n, 127n));&#10;  case 'ELong':&#10;  case 'ELongObject':&#10;    return integer(-9223372036854775808n, 9223372036854775807n);&#10;  case 'EBigInteger':&#10;    return integer();&#10;  case 'EDouble':&#10;  case 'EDoubleObject':&#10;  case 'EFloat':&#10;  case 'EFloatObject':&#10;    if (text === 'NaN') return NaN;&#10;    if (text === 'INF' || text === 'Infinity') return Infinity;&#10;    if (text === '-INF' || text === '-Infinity') return -Infinity;&#10;    if (!decimal.test(text)) throw invalid();&#10;    return Number(text);&#10;  case 'EBigDecimal':&#10;    if (!decimal.test(text)) throw invalid();&#10;    return text;&#10;  case 'EBoolean':&#10;  case 'EBooleanObject':&#10;    if (text.toLowerCase() === 'true') return true;&#10;    if (text.toLowerCase() === 'false') return false;&#10;    throw invalid();&#10;  case 'EChar':&#10;  case 'ECharacterObject':&#10;    if (literalValue.length !== 1) throw invalid();&#10;    return literalValue;&#10;  case 'EDate': {&#10;    const date = new Date(text);&#10;    if (Number.isNaN(date.getTime())) throw invalid();&#10;    return date;&#10;  }&#10;  case 'EByteArray': {&#10;    if (!/^([0-9a-fA-F]{2})*$/.test(text)) throw invalid();&#10;    const bytes = new Uint8Array(text.length / 2);&#10;    for (let i = 0; i &lt; bytes.length; i++) bytes[i] = parseInt(text.slice(2 * i, 2 * i + 2), 16);&#10;    return bytes;&#10;  }&#10;  default:&#10;    return literalValue;&#10;}"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEEnum"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
       </eAnnotations>
     </eOperations>
     <eOperations name="convertToString" eType="#//EString">
@@ -546,7 +563,7 @@
       <eParameters name="instanceValue" eType="#//EJavaObject"/>
       <eAnnotations source="https://typemf.dev/generator">
         <details key="documentation" value="Converts `instanceValue`, a value of `eDataType`, to the string form used in documents.&#10;&#10;@throws Error if `eDataType` belongs to another package."/>
-        <details key="body" value="if (this.getEPackage() !== undefined &amp;&amp; eDataType.getEPackage() !== this.getEPackage()) {&#10;  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);&#10;}&#10;if (eDataType.getName() === 'EDate' &amp;&amp; instanceValue instanceof Date) {&#10;  return instanceValue.toISOString();&#10;}&#10;return String(instanceValue);"/>
+        <details key="body" value="if (this.getEPackage() !== undefined &amp;&amp; eDataType.getEPackage() !== this.getEPackage()) {&#10;  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);&#10;}&#10;if (instanceValue === undefined || instanceValue === null) return undefined;&#10;if (instanceValue instanceof Date) return instanceValue.toISOString();&#10;if (instanceValue instanceof Uint8Array) {&#10;  return [...instanceValue].map((byte) =&gt; byte.toString(16).padStart(2, '0').toUpperCase()).join('');&#10;}&#10;return String(instanceValue);"/>
       </eAnnotations>
     </eOperations>
     <eStructuralFeatures xsi:type="ecore:EReference" name="ePackage" lowerBound="1"
@@ -842,6 +859,13 @@
       <eAnnotations source="https://typemf.dev/generator">
         <details key="documentation" value="The value of the feature while it is unset: `defaultValueLiteral` converted to the feature's type, or else the type's default value."/>
       </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/feature">
+        <details key="get" value="const type = this.getEType();&#10;if (type === undefined || this.isMany()) return undefined;&#10;const literal = this.getDefaultValueLiteral();&#10;const factory = type.getEPackage()?.getEFactoryInstance();&#10;if (literal !== undefined &amp;&amp; factory !== undefined &amp;&amp; isEDataType(type)) return factory.createFromString(type, literal);&#10;return type.getDefaultValue();"/>
+      </eAnnotations>
+      <eAnnotations source="https://typemf.dev/generator/import">
+        <details key="type" value="isEDataType"/>
+        <details key="internal-from" value="./util/EcoreTypeGuards.js"/>
+      </eAnnotations>
     </eStructuralFeatures>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="unsettable" eType="#//EBoolean">
       <eAnnotations source="https://typemf.dev/generator">
@@ -934,7 +958,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#decimal"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="number"/>
+      <details key="type" value="string"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EBigInteger" instanceClassName="java.math.BigInteger">
@@ -942,7 +966,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#integer"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="number"/>
+      <details key="type" value="bigint"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EBoolean" instanceClassName="boolean">
@@ -975,7 +999,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#hexBinary"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="number []"/>
+      <details key="type" value="Uint8Array"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EByteObject" instanceClassName="java.lang.Byte">
@@ -998,12 +1022,12 @@
       <details key="name" value="EChar:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="string []"/>
+      <details key="type" value="string | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EDate" instanceClassName="java.util.Date">
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="unknown"/>
+      <details key="type" value="Date"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EDiagnosticChain" instanceClassName="org.eclipse.emf.common.util.DiagnosticChain"
@@ -1107,7 +1131,7 @@
       <details key="baseType" value="http://www.w3.org/2001/XMLSchema#long"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="number"/>
+      <details key="type" value="bigint"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="ELongObject" instanceClassName="java.lang.Long">
@@ -1116,7 +1140,7 @@
       <details key="name" value="ELong:Object"/>
     </eAnnotations>
     <eAnnotations source="https://typemf.dev/generator">
-      <details key="type" value="number | undefined"/>
+      <details key="type" value="bigint | undefined"/>
     </eAnnotations>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EDataType" name="EMap" instanceClassName="java.util.Map"

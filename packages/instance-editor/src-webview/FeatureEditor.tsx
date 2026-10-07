@@ -83,8 +83,6 @@ const BOOLEAN_TYPE_NAMES = ['EBoolean', 'EBooleanObject'];
 const NUMERIC_TYPE_NAMES = [
   'EInt',
   'EIntegerObject',
-  'ELong',
-  'ELongObject',
   'EDouble',
   'EDoubleObject',
   'EFloat',
@@ -93,9 +91,9 @@ const NUMERIC_TYPE_NAMES = [
   'EShortObject',
   'EByte',
   'EByteObject',
-  'EBigInteger',
-  'EBigDecimal',
 ];
+/** Integer types whose values are `bigint`. */
+const BIGINT_TYPE_NAMES = ['ELong', 'ELongObject', 'EBigInteger'];
 
 /** A reasonable, type-appropriate starting value for "+ Add" on a multi-valued attribute -
  *  false/0/'' rather than always an empty string regardless of type, a real, confirmed gap found
@@ -103,6 +101,8 @@ const NUMERIC_TYPE_NAMES = [
 function defaultValueFor(typeName: string | undefined): unknown {
   if (typeName && BOOLEAN_TYPE_NAMES.includes(typeName)) return false;
   if (typeName && NUMERIC_TYPE_NAMES.includes(typeName)) return 0;
+  if (typeName && BIGINT_TYPE_NAMES.includes(typeName)) return 0n;
+  if (typeName === 'EBigDecimal') return '0';
   return '';
 }
 
@@ -166,12 +166,48 @@ function ValueEditor({
     );
   }
 
+  if (typeName && BIGINT_TYPE_NAMES.includes(typeName)) {
+    return <BigIntInput value={typeof value === 'bigint' ? value : undefined} onChange={onChange} />;
+  }
+
   return (
     <input
       className="feature-input"
       type="text"
       value={typeof value === 'string' ? value : ''}
       onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+/**
+ * A text field for a `bigint` value, committed on blur or Enter: an empty field unsets the value,
+ * text that is not an integer is discarded. Remounted (via `key`) whenever the value changes.
+ */
+function BigIntInput({
+  value,
+  onChange,
+}: {
+  value: bigint | undefined;
+  onChange: (v: unknown) => void;
+}): React.JSX.Element {
+  const commit = (input: HTMLInputElement): void => {
+    const text = input.value.trim();
+    if (text === '') onChange(undefined);
+    else if (/^[+-]?\d+$/.test(text)) onChange(BigInt(text));
+    else input.value = value?.toString() ?? '';
+  };
+  return (
+    <input
+      key={value?.toString() ?? ''}
+      className="feature-input"
+      type="text"
+      inputMode="numeric"
+      defaultValue={value?.toString() ?? ''}
+      onBlur={(e) => commit(e.currentTarget)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit(e.currentTarget);
+      }}
     />
   );
 }

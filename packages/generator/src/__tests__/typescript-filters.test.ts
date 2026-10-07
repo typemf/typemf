@@ -1,4 +1,11 @@
-import { EAnnotationImpl, EAttributeImpl, EOperationImpl, EParameterImpl, setDetailValue } from '@typemf/core';
+import {
+  EAnnotationImpl,
+  EAttributeImpl,
+  EcorePackageImpl,
+  EOperationImpl,
+  EParameterImpl,
+  setDetailValue,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import {
   argList,
@@ -11,6 +18,7 @@ import {
   operationBody,
   trivialDerivedFormula,
   paramList,
+  primitiveDefaultValue,
   tsFeatureType,
   tsScalarType,
 } from '../typescript-filters.js';
@@ -258,5 +266,35 @@ describe('jsString', () => {
     expect(eval(jsString('it\'s a "test" with\nnewlines and \\backslashes\\'))).toBe(
       'it\'s a "test" with\nnewlines and \\backslashes\\'
     );
+  });
+});
+
+describe('primitiveDefaultValue', () => {
+  const ecore = EcorePackageImpl.eINSTANCE;
+  function attribute(type: ReturnType<typeof ecore.getEInt>, literal?: string): EAttributeImpl {
+    const attr = new EAttributeImpl();
+    attr.setName('a');
+    attr.setEType(type);
+    if (literal !== undefined) attr.setDefaultValueLiteral(literal);
+    return attr;
+  }
+
+  it('emits the zero value of the type without a defaultValueLiteral', () => {
+    expect(primitiveDefaultValue(attribute(ecore.getEBoolean()))).toBe('false');
+    expect(primitiveDefaultValue(attribute(ecore.getEInt()))).toBe('0');
+    expect(primitiveDefaultValue(attribute(ecore.getELong()))).toBe('0n');
+  });
+
+  it('emits the defaultValueLiteral as a TypeScript literal of the type', () => {
+    expect(primitiveDefaultValue(attribute(ecore.getEBoolean(), 'TRUE'))).toBe('true');
+    expect(primitiveDefaultValue(attribute(ecore.getEDouble(), '2.50'))).toBe('2.5');
+    expect(primitiveDefaultValue(attribute(ecore.getELong(), '9007199254740993'))).toBe('9007199254740993n');
+  });
+
+  it('throws for a defaultValueLiteral that is not a valid value', () => {
+    expect(() => primitiveDefaultValue(attribute(ecore.getEInt(), 'many')).toString()).toThrow(
+      /Invalid defaultValueLiteral/
+    );
+    expect(() => primitiveDefaultValue(attribute(ecore.getELong(), '1.5'))).toThrow(/Invalid defaultValueLiteral/);
   });
 });

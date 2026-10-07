@@ -464,17 +464,32 @@ export function isPrimitiveValueType(classifier: EClassifier | undefined): boole
 }
 
 /**
- * The feature's own declared `defaultValueLiteral` when it has one (e.g. `changeable`'s real
- * declared default is "true", not the generic zero-default) - otherwise 'false' for EBoolean, '0' for
- * every other primitive numeric EDataType (the real Java-primitive zero-default). Used as a stored
- * field's initial value instead of `undefined`.
+ * The initial value of a stored field of a primitive data type, as TypeScript source: the
+ * feature's `defaultValueLiteral` if it has one, else `false` for EBoolean, `0n` for ELong and
+ * `0` for the other numeric types.
+ *
+ * @throws Error if the `defaultValueLiteral` is not a valid value of the type.
  */
 export function primitiveDefaultValue(feature: ETypedElement): string {
-  const literal =
-    'getDefaultValueLiteral' in feature ? (feature as EStructuralFeature).getDefaultValueLiteral() : undefined;
-  if (literal !== undefined && literal !== '') return literal;
-  const classifier = feature.getEType();
-  return classifier?.getName() === 'EBoolean' ? 'false' : '0';
+  const declared =
+    'getDefaultValueLiteral' in feature ? (feature as EStructuralFeature).getDefaultValueLiteral()?.trim() : undefined;
+  const literal = declared === '' ? undefined : declared;
+  const typeName = feature.getEType()?.getName();
+  const invalid = () => new Error(`Invalid defaultValueLiteral '${literal}' for feature '${feature.getName()}'.`);
+  if (typeName === 'EBoolean') {
+    if (literal === undefined) return 'false';
+    if (!/^(true|false)$/i.test(literal)) throw invalid();
+    return literal.toLowerCase();
+  }
+  if (typeName === 'ELong') {
+    if (literal === undefined) return '0n';
+    if (!/^[+-]?\d+$/.test(literal)) throw invalid();
+    return `${BigInt(literal)}n`;
+  }
+  if (literal === undefined) return '0';
+  const value = Number(literal);
+  if (Number.isNaN(value)) throw invalid();
+  return String(value);
 }
 
 /**

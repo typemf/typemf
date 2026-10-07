@@ -1,4 +1,15 @@
-import { createInstanceOf, EObject, ResourceSetImpl, URI, UriConverter } from '@typemf/core';
+import {
+  createInstanceOf,
+  DynamicEFactoryImpl,
+  EAttributeImpl,
+  EClassImpl,
+  EcorePackageImpl,
+  EObject,
+  EPackageImpl,
+  ResourceSetImpl,
+  URI,
+  UriConverter,
+} from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { registerJsonFormat } from '../json-resource-factory.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
@@ -334,5 +345,68 @@ describe('JsonSerializer', () => {
       expect(resource.getErrors()).toHaveLength(1);
       expect(resource.getErrors()[0]!.message).toContain("missing or malformed '$roots'");
     });
+  });
+});
+
+describe('data values', () => {
+  function counterPackage() {
+    const ecore = EcorePackageImpl.eINSTANCE;
+    const counter = new EClassImpl();
+    counter.setName('Counter');
+    const count = new EAttributeImpl();
+    count.setName('count');
+    count.setEType(ecore.getELong());
+    counter.getEStructuralFeatures().add(count);
+    const pkg = new EPackageImpl();
+    pkg.setName('counters');
+    pkg.setNsURI('https://typemf.dev/samples/counters');
+    pkg.setNsPrefix('cnt');
+    pkg.getEClassifiers().add(counter);
+    pkg.setEFactoryInstance(new DynamicEFactoryImpl());
+    return { pkg, counter, count };
+  }
+
+  it('round-trips an ELong beyond the range of a JavaScript number exactly', async () => {
+    const { pkg, counter, count } = counterPackage();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(pkg);
+    const uri = URI.parse('mem:counter.json');
+    const resource = rs.createResource(uri);
+    const obj = createInstanceOf(counter);
+    obj.eSet(count, 9007199254740993n);
+    resource.getContents().add(obj);
+    await resource.save();
+
+    const fresh = newResourceSet(converter);
+    fresh.getPackageRegistry().register(pkg);
+    const loaded = await fresh.getResource(uri, true);
+    expect(loaded!.getContents().get(0).eGet(count)).toBe(9007199254740993n);
+  });
+
+  it('records an invalid value as an error, leaves the feature unset and loads the rest', async () => {
+    const { pkg, counter, count } = counterPackage();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(pkg);
+    const uri = URI.parse('mem:invalid.json');
+    await converter.writeBinary(
+      uri,
+      new TextEncoder().encode(
+        JSON.stringify({
+          $namespaces: { cnt: 'https://typemf.dev/samples/counters' },
+          $roots: [{ $eClass: { namespace: 'cnt', name: 'Counter' }, count: 'twelve' }],
+        })
+      )
+    );
+
+    const resource = rs.createResource(uri);
+    await resource.load();
+
+    const obj = resource.getContents().get(0);
+    expect(obj.eClass()).toBe(counter);
+    expect(obj.eIsSet(count)).toBe(false);
+    expect(resource.getErrors()).toHaveLength(1);
+    expect(resource.getErrors()[0]!.message).toContain("'twelve' is not a valid value of the datatype 'ELong'");
   });
 });

@@ -327,6 +327,9 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {{ bootstrapSet(fieldExpr, "setChangeable", "Ids.EStructuralFeature.changeable", feature.isChangeable()) }}
 {{ bootstrapSet(fieldExpr, "setOrdered", "Ids.ETypedElement.ordered", feature.isOrdered()) }}
 {{ bootstrapSet(fieldExpr, "setUnique", "Ids.ETypedElement.unique", feature.isUnique()) }}
+{% if feature.getDefaultValueLiteral() !== undefined %}
+{{ bootstrapSet(fieldExpr, "setDefaultValueLiteral", "Ids.EStructuralFeature.defaultValueLiteral", jsString(feature.getDefaultValueLiteral())) }}
+{% endif %}
     {{ fieldExpr }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
     {#- containerClass: the concrete implementation class the feature is declared on - the closest
         TypeScript has to Java's own containerClass semantics (Class<?>, e.g. EClassifier.class in the
