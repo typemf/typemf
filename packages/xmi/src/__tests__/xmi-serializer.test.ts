@@ -47,6 +47,12 @@ function newResourceSet(converter: UriConverter): ResourceSetImpl {
   return rs;
 }
 
+function newResourceSetWithEcore(converter: UriConverter): ResourceSetImpl {
+  const rs = newResourceSet(converter);
+  rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
+  return rs;
+}
+
 describe('XmiSerializer', () => {
   it('round-trips attributes and containment, with namespaces declared on the root', async () => {
     const { libraryPackage, libraryClass, bookClass, booksRef, titleAttr, publishedAttr } = buildSampleMetamodel();
@@ -103,7 +109,7 @@ describe('XmiSerializer', () => {
     await resource.save();
 
     const raw = new TextDecoder().decode(await converter.readBinary(uri));
-    expect(raw).toContain('featuredBook="Dune"');
+    expect(raw).toContain('featuredBook="#Dune"');
 
     const freshSet = newResourceSet(converter);
     freshSet.getPackageRegistry().register(libraryPackage);
@@ -129,7 +135,7 @@ describe('XmiSerializer', () => {
     await resource.save();
 
     const raw = new TextDecoder().decode(await converter.readBinary(uri));
-    expect(raw).toContain('featuredBook="//@books.0"');
+    expect(raw).toContain('featuredBook="#//@books.0"');
 
     const freshSet = newResourceSet(converter);
     freshSet.getPackageRegistry().register(libraryPackage);
@@ -423,7 +429,6 @@ describe('XmiSerializer', () => {
     const rs = newResourceSet(converter);
     rs.getPackageRegistry().register(libraryPackage);
 
-    // EMF writes same-document references with a leading "#"; the serializer doesn't.
     const raw = `<?xml version="1.0" encoding="UTF-8"?>
 <lib:Library xmi:version="2.0"
     xmlns:xmi="http://www.omg.org/XMI"
@@ -516,6 +521,100 @@ describe('XmiSerializer', () => {
     const xml = new TextDecoder().decode(bytes);
 
     expect(xml).not.toContain('schemaLocation');
+  });
+
+  describe('name paths into subpackages', () => {
+    const ROOT = `<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    name="root" nsURI="https://example.org/root" nsPrefix="root">
+  <eSubpackages name="api" nsURI="https://example.org/root/api" nsPrefix="api">
+    <eClassifiers xsi:type="ecore:EClass" name="Problem">
+      <eOperations name="emptySolution" eType="#//api/Solution"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="detail" eType="#//api/inner/Detail"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Solution"/>
+    <eSubpackages name="inner" nsURI="https://example.org/root/api/inner" nsPrefix="inner">
+      <eClassifiers xsi:type="ecore:EClass" name="Detail"/>
+    </eSubpackages>
+  </eSubpackages>
+</ecore:EPackage>`;
+
+    const OTHER = `<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    name="other" nsURI="https://example.org/other" nsPrefix="other">
+  <eClassifiers xsi:type="ecore:EClass" name="User">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="detail" eType="ecore:EClass root.ecore#//api/inner/Detail"/>
+  </eClassifiers>
+</ecore:EPackage>`;
+
+    const rootUri = URI.parse('mem:/models/root.ecore');
+
+    async function setUp() {
+      const converter = new InMemoryUriConverter();
+      await converter.writeBinary(rootUri, new TextEncoder().encode(ROOT));
+      await converter.writeBinary(URI.parse('mem:/models/other.ecore'), new TextEncoder().encode(OTHER));
+      const rs = newResourceSet(converter);
+      rs.getPackageRegistry().register(EcorePackageImpl.eINSTANCE);
+      return { converter, rs };
+    }
+
+    function elements(root: EPackage) {
+      const api = root.getESubpackages().get(0);
+      const inner = api.getESubpackages().get(0);
+      const problem = api.getEClassifier('Problem') as EClass;
+      return {
+        solution: api.getEClassifier('Solution'),
+        detail: inner.getEClassifier('Detail'),
+        emptySolution: problem.getEOperations().get(0),
+        detailRef: problem.getEStructuralFeature('detail')!,
+      };
+    }
+
+    it('resolves same-document references at any depth', async () => {
+      const { rs } = await setUp();
+      const resource = await rs.getResource(rootUri, true);
+
+      expect(resource!.getErrors()).toEqual([]);
+      const { solution, detail, emptySolution, detailRef } = elements(
+        resource!.getContents().get(0) as unknown as EPackage
+      );
+      expect(emptySolution.getEType()).toBe(solution);
+      expect(detailRef.getEType()).toBe(detail);
+    });
+
+    it('resolves a reference from another document', async () => {
+      const { rs } = await setUp();
+      const other = await rs.getResource(URI.parse('mem:/models/other.ecore'), true);
+      const user = (other!.getContents().get(0) as unknown as EPackage).getEClassifier('User') as EClass;
+      const proxy = user.getEStructuralFeature('detail')!.getEType() as EObject;
+
+      const resolved = await rs.resolve(proxy);
+
+      const root = (await rs.getResource(rootUri, false))!.getContents().get(0) as unknown as EPackage;
+      expect(resolved).toBe(elements(root).detail);
+    });
+
+    it('writes name paths and reads them back', async () => {
+      const { converter, rs } = await setUp();
+      const resource = await rs.getResource(rootUri, true);
+      const savedUri = URI.parse('mem:/models/saved.ecore');
+      const saved = rs.createResource(savedUri);
+      saved.getContents().addAll(resource!.getContents().toArray());
+      await saved.save();
+
+      const xml = new TextDecoder().decode(await converter.readBinary(savedUri));
+      expect(xml).toContain('eType="#//api/Solution"');
+      expect(xml).toContain('eType="#//api/inner/Detail"');
+
+      const reloaded = await newResourceSetWithEcore(converter).getResource(savedUri, true);
+      expect(reloaded!.getErrors()).toEqual([]);
+      const { solution, emptySolution } = elements(reloaded!.getContents().get(0) as unknown as EPackage);
+      expect(emptySolution.getEType()).toBe(solution);
+    });
   });
 
   describe('diagnostics instead of silent data loss or an aborted load', () => {

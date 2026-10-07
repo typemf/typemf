@@ -1,4 +1,4 @@
-import { createInstanceOf, EClassImpl, EObject, EPackageImpl, EReferenceImpl } from '@typemf/core';
+import { createInstanceOf, EClassImpl, EcoreFactoryImpl, EObject, EPackageImpl, EReferenceImpl } from '@typemf/core';
 import { describe, expect, it } from 'vitest';
 import { computeEmfFragment, resolveEmfFragment } from '../emf-fragment.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
@@ -105,5 +105,26 @@ describe('resolveEmfFragment - name-based form', () => {
   it('still resolves the positional form "//@feature.index"', () => {
     const { pkg, foo } = buildPackage();
     expect(resolveEmfFragment('//@eClassifiers.0', [pkg])).toBe(foo);
+  });
+
+  it('addresses named Ecore elements by name, and by position when a sibling has the same name', () => {
+    const factory = new EcoreFactoryImpl();
+    const root = factory.createEPackage();
+    root.setName('root');
+    const api = factory.createEPackage();
+    api.setName('api');
+    root.getESubpackages().add(api);
+    const solution = factory.createEClass();
+    solution.setName('Solution');
+    const twin = factory.createEClass();
+    twin.setName('Solution');
+    api.getEClassifiers().add(solution);
+
+    expect(computeEmfFragment(solution, [root])).toBe('//api/Solution');
+    expect(resolveEmfFragment('//api/Solution', [root])).toBe(solution);
+
+    api.getEClassifiers().add(twin);
+    expect(computeEmfFragment(twin, [root])).toBe('//api/@eClassifiers.1');
+    expect(resolveEmfFragment('//api/@eClassifiers.1', [root])).toBe(twin);
   });
 });

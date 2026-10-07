@@ -1,8 +1,8 @@
-import { EClassifier } from '../metamodel/types/EClassifier.js';
+import { EPackage } from '../metamodel/types/EPackage.js';
 import { EObject } from '../metamodel/types/EObject.js';
 import { EStructuralFeature } from '../metamodel/types/EStructuralFeature.js';
 import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
-import { isEClass } from '../metamodel/util/EcoreTypeGuards.js';
+import { isEClass, isENamedElement } from '../metamodel/util/EcoreTypeGuards.js';
 import { EPackageRegistry } from '../registry/epackage-registry.js';
 import { EPackageRegistryImpl } from '../registry/epackage-registry-impl.js';
 import { resolveFragment } from './eobject-address.js';
@@ -159,22 +159,24 @@ function isUnresolvedProxy(value: unknown): value is EObject {
 }
 
 /**
- * The element of `pkg` that an EMF name path addresses: `//Class` for a classifier, `//Class/name`
- * for a feature of a class.
+ * The element of `pkg` that an EMF name path addresses: each segment names an element contained in
+ * the previous one, as in `//Class`, `//Class/feature`, `//sub/Class` or `//Enum/LITERAL`. A
+ * feature of a class can also be one it inherits.
  */
-export function resolveAgainstPackage(
-  pkg: { getEClassifier(name: string): EClassifier | undefined },
-  fragment: string
-): EObject | undefined {
+export function resolveAgainstPackage(pkg: EPackage, fragment: string): EObject | undefined {
   const segments = fragment
     .replace(/^\/+/, '')
     .split('/')
     .filter((s) => s.length > 0);
   if (segments.length === 0) return undefined;
 
-  const classifier = pkg.getEClassifier(segments[0]!);
-  if (segments.length === 1) return classifier;
-  if (!classifier || !isEClass(classifier)) return undefined;
-
-  return classifier.getEStructuralFeature(segments[1]!);
+  let current: EObject | undefined = pkg;
+  for (const name of segments) {
+    const container: EObject = current;
+    current =
+      container.eContents().find((child) => isENamedElement(child) && child.getName() === name) ??
+      (isEClass(container) ? container.getEStructuralFeature(name) : undefined);
+    if (!current) return undefined;
+  }
+  return current;
 }
