@@ -5,6 +5,7 @@ import {
   EClassImpl,
   EcorePackageImpl,
   EObject,
+  getProxyURI,
   EPackageImpl,
   ResourceSetImpl,
   URI,
@@ -155,7 +156,7 @@ describe('JsonSerializer', () => {
     await resourceB.save();
 
     const raw = JSON.parse(new TextDecoder().decode(await converter.readBinary(uriB)));
-    expect(raw.$roots[0].featuredBook.$ref).toBe('mem:library-a.json#Book_Dune');
+    expect(raw.$roots[0].featuredBook.$ref).toBe('library-a.json#Book_Dune');
 
     const freshSet = newResourceSet(converter);
     freshSet.getPackageRegistry().register(libraryPackage);
@@ -170,6 +171,53 @@ describe('JsonSerializer', () => {
     expect(resolved.eIsProxy()).toBe(false);
     expect(resolved.eGet(titleAttr)).toBe('Dune');
     expect(freshSet.getResources()).toHaveLength(2);
+  });
+
+  it('keeps references between documents working after their folder is moved', async () => {
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(libraryPackage);
+
+    const uriA = URI.parse('mem:/old/a/sub/library-a.json');
+    const resourceA = rs.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(v: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+    await resourceA.save();
+
+    const uriB = URI.parse('mem:/old/b/library-b.json');
+    const resourceB = rs.createResource(uriB);
+    const libraryB = createInstanceOf(libraryClass);
+    libraryB.eSet(featuredBookRef, book);
+    resourceB.getContents().add(libraryB);
+    await resourceB.save();
+
+    const refOf = async (uri: URI) =>
+      JSON.parse(new TextDecoder().decode(await converter.readBinary(uri))).$roots[0].featuredBook.$ref;
+    expect(await refOf(uriB)).toBe('../a/sub/library-a.json#Book_Dune');
+
+    // Move both documents to another folder.
+    const movedA = URI.parse('mem:/new/a/sub/library-a.json');
+    const movedB = URI.parse('mem:/new/b/library-b.json');
+    await converter.writeBinary(movedA, await converter.readBinary(uriA));
+    await converter.writeBinary(movedB, await converter.readBinary(uriB));
+
+    const freshSet = newResourceSet(converter);
+    freshSet.getPackageRegistry().register(libraryPackage);
+    const loadedB = await freshSet.getResource(movedB, true);
+    const featuredBook = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    expect(getProxyURI(featuredBook)?.trimFragment().toString()).toBe(movedA.toString());
+
+    // Saved again without loading the target, the reference stays relative.
+    await loadedB!.save();
+    expect(await refOf(movedB)).toBe(await refOf(uriB));
+
+    const resolved = await freshSet.resolve(featuredBook);
+    expect(resolved.eGet(titleAttr)).toBe('Dune');
+    expect(resolved.eResource()?.getURI().toString()).toBe(movedA.toString());
   });
 
   it("writes $eClass on a $ref only when the target's type differs from the feature type", async () => {

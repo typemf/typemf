@@ -16,7 +16,7 @@ import {
   getProxyURI,
   type EObjectSerializer,
 } from '@typemf/core';
-import { allStructuralFeaturesOf, computeEmfFragment, resolveEmfFragment } from './emf-fragment.js';
+import { allStructuralFeaturesOf, computeEmfFragment, nameSegmentAmong, resolveEmfFragment } from './emf-fragment.js';
 import { NamespaceCollector } from './namespace-collector.js';
 import { escapeAttributeValue, escapeText } from './xml-text.js';
 import { parseXmlDocument } from './xml-dom.js';
@@ -262,11 +262,8 @@ function writeObjectParts(
         childrenXml += renderElement({ tagName: feature.getName() as string, attributes: attrs, childrenXml: '' });
       }
     } else {
-      const anyPolymorphic = encoded.some((e) => e.xsiType);
-      const tokens = encoded.map((e) =>
-        anyPolymorphic ? `${e.xsiType ?? sameTypeToken(refFeature, namespaces)} ${e.value}` : e.value
-      );
-      attributes.push([feature.getName() as string, tokens.join(' ')]);
+      // As EMF writes them: "#fragment" each, with no type, since the target is in this document.
+      attributes.push([feature.getName() as string, encoded.map((e) => `#${e.value}`).join(' ')]);
     }
   }
 
@@ -286,12 +283,6 @@ function childElementTag(child: EObject, feature: EReference, namespaces: Namesp
   if (declared === actual) return {};
   const prefix = namespaces.prefixFor(requirePackage(actual));
   return { xsiType: `${prefix}:${actual.getName()}` };
-}
-
-function sameTypeToken(feature: EReference, namespaces: NamespaceCollector): string {
-  const declared = feature.getEType() as EClass;
-  const prefix = namespaces.prefixFor(requirePackage(declared));
-  return `${prefix}:${declared.getName()}`;
 }
 
 interface EncodedReference {
@@ -399,18 +390,15 @@ function ecoreOwnFragmentPath(target: EObject): string | undefined {
   }
 
   const containingClass = hasContainingClass(target) ? target.getEContainingClass() : undefined;
-  if (containingClass && containingClass.getEPackage() === ecore && isNamed(target)) {
-    return `//${containingClass.getName() ?? ''}/${target.getName() ?? ''}`;
+  if (containingClass && containingClass.getEPackage() === ecore) {
+    const segment = nameSegmentAmong(target, containingClass.eContents());
+    return segment === undefined ? undefined : `//${containingClass.getName() ?? ''}/${segment}`;
   }
   return undefined;
 }
 
 function hasContainingClass(obj: EObject): obj is EObject & { getEContainingClass(): EClass | undefined } {
   return typeof (obj as { getEContainingClass?: unknown }).getEContainingClass === 'function';
-}
-
-function isNamed(obj: EObject): obj is EObject & { getName(): string | undefined } {
-  return typeof (obj as { getName?: unknown }).getName === 'function';
 }
 
 /**
@@ -733,11 +721,8 @@ function completeObject(
 /**
  * A reference written as an XML attribute - same-document fragments (the common case) and
  * cross-document references into an entirely different document both use this same attribute
- * form in real EMF-authored XMI (a <feature href="..."/> child element, the other form this
- * serializer writes, is only one of the two conventions actually in use - see writeObjectParts's
- * own "anyPolymorphic" attribute-form path, which already produces both from this side; this was
- * the read-side gap that had never been exercised until parsing a real, externally-authored file).
- * Each whitespace-separated fragment is classified independently: one that parses as an absolute
+ * form in real EMF-authored XMI; a <feature href="..."/> child element is the other form, which
+ * this serializer writes for cross-document references. Each whitespace-separated fragment is classified independently: one that parses as an absolute
  * URI (a real scheme, e.g. "http://www.eclipse.org/emf/2002/Ecore#//EString") is cross-document,
  * as is anything with a "#" that doesn't start with one and isn't itself a fragment (e.g.
  * "other.xmi#Dune" - EMF's own relative-href form) - both resolved as a proxy exactly like the
@@ -770,13 +755,10 @@ function decodeAttributeFormReference(
       return [createProxy(proxyEClass, URI.parse(fragment).resolve(ctx.resourceURI))];
     }
 
-    // Real EMF-authored files always write same-document attribute-form
-    // references with a leading "#" (e.g. eType="#//EString") - our own
-    // writer never produces one (computeEmfFragment's own output has no
-    // "#"), so this was never exercised by our own round-trip tests until
-    // parsing a real external file. Strip it here, at the point raw XML
-    // attribute text becomes a fragment to resolve, rather than teaching
-    // every fragment-parsing branch to tolerate an optional prefix.
+    // Same-document references are usually written with a leading "#"
+    // (e.g. eType="#//EString"), as EMF and this serializer write them;
+    // older files may omit it. Strip it here, at the point raw XML
+    // attribute text becomes a fragment to resolve.
     const normalized = fragment.startsWith('#') ? fragment.slice(1) : fragment;
     const resolved = resolveEmfFragment(normalized, roots);
     if (!resolved) {

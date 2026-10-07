@@ -1,8 +1,8 @@
-import { EClassifier } from '../metamodel/types/EClassifier.js';
+import { EPackage } from '../metamodel/types/EPackage.js';
 import { EObject } from '../metamodel/types/EObject.js';
 import { EStructuralFeature } from '../metamodel/types/EStructuralFeature.js';
 import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
-import { isEClass } from '../metamodel/util/EcoreTypeGuards.js';
+import { isEClass, isENamedElement } from '../metamodel/util/EcoreTypeGuards.js';
 import { EPackageRegistry } from '../registry/epackage-registry.js';
 import { EPackageRegistryImpl } from '../registry/epackage-registry-impl.js';
 import { resolveFragment } from './eobject-address.js';
@@ -159,22 +159,41 @@ function isUnresolvedProxy(value: unknown): value is EObject {
 }
 
 /**
- * The element of `pkg` that an EMF name path addresses: `//Class` for a classifier, `//Class/name`
- * for a feature of a class.
+ * The element of `pkg` that an EMF name path addresses: each segment names an element contained in
+ * the previous one, as in `//Class`, `//Class/operation/parameter`, `//sub/Class` or
+ * `//Enum/LITERAL`. A segment `name.n` is the element after n others with that name, as EMF writes
+ * a repeated name such as an overloaded operation. A feature of a class can also be one it inherits.
  */
-export function resolveAgainstPackage(
-  pkg: { getEClassifier(name: string): EClassifier | undefined },
-  fragment: string
-): EObject | undefined {
+export function resolveAgainstPackage(pkg: EPackage, fragment: string): EObject | undefined {
   const segments = fragment
     .replace(/^\/+/, '')
     .split('/')
     .filter((s) => s.length > 0);
   if (segments.length === 0) return undefined;
 
-  const classifier = pkg.getEClassifier(segments[0]!);
-  if (segments.length === 1) return classifier;
-  if (!classifier || !isEClass(classifier)) return undefined;
+  let current: EObject | undefined = pkg;
+  for (const segment of segments) {
+    const container: EObject = current;
+    current =
+      namedContent(container, segment) ?? (isEClass(container) ? container.getEStructuralFeature(segment) : undefined);
+    if (!current) return undefined;
+  }
+  return current;
+}
 
-  return classifier.getEStructuralFeature(segments[1]!);
+function namedContent(container: EObject, segment: string): EObject | undefined {
+  const counted = /^(.*)\.(\d+)$/.exec(segment);
+  return (
+    (counted && nthNamedContent(container, counted[1]!, Number(counted[2]))) || nthNamedContent(container, segment, 0)
+  );
+}
+
+function nthNamedContent(container: EObject, name: string, n: number): EObject | undefined {
+  let remaining = n;
+  for (const child of container.eContents()) {
+    if (!isENamedElement(child) || child.getName() !== name) continue;
+    if (remaining === 0) return child;
+    remaining--;
+  }
+  return undefined;
 }

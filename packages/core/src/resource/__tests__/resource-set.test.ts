@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EClass } from '../../metamodel/types/EClass.js';
+import { EcoreFactoryImpl } from '../../metamodel/impl/EcoreFactoryImpl.js';
 import { createInstanceOf } from '../../metamodel/impl/metamodel-helpers.js';
 import { EObject } from '../../metamodel/types/EObject.js';
 import { EReference } from '../../metamodel/types/EReference.js';
@@ -233,6 +234,64 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     const featureProxy = createProxy(bookClass, URI.parse(`${nsURI}#//Library/books`));
     const resolvedFeature = await resourceSet.resolve(featureProxy);
     expect((resolvedFeature as EReference).getName()).toBe('books');
+  });
+
+  it('resolve() follows a name path into nested subpackages of a registered package', async () => {
+    const factory = new EcoreFactoryImpl();
+    const root = factory.createEPackage();
+    root.setName('root');
+    root.setNsURI('https://example.org/root');
+    const api = factory.createEPackage();
+    api.setName('api');
+    const inner = factory.createEPackage();
+    inner.setName('inner');
+    const detail = factory.createEClass();
+    detail.setName('Detail');
+    const kind = factory.createEEnum();
+    kind.setName('Kind');
+    const open = factory.createEEnumLiteral();
+    open.setName('OPEN');
+    kind.getELiterals().add(open);
+    root.getESubpackages().add(api);
+    api.getESubpackages().add(inner);
+    inner.getEClassifiers().add(detail);
+    inner.getEClassifiers().add(kind);
+
+    const resourceSet = new ResourceSetImpl();
+    resourceSet.getPackageRegistry().register(root);
+
+    const detailProxy = createProxy(detail, URI.parse('https://example.org/root#//api/inner/Detail'));
+    expect(await resourceSet.resolve(detailProxy)).toBe(detail);
+    const literalProxy = createProxy(detail, URI.parse('https://example.org/root#//api/inner/Kind/OPEN'));
+    expect(await resourceSet.resolve(literalProxy)).toBe(open);
+  });
+
+  it('resolve() follows a name path to an overloaded operation and its parameter', async () => {
+    const factory = new EcoreFactoryImpl();
+    const pkg = factory.createEPackage();
+    pkg.setName('api');
+    pkg.setNsURI('https://example.org/api');
+    const problem = factory.createEClass();
+    problem.setName('Problem');
+    const solve = factory.createEOperation();
+    solve.setName('solve');
+    const overload = factory.createEOperation();
+    overload.setName('solve');
+    const limit = factory.createEParameter();
+    limit.setName('limit');
+    overload.getEParameters().add(limit);
+    problem.getEOperations().add(solve);
+    problem.getEOperations().add(overload);
+    pkg.getEClassifiers().add(problem);
+
+    const resourceSet = new ResourceSetImpl();
+    resourceSet.getPackageRegistry().register(pkg);
+    const resolve = (fragment: string) =>
+      resourceSet.resolve(createProxy(problem, URI.parse(`https://example.org/api#${fragment}`)));
+
+    expect(await resolve('//Problem/solve')).toBe(solve);
+    expect(await resolve('//Problem/solve.1')).toBe(overload);
+    expect(await resolve('//Problem/solve.1/limit')).toBe(limit);
   });
 
   it('resolve() throws for a fragment that matches nothing in a registered package', async () => {
