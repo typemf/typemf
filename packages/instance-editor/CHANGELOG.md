@@ -1,5 +1,13 @@
 # instance-editor
 
+## 0.8.1
+
+### Patch Changes
+
+- [#12](https://github.com/typemf/typemf/pull/12) [`0166502`](https://github.com/typemf/typemf/commit/0166502cc6c08b5aa06139c8e298371e5bd82d09) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix "Link external…" hanging on "Loading…" when the Ecore package is picked from the registry. The webview now uses Ecore's own classifiers directly instead of rebuilding copies of them from the extension host. The same fix applies to the class picker for adding a child.
+
+- [#12](https://github.com/typemf/typemf/pull/12) [`0166502`](https://github.com/typemf/typemf/commit/0166502cc6c08b5aa06139c8e298371e5bd82d09) Thanks [@bergerbd](https://github.com/bergerbd)! - Linking the type of an attribute now only offers data types, and linking the type of a reference only offers classes.
+
 ## 0.8.0
 
 ### Minor Changes
