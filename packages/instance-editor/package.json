@@ -2,7 +2,7 @@
   "name": "instance-editor",
   "displayName": "TypeMF Instance Editor",
   "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore), for generated as well as dynamically loaded metamodels.",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "publisher": "typemf",
   "preview": true,
   "license": "Apache-2.0",

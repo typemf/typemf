@@ -1,5 +1,20 @@
 # @typemf/generator
 
+## 0.9.0
+
+### Minor Changes
+
+- [#14](https://github.com/typemf/typemf/pull/14) [`4afce8e`](https://github.com/typemf/typemf/commit/4afce8ed27ad955a5f863f6e6e318959d98644ef) Thanks [@bergerbd](https://github.com/bergerbd)! - A `.ecore` file can now use classifiers of another `.ecore` file. The generator loads the referenced file, and the new `package-imports` option says, by nsURI, where that package's generated code is: a folder relative to `outputDir`, or a module name. This also applies to data types of another package, which the generated package class previously looked up on Ecore's package. Supertypes from another package are reported as unsupported.
+
+  References to Ecore's classes, such as `EModelElement`, are now imported from `@typemf/core` instead of from a file in the generated package that doesn't exist.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @typemf/core@0.9.0
+  - @typemf/node@0.9.0
+  - @typemf/xmi@0.9.0
+
 ## 0.8.1
 
 ### Patch Changes
