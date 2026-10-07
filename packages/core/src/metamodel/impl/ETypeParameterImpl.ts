@@ -7,6 +7,7 @@ import { EList } from '../types/EList.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
+/** A type parameter of a classifier or an operation. */
 export class ETypeParameterImpl extends ENamedElementImpl implements ETypeParameter {
   private _eBoundsCache: BasicEList<EGenericType> | undefined;
 

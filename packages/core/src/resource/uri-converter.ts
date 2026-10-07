@@ -1,22 +1,19 @@
 import { URI } from './uri.js';
 
 /**
- * Reads/writes the raw bytes behind a URI. This is the seam we discussed
- * for keeping @typemf/core isomorphic: only the interface lives here. The
- * `fs`-backed implementation is a separate, Node-only package
- * (@typemf/node), never a runtime dependency of core itself. A browser or
- * webview consumer supplies its own implementation (backed by `fetch`, a
- * virtual filesystem, VSCode's own FS API, etc).
- *
- * Deliberately byte-oriented (Uint8Array), not string-oriented, matching
- * EMF's stream-based Resource I/O - text encoding/decoding is a concern of
- * the EObjectSerializer for a given format, not of the converter.
+ * Reads and writes the bytes behind a URI. Core contains no implementation; `@typemf/node`
+ * provides one for `file:` URIs, and other environments supply their own.
  */
 export interface UriConverter {
   /** Whether this converter knows how to handle `uri` (typically by scheme). */
   canHandle(uri: URI): boolean;
 
+  /** The bytes stored at `uri`. */
   readBinary(uri: URI): Promise<Uint8Array>;
+
+  /** Stores `content` at `uri`, replacing what was there. */
   writeBinary(uri: URI, content: Uint8Array): Promise<void>;
+
+  /** Whether something is stored at `uri`. */
   exists(uri: URI): Promise<boolean>;
 }

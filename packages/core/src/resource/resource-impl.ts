@@ -11,7 +11,7 @@ import { URI } from './uri.js';
 import { UriConverter } from './uri-converter.js';
 
 /**
- * getContents() as a live, unique list that keeps resource-utils.ts's side-table in sync. EMF
+ * getContents() as a unique list that sets each root's resource (see EObject.eResource()). EMF
  * semantics: adding an object makes this resource its sole owner - if it was contained elsewhere,
  * it is detached from that container first; if it was itself a root of a different resource, it
  * is removed from that resource's own contents first. Adding an object already a root of *this*
@@ -120,26 +120,9 @@ export class ResourceImpl implements Resource {
     return this.loaded;
   }
 
-  /**
-   * Concurrency-protected: `loaded` only flips to true once deserialize() fully finishes, so
-   * multiple concurrent load() calls for this exact resource - genuinely racing, none of them
-   * blocking on any of the others' own completion - used to each independently see
-   * `!resource.isLoaded()` and start their own, fully separate deserialize() call. Collapsed here
-   * into one: a call made while another is already in flight awaits that same, single,
-   * already-running promise instead. The real fix for a real, confirmed exponential-blowup hazard
-   * found this way: a self-referential metamodel (e.g. a "Feature contains child Features" style
-   * containment cycle - a normal, valid pattern, not a modeling error) can have many concurrent,
-   * independent resolve() calls converge on the same not-yet-finished resource.
-   *
-   * What this does NOT, and cannot, fix on its own: a caller that *directly awaits* a nested
-   * load() call on this exact resource, from within this resource's own still-running
-   * deserialize() itself, still deadlocks - confirmed directly, not just reasoned about. The
-   * shared, returned promise can only resolve once deserialize() returns, but deserialize() would
-   * now be waiting on that very promise, a genuine circular wait no Resource-level guard can
-   * break. A caller with that exact shape (e.g. SnapshotSerializer's own reconstruction of a
-   * self-referential metamodel) has to avoid making the reentrant load() call at all instead -
-   * see SnapshotSerializer's own registry.objectFor() short-circuit for how.
-   */
+  // A load already in progress is shared: a self-referential model can trigger many concurrent
+  // resolve() calls into the same resource. A load() awaited from inside this resource's own
+  // deserialize() would still deadlock.
   async load(): Promise<void> {
     if (this.loadInProgress) return this.loadInProgress;
     this.loadInProgress = this.doLoad();

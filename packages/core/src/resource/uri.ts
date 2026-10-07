@@ -1,9 +1,7 @@
 /**
- * A minimal URI: scheme + optional authority marker + path + optional fragment, or - when
- * `getScheme()` is undefined - a relative reference (e.g. "other.xmi#//@books.0", the form EMF
- * writes by default between files in the same workspace). No archive-URI support, unlike EMF's
- * much larger `URI` class. See NOTES.md: build out only what a concrete need actually demands
- * rather than porting EMF's full surface speculatively.
+ * A URI made of a scheme, a path and an optional fragment, or a relative reference without a
+ * scheme (e.g. `other.xmi#//@books.0`, as EMF writes references between files). It covers only
+ * what model documents need, a small subset of EMF's `URI`.
  */
 export class URI {
   private constructor(

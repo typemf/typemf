@@ -9,6 +9,10 @@ import { EObject } from '../types/EObject.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/**
+ * Additional information attached to a model element: a source URI identifying the kind of
+ * information, string details, and optional contained or referenced objects.
+ */
 export class EAnnotationImpl extends EModelElementImpl implements EAnnotation {
   private _source: string | undefined;
 

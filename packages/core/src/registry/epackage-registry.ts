@@ -7,14 +7,8 @@ import { EPackage } from '../metamodel/types/EPackage.js';
 export type EPackageDescriptor = () => EPackage;
 
 /**
- * A lookup from namespace URI to EPackage - "which metamodel does this
- * nsURI mean?" Deliberately does not expose a global/ambient instance from
- * this module (see NOTES.md): a consuming app creates one explicitly near
- * its entry point, and @typemf/vscode-runtime's TypeMfRuntime is the one
- * legitimate *shared* instance for the multi-extension case, handed out via
- * activate() rather than reached for implicitly.
- *
- * Maps to EMF's org.eclipse.emf.ecore.EPackage.Registry.
+ * Maps namespace URIs to packages, as EMF's `EPackage.Registry`. There is no global instance;
+ * each `ResourceSet` has its own.
  */
 export interface EPackageRegistry {
   /** Registers `pkg` under its own `getNsURI()`. Throws if nsURI is unset. */

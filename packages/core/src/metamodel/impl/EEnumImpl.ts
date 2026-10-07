@@ -7,6 +7,7 @@ import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EList } from '../types/EList.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A data type whose values are a fixed set of literals. */
 export class EEnumImpl extends EDataTypeImpl implements EEnum {
   private _eLiteralsCache: BasicEList<EEnumLiteral> | undefined;
 

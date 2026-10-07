@@ -37,6 +37,25 @@ describe('docComment / documentationOf', () => {
     expect(docComment(bookClass)).toBe('/**\n * Line one.\n * Line two.\n */');
   });
 
+  it('wraps a line longer than 100 columns at spaces and keeps blank lines', () => {
+    const { bookClass } = buildSampleMetamodel();
+    const annotation = new EAnnotationImpl();
+    annotation.setSource('http://www.eclipse.org/emf/2002/Ecore');
+    const long = Array.from({ length: 20 }, (_, i) => `word${i}`).join(' ');
+    setDetailValue(annotation.getDetails(), 'documentation', `${long}\n\nShort.`);
+    bookClass.getEAnnotations().add(annotation);
+
+    const lines = docComment(bookClass, '  ').split('\n');
+    expect(lines.every((line) => line.length <= 100)).toBe(true);
+    expect(
+      lines
+        .slice(1, -1)
+        .map((line) => line.replace(/^ {3}\* ?/, ''))
+        .join(' ')
+    ).toBe(`${long}  Short.`);
+    expect(lines).toContain('   *');
+  });
+
   describe('sources: the generator annotation first, then Ecore', () => {
     const GENERATOR = 'https://typemf.dev/generator';
     const ECORE = 'http://www.eclipse.org/emf/2002/Ecore';

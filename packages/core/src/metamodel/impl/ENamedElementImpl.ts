@@ -5,6 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { ENamedElement } from '../types/ENamedElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A model element with a name. */
 export class ENamedElementImpl extends EModelElementImpl implements ENamedElement {
   private _name: string | undefined;
 

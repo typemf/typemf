@@ -5,6 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { EDataType } from '../types/EDataType.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A type whose instances are plain values, such as strings and numbers, not model objects. */
 export class EDataTypeImpl extends EClassifierImpl implements EDataType {
   private _serializable: boolean = true;
 

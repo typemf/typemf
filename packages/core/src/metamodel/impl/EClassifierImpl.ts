@@ -11,6 +11,7 @@ import { EObject } from '../types/EObject';
 import { TypeScriptClass } from '../types/TypeScriptClass';
 import { EObjectImpl } from './EObjectImpl';
 
+/** A type that typed elements refer to: a class or a data type. */
 export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   private _instanceClassName: string | undefined;
 

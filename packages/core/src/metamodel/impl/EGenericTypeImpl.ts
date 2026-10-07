@@ -8,6 +8,9 @@ import { EList } from '../types/EList.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
+/**
+ * A use of a type: a classifier with type arguments, a type parameter, or a wildcard with bounds.
+ */
 export class EGenericTypeImpl extends EObjectImpl implements EGenericType {
   private _eUpperBound: EGenericType | undefined;
 

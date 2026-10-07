@@ -8,22 +8,31 @@ import { generate } from '../generate.js';
 import { typescriptTemplateSet } from '../typescript-template-set.js';
 import { annotatedDataType } from './sample-metamodel.js';
 
-/** The package, a class and an attribute carry documentation annotations with quotes in them. */
+const RUNTIME_SOURCE = 'https://example.com/meta';
+
+/**
+ * The package, a class and an attribute carry runtime annotations with quotes in them; the class
+ * and the package also carry generator-only annotations (GenModel, typemf generator).
+ */
 function buildAnnotatedMetamodel() {
   const eString = annotatedDataType('EString', 'string');
 
   const widget = new EClassImpl();
   widget.setName('Widget');
   const widgetDoc = new EAnnotationImpl();
-  widgetDoc.setSource('http://www.eclipse.org/emf/2002/GenModel');
+  widgetDoc.setSource(RUNTIME_SOURCE);
   setDetailValue(widgetDoc.getDetails(), 'documentation', "A widget, with an apostrophe's worth of trouble.");
   widget.getEAnnotations().add(widgetDoc);
+  const widgetGenModel = new EAnnotationImpl();
+  widgetGenModel.setSource('http://www.eclipse.org/emf/2002/GenModel');
+  setDetailValue(widgetGenModel.getDetails(), 'documentation', 'Only for the generator.');
+  widget.getEAnnotations().add(widgetGenModel);
 
   const name = new EAttributeImpl();
   name.setName('name');
   name.setEType(eString);
   const nameDoc = new EAnnotationImpl();
-  nameDoc.setSource('http://www.eclipse.org/emf/2002/GenModel');
+  nameDoc.setSource(RUNTIME_SOURCE);
   setDetailValue(nameDoc.getDetails(), 'documentation', 'The widget\'s "name" - note the embedded quotes.');
   name.getEAnnotations().add(nameDoc);
   widget.getEStructuralFeatures().add(name);
@@ -33,9 +42,13 @@ function buildAnnotatedMetamodel() {
   pkg.setNsURI('https://typemf.dev/test/annotated');
   pkg.setNsPrefix('annotated');
   const pkgDoc = new EAnnotationImpl();
-  pkgDoc.setSource('http://www.eclipse.org/emf/2002/GenModel');
+  pkgDoc.setSource(RUNTIME_SOURCE);
   setDetailValue(pkgDoc.getDetails(), 'documentation', 'The package-level documentation.');
   pkg.getEAnnotations().add(pkgDoc);
+  const pkgGenerator = new EAnnotationImpl();
+  pkgGenerator.setSource('https://typemf.dev/generator');
+  setDetailValue(pkgGenerator.getDetails(), 'documentation', 'Only for the generator.');
+  pkg.getEAnnotations().add(pkgGenerator);
   pkg.getEClassifiers().add(eString);
   pkg.getEClassifiers().add(widget);
   for (const c of pkg.getEClassifiers()) (c as EClassImpl).setEPackage(pkg);
@@ -55,13 +68,14 @@ describe('annotations in generated code', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('are created by the package and found by getEAnnotation()', async () => {
+  it('are created by the package and found by getEAnnotation(), except generator-only ones', async () => {
     const { pkg } = buildAnnotatedMetamodel();
     const files = generate(pkg, typescriptTemplateSet, {});
 
     const packageImplFile = files.find((f) => f.path === 'impl/AnnotatedtestPackageImpl.ts')!;
     expect(packageImplFile.content).toContain('new EAnnotationImpl()');
-    expect(packageImplFile.content).toContain('http://www.eclipse.org/emf/2002/GenModel');
+    expect(packageImplFile.content).toContain(RUNTIME_SOURCE);
+    expect(packageImplFile.content).not.toContain('http://www.eclipse.org/emf/2002/GenModel');
     expect(packageImplFile.content).toContain("apostrophe's worth of trouble");
     expect(packageImplFile.content).not.toContain("'A widget, with an apostrophe's");
 
@@ -107,22 +121,26 @@ describe('annotations in generated code', () => {
 
     // Package-level annotation.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pkgAnnotation = eClasses.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel') as any;
+    const pkgAnnotation = eClasses.getEAnnotation(RUNTIME_SOURCE) as any;
     expect(detailValue(pkgAnnotation.getDetails(), 'documentation')).toBe('The package-level documentation.');
 
     // Classifier-level annotation, including the apostrophe.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const widgetClass = eClasses.getWidget() as any;
-    const widgetAnnotation = widgetClass.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel');
+    const widgetAnnotation = widgetClass.getEAnnotation(RUNTIME_SOURCE);
     expect(detailValue(widgetAnnotation.getDetails(), 'documentation')).toBe(
       "A widget, with an apostrophe's worth of trouble."
     );
 
     // Feature-level annotation, including embedded double quotes.
     const nameFeature = widgetClass.getEStructuralFeatures().get(0);
-    const nameAnnotation = nameFeature.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel');
+    const nameAnnotation = nameFeature.getEAnnotation(RUNTIME_SOURCE);
     expect(detailValue(nameAnnotation.getDetails(), 'documentation')).toBe(
       'The widget\'s "name" - note the embedded quotes.'
     );
+
+    // Generator-only annotations are not part of the runtime metamodel.
+    expect(widgetClass.getEAnnotation('http://www.eclipse.org/emf/2002/GenModel')).toBeUndefined();
+    expect(eClasses.getEAnnotation('https://typemf.dev/generator')).toBeUndefined();
   });
 });

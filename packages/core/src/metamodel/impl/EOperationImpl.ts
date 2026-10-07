@@ -10,6 +10,7 @@ import { EParameter } from '../types/EParameter.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
+/** An operation of a class, with parameters, a return type and exceptions. */
 export class EOperationImpl extends ETypedElementImpl implements EOperation {
   private _eContainingClass: EClass | undefined;
 

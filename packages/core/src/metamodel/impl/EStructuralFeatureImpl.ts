@@ -5,6 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { TypeScriptClass } from '../types/TypeScriptClass.js';
 
+/** An attribute or a reference of a class. */
 export class EStructuralFeatureImpl extends ETypedElementImpl implements EStructuralFeature {
   private _changeable: boolean = true;
 

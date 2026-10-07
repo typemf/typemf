@@ -9,6 +9,7 @@ import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { DynamicEObjectImpl } from './DynamicEObjectImpl.js';
 
+/** Creates instances of a package's classes and converts data values to and from strings. */
 export class EFactoryImpl extends EModelElementImpl implements EFactory {
   private _ePackage: EPackage | undefined;
 

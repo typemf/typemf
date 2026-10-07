@@ -7,6 +7,7 @@ import { EList } from '../types/EList.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** The base of every metamodel element. It can carry annotations. */
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
   private _eAnnotationsCache: BasicEList<EAnnotation> | undefined;
 

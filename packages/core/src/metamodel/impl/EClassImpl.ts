@@ -13,6 +13,7 @@ import { BasicEList } from './BasicEList.js';
 import { EGenericTypeImpl } from './EGenericTypeImpl.js';
 import { EOperationImpl } from './EOperationImpl';
 
+/** A class: the features, operations and supertypes its instances share. */
 export class EClassImpl extends EClassifierImpl implements EClass {
   private _abstract: boolean = false;
 

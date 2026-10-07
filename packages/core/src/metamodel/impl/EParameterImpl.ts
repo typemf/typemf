@@ -6,6 +6,7 @@ import { EOperation } from '../types/EOperation.js';
 import { EParameter } from '../types/EParameter.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A parameter of an operation. */
 export class EParameterImpl extends ETypedElementImpl implements EParameter {
   private _eOperation: EOperation | undefined;
 

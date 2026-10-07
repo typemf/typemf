@@ -5,40 +5,54 @@ import { EObjectSerializer } from './serializer.js';
 import { ResourceSet } from './resource-set.js';
 import { URI } from './uri.js';
 
-/**
- * A loaded (or loadable) document: a URI, its root EObject(s), and
- * load()/save() delegating to an injected EObjectSerializer. Maps to EMF's
- * org.eclipse.emf.ecore.resource.Resource.
- */
+/** A document: a URI and the root objects stored there, as EMF's `Resource`. */
 export interface Resource {
+  /** The location the resource is loaded from and saved to. */
   getURI(): URI;
+
+  /** Changes the location used by later loads and saves; nothing is moved or written. */
   setURI(uri: URI): void;
 
-  /** Root objects. Most documents have exactly one; some formats allow many. */
+  /**
+   * The root objects. Adding an object makes this resource its only owner: it is removed from
+   * its container or from another resource's contents first. An object is never added twice.
+   */
   getContents(): EList<EObject>;
 
+  /** The resource set this resource was created by, if any. */
   getResourceSet(): ResourceSet | undefined;
 
+  /** Problems recorded by the last load that make the content incomplete. */
   getErrors(): Diagnostic[];
+
+  /** Problems recorded by the last load that the content survived. */
   getWarnings(): Diagnostic[];
 
+  /** Whether a load has completed since creation or the last {@link unload}. */
   isLoaded(): boolean;
 
-  /** The format this resource reads/writes through - see EObjectSerializer. */
+  /** The format the resource is read and written in. */
   getSerializer(): EObjectSerializer;
 
-  /** Reads and deserializes via the injected UriConverter/EObjectSerializer. */
+  /**
+   * Reads the document and replaces the contents with what was read, also when the resource is
+   * already loaded. Concurrent calls share one read. Clears {@link getErrors} and
+   * {@link getWarnings} before parsing.
+   *
+   * @throws Error if no `UriConverter` handles the URI, reading fails or the serializer throws.
+   */
   load(): Promise<void>;
 
-  /** Serializes and writes back via the injected UriConverter/EObjectSerializer. */
+  /**
+   * Writes the contents to the document.
+   *
+   * @throws Error if no `UriConverter` handles the URI, or writing fails.
+   */
   save(): Promise<void>;
 
-  /** Clears getContents() and resets isLoaded() to false, without touching storage. */
+  /** Clears the contents and marks the resource as not loaded, without touching storage. */
   unload(): void;
 
-  /**
-   * Internal - called by ResourceSetImpl when a Resource is added to or
-   * removed from a set. Not part of the API a consumer calls directly.
-   */
+  /** Called by the resource set when it adds or removes this resource; not for other callers. */
   eSetResourceSet(resourceSet: ResourceSet | undefined): void;
 }

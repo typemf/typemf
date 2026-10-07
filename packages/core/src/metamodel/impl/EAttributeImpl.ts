@@ -6,6 +6,7 @@ import { EClass } from '../types/EClass.js';
 import { EDataType } from '../types/EDataType.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A feature whose values are data values, instances of an `EDataType`. */
 export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute {
   private _iD: boolean = false;
 

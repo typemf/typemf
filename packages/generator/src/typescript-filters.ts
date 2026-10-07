@@ -14,6 +14,7 @@ import {
   EPackage,
   EStructuralFeature,
   ETypedElement,
+  isEDataType as isDataTypeObject,
 } from '@typemf/core';
 
 /** The generator's own annotation source. */
@@ -62,23 +63,40 @@ export function documentationOf(element: EModelElement): string | undefined {
   return layeredAnnotationDetail(element, 'documentation', ECLIPSE_ECORE_ANNOTATION_SOURCE);
 }
 
+/** Lines of generated doc comments are wrapped to this width, indentation included. */
+const DOC_COMMENT_WIDTH = 100;
+
 /**
- * Renders a JSDoc block from documentationOf(), or '' if there is none.
- * Deliberately WITHOUT a trailing newline: every template writes
- * `{{ docComment(x) }}` on its own line and puts the declaration on the
- * next one, so the template's own newline is what separates them - a
- * trailing newline here as well used to leave a blank line between every
- * doc comment and the declaration it documents.
+ * Renders a JSDoc block from documentationOf(), or '' if there is none. Lines longer than
+ * {@link DOC_COMMENT_WIDTH} are wrapped at spaces; shorter lines are kept as written. Has no
+ * trailing newline, since every template puts the declaration on the next line itself.
  */
 export function docComment(element: EModelElement, indent = ''): string {
-  const doc = documentationOf(element);
+  const doc = documentationOf(element)?.trim();
   if (!doc) return '';
-  const lines = doc.trim().split('\n');
-  if (lines.length === 1) {
-    return `${indent}/** ${lines[0]} */`;
-  }
-  const body = lines.map((line) => `${indent} * ${line}`).join('\n');
+  const single = `${indent}/** ${doc} */`;
+  if (!doc.includes('\n') && single.length <= DOC_COMMENT_WIDTH) return single;
+  const width = DOC_COMMENT_WIDTH - `${indent} * `.length;
+  const lines = doc.split('\n').flatMap((line) => wrapLine(line, width));
+  const body = lines.map((line) => (line === '' ? `${indent} *` : `${indent} * ${line}`)).join('\n');
   return `${indent}/**\n${body}\n${indent} */`;
+}
+
+/** `line` split at spaces into lines of at most `width` characters; a longer word stays whole. */
+function wrapLine(line: string, width: number): string[] {
+  if (line.length <= width) return [line];
+  const lines: string[] = [];
+  let current = '';
+  for (const word of line.split(' ')) {
+    if (current !== '' && current.length + 1 + word.length > width) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = current === '' ? word : `${current} ${word}`;
+    }
+  }
+  lines.push(current);
+  return lines;
 }
 
 /**
@@ -1205,6 +1223,24 @@ export function jsString(value: string | undefined): string {
  * properties). Converting to a plain array here avoids relying on
  * behavior that was never actually verified.
  */
+/**
+ * `element`'s annotations that belong in the runtime metamodel. EMF's GenModel annotations are
+ * left out, and so are the generator's own (sources starting with https://typemf.dev/generator),
+ * which only steer code generation - except on a data type, where they say which TypeScript type
+ * the data type maps to and what to import, which generating another package that uses the data
+ * type reads from this runtime metamodel.
+ */
+export function runtimeAnnotations(element: EModelElement): EAnnotation[] {
+  return element
+    .getEAnnotations()
+    .toArray()
+    .filter((annotation) => {
+      const source = annotation.getSource() ?? '';
+      if (source === ECLIPSE_GENMODEL_ANNOTATION_SOURCE) return false;
+      return !source.startsWith(TYPEMF_GENERATOR_ANNOTATION_SOURCE) || isDataTypeObject(element);
+    });
+}
+
 export function detailsEntries(annotation: EAnnotation): { key: string; value: string }[] {
   return [...annotation.getDetails()].map((entry) => ({ key: entry.getKey() ?? '', value: entry.getValue() ?? '' }));
 }

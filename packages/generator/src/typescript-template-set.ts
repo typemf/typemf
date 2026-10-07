@@ -9,6 +9,7 @@ import {
   beanGetterName,
   concreteEClassesOf,
   detailsEntries,
+  runtimeAnnotations,
   docComment,
   eClassesOf,
   factoryClassName,
@@ -127,6 +128,7 @@ export const typescriptTemplateSet: TemplateSet = {
     env.addGlobal('findEClassByName', findEClassByName);
     env.addGlobal('jsString', jsString);
     env.addGlobal('detailsEntries', detailsEntries);
+    env.addGlobal('runtimeAnnotations', runtimeAnnotations);
     env.addGlobal('beanGetterName', beanGetterName);
     env.addGlobal('isPrimitiveValueType', isPrimitiveValueType);
     env.addGlobal('primitiveDefaultValue', primitiveDefaultValue);

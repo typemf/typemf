@@ -8,6 +8,7 @@ import { EList } from '../types/EList.js';
 import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A namespace of classifiers, identified by its namespace URI. */
 export class EPackageImpl extends ENamedElementImpl implements EPackage {
   private _nsURI: string | undefined;
 

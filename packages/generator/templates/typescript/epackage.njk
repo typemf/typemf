@@ -60,27 +60,27 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
 {% set needsEnum = false %}
 {% set needsEnumLiteral = false %}
 {% set needsAnnotation = false %}
-{% if package.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(package).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% for classifier in package.getEClassifiers() %}
-{% if classifier.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(classifier).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% if isEClass(classifier) %}
 {% for feature in classifier.getEStructuralFeatures() %}
 {% if isEReference(feature) %}{% set needsReference = true %}{% else %}{% set needsAttribute = true %}{% endif %}
-{% if feature.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(feature).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% endfor %}
 {% for op in classifier.getEOperations() %}
 {% set needsOperation = true %}
-{% if op.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(op).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% if op.getEParameters().size() > 0 %}{% set needsParameter = true %}{% endif %}
 {% for param in op.getEParameters() %}
-{% if param.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(param).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% endfor %}
 {% endfor %}
 {% elif isEEnum(classifier) %}
 {% set needsEnum = true %}
 {% for literal in classifier.getELiterals() %}
 {% set needsEnumLiteral = true %}
-{% if literal.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(literal).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% endfor %}
 {% else %}
 {% set needsDataType = true %}
@@ -107,8 +107,9 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
 {% set _ = useImport("register" + pkgClass + "Initializer", "impl", {file: pkgClass + "Ref", foundational: false}) %}
 
 {#-
-  Emits code reconstructing `element`'s real EAnnotations (source +
-  details) onto the runtime object built at `targetExpr`. Scoped to
+  Emits code reconstructing `element`'s EAnnotations (source + details) onto
+  the runtime object built at `targetExpr`, except the generator-only ones
+  (see runtimeAnnotations). Scoped to
   package/classifier/feature/enum-literal only - EOperations have no
   runtime representation in the converted metamodel yet, so there's
   nowhere for an operation-level annotation to attach (see NOTES.md).
@@ -156,7 +157,7 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
     everywhere else in this file (the metaclass for EStringToStringMapEntry doesn't exist yet at the
     point this code runs during self-construction); the ordinary branch has no such ordering problem and
     uses the real, public API (setDetailValue) directly. #}
-{% for annotation in element.getEAnnotations() %}
+{% for annotation in runtimeAnnotations(element) %}
     {
       const annotation = new EAnnotationImpl();
 {% if annotation.getSource() %}

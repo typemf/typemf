@@ -7,6 +7,7 @@ import { EGenericType } from '../types/EGenericType.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypedElement } from '../types/ETypedElement.js';
 
+/** An element with a type and a multiplicity: a feature, an operation or a parameter. */
 export class ETypedElementImpl extends ENamedElementImpl implements ETypedElement {
   private _ordered: boolean = true;
 

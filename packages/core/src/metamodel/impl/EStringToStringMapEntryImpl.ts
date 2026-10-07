@@ -5,6 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A key-value pair of strings, the type of an annotation's details. */
 export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {
   private _key: string | undefined;
 
