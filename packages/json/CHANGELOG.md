@@ -1,5 +1,13 @@
 # @typemf/json
 
+## 0.9.1
+
+### Patch Changes
+
+- [#16](https://github.com/typemf/typemf/pull/16) [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c) Thanks [@bergerbd](https://github.com/bergerbd)! - Relative `$ref`s to other documents are now resolved against the URI of the document that contains them, so `"api.ecore#//…"` refers to the file next to it. References to other documents are written relative to the saving document when both share scheme and authority, so a folder of models can be moved or checked in.
+- Updated dependencies [[`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c), [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c)]:
+  - @typemf/core@0.9.1
+
 ## 0.9.0
 
 ### Patch Changes
