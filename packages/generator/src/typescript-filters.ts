@@ -1,4 +1,5 @@
-import { generationContext, isExternal } from './generation-context.js';
+import { posix } from 'node:path';
+import { generationContext, isExternal, PACKAGE_IMPORTS_OPTION } from './generation-context.js';
 import { importCollector } from './import-collector.js';
 import { readImportAnnotations } from './type-import-mapping.js';
 import {
@@ -6,6 +7,7 @@ import {
   EAnnotation,
   EClass,
   EClassifier,
+  EcorePackageImpl,
   EDataType,
   EEnum,
   EGenericType,
@@ -346,8 +348,76 @@ function tsBaseType(classifier: EClassifier | undefined): string {
     return 'EObject';
   }
   if (isEDataType(classifier)) return tsPrimitiveType(classifier);
-  // EClass or EEnum: the generated api-layer type shares the classifier's own name.
+  // EClass or EEnum: the generated api-layer type shares the classifier's own name. A classifier of
+  // this package is imported by the templates (see referencedApiTypes), any other one here.
+  if (isExternal(classifier)) {
+    const name = classifier.getName()!;
+    if (isEcoreClassifier(classifier)) importCollector.add({ name, location: 'types', foundational: true });
+    else
+      importCollector.add({
+        name,
+        location: 'types',
+        foundational: false,
+        from: otherPackageImport(classifier.getEPackage()!, 'types', name),
+      });
+  }
   return classifier.getName()!;
+}
+
+function isEcoreClassifier(classifier: EClassifier): boolean {
+  return classifier.getEPackage()?.getNsURI() === EcorePackageImpl.eINSTANCE.getNsURI();
+}
+
+/**
+ * The module the generated file `file` of another package `pkg` is imported from, taken from the
+ * `package-imports` option: the file inside a relative location, or the module itself.
+ *
+ * @throws Error if the option has no entry for `pkg`.
+ */
+function otherPackageImport(pkg: EPackage, folder: 'types' | 'impl', file: string): string {
+  const nsURI = pkg.getNsURI() ?? '';
+  const location = generationContext.packageImports.get(nsURI);
+  if (location === undefined) {
+    throw new Error(
+      `The package '${nsURI}' is referenced, but the "${PACKAGE_IMPORTS_OPTION}" option has no entry for it.`
+    );
+  }
+  if (!location.startsWith('./') && !location.startsWith('../')) return location;
+  const path = posix.join(location, folder, `${file}.js`);
+  return path.startsWith('.') ? path : `./${path}`;
+}
+
+/** A message for each class of `pkg` with a supertype from another package, which is not supported. */
+export function findOtherPackageSuperTypes(pkg: EPackage): string[] {
+  const messages: string[] = [];
+  for (const classifier of pkg.getEClassifiers()) {
+    if (!isEClass(classifier)) continue;
+    for (const superType of classifier.getESuperTypes()) {
+      if (superType.getEPackage() !== pkg)
+        messages.push(
+          `${classifier.getName()}: the supertype ${superType.getName()} belongs to another package, which is not supported yet`
+        );
+    }
+  }
+  return messages;
+}
+
+/**
+ * The expression for a classifier of another package in the generated package class: the accessor
+ * on that package's PackageImpl singleton, whose import it registers.
+ */
+export function otherPackageClassifierExpr(classifier: EClassifier): string {
+  const pkg = classifier.getEPackage()!;
+  const implName = isEcoreClassifier(classifier) ? 'EcorePackageImpl' : `${packageClassName(pkg)}Impl`;
+  if (isEcoreClassifier(classifier)) importCollector.add({ name: implName, location: 'impl', foundational: true });
+  else
+    importCollector.add({
+      name: implName,
+      location: 'impl',
+      foundational: false,
+      from: otherPackageImport(pkg, 'impl', implName),
+    });
+  return `${implName}.eINSTANCE.get${classifier.getName()}()`;
 }
 
 export interface ResolvedDataTypeText {
@@ -1135,9 +1205,11 @@ export function findUnresolvedCollisions(pkg: EPackage): MemberCollision[] {
 }
 
 /**
- * Distinct EClass/EEnum type names referenced by `features` (an EClass or
- * EEnum's own attribute/reference types) that need their own import
- * statement - EDataType primitives (string/number/boolean/Date) never do.
+ * Distinct EClass/EEnum type names of this package referenced by `features`
+ * (an EClass or EEnum's own attribute/reference types) that need their own
+ * import statement - EDataType primitives (string/number/boolean/Date) never
+ * do, and other packages' types are imported where they are emitted (see
+ * tsBaseType).
  * A TS helper rather than a Nunjucks loop with manual dedup, since
  * template-level array mutation is awkward without extra Nunjucks
  * extensions - matches the "templates handle structure, TS computes"
@@ -1148,10 +1220,11 @@ export function referencedApiTypes(features: Iterable<EStructuralFeature>, ...ex
   const names = new Set<string>();
   for (const feature of features) {
     const type = feature.getEType();
-    if (type && (isEReference(feature) || isEEnum(type)) && !exclude.has(type.getName()!)) names.add(type.getName()!);
+    if (type && (isEReference(feature) || isEEnum(type)) && !isExternal(type) && !exclude.has(type.getName()!))
+      names.add(type.getName()!);
     // Classes/enums bound inside type arguments need importing too.
     for (const argument of genericArgumentClassifiers(feature.getEGenericType())) {
-      if ((isEClass(argument) || isEEnum(argument)) && !exclude.has(argument.getName()!))
+      if ((isEClass(argument) || isEEnum(argument)) && !isExternal(argument) && !exclude.has(argument.getName()!))
         names.add(argument.getName()!);
     }
   }
@@ -1175,7 +1248,7 @@ export function referencedOperationTypes(operations: Iterable<EOperation>, ...ex
   const exclude = new Set(excludeTypeNames);
   const names = new Set<string>();
   const maybeAdd = (type: EClassifier | undefined) => {
-    if (type && (isEClass(type) || isEEnum(type)) && !exclude.has(type.getName()!)) {
+    if (type && (isEClass(type) || isEEnum(type)) && !isExternal(type) && !exclude.has(type.getName()!)) {
       names.add(type.getName()!);
     }
   };

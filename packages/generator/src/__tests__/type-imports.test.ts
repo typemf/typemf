@@ -116,6 +116,9 @@ describe('import annotation', () => {
   });
 });
 
+/** Where the generated code of package a, which declares the data types package b uses, is. */
+const PACKAGE_A = { 'package-imports': { 'https://test/a': '../a' } };
+
 describe('internal and external types', () => {
   beforeEach(() => {
     resetGenerationContext();
@@ -124,7 +127,7 @@ describe('internal and external types', () => {
 
   it('imports an external type from `from`', () => {
     const { b } = referencing(BOTH);
-    const files = generate(b, typescriptTemplateSet, {});
+    const files = generate(b, typescriptTemplateSet, PACKAGE_A);
     for (const path of ['types/Child.ts', 'impl/ChildImpl.ts']) {
       expect(file(files, path), path).toContain("import { Money } from '@acme/money';");
       expect(file(files, path), path).not.toContain('./types/Money');
@@ -146,7 +149,7 @@ describe('internal and external types', () => {
     const a = pkg('a', eMoney, classWith('Holder', ['price', eMoney]));
     const b = pkg('b', classWith('Child', ['price', eMoney]));
     expect(file(generate(a, typescriptTemplateSet, {}), 'types/Holder.ts')).toContain("from './Money'");
-    expect(file(generate(b, typescriptTemplateSet, {}), 'types/Child.ts')).toContain("from '@acme/money'");
+    expect(file(generate(b, typescriptTemplateSet, PACKAGE_A), 'types/Child.ts')).toContain("from '@acme/money'");
     expect(file(generate(a, typescriptTemplateSet, {}), 'types/Holder.ts')).toContain("from './Money'");
   });
 
@@ -158,7 +161,7 @@ describe('internal and external types', () => {
 
   it('an external type with only `internal-from` gets no import', () => {
     const { b } = referencing({ type: 'Money', 'internal-from': './types/Money' });
-    const child = file(generate(b, typescriptTemplateSet, {}), 'types/Child.ts');
+    const child = file(generate(b, typescriptTemplateSet, PACKAGE_A), 'types/Child.ts');
     expect(child).toContain('getPrice(): Money | undefined;');
     expect(child).not.toMatch(/import \{[^}]*\bMoney\b/);
   });
@@ -177,7 +180,7 @@ describe('internal and external types', () => {
     const a = pkg('a', eelist); // where EEList is declared - external to b
     const b = pkg('b', eString, classWith('Child', ['tags', eString, -1], ['raw', eelist]));
     expect(a.getEClassifiers().size()).toBe(1);
-    const child = file(generate(b, typescriptTemplateSet, {}), 'types/Child.ts');
+    const child = file(generate(b, typescriptTemplateSet, PACKAGE_A), 'types/Child.ts');
     const coreImports = child.match(/^import \{[^}]*\} from '@typemf\/core';$/gm) ?? [];
     expect(coreImports).toHaveLength(1); // one statement...
     expect(coreImports[0]!.match(/\bEList\b/g)).toHaveLength(1); // ...naming EList once
@@ -197,6 +200,7 @@ describe('import mappings supplied with the model', () => {
   it('an entry supplies the import for a type without an import annotation', () => {
     const { b } = referencing(undefined, 'Money'); // the TEXT still comes from the model; the mapping supplies the import
     const files = generate(b, typescriptTemplateSet, {
+      ...PACKAGE_A,
       'type-imports': { [KEY]: { type: 'Money', from: '@acme/money' } },
     });
     expect(file(files, 'types/Child.ts')).toContain("import { Money } from '@acme/money';");
@@ -206,7 +210,10 @@ describe('import mappings supplied with the model', () => {
   it('an entry replaces the annotation', () => {
     const { b } = referencing({ type: 'Money', from: '@old/money', 'internal-from': './types/OldMoney' });
     const child = file(
-      generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { type: 'Money', from: '@new/money' } } }),
+      generate(b, typescriptTemplateSet, {
+        ...PACKAGE_A,
+        'type-imports': { [KEY]: { type: 'Money', from: '@new/money' } },
+      }),
       'types/Child.ts'
     );
     expect(child).toContain("import { Money } from '@new/money';");
@@ -225,7 +232,7 @@ describe('import mappings supplied with the model', () => {
   it('an entry without a `type` is ignored', () => {
     const { b } = referencing(BOTH);
     const child = file(
-      generate(b, typescriptTemplateSet, { 'type-imports': { [KEY]: { from: '@ignored/money' } } }),
+      generate(b, typescriptTemplateSet, { ...PACKAGE_A, 'type-imports': { [KEY]: { from: '@ignored/money' } } }),
       'types/Child.ts'
     );
     expect(child).toContain("import { Money } from '@acme/money';");
@@ -236,6 +243,7 @@ describe('import mappings supplied with the model', () => {
     const { b } = referencing(undefined);
     const child = file(
       generate(b, typescriptTemplateSet, {
+        ...PACKAGE_A,
         'type-imports': {
           'https://test/other#EMoney': { type: 'Money', from: '@acme/money' },
           'https://test/a#EOther': { type: 'Money', from: '@acme/money' },

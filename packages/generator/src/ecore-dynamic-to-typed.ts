@@ -53,8 +53,14 @@ import {
  * classifier here: any reference to it becomes `undefined` on the real
  * side, matching the generator's own existing convention for a classifier
  * with no explicit type (which already means "real @typemf/core EObject").
+ *
+ * `foreignClassifier` maps a proxy into another .ecore file to the typed classifier it stands for
+ * (see loadEcorePackage); without it, only this package's and Ecore's classifiers can be referenced.
  */
-export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
+export function convertDynamicEcoreToTyped(
+  dynamicPkg: EObject,
+  foreignClassifier?: (proxy: EObject) => EClassifier | undefined
+): EPackage {
   const realPkg = new EPackageImpl();
   realPkg.setName(byName<string>(dynamicPkg, 'name') ?? '');
   realPkg.setNsURI(byName<string>(dynamicPkg, 'nsURI') ?? '');
@@ -104,12 +110,15 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
   }
 
   /**
-   * The real classifier a dynamic classifier reference denotes: one of this package's own, or, for a
-   * proxy into Ecore (e.g. `http://www.eclipse.org/emf/2002/Ecore#//EString`), Ecore's own. Ecore's
-   * EObject maps to undefined, like a local one.
+   * The real classifier a dynamic classifier reference denotes: one of this package's own, one of
+   * another file's (see `foreignClassifier`), or, for a proxy into Ecore (e.g.
+   * `http://www.eclipse.org/emf/2002/Ecore#//EString`), Ecore's own. Ecore's EObject maps to
+   * undefined, like a local one.
    */
   function classifierOf(dynClassifier: EObject): EClassifier | undefined {
     if (classifierMap.has(dynClassifier)) return classifierMap.get(dynClassifier);
+    const foreign = foreignClassifier?.(dynClassifier);
+    if (foreign) return foreign;
     const uri = dynClassifier.eIsProxy() ? getProxyURI(dynClassifier) : undefined;
     const ecore = EcorePackageImpl.eINSTANCE;
     if (uri && uri.trimFragment().toString() === ecore.getNsURI()) {
@@ -119,7 +128,7 @@ export function convertDynamicEcoreToTyped(dynamicPkg: EObject): EPackage {
       if (isEClassifier(resolved)) return resolved;
     }
     throw new Error(
-      `Cannot resolve the classifier reference '${uri?.toString() ?? dynClassifier.fullId()}': only classifiers of this package and of Ecore are supported.`
+      `Cannot resolve the classifier reference '${uri?.toString() ?? dynClassifier.fullId()}': only classifiers of this package, of Ecore and of other .ecore files are supported.`
     );
   }
 
