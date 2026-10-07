@@ -1,8 +1,9 @@
 import { EObject } from '@typemf/core';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PropertiesPanel } from './PropertiesPanel.js';
 import { Tree } from './Tree.js';
 import { useResolvedById } from './hooks.js';
+import { vscodeApi } from './vscode-api.js';
 import { WebviewEnvironment } from './webview-environment.js';
 
 export interface AppProps {
@@ -11,13 +12,37 @@ export interface AppProps {
   showDerivedFeatures: boolean;
 }
 
+/** What survives a webview reload (the host reloads it after every undo/redo, see
+ *  InstanceEditorProvider.announceEdit): host ids stay valid across reloads. */
+interface SavedUiState {
+  expandedIds: string[];
+  selectedId: string | undefined;
+}
+
+function readSavedUiState(): SavedUiState | undefined {
+  const state = vscodeApi.getState() as Partial<SavedUiState> | undefined;
+  return Array.isArray(state?.expandedIds)
+    ? { expandedIds: state.expandedIds, selectedId: state.selectedId }
+    : undefined;
+}
+
 export function App({ environment, rootId, showDerivedFeatures }: AppProps): React.JSX.Element {
   const { resourceSet, objectRegistry, ancestorChainQuery } = environment;
   const root = useResolvedById(rootId, resourceSet);
-  const [selected, setSelected] = useState<EObject | undefined>(undefined);
+  const saved = useMemo(() => readSavedUiState(), []);
+  const [pickedSelection, setSelected] = useState<EObject | undefined>(undefined);
   // The root is recorded under rootId, so it starts expanded.
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(rootId ? [rootId] : []));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set([...(rootId ? [rootId] : []), ...(saved?.expandedIds ?? [])])
+  );
+  // Until the user picks something new, the selection from before the reload.
+  const restoredSelection = useResolvedById(saved?.selectedId, resourceSet);
+  const selected = pickedSelection ?? restoredSelection;
   const selectedId = selected ? objectRegistry.hostIdFor(selected) : undefined;
+  useEffect(() => {
+    const state: SavedUiState = { expandedIds: [...expandedIds], selectedId };
+    vscodeApi.setState(state);
+  }, [expandedIds, selectedId]);
 
   const toggleExpand = (id: string): void => {
     setExpandedIds((prev) => {

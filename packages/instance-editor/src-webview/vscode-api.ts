@@ -4,6 +4,10 @@
  * (calling it again throws), so every other module in this app imports vscodeApi from here rather
  * than calling it itself.
  */
-declare function acquireVsCodeApi(): { postMessage(message: unknown): void };
+declare function acquireVsCodeApi(): {
+  postMessage(message: unknown): void;
+  getState(): unknown;
+  setState(state: unknown): void;
+};
 
 export const vscodeApi = acquireVsCodeApi();

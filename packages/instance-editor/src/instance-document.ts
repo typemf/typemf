@@ -1,5 +1,6 @@
 import { Resource, ResourceSet } from '@typemf/core';
 import * as vscode from 'vscode';
+import { EditHistory } from './edit-history.js';
 import { ObjectIdMap } from './object-id-map.js';
 
 /**
@@ -22,6 +23,21 @@ export class InstanceDocument implements vscode.CustomDocument {
    */
   readonly objectIds = new ObjectIdMap();
 
+  /** Bumped whenever the resource is reloaded from its file (revert, external change): every
+   *  object, and so every undo step recorded before that, belongs to a previous generation. */
+  generation = 0;
+
+  /** Whether there are unsaved changes - see EditHistory. */
+  history = new EditHistory();
+
+  /** The file's modification time as of our own last load or save; a change event whose file
+   *  still has this time is our own write, not an external one. */
+  lastKnownMtime: number | undefined;
+  /** True while our own save is writing, so its file events are not mistaken for external ones. */
+  saving = false;
+  reloading = false;
+  private fileWatcher: { dispose(): void } | undefined;
+
   constructor(
     // Deliberately NOT readonly - a real, confirmed bug: a brand-new instance opens at an
     // untitled: URI, and its first real save goes through saveCustomDocumentAs, not
@@ -36,5 +52,13 @@ export class InstanceDocument implements vscode.CustomDocument {
     public readonly resource: Resource
   ) {}
 
-  dispose(): void {}
+  /** Replaces the watcher (a "Save As" moves the document to another file). */
+  setFileWatcher(watcher: { dispose(): void } | undefined): void {
+    this.fileWatcher?.dispose();
+    this.fileWatcher = watcher;
+  }
+
+  dispose(): void {
+    this.setFileWatcher(undefined);
+  }
 }
