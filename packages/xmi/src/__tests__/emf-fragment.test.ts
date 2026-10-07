@@ -107,24 +107,56 @@ describe('resolveEmfFragment - name-based form', () => {
     expect(resolveEmfFragment('//@eClassifiers.0', [pkg])).toBe(foo);
   });
 
-  it('addresses named Ecore elements by name, and by position when a sibling has the same name', () => {
+  it('addresses named Ecore elements by name, with ".n" for a repeated name', () => {
     const factory = new EcoreFactoryImpl();
     const root = factory.createEPackage();
     root.setName('root');
     const api = factory.createEPackage();
     api.setName('api');
     root.getESubpackages().add(api);
-    const solution = factory.createEClass();
-    solution.setName('Solution');
-    const twin = factory.createEClass();
-    twin.setName('Solution');
-    api.getEClassifiers().add(solution);
+    const problem = factory.createEClass();
+    problem.setName('Problem');
+    api.getEClassifiers().add(problem);
+    const solve = factory.createEOperation();
+    solve.setName('solve');
+    const overload = factory.createEOperation();
+    overload.setName('solve');
+    const limit = factory.createEParameter();
+    limit.setName('limit');
+    overload.getEParameters().add(limit);
+    problem.getEOperations().add(solve);
+    problem.getEOperations().add(overload);
+    const kind = factory.createEEnum();
+    kind.setName('Kind');
+    const open = factory.createEEnumLiteral();
+    open.setName('OPEN');
+    kind.getELiterals().add(open);
+    api.getEClassifiers().add(kind);
 
-    expect(computeEmfFragment(solution, [root])).toBe('//api/Solution');
-    expect(resolveEmfFragment('//api/Solution', [root])).toBe(solution);
+    const cases: Array<[EObject, string]> = [
+      [problem, '//api/Problem'],
+      [solve, '//api/Problem/solve'],
+      [overload, '//api/Problem/solve.1'],
+      [limit, '//api/Problem/solve.1/limit'],
+      [open, '//api/Kind/OPEN'],
+    ];
+    for (const [element, fragment] of cases) {
+      expect(computeEmfFragment(element, [root])).toBe(fragment);
+      expect(resolveEmfFragment(fragment, [root])).toBe(element);
+    }
+    // Positional segments stay valid input.
+    expect(resolveEmfFragment('//@eSubpackages.0/@eClassifiers.0/@eOperations.1', [root])).toBe(overload);
+  });
 
-    api.getEClassifiers().add(twin);
-    expect(computeEmfFragment(twin, [root])).toBe('//api/@eClassifiers.1');
-    expect(resolveEmfFragment('//api/@eClassifiers.1', [root])).toBe(twin);
+  it('finds a name that itself ends in ".n"', () => {
+    const factory = new EcoreFactoryImpl();
+    const root = factory.createEPackage();
+    root.setName('root');
+    const versioned = factory.createEClass();
+    versioned.setName('Version.2');
+    root.getEClassifiers().add(versioned);
+
+    expect(computeEmfFragment(versioned, [root])).toBe('//Version.2');
+    expect(resolveEmfFragment('//Version.2', [root])).toBe(versioned);
   });
 });

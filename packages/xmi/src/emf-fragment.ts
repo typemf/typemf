@@ -1,12 +1,4 @@
-import {
-  EObject,
-  EStructuralFeature,
-  EClass,
-  EAttribute,
-  isEModelElement,
-  isENamedElement,
-  isEReference,
-} from '@typemf/core';
+import { EObject, EStructuralFeature, EClass, EAttribute, isEModelElement, isENamedElement } from '@typemf/core';
 
 /**
  * Own + inherited structural features/attributes, computed manually by
@@ -57,9 +49,10 @@ export function allAttributesOf(eClass: EClass): EAttribute[] {
  *   - an object whose EClass has an ID attribute set: the ID value itself,
  *     with no leading "/" at all (e.g. "myBookId123")
  *   - a named Ecore element inside another Ecore element (a classifier, a
- *     subpackage, a feature, ...): its name instead of "@feature.index", as
- *     in "//api/Solution" or "//Book/title", unless a sibling has the same
- *     name or the name contains "/" or "#"
+ *     subpackage, a feature, an operation, ...): its name instead of
+ *     "@feature.index", as in "//api/Solution" or "//Book/title", with ".n"
+ *     appended when n earlier siblings have the same name (see
+ *     nameSegmentAmong)
  *
  * Positional forms are fragile to reordering, same as @typemf/core's - an
  * ID attribute is preferred whenever the target EClass has one.
@@ -113,15 +106,28 @@ export function computeEmfFragment(target: EObject, roots: EObject[]): string {
 }
 
 /**
- * The name `target` is addressed by within `container`, as EMF does for named Ecore elements, or
- * undefined if it is addressed by position.
+ * The segment that addresses `target` within `container` by name, as EMF does for named Ecore
+ * elements, or undefined if it is addressed by position. See {@link nameSegmentAmong}.
  */
 function nameSegment(target: EObject, container: EObject): string | undefined {
   if (!isENamedElement(target) || !isEModelElement(container)) return undefined;
-  const name = target.getName();
-  if (!name || name.startsWith('@') || /[/#]/.test(name)) return undefined;
-  const sameName = [...container.eContents()].filter((child) => nameOf(child) === name);
-  return sameName.length === 1 ? name : undefined;
+  return nameSegmentAmong(target, container.eContents());
+}
+
+/**
+ * The name segment of `target` among `siblings`, the contents of its container in order: its name,
+ * followed by ".n" when n earlier siblings have the same name (EMF's convention, e.g. for
+ * overloaded operations). Undefined for a name that a segment can't hold.
+ */
+export function nameSegmentAmong(target: EObject, siblings: Iterable<EObject>): string | undefined {
+  const name = nameOf(target);
+  if (typeof name !== 'string' || name === '' || /^[@%]|[\s/#]/.test(name)) return undefined;
+  let count = 0;
+  for (const sibling of siblings) {
+    if (sibling === target) return count > 0 ? `${name}.${count}` : name;
+    if (nameOf(sibling) === name) count++;
+  }
+  return undefined;
 }
 
 /** The inverse of computeEmfFragment(). */
@@ -172,14 +178,22 @@ function containmentStep(current: EObject, segment: string): EObject | undefined
   return [...(current.eGet(feature) as Iterable<EObject>)][index];
 }
 
-/** The first object directly contained in `container` whose `name` is `name`. */
-function namedChild(container: EObject, name: string): EObject | undefined {
-  for (const feature of allStructuralFeaturesOf(container.eClass())) {
-    if (!isEReference(feature) || !feature.isContainment()) continue;
-    const value = container.eGet(feature);
-    const children = feature.isMany() ? [...(value as Iterable<EObject>)] : value ? [value as EObject] : [];
-    const found = children.find((child) => nameOf(child) === name);
-    if (found) return found;
+/**
+ * The object directly contained in `container` that a name segment addresses: "name" is the first
+ * with that name, "name.n" the one after n others with that name. A segment that only reads as
+ * "name.n" because the name itself ends that way is also found.
+ */
+function namedChild(container: EObject, segment: string): EObject | undefined {
+  const counted = /^(.*)\.(\d+)$/.exec(segment);
+  return (counted && nthNamedChild(container, counted[1]!, Number(counted[2]))) || nthNamedChild(container, segment, 0);
+}
+
+function nthNamedChild(container: EObject, name: string, n: number): EObject | undefined {
+  let remaining = n;
+  for (const child of container.eContents()) {
+    if (nameOf(child) !== name) continue;
+    if (remaining === 0) return child;
+    remaining--;
   }
   return undefined;
 }

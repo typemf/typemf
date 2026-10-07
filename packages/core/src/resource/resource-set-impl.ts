@@ -160,8 +160,9 @@ function isUnresolvedProxy(value: unknown): value is EObject {
 
 /**
  * The element of `pkg` that an EMF name path addresses: each segment names an element contained in
- * the previous one, as in `//Class`, `//Class/feature`, `//sub/Class` or `//Enum/LITERAL`. A
- * feature of a class can also be one it inherits.
+ * the previous one, as in `//Class`, `//Class/operation/parameter`, `//sub/Class` or
+ * `//Enum/LITERAL`. A segment `name.n` is the element after n others with that name, as EMF writes
+ * a repeated name such as an overloaded operation. A feature of a class can also be one it inherits.
  */
 export function resolveAgainstPackage(pkg: EPackage, fragment: string): EObject | undefined {
   const segments = fragment
@@ -171,12 +172,28 @@ export function resolveAgainstPackage(pkg: EPackage, fragment: string): EObject 
   if (segments.length === 0) return undefined;
 
   let current: EObject | undefined = pkg;
-  for (const name of segments) {
+  for (const segment of segments) {
     const container: EObject = current;
     current =
-      container.eContents().find((child) => isENamedElement(child) && child.getName() === name) ??
-      (isEClass(container) ? container.getEStructuralFeature(name) : undefined);
+      namedContent(container, segment) ?? (isEClass(container) ? container.getEStructuralFeature(segment) : undefined);
     if (!current) return undefined;
   }
   return current;
+}
+
+function namedContent(container: EObject, segment: string): EObject | undefined {
+  const counted = /^(.*)\.(\d+)$/.exec(segment);
+  return (
+    (counted && nthNamedContent(container, counted[1]!, Number(counted[2]))) || nthNamedContent(container, segment, 0)
+  );
+}
+
+function nthNamedContent(container: EObject, name: string, n: number): EObject | undefined {
+  let remaining = n;
+  for (const child of container.eContents()) {
+    if (!isENamedElement(child) || child.getName() !== name) continue;
+    if (remaining === 0) return child;
+    remaining--;
+  }
+  return undefined;
 }

@@ -266,6 +266,34 @@ describe('ResourceSet + Resource (via an in-memory fixture format)', () => {
     expect(await resourceSet.resolve(literalProxy)).toBe(open);
   });
 
+  it('resolve() follows a name path to an overloaded operation and its parameter', async () => {
+    const factory = new EcoreFactoryImpl();
+    const pkg = factory.createEPackage();
+    pkg.setName('api');
+    pkg.setNsURI('https://example.org/api');
+    const problem = factory.createEClass();
+    problem.setName('Problem');
+    const solve = factory.createEOperation();
+    solve.setName('solve');
+    const overload = factory.createEOperation();
+    overload.setName('solve');
+    const limit = factory.createEParameter();
+    limit.setName('limit');
+    overload.getEParameters().add(limit);
+    problem.getEOperations().add(solve);
+    problem.getEOperations().add(overload);
+    pkg.getEClassifiers().add(problem);
+
+    const resourceSet = new ResourceSetImpl();
+    resourceSet.getPackageRegistry().register(pkg);
+    const resolve = (fragment: string) =>
+      resourceSet.resolve(createProxy(problem, URI.parse(`https://example.org/api#${fragment}`)));
+
+    expect(await resolve('//Problem/solve')).toBe(solve);
+    expect(await resolve('//Problem/solve.1')).toBe(overload);
+    expect(await resolve('//Problem/solve.1/limit')).toBe(limit);
+  });
+
   it('resolve() throws for a fragment that matches nothing in a registered package', async () => {
     const { bookClass } = buildSampleMetamodel();
     const pkg = bookClass.getEPackage()!;

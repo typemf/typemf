@@ -16,7 +16,7 @@ import {
   getProxyURI,
   type EObjectSerializer,
 } from '@typemf/core';
-import { allStructuralFeaturesOf, computeEmfFragment, resolveEmfFragment } from './emf-fragment.js';
+import { allStructuralFeaturesOf, computeEmfFragment, nameSegmentAmong, resolveEmfFragment } from './emf-fragment.js';
 import { NamespaceCollector } from './namespace-collector.js';
 import { escapeAttributeValue, escapeText } from './xml-text.js';
 import { parseXmlDocument } from './xml-dom.js';
@@ -390,18 +390,15 @@ function ecoreOwnFragmentPath(target: EObject): string | undefined {
   }
 
   const containingClass = hasContainingClass(target) ? target.getEContainingClass() : undefined;
-  if (containingClass && containingClass.getEPackage() === ecore && isNamed(target)) {
-    return `//${containingClass.getName() ?? ''}/${target.getName() ?? ''}`;
+  if (containingClass && containingClass.getEPackage() === ecore) {
+    const segment = nameSegmentAmong(target, containingClass.eContents());
+    return segment === undefined ? undefined : `//${containingClass.getName() ?? ''}/${segment}`;
   }
   return undefined;
 }
 
 function hasContainingClass(obj: EObject): obj is EObject & { getEContainingClass(): EClass | undefined } {
   return typeof (obj as { getEContainingClass?: unknown }).getEContainingClass === 'function';
-}
-
-function isNamed(obj: EObject): obj is EObject & { getName(): string | undefined } {
-  return typeof (obj as { getName?: unknown }).getName === 'function';
 }
 
 /**
