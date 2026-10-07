@@ -28,7 +28,7 @@ export interface EObject {
   /**
    * The direct children, across all containment references in feature order.
    *
-   * @returns a new list; changing it does not change the model.
+   * @returns a read-only snapshot; it does not follow later changes.
    */
   eContents(): EList<EObject>;
 

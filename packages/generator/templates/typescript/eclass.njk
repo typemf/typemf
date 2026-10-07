@@ -196,11 +196,12 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if feature.isMany() %}
 {% if getter %}
 {% set _featureImports = registerBodyImports(feature) %}
+  {#- Computed: the cached list is read-only, since changing it would never reach the model. #}
   get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature) }}> {
     if (this._{{ feature.getName() }}CacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._{{ feature.getName() }}Cache = (() => {
+      this._{{ feature.getName() }}Cache = new {{ useImport("UnmodifiableEList", "impl", {foundational: true}) }}((() => {
         {{ getter | indent(8) }}
-      })();
+      })());
       this._{{ feature.getName() }}CacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._{{ feature.getName() }}Cache!;

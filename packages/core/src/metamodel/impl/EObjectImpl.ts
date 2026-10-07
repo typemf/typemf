@@ -7,6 +7,7 @@ import { EReference } from '../types/EReference.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { Notification } from '../types/Notification.js';
 import { BasicEList } from './BasicEList.js';
+import { UnmodifiableEList } from './UnmodifiableEList.js';
 
 interface Listener {
   readonly callback: (notification: Notification) => void;
@@ -406,19 +407,17 @@ export abstract class EObjectImpl implements EObject {
   }
 
   eContents(): EList<EObject> {
-    const result = new BasicEList<EObject>();
+    const result: EObject[] = [];
     for (const feature of this.eClass().getEAllStructuralFeatures()) {
       if (!isContainmentReference(feature)) continue;
       const value = this.eGet(feature);
       if (feature.isMany()) {
-        if (isEListOfEObject(value)) {
-          for (const child of value) result.add(child);
-        }
+        if (isEListOfEObject(value)) result.push(...value);
       } else if (isEObject(value)) {
-        result.add(value);
+        result.push(value);
       }
     }
-    return result;
+    return new UnmodifiableEList(result);
   }
 
   eAllContents(): EObject[] {
