@@ -6,6 +6,7 @@ import {
   EClassImpl,
   EcorePackageImpl,
   EObject,
+  getProxyURI,
   EPackage,
   EPackageImpl,
   EStructuralFeature,
@@ -216,6 +217,53 @@ describe('XmiSerializer', () => {
     const resolved = await freshSet.resolve(featuredBook);
     expect(resolved.eIsProxy()).toBe(false);
     expect(resolved.eGet(titleAttr)).toBe('Dune');
+  });
+
+  it('keeps references between documents working after their folder is moved', async () => {
+    const { libraryPackage, libraryClass, bookClass, booksRef, featuredBookRef, titleAttr } = buildSampleMetamodel();
+    const converter = new InMemoryUriConverter();
+    const rs = newResourceSet(converter);
+    rs.getPackageRegistry().register(libraryPackage);
+
+    const uriA = URI.parse('mem:/old/a/sub/library-a.xmi');
+    const resourceA = rs.createResource(uriA);
+    const libraryA = createInstanceOf(libraryClass);
+    const book = createInstanceOf(bookClass);
+    book.eSet(titleAttr, 'Dune');
+    (libraryA.eGet(booksRef) as { add(v: EObject): void }).add(book);
+    resourceA.getContents().add(libraryA);
+    await resourceA.save();
+
+    const uriB = URI.parse('mem:/old/b/library-b.xmi');
+    const resourceB = rs.createResource(uriB);
+    const libraryB = createInstanceOf(libraryClass);
+    libraryB.eSet(featuredBookRef, book);
+    resourceB.getContents().add(libraryB);
+    await resourceB.save();
+
+    const refOf = async (uri: URI) =>
+      /featuredBook href="([^"]*)"/.exec(new TextDecoder().decode(await converter.readBinary(uri)))?.[1];
+    expect(await refOf(uriB)).toBe('../a/sub/library-a.xmi#Dune');
+
+    // Move both documents to another folder.
+    const movedA = URI.parse('mem:/new/a/sub/library-a.xmi');
+    const movedB = URI.parse('mem:/new/b/library-b.xmi');
+    await converter.writeBinary(movedA, await converter.readBinary(uriA));
+    await converter.writeBinary(movedB, await converter.readBinary(uriB));
+
+    const freshSet = newResourceSet(converter);
+    freshSet.getPackageRegistry().register(libraryPackage);
+    const loadedB = await freshSet.getResource(movedB, true);
+    const featuredBook = loadedB!.getContents().get(0).eGet(featuredBookRef) as EObject;
+    expect(getProxyURI(featuredBook)?.trimFragment().toString()).toBe(movedA.toString());
+
+    // Saved again without loading the target, the reference stays relative.
+    await loadedB!.save();
+    expect(await refOf(movedB)).toBe(await refOf(uriB));
+
+    const resolved = await freshSet.resolve(featuredBook);
+    expect(resolved.eGet(titleAttr)).toBe('Dune');
+    expect(resolved.eResource()?.getURI().toString()).toBe(movedA.toString());
   });
 
   it('reads a relative cross-document reference written the attribute-form way (externally-authored)', async () => {

@@ -157,19 +157,22 @@ function serializeReferenceValue(
   }
 
   if (target.eIsProxy()) {
-    // Round-trip an already-unresolved proxy as-is, no need to load it.
+    // Round-trip an already-unresolved proxy without loading it, relative to this document.
     const proxyURI = getProxyURI(target);
     if (!proxyURI) {
       throw new Error(`eIsProxy() is true but no proxy URI is on record for this ${target.eClass().getName()}.`);
     }
-    return buildRefJson(proxyURI.toString(), target.eClass(), feature, namespaces);
+    return buildRefJson(proxyURI.deresolve(sourceResource.getURI()).toString(), target.eClass(), feature, namespaces);
   }
 
   const targetResource = target.eResource();
   const isLocal = !targetResource || targetResource === sourceResource;
 
   const fragment = fragmentForTarget(target, targetResource, roots);
-  const refString = isLocal ? `#${fragment}` : `${targetResource!.getURI().toString()}#${fragment}`;
+  // Another document is written relative to this one where possible, as EMF does.
+  const refString = isLocal
+    ? `#${fragment}`
+    : `${targetResource!.getURI().deresolve(sourceResource.getURI()).toString()}#${fragment}`;
 
   return buildRefJson(refString, target.eClass(), feature, namespaces);
 }
@@ -357,8 +360,9 @@ function resolveRef(
   }
 
   // Cross-resource: never loaded eagerly - a proxy, resolved later via
-  // ResourceSet.resolve() (which uses the identical resolveFragment()).
-  const uri = URI.parse(refString);
+  // ResourceSet.resolve() (which uses the identical resolveFragment()). A
+  // relative reference is relative to this document.
+  const uri = URI.parse(refString).resolve(ctx.resource.getURI());
   return createProxy(overrideEClass ?? declaredEClass, uri);
 }
 

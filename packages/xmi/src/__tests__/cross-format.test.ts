@@ -62,7 +62,7 @@ describe('Cross-format references (JSON <-> XMI)', () => {
 
     // The fragment uses the XMI syntax of the target document.
     const rawJson = JSON.parse(new TextDecoder().decode(await converter.readBinary(jsonUri)));
-    expect(rawJson.$roots[0].featuredBook.$ref).toBe('mem:library.xmi#//@books.0');
+    expect(rawJson.$roots[0].featuredBook.$ref).toBe('library.xmi#//@books.0');
 
     // Resolve it back, from a fresh ResourceSet.
     const freshSet = newResourceSet(converter);
