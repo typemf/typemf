@@ -4,13 +4,7 @@
 {% set _ = useImport(name, "types", {foundational: true}) %}
 {% endfor %}
 
-/**
- * Classifier/feature IDs, as pure numeric literals - safe to import from
- * anywhere (Factory, Switch) with zero risk of the circular-import hazard
- * that made a lazy, explicit init() necessary for the singleton itself
- * (see {{ pkgClass }}Impl.ts) - these are just numbers, never require
- * constructing anything.
- */
+/** The classifier, feature and operation IDs; plain numbers, safe to import from anywhere. */
 export const Ids = {
 {% for classifier in package.getEClassifiers() %}
   {{ classifier.getName() }}: { self: {{ classifier.getClassifierID() }}{% if isEClass(classifier) %}{% for feature in classifier.getEStructuralFeatures() %}, {{ feature.getName() }}: {{ feature.getFeatureID() }}{% endfor %}{% for op in classifier.getEOperations() %}, op{{ loop.index0 }}: {{ op.getOperationID() }}{% endfor %}{% endif %} },
@@ -60,27 +54,27 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
 {% set needsEnum = false %}
 {% set needsEnumLiteral = false %}
 {% set needsAnnotation = false %}
-{% if package.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(package).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% for classifier in package.getEClassifiers() %}
-{% if classifier.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(classifier).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% if isEClass(classifier) %}
 {% for feature in classifier.getEStructuralFeatures() %}
 {% if isEReference(feature) %}{% set needsReference = true %}{% else %}{% set needsAttribute = true %}{% endif %}
-{% if feature.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(feature).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% endfor %}
 {% for op in classifier.getEOperations() %}
 {% set needsOperation = true %}
-{% if op.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(op).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% if op.getEParameters().size() > 0 %}{% set needsParameter = true %}{% endif %}
 {% for param in op.getEParameters() %}
-{% if param.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(param).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% endfor %}
 {% endfor %}
 {% elif isEEnum(classifier) %}
 {% set needsEnum = true %}
 {% for literal in classifier.getELiterals() %}
 {% set needsEnumLiteral = true %}
-{% if literal.getEAnnotations().size() > 0 %}{% set needsAnnotation = true %}{% endif %}
+{% if runtimeAnnotations(literal).length > 0 %}{% set needsAnnotation = true %}{% endif %}
 {% endfor %}
 {% else %}
 {% set needsDataType = true %}
@@ -107,8 +101,9 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
 {% set _ = useImport("register" + pkgClass + "Initializer", "impl", {file: pkgClass + "Ref", foundational: false}) %}
 
 {#-
-  Emits code reconstructing `element`'s real EAnnotations (source +
-  details) onto the runtime object built at `targetExpr`. Scoped to
+  Emits code reconstructing `element`'s EAnnotations (source + details) onto
+  the runtime object built at `targetExpr`, except the generator-only ones
+  (see runtimeAnnotations). Scoped to
   package/classifier/feature/enum-literal only - EOperations have no
   runtime representation in the converted metamodel yet, so there's
   nowhere for an operation-level annotation to attach (see NOTES.md).
@@ -156,7 +151,7 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
     everywhere else in this file (the metaclass for EStringToStringMapEntry doesn't exist yet at the
     point this code runs during self-construction); the ordinary branch has no such ordering problem and
     uses the real, public API (setDetailValue) directly. #}
-{% for annotation in element.getEAnnotations() %}
+{% for annotation in runtimeAnnotations(element) %}
     {
       const annotation = new EAnnotationImpl();
 {% if annotation.getSource() %}
@@ -208,14 +203,9 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
   private static _instance: {{ pkgClass }}Impl | undefined;
 
   /**
-   * The one explicit entry point that constructs the singleton - call it
-   * yourself, with your own factory, before anything else in your program
-   * touches {{ pkgClass }}Impl.eINSTANCE, to use a custom factory (e.g. one
-   * overriding createX() to return your own derived classes). Whichever
-   * caller gets here FIRST wins; a later call with a *different* factory
-   * is logged and otherwise ignored, rather than silently replacing an
-   * already-in-use singleton or throwing on a caller who didn't cause the
-   * conflict.
+   * Constructs the package, if that hasn't happened yet, and returns it. To use your own factory
+   * (e.g. one returning subclasses), call this with it before anything reads `eINSTANCE`; a
+   * factory passed after construction is ignored with a warning.
    */
   static init(factory?: {{ factoryClassName(package) }}): {{ pkgClass }}Impl {
     if (!{{ pkgClass }}Impl._instance) {
@@ -236,10 +226,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 
   private constructor() {
     super();
-    // Set immediately, before Pass 1 constructs any classifier (each of
-    // which may need this reference - see {{ pkgClass }}Ref.ts's own doc
-    // comment for why this is a late-bound reference rather than a
-    // direct import of {{ pkgClass }}Impl.
+    // Set first: constructing the classifiers below already needs the package reference.
     set{{ pkgClass }}Ref(this);
 
     // Pass 1: create every classifier (empty shell - no features/supertypes
@@ -267,10 +254,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {{ bootstrapSet("literal", "setLiteral", "Ids.EEnumLiteral.literal", jsString(literal.getLiteral())) }}
 {{ emitAnnotations("literal", literal) }}
 {% if options['generate-ecore'] %}
-      // No addLiteral() here - this generated EEnumImpl doesn't have that
-      // hand-written convenience method (it's not a reflective feature),
-      // so the list-add and the eEnum backpointer (a real, modeled,
-      // non-changeable opposite - see NOTES.md) are wired manually.
+      // eEnum is not changeable, so both ends of the opposite are set directly.
       this._{{ classifier.getName() }}.eBootstrapList(Ids.EEnum.eLiterals).add(literal);
       literal.eBasicSetValue(Ids.EEnumLiteral.eEnum, this._{{ classifier.getName() }});
 {% else %}
@@ -326,6 +310,9 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {{ bootstrapSet(fieldExpr, "setChangeable", "Ids.EStructuralFeature.changeable", feature.isChangeable()) }}
 {{ bootstrapSet(fieldExpr, "setOrdered", "Ids.ETypedElement.ordered", feature.isOrdered()) }}
 {{ bootstrapSet(fieldExpr, "setUnique", "Ids.ETypedElement.unique", feature.isUnique()) }}
+{% if feature.getDefaultValueLiteral() !== undefined %}
+{{ bootstrapSet(fieldExpr, "setDefaultValueLiteral", "Ids.EStructuralFeature.defaultValueLiteral", jsString(feature.getDefaultValueLiteral())) }}
+{% endif %}
     {{ fieldExpr }}.setFeatureID(Ids.{{ classifier.getName() }}.{{ feature.getName() }});
     {#- containerClass: the concrete implementation class the feature is declared on - the closest
         TypeScript has to Java's own containerClass semantics (Class<?>, e.g. EClassifier.class in the
@@ -346,11 +333,8 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endfor %}
 {% endfor %}
 
-    // Pass 2.5: operations and their parameters - real EOperation/EParameter objects, not just the
-    // generated METHODS (which already existed) - eOperations used to be permanently empty at runtime;
-    // this is what actually populates it, the same way pass 2 populates eStructuralFeatures. Kept as
-    // its own pass, after every classifier and feature exists (an operation's return type or a
-    // parameter's type can reference either), rather than folded into the loop above.
+    // Pass 2.5: operations and their parameters, after every classifier and feature exists, since
+    // their types can refer to any of them.
 {% for classifier in eClassesOf(package) %}
 {% for op in classifier.getEOperations() %}
 {% set opIndex = loop.index0 %}
@@ -407,21 +391,9 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endfor %}
 {% endfor %}
 
-    // Pass 5 (recompute EAll* caches, ordinary mode only) removed - stale post-swap.
-    // @typemf/core's own EClassImpl is now itself generated code (see NOTES.md's point 6/7
-    // write-ups), using the same automatic, get-bodied caching (EObjectImpl.getModelGeneration(),
-    // point 1) as self-hosted output always did - there is no recomputeAllLists() method to call
-    // anymore, in either mode, and none is needed.
 
-    // Pass 6: set the package's own name/nsURI/nsPrefix/annotations last,
-    // deliberately - these go through the ordinary reflective setters
-    // (this.setName(), etc.), which need the "name"/etc. feature's own
-    // metaclass object to already exist (it's built above, in the passes
-    // this follows). Calling them earlier - before those metaclasses
-    // exist - is a genuine bootstrap-ordering bug, confirmed directly by
-    // reproducing it: this line order isn't a style choice, the metaclass
-    // shells and feature wiring above are a real, load-bearing
-    // precondition for the reflective setter calls below to work at all.
+    // Pass 5: the package's own name, nsURI, nsPrefix and annotations, last: the setters used here
+    // need the features built above.
     this.setName({{ jsString(package.getName()) }});
     this.setNsURI({{ jsString(package.getNsURI()) }});
     this.setNsPrefix({{ jsString(package.getNsPrefix()) }});
@@ -478,10 +450,7 @@ export class {{ pkgClass }}Impl extends EPackageImpl implements {{ pkgClass }} {
 {% endfor %}
 }
 
-// CORE-01: lets getXxxRef() construct the singleton itself, on first use, instead of only ever
-// throwing when nothing has touched {{ pkgClass }}Impl.eINSTANCE/.init() yet. A side effect of
-// this module being evaluated at all - see register{{ pkgClass }}Initializer's own doc comment
-// in {{ pkgClass }}Ref.ts.
+// Lets get{{ pkgClass }}Ref() construct the package on first use.
 register{{ pkgClass }}Initializer(() => {
   void {{ pkgClass }}Impl.eINSTANCE;
 });

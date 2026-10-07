@@ -9,6 +9,8 @@ import {
   beanGetterName,
   concreteEClassesOf,
   detailsEntries,
+  runtimeAnnotations,
+  hasStoredManyValuedFeature,
   docComment,
   eClassesOf,
   factoryClassName,
@@ -78,7 +80,8 @@ function useImport(name: string, location: ImportLocation, opts: { file?: string
 export const typescriptTemplateSet: TemplateSet = {
   name: 'typescript',
   baseFolder: join(packageRoot, 'templates', 'typescript'),
-  validate(pkg): string[] {
+  validate(pkg, options): string[] {
+    beginGeneration(pkg, options);
     return [
       ...findUnnamedElements(pkg),
       ...findUnresolvedCollisions(pkg).map(
@@ -127,6 +130,8 @@ export const typescriptTemplateSet: TemplateSet = {
     env.addGlobal('findEClassByName', findEClassByName);
     env.addGlobal('jsString', jsString);
     env.addGlobal('detailsEntries', detailsEntries);
+    env.addGlobal('runtimeAnnotations', runtimeAnnotations);
+    env.addGlobal('hasStoredManyValuedFeature', hasStoredManyValuedFeature);
     env.addGlobal('beanGetterName', beanGetterName);
     env.addGlobal('isPrimitiveValueType', isPrimitiveValueType);
     env.addGlobal('primitiveDefaultValue', primitiveDefaultValue);

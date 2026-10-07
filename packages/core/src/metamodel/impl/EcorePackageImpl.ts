@@ -231,14 +231,9 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private static _instance: EcorePackageImpl | undefined;
 
   /**
-   * The one explicit entry point that constructs the singleton - call it
-   * yourself, with your own factory, before anything else in your program
-   * touches EcorePackageImpl.eINSTANCE, to use a custom factory (e.g. one
-   * overriding createX() to return your own derived classes). Whichever
-   * caller gets here FIRST wins; a later call with a *different* factory
-   * is logged and otherwise ignored, rather than silently replacing an
-   * already-in-use singleton or throwing on a caller who didn't cause the
-   * conflict.
+   * Constructs the package, if that hasn't happened yet, and returns it. To use your own factory
+   * (e.g. one returning subclasses), call this with it before anything reads `eINSTANCE`; a
+   * factory passed after construction is ignored with a warning.
    */
   static init(factory?: EcoreFactory): EcorePackageImpl {
     if (!EcorePackageImpl._instance) {
@@ -259,10 +254,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
   private constructor() {
     super();
-    // Set immediately, before Pass 1 constructs any classifier (each of
-    // which may need this reference - see EcorePackageRef.ts's own doc
-    // comment for why this is a late-bound reference rather than a
-    // direct import of EcorePackageImpl.
+    // Set first: constructing the classifiers below already needs the package reference.
     setEcorePackageRef(this);
 
     // Pass 1: create every classifier (empty shell - no features/supertypes
@@ -567,7 +559,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'string');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EBigDecimal.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -599,7 +591,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'bigint');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EBigInteger.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -733,7 +725,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number []');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'Uint8Array');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EByteArray.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -829,7 +821,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'string []');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'string | undefined');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._ECharacterObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -849,7 +841,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'unknown');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'Date');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._EDate.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -1264,7 +1256,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'bigint');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._ELong.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -1302,7 +1294,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       {
         const entry = new EStringToStringMapEntryImpl();
         entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'number | undefined');
+        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'bigint | undefined');
         annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
       }
       this._ELongObject.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
@@ -1548,43 +1540,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EStringToStringMapEntry.eBasicSetValue(Ids.ENamedElement.name, 'EStringToStringMapEntry');
 
     this._EStringToStringMapEntry.setClassifierID(Ids.EStringToStringMapEntry.self);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EStringToStringMapEntry');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EStringToStringMapEntry.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EStringToStringMapEntry');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './types/EStringToStringMapEntry');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EStringToStringMapEntry.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this.eBootstrapList(Ids.EPackage.eClassifiers).add(this._EStringToStringMapEntry);
 
@@ -1927,25 +1882,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eSuperTypes.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eSuperTypes);
 
     this._EClass_eOperations = new EReferenceImpl();
@@ -2008,64 +1944,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eAllAttributes.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return new BasicEList<EAttribute>(undefined, undefined, this.getEAllStructuralFeatures().filter(isEAttribute) as EAttribute[]);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllAttributes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllAttributes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEAttribute');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllAttributes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllAttributes);
 
     this._EClass_eAllReferences = new EReferenceImpl();
@@ -2096,64 +1974,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_eAllReferences.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
     this._EClass_eAllReferences.eBasicSetValue(Ids.EReference.containment, false);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return new BasicEList<EReference>(undefined, undefined, this.getEAllStructuralFeatures().filter(isEReference) as EReference[]);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllReferences.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllReferences.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEReference');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllReferences.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllReferences);
 
@@ -2186,64 +2006,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eReferences.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return new BasicEList<EReference>(undefined, undefined, this.getEStructuralFeatures().filter(isEReference) as EReference[]);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eReferences.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eReferences.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEReference');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eReferences.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eReferences);
 
     this._EClass_eAttributes = new EReferenceImpl();
@@ -2274,64 +2036,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_eAttributes.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
     this._EClass_eAttributes.eBasicSetValue(Ids.EReference.containment, false);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return new BasicEList<EAttribute>(undefined, undefined, this.getEStructuralFeatures().filter(isEAttribute) as EAttribute[]);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAttributes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAttributes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEAttribute');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAttributes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAttributes);
 
@@ -2364,64 +2068,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eAllContainments.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const references = this.getEAllStructuralFeatures().filter(isEReference) as EReference[];\nreturn new BasicEList<EReference>(undefined, undefined, references.filter(reference => reference.isContainment()));'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllContainments.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllContainments.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEReference');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllContainments.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllContainments);
 
     this._EClass_eAllOperations = new EReferenceImpl();
@@ -2452,64 +2098,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_eAllOperations.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
     this._EClass_eAllOperations.eBasicSetValue(Ids.EReference.containment, false);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const operations = new Set<EOperation>();\nconst visited = new Set<EClass>();\nconst visit = (eClass: EClass): void => {\n  if (visited.has(eClass)) return;\n  visited.add(eClass);\n  eClass.getESuperTypes().forEach(visit);\n  for (const generic of eClass.getEGenericSuperTypes()) {\n    const raw = generic.getEClassifier();\n    if (raw !== undefined && isEClass(raw)) visit(raw);\n  }\n  eClass.getEOperations().forEach(operation => operations.add(operation));\n};\nvisit(this);\nreturn new BasicEList<EOperation>(undefined, undefined, operations);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllOperations.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllOperations.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEClass');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllOperations.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllOperations);
 
@@ -2542,64 +2130,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eAllStructuralFeatures.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const features = new Set<EStructuralFeature>();\nconst visited = new Set<EClass>();\nconst visit = (eClass: EClass): void => {\n  if (visited.has(eClass)) return;\n  visited.add(eClass);\n  eClass.getESuperTypes().forEach(visit);\n  for (const generic of eClass.getEGenericSuperTypes()) {\n    const raw = generic.getEClassifier();\n    if (raw !== undefined && isEClass(raw)) visit(raw);\n  }\n  eClass.getEStructuralFeatures().forEach(feature => features.add(feature));\n};\nvisit(this);\nreturn new BasicEList<EStructuralFeature>(undefined, undefined, features);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllStructuralFeatures.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEClass');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllStructuralFeatures.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllStructuralFeatures.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllStructuralFeatures);
 
     this._EClass_eAllSuperTypes = new EReferenceImpl();
@@ -2631,64 +2161,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eAllSuperTypes.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const superTypes = new Set<EClass>();\nconst visited = new Set<EClass>();\nconst visit = (eClass: EClass): void => {\n  if (visited.has(eClass)) return;\n  visited.add(eClass);\n  for (const sup of eClass.getESuperTypes()) {\n    visit(sup);\n    superTypes.add(sup);\n  }\n  for (const generic of eClass.getEGenericSuperTypes()) {\n    const raw = generic.getEClassifier();\n    if (raw !== undefined && isEClass(raw)) {\n      visit(raw);\n      superTypes.add(raw);\n    }\n  }\n};\nvisit(this);\nreturn new BasicEList<EClass>(undefined, undefined, superTypes);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEClass');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllSuperTypes);
 
     this._EClass_eIDAttribute = new EReferenceImpl();
@@ -2719,19 +2191,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_eIDAttribute.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClass);
 
     this._EClass_eIDAttribute.eBasicSetValue(Ids.EReference.containment, false);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'return this.getEAllAttributes().find(a => a.isID());');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eIDAttribute.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eIDAttribute);
 
@@ -2795,25 +2254,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eGenericSuperTypes.eBasicSetValue(Ids.EReference.containment, true);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eGenericSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eGenericSuperTypes);
 
     this._EClass_eAllGenericSuperTypes = new EReferenceImpl();
@@ -2845,88 +2285,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_eAllGenericSuperTypes.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const genericSuperTypes = new Set<EGenericType>();\nconst visited = new Set<EClass>();\nconst visit = (eClass: EClass): void => {\n  if (visited.has(eClass)) return;\n  visited.add(eClass);\n  for (const sup of eClass.getESuperTypes()) {\n    visit(sup);\n    const implicit = new EGenericTypeImpl();\n    implicit.setEClassifier(sup);\n    genericSuperTypes.add(implicit);\n  }\n  for (const generic of eClass.getEGenericSuperTypes()) {\n    const raw = generic.getEClassifier();\n    if (raw !== undefined && isEClass(raw)) {\n      visit(raw);\n      genericSuperTypes.add(generic);\n    }\n  }\n};\nvisit(this);\nreturn new BasicEList<EGenericType>(undefined, undefined, genericSuperTypes);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllGenericSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'BasicEList');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/BasicEList.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllGenericSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEClass');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllGenericSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EGenericTypeImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EGenericTypeImpl.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_eAllGenericSuperTypes.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClass_eAllGenericSuperTypes);
 
     this._EClassifier_instanceClassName = new EAttributeImpl();
@@ -2955,25 +2313,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClassifier_instanceClassName.setFeatureID(Ids.EClassifier.instanceClassName);
     this._EClassifier_instanceClassName.setContainerClass(EClassifierImpl);
     this._EClassifier_instanceClassName.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClassifier_instanceClassName.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_instanceClassName);
 
@@ -3062,25 +2401,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClassifier_instanceTypeName.setContainerClass(EClassifierImpl);
     this._EClassifier_instanceTypeName.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EClassifier);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClassifier_instanceTypeName.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClassifier.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EClassifier_instanceTypeName);
 
     this._EClassifier_ePackage = new EReferenceImpl();
@@ -3167,6 +2487,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._EDataType_serializable.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._EDataType_serializable.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
 
     this._EDataType_serializable.setFeatureID(Ids.EDataType.serializable);
     this._EDataType_serializable.setContainerClass(EDataTypeImpl);
@@ -3289,28 +2611,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EEnumLiteral_literal.setFeatureID(Ids.EEnumLiteral.literal);
     this._EEnumLiteral_literal.setContainerClass(EEnumLiteralImpl);
     this._EEnumLiteral_literal.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EEnumLiteral);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'return this._literal ?? this.getName();');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'set');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "const oldValue = this._literal;\nif (oldValue === value) return;\nconst wasSet = this._literal !== undefined;\nthis._literal = value;\nthis.eDidRemove(undefined, oldValue);\nthis.eDidAdd(undefined, value);\nconst feature = getEcorePackageRef().getEEnumLiteral_Literal();\nthis.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EEnumLiteral_literal.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EEnumLiteral.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EEnumLiteral_literal);
 
@@ -3558,25 +2858,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EOperation_eExceptions.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EOperation_eExceptions.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eExceptions);
 
     this._EOperation_eGenericExceptions = new EReferenceImpl();
@@ -3607,25 +2888,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EOperation);
 
     this._EOperation_eGenericExceptions.eBasicSetValue(Ids.EReference.containment, true);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EOperation_eGenericExceptions.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EOperation.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EOperation_eGenericExceptions);
 
@@ -3923,6 +3185,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EReference_resolveProxies.eBasicSetValue(Ids.ETypedElement.unique, true);
 
+    this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
+
     this._EReference_resolveProxies.setFeatureID(Ids.EReference.resolveProxies);
     this._EReference_resolveProxies.setContainerClass(EReferenceImpl);
     this._EReference_resolveProxies.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._EReference);
@@ -4044,6 +3308,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._EStructuralFeature_changeable.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._EStructuralFeature_changeable.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
 
     this._EStructuralFeature_changeable.setFeatureID(Ids.EStructuralFeature.changeable);
     this._EStructuralFeature_changeable.setContainerClass(EStructuralFeatureImpl);
@@ -4301,6 +3567,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._ETypedElement_ordered.eBasicSetValue(Ids.ETypedElement.unique, true);
 
+    this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
+
     this._ETypedElement_ordered.setFeatureID(Ids.ETypedElement.ordered);
     this._ETypedElement_ordered.setContainerClass(ETypedElementImpl);
     this._ETypedElement_ordered.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
@@ -4329,6 +3597,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._ETypedElement_unique.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._ETypedElement_unique.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, 'true');
 
     this._ETypedElement_unique.setFeatureID(Ids.ETypedElement.unique);
     this._ETypedElement_unique.setContainerClass(ETypedElementImpl);
@@ -4387,6 +3657,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.ordered, true);
 
     this._ETypedElement_upperBound.eBasicSetValue(Ids.ETypedElement.unique, true);
+
+    this._ETypedElement_upperBound.eBasicSetValue(Ids.EStructuralFeature.defaultValueLiteral, '1');
 
     this._ETypedElement_upperBound.setFeatureID(Ids.ETypedElement.upperBound);
     this._ETypedElement_upperBound.setContainerClass(ETypedElementImpl);
@@ -4481,40 +3753,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._ETypedElement_eType.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._ETypedElement_eType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'set');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "const oldValue = this._eType;\nconst wasSet = this._eType !== undefined;\nthis._eType = value;\nthis._eGenericType = undefined;\nthis.eDidAdd(undefined, value);\nconst feature = getEcorePackageRef().getETypedElement_EType();\nthis.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._ETypedElement_eType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_eType);
 
     this._ETypedElement_eGenericType = new EReferenceImpl();
@@ -4545,40 +3783,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._ETypedElement_eGenericType.eBasicSetValue(Ids.EStructuralFeature.eContainingClass, this._ETypedElement);
 
     this._ETypedElement_eGenericType.eBasicSetValue(Ids.EReference.containment, true);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'http://www.eclipse.org/emf/2002/GenModel');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedIsSetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'suppressedUnsetVisibility');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'true');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._ETypedElement_eGenericType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'set');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "const feature = getEcorePackageRef().getETypedElement_EGenericType();\nconst oldValue = this.eGet(feature);\nconst wasSet = this.eIsSet(feature);\nthis.eBasicSetValue(feature, value);\nthis.eDidRemove(feature, oldValue);\nthis.eDidAdd(feature, value);\nthis.eNotify({ eventType: 'SET', notifier: this, feature, oldValue, newValue: value, position: undefined, wasSet });\nconst oldEType = this._eType;\nconst eTypeWasSet = oldEType !== undefined;\nthis._eType = value?.getERawType();\nconst eTypeFeature = getEcorePackageRef().getETypedElement_EType();\nthis.eNotify({ eventType: 'SET', notifier: this, feature: eTypeFeature, oldValue: oldEType, newValue: this._eType, position: undefined, wasSet: eTypeWasSet });"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._ETypedElement_eGenericType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._ETypedElement.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypedElement_eGenericType);
 
@@ -4739,22 +3943,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EGenericType_eRawType.eBasicSetValue(Ids.EReference.containment, false);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/feature');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'get');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'if (this.getEClassifier() !== undefined) return this.getEClassifier();\nconst typeParameter = this.getETypeParameter();\nif (typeParameter !== undefined && !typeParameter.getEBounds().isEmpty()) {\n  const bound = typeParameter.getEBounds().get(0);\n  return bound.getERawType();\n}\nconst upperBound = this.getEUpperBound();\nif (upperBound !== undefined) return upperBound.getERawType();\nreturn getEcorePackageRef().getEJavaObject();'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EGenericType_eRawType.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EGenericType.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._EGenericType_eRawType);
 
     this._EGenericType_eLowerBound = new EReferenceImpl();
@@ -4881,11 +4069,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._ETypeParameter.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypeParameter_eBounds);
 
-    // Pass 2.5: operations and their parameters - real EOperation/EParameter objects, not just the
-    // generated METHODS (which already existed) - eOperations used to be permanently empty at runtime;
-    // this is what actually populates it, the same way pass 2 populates eStructuralFeatures. Kept as
-    // its own pass, after every classifier and feature exists (an operation's return type or a
-    // parameter's type can reference either), rather than folded into the loop above.
+    // Pass 2.5: operations and their parameters, after every classifier and feature exists, since
+    // their types can refer to any of them.
     this._EClass_op0 = new EOperationImpl();
     this._EClass_op0.eBasicSetValue(Ids.ENamedElement.name, 'isSuperTypeOf');
 
@@ -4907,40 +4092,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_op0.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op0_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const visited = new Set<EClass>();\nconst pending: EClass[] = [someClass];\nwhile (pending.length > 0) {\n  const current = pending.pop()!;\n  if (current === this) return true;\n  if (visited.has(current)) continue;\n  visited.add(current);\n  pending.push(...current.getESuperTypes());\n  for (const generic of current.getEGenericSuperTypes()) {\n    const raw = generic.getEClassifier();\n    if (raw !== undefined && isEClass(raw)) pending.push(raw);\n  }\n}\nreturn false;'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'isEClass');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './util/EcoreTypeGuards.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op0);
 
     this._EClass_op1 = new EOperationImpl();
@@ -4951,19 +4102,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_op1.eBasicSetValue(Ids.EOperation.eContainingClass, this._EClass);
 
     this._EClass_op1.setOperationID(Ids.EClass.op1);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'return this.getEAllStructuralFeatures().size();');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op1.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op1);
 
@@ -4988,22 +4126,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_op2.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op2_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'const features = this.getEAllStructuralFeatures(); return featureIDOrFeatureName >= 0 && featureIDOrFeatureName < features.size() ? features.get(featureIDOrFeatureName) : undefined;'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op2.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op2);
 
     this._EClass_op3 = new EOperationImpl();
@@ -5026,22 +4148,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_op3_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EClass_op3);
 
     this._EClass_op3.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op3_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getEAllStructuralFeatures().indexOf(feature);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op3.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op3);
 
@@ -5066,22 +4172,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_op4.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op4_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getEAllStructuralFeatures().filter(feature => feature.getName() === featureIDOrFeatureName).at(0);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op4.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op4);
 
     this._EClass_op5 = new EOperationImpl();
@@ -5092,19 +4182,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_op5.eBasicSetValue(Ids.EOperation.eContainingClass, this._EClass);
 
     this._EClass_op5.setOperationID(Ids.EClass.op5);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'return this.getEAllOperations().size();');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op5.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op5);
 
@@ -5129,22 +4206,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_op6.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op6_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getEAllOperations().filter(op => this.getOperationID(op) === operationID).at(0);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op6.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op6);
 
     this._EClass_op7 = new EOperationImpl();
@@ -5167,46 +4228,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClass_op7_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EClass_op7);
 
     this._EClass_op7.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op7_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return (operation as EOperationImpl).getOperationID();'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op7.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EOperationImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EOperationImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op7.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op7);
 
@@ -5231,22 +4252,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EClass_op8.eBootstrapList(Ids.EOperation.eParameters).add(this._EClass_op8_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'if (operation.getEContainingClass() === this) return undefined;\nfor (const candidate of this.getEAllOperations()) {\n  if (candidate.isOverrideOf(operation)) return candidate;\n}\nreturn undefined;'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClass_op8.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EClass.eBootstrapList(Ids.EClass.eOperations).add(this._EClass_op8);
 
     this._EClassifier_op0 = new EOperationImpl();
@@ -5269,70 +4274,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EClassifier_op0_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EClassifier_op0);
 
     this._EClassifier_op0.eBootstrapList(Ids.EOperation.eParameters).add(this._EClassifier_op0_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "switch (this.eClass().getName()) {\n  case 'EClass':\n    return object instanceof EObjectImpl && (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());\n  default:\n    switch (this.getName()) {\n      case 'EString':\n      case 'EChar':\n      case 'ECharacterObject':\n        return typeof object === 'string';\n      case 'EInt':\n      case 'EIntegerObject':\n      case 'ELong':\n      case 'ELongObject':\n      case 'EDouble':\n      case 'EDoubleObject':\n      case 'EFloat':\n      case 'EFloatObject':\n      case 'EShort':\n      case 'EShortObject':\n      case 'EByte':\n      case 'EByteObject':\n        return typeof object === 'number';\n      case 'EBigInteger':\n        return typeof object === 'bigint';\n      case 'EBoolean':\n      case 'EBooleanObject':\n        return typeof object === 'boolean';\n      case 'EDate':\n        return object instanceof Date;\n      default:\n        return object !== undefined && object !== null;\n    }\n}"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EObjectImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/EObjectImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'EObject');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './types/EObject');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EClassifier_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EClassifier.eBootstrapList(Ids.EClass.eOperations).add(this._EClassifier_op0);
 
@@ -5368,22 +4309,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EEnum_op0.eBootstrapList(Ids.EOperation.eParameters).add(this._EEnum_op0_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getELiterals().find(literal => literal.getName() === name);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EEnum_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EEnum.eBootstrapList(Ids.EClass.eOperations).add(this._EEnum_op0);
 
     this._EEnum_op1 = new EOperationImpl();
@@ -5406,22 +4331,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EEnum_op1_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EEnum_op1);
 
     this._EEnum_op1.eBootstrapList(Ids.EOperation.eParameters).add(this._EEnum_op1_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getELiterals().find(literal => literal.getValue() === value);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EEnum_op1.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EEnum.eBootstrapList(Ids.EClass.eOperations).add(this._EEnum_op1);
 
@@ -5446,22 +4355,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EEnum_op2.eBootstrapList(Ids.EOperation.eParameters).add(this._EEnum_op2_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getELiterals().find(candidate => candidate.getLiteral() === literal);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EEnum_op2.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EEnum.eBootstrapList(Ids.EClass.eOperations).add(this._EEnum_op2);
 
     this._EFactory_op0 = new EOperationImpl();
@@ -5482,46 +4375,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EFactory_op0_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EFactory_op0);
 
     this._EFactory_op0.eBootstrapList(Ids.EOperation.eParameters).add(this._EFactory_op0_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "if (eClass.isAbstract() || eClass.isInterface()) {\n  throw new Error(`Cannot create an instance of '${eClass.getName()}': it is abstract or an interface.`);\n}\nconsole.warn(\n  `No factory recognizes classifier id ${eClass.getClassifierID()} (${eClass.getName()}) - falling back to a DynamicEObjectImpl. ` +\n    'Add a concrete factory for it to avoid this.'\n);\nreturn new DynamicEObjectImpl(eClass);"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EFactory_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator/import');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'type');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, 'DynamicEObjectImpl');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, '@typemf/core');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'internal-from');
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.value, './impl/DynamicEObjectImpl.js');
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EFactory_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EFactory.eBootstrapList(Ids.EClass.eOperations).add(this._EFactory_op0);
 
@@ -5559,22 +4412,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EFactory_op1.eBootstrapList(Ids.EOperation.eParameters).add(this._EFactory_op1_p1);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "if (this.getEPackage() !== undefined && eDataType.getEPackage() !== this.getEPackage()) {\n  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);\n}\nswitch (eDataType.getName()) {\n  case 'EString':\n    return literalValue;\n  case 'EInt':\n  case 'EIntegerObject':\n  case 'ELong':\n  case 'ELongObject':\n  case 'EDouble':\n  case 'EDoubleObject':\n  case 'EFloat':\n  case 'EFloatObject':\n  case 'EShort':\n  case 'EShortObject':\n  case 'EByte':\n  case 'EByteObject':\n    return Number(literalValue);\n  case 'EBigInteger':\n    return BigInt(literalValue);\n  case 'EBoolean':\n  case 'EBooleanObject':\n    return literalValue === 'true';\n  case 'EChar':\n  case 'ECharacterObject':\n    return literalValue.charAt(0);\n  case 'EDate':\n    return new Date(literalValue);\n  default:\n    return literalValue;\n}"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EFactory_op1.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EFactory.eBootstrapList(Ids.EClass.eOperations).add(this._EFactory_op1);
 
     this._EFactory_op2 = new EOperationImpl();
@@ -5611,22 +4448,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EFactory_op2.eBootstrapList(Ids.EOperation.eParameters).add(this._EFactory_op2_p1);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          "if (this.getEPackage() !== undefined && eDataType.getEPackage() !== this.getEPackage()) {\n  throw new Error(`The datatype '${eDataType.getName()}' is not a valid classifier of this factory's package.`);\n}\nif (eDataType.getName() === 'EDate' && instanceValue instanceof Date) {\n  return instanceValue.toISOString();\n}\nreturn String(instanceValue);"
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EFactory_op2.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EFactory.eBootstrapList(Ids.EClass.eOperations).add(this._EFactory_op2);
 
     this._EModelElement_op0 = new EOperationImpl();
@@ -5649,22 +4470,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EModelElement_op0_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EModelElement_op0);
 
     this._EModelElement_op0.eBootstrapList(Ids.EOperation.eParameters).add(this._EModelElement_op0_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getEAnnotations().filter(ann => ann.getSource() === source).at(0);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EModelElement_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EModelElement.eBootstrapList(Ids.EClass.eOperations).add(this._EModelElement_op0);
 
@@ -5700,22 +4505,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._EOperation_op1.eBootstrapList(Ids.EOperation.eParameters).add(this._EOperation_op1_p0);
 
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'if (someOperation === this) return false;\nconst thisClass = this.getEContainingClass();\nconst otherClass = someOperation.getEContainingClass();\nif (thisClass === undefined || otherClass === undefined) return false;\nif (thisClass === otherClass) return false;\nif (!otherClass.isSuperTypeOf(thisClass)) return false;\nif (this.getName() !== someOperation.getName()) return false;\nconst params = this.getEParameters();\nconst otherParams = someOperation.getEParameters();\nif (params.size() !== otherParams.size()) return false;\nfor (let i = 0; i < params.size(); i++) {\n  if (params.get(i)!.getEType() !== otherParams.get(i)!.getEType()) return false;\n}\nreturn true;'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EOperation_op1.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
-
     this._EOperation.eBootstrapList(Ids.EClass.eOperations).add(this._EOperation_op1);
 
     this._EPackage_op0 = new EOperationImpl();
@@ -5738,22 +4527,6 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
     this._EPackage_op0_p0.eBasicSetValue(Ids.EParameter.eOperation, this._EPackage_op0);
 
     this._EPackage_op0.eBootstrapList(Ids.EOperation.eParameters).add(this._EPackage_op0_p0);
-
-    {
-      const annotation = new EAnnotationImpl();
-      annotation.eBasicSetValue(Ids.EAnnotation.source, 'https://typemf.dev/generator');
-
-      {
-        const entry = new EStringToStringMapEntryImpl();
-        entry.eBasicSetValue(Ids.EStringToStringMapEntry.key, 'body');
-        entry.eBasicSetValue(
-          Ids.EStringToStringMapEntry.value,
-          'return this.getEClassifiers().filter(cl => cl.getName() === name).at(0);'
-        );
-        annotation.eBootstrapList(Ids.EAnnotation.details).add(entry);
-      }
-      this._EPackage_op0.eBootstrapList(Ids.EModelElement.eAnnotations).add(annotation);
-    }
 
     this._EPackage.eBootstrapList(Ids.EClass.eOperations).add(this._EPackage_op0);
 
@@ -5958,21 +4731,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       this._EClass_eStructuralFeatures
     );
 
-    // Pass 5 (recompute EAll* caches, ordinary mode only) removed - stale post-swap.
-    // @typemf/core's own EClassImpl is now itself generated code (see NOTES.md's point 6/7
-    // write-ups), using the same automatic, get-bodied caching (EObjectImpl.getModelGeneration(),
-    // point 1) as self-hosted output always did - there is no recomputeAllLists() method to call
-    // anymore, in either mode, and none is needed.
-
-    // Pass 6: set the package's own name/nsURI/nsPrefix/annotations last,
-    // deliberately - these go through the ordinary reflective setters
-    // (this.setName(), etc.), which need the "name"/etc. feature's own
-    // metaclass object to already exist (it's built above, in the passes
-    // this follows). Calling them earlier - before those metaclasses
-    // exist - is a genuine bootstrap-ordering bug, confirmed directly by
-    // reproducing it: this line order isn't a style choice, the metaclass
-    // shells and feature wiring above are a real, load-bearing
-    // precondition for the reflective setter calls below to work at all.
+    // Pass 5: the package's own name, nsURI, nsPrefix and annotations, last: the setters used here
+    // need the features built above.
     this.setName('ecore');
     this.setNsURI('http://www.eclipse.org/emf/2002/Ecore');
     this.setNsPrefix('ecore');
@@ -6385,10 +5145,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   }
 }
 
-// CORE-01: lets getXxxRef() construct the singleton itself, on first use, instead of only ever
-// throwing when nothing has touched EcorePackageImpl.eINSTANCE/.init() yet. A side effect of
-// this module being evaluated at all - see registerEcorePackageInitializer's own doc comment
-// in EcorePackageRef.ts.
+// Lets getEcorePackageRef() construct the package on first use.
 registerEcorePackageInitializer(() => {
   void EcorePackageImpl.eINSTANCE;
 });

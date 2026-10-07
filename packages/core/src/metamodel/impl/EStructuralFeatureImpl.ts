@@ -1,10 +1,13 @@
 import { BasicEList } from './BasicEList.js';
+import { EObjectImpl } from './EObjectImpl.js';
 import { ETypedElementImpl } from './ETypedElementImpl.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
 import { EClass } from '../types/EClass.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { TypeScriptClass } from '../types/TypeScriptClass.js';
+import { isEDataType } from '../util/EcoreTypeGuards.js';
 
+/** An attribute or a reference of a class. */
 export class EStructuralFeatureImpl extends ETypedElementImpl implements EStructuralFeature {
   private _changeable: boolean = true;
 
@@ -14,7 +17,8 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
 
   private _defaultValueLiteral: string | undefined;
 
-  private _defaultValue: unknown;
+  private _defaultValueCache: unknown | undefined;
+  private _defaultValueCacheGeneration = -1;
 
   private _unsettable: boolean = false;
 
@@ -28,15 +32,18 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
     return this.featureId;
   }
 
+  /** Sets the feature's ID; called by generated packages. */
   setFeatureID(id: number): void {
     this.featureId = id;
   }
+
   private containerClass: TypeScriptClass<unknown> | undefined;
 
   getContainerClass(): TypeScriptClass<unknown> | undefined {
     return this.containerClass;
   }
 
+  /** Sets the implementation class of the declaring class; called by generated packages. */
   setContainerClass(cls: TypeScriptClass<unknown> | undefined): void {
     this.containerClass = cls;
   }
@@ -69,12 +76,21 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   setDefaultValueLiteral(value: string | undefined): void {
     this.eSet(getEcorePackageRef().getEStructuralFeature_DefaultValueLiteral(), value);
   }
-  getDefaultValue(): unknown {
-    return this._defaultValue;
-  }
 
-  setDefaultValue(value: unknown): void {
-    this._defaultValue = value;
+  getDefaultValue(): unknown {
+    if (this._defaultValueCacheGeneration !== EObjectImpl.getModelGeneration()) {
+      this._defaultValueCache = (() => {
+        const type = this.getEType();
+        if (type === undefined || this.isMany()) return undefined;
+        const literal = this.getDefaultValueLiteral();
+        const factory = type.getEPackage()?.getEFactoryInstance();
+        if (literal !== undefined && factory !== undefined && isEDataType(type))
+          return factory.createFromString(type, literal);
+        return type.getDefaultValue();
+      })();
+      this._defaultValueCacheGeneration = EObjectImpl.getModelGeneration();
+    }
+    return this._defaultValueCache!;
   }
   isUnsettable(): boolean {
     return this._unsettable;
@@ -107,8 +123,9 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         return this._transient;
       case 13:
         return this._defaultValueLiteral;
+
       case 14:
-        return this._defaultValue;
+        return this.getDefaultValue();
       case 15:
         return this._unsettable;
       case 16:
@@ -251,9 +268,6 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
       case 13:
         this._defaultValueLiteral = value as string | undefined;
         return;
-      case 14:
-        this._defaultValue = value as unknown;
-        return;
       case 15:
         this._unsettable = value as boolean;
         return;
@@ -268,6 +282,8 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:
@@ -286,8 +302,9 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         return this._transient !== false;
       case 13:
         return this._defaultValueLiteral !== undefined;
+
       case 14:
-        return this._defaultValue !== undefined;
+        return this.getDefaultValue() !== undefined;
       case 15:
         return this._unsettable !== false;
       case 16:
@@ -357,23 +374,6 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
         const wasSet = this.eIsSet(feature);
         const oldValue = this._defaultValueLiteral;
         this._defaultValueLiteral = undefined;
-        this.eDidRemove(feature, oldValue);
-        this.eNotify({
-          eventType: 'UNSET',
-          notifier: this,
-          feature,
-          oldValue,
-          newValue: undefined,
-          position: undefined,
-          wasSet,
-        });
-        return;
-      }
-
-      case 14: {
-        const wasSet = this.eIsSet(feature);
-        const oldValue = this._defaultValue;
-        this._defaultValue = undefined;
         this.eDidRemove(feature, oldValue);
         this.eNotify({
           eventType: 'UNSET',

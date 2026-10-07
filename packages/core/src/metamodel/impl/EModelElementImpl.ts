@@ -7,6 +7,7 @@ import { EList } from '../types/EList.js';
 import { EModelElement } from '../types/EModelElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** The base of every metamodel element. It can carry annotations. */
 export class EModelElementImpl extends EObjectImpl implements EModelElement {
   private _eAnnotationsCache: BasicEList<EAnnotation> | undefined;
 
@@ -60,6 +61,8 @@ export class EModelElementImpl extends EObjectImpl implements EModelElement {
         throw new Error(`Feature ${String(featureId)} on EModelElement is many-valued or unknown.`);
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 0:

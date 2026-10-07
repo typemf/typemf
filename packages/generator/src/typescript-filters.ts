@@ -14,6 +14,7 @@ import {
   EPackage,
   EStructuralFeature,
   ETypedElement,
+  isEDataType as isDataTypeObject,
 } from '@typemf/core';
 
 /** The generator's own annotation source. */
@@ -62,23 +63,40 @@ export function documentationOf(element: EModelElement): string | undefined {
   return layeredAnnotationDetail(element, 'documentation', ECLIPSE_ECORE_ANNOTATION_SOURCE);
 }
 
+/** Lines of generated doc comments are wrapped to this width, indentation included. */
+const DOC_COMMENT_WIDTH = 100;
+
 /**
- * Renders a JSDoc block from documentationOf(), or '' if there is none.
- * Deliberately WITHOUT a trailing newline: every template writes
- * `{{ docComment(x) }}` on its own line and puts the declaration on the
- * next one, so the template's own newline is what separates them - a
- * trailing newline here as well used to leave a blank line between every
- * doc comment and the declaration it documents.
+ * Renders a JSDoc block from documentationOf(), or '' if there is none. Lines longer than
+ * {@link DOC_COMMENT_WIDTH} are wrapped at spaces; shorter lines are kept as written. Has no
+ * trailing newline, since every template puts the declaration on the next line itself.
  */
 export function docComment(element: EModelElement, indent = ''): string {
-  const doc = documentationOf(element);
+  const doc = documentationOf(element)?.trim();
   if (!doc) return '';
-  const lines = doc.trim().split('\n');
-  if (lines.length === 1) {
-    return `${indent}/** ${lines[0]} */`;
-  }
-  const body = lines.map((line) => `${indent} * ${line}`).join('\n');
+  const single = `${indent}/** ${doc} */`;
+  if (!doc.includes('\n') && single.length <= DOC_COMMENT_WIDTH) return single;
+  const width = DOC_COMMENT_WIDTH - `${indent} * `.length;
+  const lines = doc.split('\n').flatMap((line) => wrapLine(line, width));
+  const body = lines.map((line) => (line === '' ? `${indent} *` : `${indent} * ${line}`)).join('\n');
   return `${indent}/**\n${body}\n${indent} */`;
+}
+
+/** `line` split at spaces into lines of at most `width` characters; a longer word stays whole. */
+function wrapLine(line: string, width: number): string[] {
+  if (line.length <= width) return [line];
+  const lines: string[] = [];
+  let current = '';
+  for (const word of line.split(' ')) {
+    if (current !== '' && current.length + 1 + word.length > width) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = current === '' ? word : `${current} ${word}`;
+    }
+  }
+  lines.push(current);
+  return lines;
 }
 
 /**
@@ -446,17 +464,32 @@ export function isPrimitiveValueType(classifier: EClassifier | undefined): boole
 }
 
 /**
- * The feature's own declared `defaultValueLiteral` when it has one (e.g. `changeable`'s real
- * declared default is "true", not the generic zero-default) - otherwise 'false' for EBoolean, '0' for
- * every other primitive numeric EDataType (the real Java-primitive zero-default). Used as a stored
- * field's initial value instead of `undefined`.
+ * The initial value of a stored field of a primitive data type, as TypeScript source: the
+ * feature's `defaultValueLiteral` if it has one, else `false` for EBoolean, `0n` for ELong and
+ * `0` for the other numeric types.
+ *
+ * @throws Error if the `defaultValueLiteral` is not a valid value of the type.
  */
 export function primitiveDefaultValue(feature: ETypedElement): string {
-  const literal =
-    'getDefaultValueLiteral' in feature ? (feature as EStructuralFeature).getDefaultValueLiteral() : undefined;
-  if (literal !== undefined && literal !== '') return literal;
-  const classifier = feature.getEType();
-  return classifier?.getName() === 'EBoolean' ? 'false' : '0';
+  const declared =
+    'getDefaultValueLiteral' in feature ? (feature as EStructuralFeature).getDefaultValueLiteral()?.trim() : undefined;
+  const literal = declared === '' ? undefined : declared;
+  const typeName = feature.getEType()?.getName();
+  const invalid = () => new Error(`Invalid defaultValueLiteral '${literal}' for feature '${feature.getName()}'.`);
+  if (typeName === 'EBoolean') {
+    if (literal === undefined) return 'false';
+    if (!/^(true|false)$/i.test(literal)) throw invalid();
+    return literal.toLowerCase();
+  }
+  if (typeName === 'ELong') {
+    if (literal === undefined) return '0n';
+    if (!/^[+-]?\d+$/.test(literal)) throw invalid();
+    return `${BigInt(literal)}n`;
+  }
+  if (literal === undefined) return '0';
+  const value = Number(literal);
+  if (Number.isNaN(value)) throw invalid();
+  return String(value);
 }
 
 /**
@@ -881,40 +914,29 @@ export function superTypeChain(eClass: EClass): EClass[] {
 }
 
 /**
- * Whether this class descends from (or is) "EClassifier" - needed
- * specifically for self-hosting Ecore.ecore: classifierID is internal
- * dispatch bookkeeping, not a real modeled Ecore feature, so it's never
- * emitted by the ordinary feature-driven getter/setter generation - but
- * bootstrap code constructing the metamodel's own classifier shells
- * (which ARE real EClassifier-derived instances, e.g. EClassImpl,
- * EDataTypeImpl) genuinely needs to set it. Confirmed as a real,
- * necessary gap by actually running self-hosted bootstrap code, not
- * assumed - see NOTES.md.
+ * Whether `eClass` is EClassifier or a subclass of it, when generating Ecore itself: such a class
+ * gets a stored classifier ID (`getClassifierID`/`setClassifierID`), which is bookkeeping, not a
+ * modeled feature. Always false for any other package, so a user class that happens to be named
+ * EClassifier is generated like any other class.
  */
 export function isClassifierDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === 'EClassifier');
+  return generationContext.generateEcore && superTypeChain(eClass).some((c) => c.getName() === 'EClassifier');
 }
 
-/** The featureID analog of isClassifierDerived() - same reasoning, same real gap found the same way (see NOTES.md). */
+/** Like {@link isClassifierDerived}, for EStructuralFeature (feature ID and container class). */
 export function isStructuralFeatureDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === 'EStructuralFeature');
+  return generationContext.generateEcore && superTypeChain(eClass).some((c) => c.getName() === 'EStructuralFeature');
 }
 
-/** The operationID analog of isClassifierDerived()/isStructuralFeatureDerived() - added for point 4. */
+/** Like {@link isClassifierDerived}, for EOperation (operation ID). */
 export function isOperationDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === 'EOperation');
+  return generationContext.generateEcore && superTypeChain(eClass).some((c) => c.getName() === 'EOperation');
 }
 
 /**
- * Whether a real EOperation's name collides with a hand-added bookkeeping
- * method (classifierID/featureID - see isClassifierDerived/
- * isStructuralFeatureDerived's own doc comments). Real Ecore.ecore
- * genuinely declares both "EClassifier.getClassifierID(): EInt" and
- * "EStructuralFeature.getFeatureID(): EInt" as real, zero-arg operations
- * - colliding, by name, with exactly the bookkeeping getters added for
- * the self-hosting bootstrap fix. Confirmed directly against the real
- * file before excluding these operations from the generic,
- * throwing-stub-generating operation loop, not assumed - see NOTES.md.
+ * Whether `op` is one of Ecore's own operations that the bookkeeping methods implement
+ * (`getClassifierID`, `getFeatureID`, `getOperationID`, `getContainerClass`; see
+ * {@link isClassifierDerived}), so the operation loop must not generate it again.
  */
 export function isBookkeepingOperation(op: EOperation, eClass: EClass): boolean {
   if (op.getName() === 'getClassifierID' && op.getEParameters().isEmpty() && isClassifierDerived(eClass)) return true;
@@ -1205,6 +1227,29 @@ export function jsString(value: string | undefined): string {
  * properties). Converting to a plain array here avoids relying on
  * behavior that was never actually verified.
  */
+/** Whether one of `features` is many-valued and stored in a list (has no custom getter). */
+export function hasStoredManyValuedFeature(features: Iterable<EStructuralFeature>): boolean {
+  return [...features].some((feature) => feature.isMany() && featureGetter(feature) === undefined);
+}
+
+/**
+ * `element`'s annotations that belong in the runtime metamodel. EMF's GenModel annotations are
+ * left out, and so are the generator's own (sources starting with https://typemf.dev/generator),
+ * which only steer code generation - except on a data type, where they say which TypeScript type
+ * the data type maps to and what to import, which generating another package that uses the data
+ * type reads from this runtime metamodel.
+ */
+export function runtimeAnnotations(element: EModelElement): EAnnotation[] {
+  return element
+    .getEAnnotations()
+    .toArray()
+    .filter((annotation) => {
+      const source = annotation.getSource() ?? '';
+      if (source === ECLIPSE_GENMODEL_ANNOTATION_SOURCE) return false;
+      return !source.startsWith(TYPEMF_GENERATOR_ANNOTATION_SOURCE) || isDataTypeObject(element);
+    });
+}
+
 export function detailsEntries(annotation: EAnnotation): { key: string; value: string }[] {
   return [...annotation.getDetails()].map((entry) => ({ key: entry.getKey() ?? '', value: entry.getValue() ?? '' }));
 }

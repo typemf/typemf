@@ -1,23 +1,13 @@
 import { EObject } from '../metamodel/types/EObject.js';
 
 /**
- * Computes a fragment addressing `target` relative to `roots` - the bare
- * fragment text a serializer puts after "#" (same-resource) or "uri#"
- * (cross-resource), with no leading "#" itself.
+ * The fragment addressing `target` among `roots`, without the leading `#`: its `fullId()` if it
+ * has an ID attribute set (e.g. `Book_Dune`), otherwise its containment path (`/0/books/2`: root
+ * 0, feature `books`, index 2). This is the default fragment grammar of every serializer that does
+ * not define its own. A path changes when an element before it is moved, so give objects that are
+ * referenced across documents an ID attribute.
  *
- * Prefers the ID-attribute form (fullId(), e.g. "Book_Dune") whenever the
- * target has one set; falls back to a positional, JSON-Pointer-shaped path
- * ("/0/books/2": root 0's "books" feature, index 2) computed via
- * containment when it doesn't. This is genuinely format-agnostic - any
- * EObjectSerializer (JSON, XMI, ...) that wants "#id-or-path" addressing
- * uses this and resolveFragment() rather than reimplementing it, which is
- * also what lets ResourceSet.resolve() understand fragments regardless of
- * which serializer produced them.
- *
- * The positional fallback has the same trade-off as EMF's own positional
- * "e-path" fragments (#//@classifiers.2): it breaks if anything earlier in
- * the same containment chain is reordered later. Prefer giving
- * cross-referenced EClasses an ID attribute wherever practical.
+ * @throws Error if `target` is not contained in one of `roots`.
  */
 export function computeFragment(target: EObject, roots: EObject[]): string {
   const idAttribute = target
@@ -30,7 +20,12 @@ export function computeFragment(target: EObject, roots: EObject[]): string {
   return computePositionalPath(target, roots);
 }
 
-/** The inverse of computeFragment(): resolves a "#"-less fragment against `roots`. */
+/**
+ * The object `fragment` addresses among `roots`; the counterpart of {@link computeFragment}.
+ *
+ * @returns `undefined` if no object has the ID.
+ * @throws Error if a containment path does not lead to an object.
+ */
 export function resolveFragment(fragment: string, roots: EObject[]): EObject | undefined {
   if (fragment.startsWith('/')) {
     return resolvePositionalPath(fragment, roots);

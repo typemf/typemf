@@ -291,9 +291,9 @@ describe('SnapshotSerializer', () => {
     expect(literals.map((l) => l.getLiteral())).toEqual(literalNames);
   });
 
-  // Regression test for a bug GEN-13's opposite fix exposed: the root here is an EPackage, which
+  // Regression test for a bug the automatic opposite maintenance exposed: the root here is an EPackage, which
   // isn't eager (needsEagerOwnFeatures), so its classifiers are reconstructed as unresolved
-  // proxies - CORE-02's bug ("eInverseAdd calls eGet on the proxy") threw on the second add, and
+  // proxies - a bug ("eInverseAdd calls eGet on the proxy") threw on the second add, and
   // SnapshotSerializer's trySet() silently swallowed it, so only the first classifier ever made
   // it into the list. This is the host-side proof that opening a .ecore file with more than one
   // classifier shows all of them, not just the first.

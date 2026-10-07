@@ -6,6 +6,9 @@ import {
   EReference,
   EStructuralFeature,
   isEClassifier,
+  isEDataType,
+  convertToString,
+  createFromString,
   Resource,
   URI,
   computeFragment as coreComputeFragment,
@@ -439,18 +442,11 @@ function requirePackage(eClass: EClass) {
   return pkg;
 }
 
-/**
- * EDate -> ISO string (XML has no native date type). EEnum -> literal
- * name, matching the same convention @typemf/json established (an EEnum
- * attribute's in-memory value already IS its literal's name). Every other
- * primitive is already a string/number/boolean's natural toString().
- */
+/** The XML text of an attribute value, converted with the factory of the attribute's data type. */
 function encodeAttributeValue(value: unknown, feature: EStructuralFeature): string {
   const eType = feature.getEType();
-  if (eType?.getName() === 'EDate' && value instanceof Date) {
-    return value.toISOString();
-  }
-  return String(value);
+  const text = eType && isEDataType(eType) ? convertToString(eType, value) : undefined;
+  return text ?? String(value);
 }
 
 // ---------------------------------------------------------------------
@@ -462,7 +458,7 @@ interface DeserializeContext {
   /** The document being read - anchors a relative href (EMF's default form between files in the
    *  same workspace) to an absolute URI before it becomes a proxy. */
   resourceURI: URI;
-  /** Where to record a problem instead of throwing and aborting the whole load (XMI-04): an
+  /** Where to record a problem instead of throwing and aborting the whole load: an
    *  unknown attribute/element is a warning (data loss on the next save); an unresolved
    *  same-document reference is an error (the feature is left unset, the rest of the document
    *  still loads). */
@@ -574,17 +570,15 @@ function constructShell(
     .at(0);
   if (nameFeature) {
     const nameAttrValue = element.getAttribute('name');
-    if (nameAttrValue !== null) {
-      obj.eSet(nameFeature, decodeAttributeValue(nameAttrValue, nameFeature));
-    }
+    const decoded = nameAttrValue === null ? undefined : decodeAttributeValue(nameAttrValue, nameFeature, element, ctx);
+    if (decoded) obj.eSet(nameFeature, decoded.value);
   }
   const idFeature = eClass.getEIDAttribute();
   const idFeatureName = idFeature?.getName();
   if (idFeature && idFeatureName && idFeature !== nameFeature) {
     const idAttrValue = element.getAttribute(idFeatureName);
-    if (idAttrValue !== null) {
-      obj.eSet(idFeature, decodeAttributeValue(idAttrValue, idFeature));
-    }
+    const decoded = idAttrValue === null ? undefined : decodeAttributeValue(idAttrValue, idFeature, element, ctx);
+    if (decoded) obj.eSet(idFeature, decoded.value);
   }
 
   for (let i = 0; i < element.childNodes.length; i++) {
@@ -655,7 +649,8 @@ function completeObject(
         // supported in v1.
         continue;
       }
-      obj.eSet(feature, decodeAttributeValue(attr.value, feature));
+      const decoded = decodeAttributeValue(attr.value, feature, element, ctx);
+      if (decoded) obj.eSet(feature, decoded.value);
       continue;
     }
 
@@ -691,12 +686,13 @@ function completeObject(
 
     if (!isReferenceFeature(feature)) {
       // Many-valued attribute, written as a repeated child element.
-      const value = decodeAttributeValue(child.textContent ?? '', feature);
+      const decoded = decodeAttributeValue(child.textContent ?? '', feature, child, ctx);
+      if (!decoded) continue;
       if (feature.isMany()) {
         const list = obj.eGet(feature) as { add(v: unknown): void };
-        list.add(value);
+        list.add(decoded.value);
       } else {
-        obj.eSet(feature, value);
+        obj.eSet(feature, decoded.value);
       }
       continue;
     }
@@ -784,7 +780,7 @@ function decodeAttributeFormReference(
     const normalized = fragment.startsWith('#') ? fragment.slice(1) : fragment;
     const resolved = resolveEmfFragment(normalized, roots);
     if (!resolved) {
-      // XMI-04: recorded as an error rather than thrown, so the rest of the document still loads
+      // Recorded as an error rather than thrown, so the rest of the document still loads
       // (EMF's own behavior) - the feature is simply left unset for this value.
       ctx.resource.getErrors().push({
         message: `Unresolved same-document reference '${fragment}' on feature '${feature.getName()}': no object matches this fragment in this document.`,
@@ -807,12 +803,24 @@ function isAbsoluteUri(token: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9+.-]*:(\/\/|#)/.test(token);
 }
 
-function decodeAttributeValue(value: string, feature: EStructuralFeature): unknown {
+/**
+ * The attribute value `text` stands for, converted with the factory of the attribute's data type -
+ * or `undefined`, after recording an error on the resource, if `text` is not a valid value.
+ */
+function decodeAttributeValue(
+  text: string,
+  feature: EStructuralFeature,
+  element: Element,
+  ctx: DeserializeContext
+): { value: unknown } | undefined {
   const eType = feature.getEType();
-  const typeName = eType?.getName();
-  if (typeName === 'EDate') return new Date(value);
-  if (typeName === 'EInt' || typeName === 'ELong' || typeName === 'EDouble' || typeName === 'EFloat')
-    return Number(value);
-  if (typeName === 'EBoolean') return value === 'true';
-  return value;
+  if (!eType || !isEDataType(eType)) return { value: text };
+  try {
+    return { value: createFromString(eType, text) };
+  } catch (err) {
+    ctx.resource.getErrors().push({
+      message: `Invalid value for '${feature.getName()}' on <${element.tagName}>: ${(err as Error).message}`,
+    });
+    return undefined;
+  }
 }

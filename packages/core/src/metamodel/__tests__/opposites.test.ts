@@ -208,7 +208,7 @@ describe('opposite (inverse) reference maintenance', () => {
   });
 });
 
-describe('opposite (inverse) reference maintenance - notifications (CORE-09)', () => {
+describe('opposite (inverse) reference maintenance - notifications', () => {
   it('many-to-many: adding on one side fires ADD on the opposite end too, not just the written side', () => {
     const m = buildOppositeMetamodel();
     const alice = m.newPerson();
@@ -218,9 +218,8 @@ describe('opposite (inverse) reference maintenance - notifications (CORE-09)', (
 
     list(apollo, m.membersRef).add(alice);
 
-    // Written directly: ADD on apollo.members (already covered elsewhere). What CORE-09 was
-    // about: alice's own projectsRef - updated only as a side effect of the opposite - used to
-    // get no notification of its own at all.
+    // Written directly: ADD on apollo.members (already covered elsewhere). The point here:
+    // alice's own projectsRef, updated only as a side effect of the opposite, notifies too.
     expect(notifications).toEqual(['ADD projects 0']);
   });
 
@@ -249,9 +248,8 @@ describe('opposite (inverse) reference maintenance - notifications (CORE-09)', (
     alice.onDidChange((n) => aliceNotifications.push(`${n.eventType} ${n.feature?.getName()}`));
     bob.onDidChange((n) => bobNotifications.push(`${n.eventType} ${n.feature?.getName()}`));
 
-    // Carol takes alice as mentor: alice's own mentee changes (bob -> carol) as a side effect -
-    // used to fire nothing on alice at all. Bob is displaced (loses his mentor) - used to fire
-    // nothing on bob either.
+    // Carol takes alice as mentor: alice's mentee changes from bob to carol as a side effect,
+    // and bob loses his mentor; both notify.
     carol.eSet(m.mentorRef, alice);
 
     expect(aliceNotifications).toEqual(['SET mentee']);
@@ -269,7 +267,7 @@ describe('opposite (inverse) reference maintenance - notifications (CORE-09)', (
 
     list(research, m.employeesRef).add(alice);
 
-    // sales.employees loses alice as a side effect of the move - used to fire nothing at all.
+    // sales.employees loses alice as a side effect of the move, and notifies.
     expect(salesNotifications).toEqual(['REMOVE employees 0']);
   });
 

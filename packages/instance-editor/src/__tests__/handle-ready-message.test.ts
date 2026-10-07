@@ -5,7 +5,6 @@ import {
   EClassImpl,
   EPackageImpl,
   ResourceImpl,
-  ResourceSetImpl,
   URI,
 } from '@typemf/core';
 import { describe, expect, it } from 'vitest';
@@ -27,13 +26,11 @@ describe('handleReadyMessage', () => {
     const book = createInstanceOf(bookClass);
 
     const objectIds = new ObjectIdMap();
-    const resourceSet = new ResourceSetImpl();
     const resource = new ResourceImpl(URI.parse('mem:x'), {
       serialize: async () => new Uint8Array(),
       deserialize: async () => [],
       peekReferencedNsURIs: async () => [],
     });
-    resource.eSetResourceSet(resourceSet);
     resource.getContents().add(book);
 
     const init = handleReadyMessage({ objectIds, resource }, false);

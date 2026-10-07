@@ -1,6 +1,7 @@
 import { EClassifierImpl } from './EClassifierImpl.js';
 import { EObjectImpl } from './EObjectImpl.js';
 import { getEcorePackageRef } from './EcorePackageRef.js';
+import { UnmodifiableEList } from './UnmodifiableEList.js';
 import { EAttribute } from '../types/EAttribute.js';
 import { EClass } from '../types/EClass.js';
 import { EGenericType } from '../types/EGenericType.js';
@@ -13,6 +14,7 @@ import { BasicEList } from './BasicEList.js';
 import { EGenericTypeImpl } from './EGenericTypeImpl.js';
 import { EOperationImpl } from './EOperationImpl';
 
+/** A class: the features, operations and supertypes its instances share. */
 export class EClassImpl extends EClassifierImpl implements EClass {
   private _abstract: boolean = false;
 
@@ -104,139 +106,163 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   getEOperations(): EList<EOperation> {
     return this._eOperations;
   }
+
   getEAllAttributes(): EList<EAttribute> {
     if (this._eAllAttributesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllAttributesCache = (() => {
-        return new BasicEList<EAttribute>(
-          undefined,
-          undefined,
-          this.getEAllStructuralFeatures().filter(isEAttribute) as EAttribute[]
-        );
-      })();
+      this._eAllAttributesCache = new UnmodifiableEList(
+        (() => {
+          return new BasicEList<EAttribute>(
+            undefined,
+            undefined,
+            this.getEAllStructuralFeatures().filter(isEAttribute) as EAttribute[]
+          );
+        })()
+      );
       this._eAllAttributesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllAttributesCache!;
   }
+
   getEAllReferences(): EList<EReference> {
     if (this._eAllReferencesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllReferencesCache = (() => {
-        return new BasicEList<EReference>(
-          undefined,
-          undefined,
-          this.getEAllStructuralFeatures().filter(isEReference) as EReference[]
-        );
-      })();
+      this._eAllReferencesCache = new UnmodifiableEList(
+        (() => {
+          return new BasicEList<EReference>(
+            undefined,
+            undefined,
+            this.getEAllStructuralFeatures().filter(isEReference) as EReference[]
+          );
+        })()
+      );
       this._eAllReferencesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllReferencesCache!;
   }
+
   getEReferences(): EList<EReference> {
     if (this._eReferencesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eReferencesCache = (() => {
-        return new BasicEList<EReference>(
-          undefined,
-          undefined,
-          this.getEStructuralFeatures().filter(isEReference) as EReference[]
-        );
-      })();
+      this._eReferencesCache = new UnmodifiableEList(
+        (() => {
+          return new BasicEList<EReference>(
+            undefined,
+            undefined,
+            this.getEStructuralFeatures().filter(isEReference) as EReference[]
+          );
+        })()
+      );
       this._eReferencesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eReferencesCache!;
   }
+
   getEAttributes(): EList<EAttribute> {
     if (this._eAttributesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAttributesCache = (() => {
-        return new BasicEList<EAttribute>(
-          undefined,
-          undefined,
-          this.getEStructuralFeatures().filter(isEAttribute) as EAttribute[]
-        );
-      })();
+      this._eAttributesCache = new UnmodifiableEList(
+        (() => {
+          return new BasicEList<EAttribute>(
+            undefined,
+            undefined,
+            this.getEStructuralFeatures().filter(isEAttribute) as EAttribute[]
+          );
+        })()
+      );
       this._eAttributesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAttributesCache!;
   }
+
   getEAllContainments(): EList<EReference> {
     if (this._eAllContainmentsCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllContainmentsCache = (() => {
-        const references = this.getEAllStructuralFeatures().filter(isEReference) as EReference[];
-        return new BasicEList<EReference>(
-          undefined,
-          undefined,
-          references.filter((reference) => reference.isContainment())
-        );
-      })();
+      this._eAllContainmentsCache = new UnmodifiableEList(
+        (() => {
+          const references = this.getEAllStructuralFeatures().filter(isEReference) as EReference[];
+          return new BasicEList<EReference>(
+            undefined,
+            undefined,
+            references.filter((reference) => reference.isContainment())
+          );
+        })()
+      );
       this._eAllContainmentsCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllContainmentsCache!;
   }
+
   getEAllOperations(): EList<EOperation> {
     if (this._eAllOperationsCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllOperationsCache = (() => {
-        const operations = new Set<EOperation>();
-        const visited = new Set<EClass>();
-        const visit = (eClass: EClass): void => {
-          if (visited.has(eClass)) return;
-          visited.add(eClass);
-          eClass.getESuperTypes().forEach(visit);
-          for (const generic of eClass.getEGenericSuperTypes()) {
-            const raw = generic.getEClassifier();
-            if (raw !== undefined && isEClass(raw)) visit(raw);
-          }
-          eClass.getEOperations().forEach((operation) => operations.add(operation));
-        };
-        visit(this);
-        return new BasicEList<EOperation>(undefined, undefined, operations);
-      })();
+      this._eAllOperationsCache = new UnmodifiableEList(
+        (() => {
+          const operations = new Set<EOperation>();
+          const visited = new Set<EClass>();
+          const visit = (eClass: EClass): void => {
+            if (visited.has(eClass)) return;
+            visited.add(eClass);
+            eClass.getESuperTypes().forEach(visit);
+            for (const generic of eClass.getEGenericSuperTypes()) {
+              const raw = generic.getEClassifier();
+              if (raw !== undefined && isEClass(raw)) visit(raw);
+            }
+            eClass.getEOperations().forEach((operation) => operations.add(operation));
+          };
+          visit(this);
+          return new BasicEList<EOperation>(undefined, undefined, operations);
+        })()
+      );
       this._eAllOperationsCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllOperationsCache!;
   }
+
   getEAllStructuralFeatures(): EList<EStructuralFeature> {
     if (this._eAllStructuralFeaturesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllStructuralFeaturesCache = (() => {
-        const features = new Set<EStructuralFeature>();
-        const visited = new Set<EClass>();
-        const visit = (eClass: EClass): void => {
-          if (visited.has(eClass)) return;
-          visited.add(eClass);
-          eClass.getESuperTypes().forEach(visit);
-          for (const generic of eClass.getEGenericSuperTypes()) {
-            const raw = generic.getEClassifier();
-            if (raw !== undefined && isEClass(raw)) visit(raw);
-          }
-          eClass.getEStructuralFeatures().forEach((feature) => features.add(feature));
-        };
-        visit(this);
-        return new BasicEList<EStructuralFeature>(undefined, undefined, features);
-      })();
+      this._eAllStructuralFeaturesCache = new UnmodifiableEList(
+        (() => {
+          const features = new Set<EStructuralFeature>();
+          const visited = new Set<EClass>();
+          const visit = (eClass: EClass): void => {
+            if (visited.has(eClass)) return;
+            visited.add(eClass);
+            eClass.getESuperTypes().forEach(visit);
+            for (const generic of eClass.getEGenericSuperTypes()) {
+              const raw = generic.getEClassifier();
+              if (raw !== undefined && isEClass(raw)) visit(raw);
+            }
+            eClass.getEStructuralFeatures().forEach((feature) => features.add(feature));
+          };
+          visit(this);
+          return new BasicEList<EStructuralFeature>(undefined, undefined, features);
+        })()
+      );
       this._eAllStructuralFeaturesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllStructuralFeaturesCache!;
   }
+
   getEAllSuperTypes(): EList<EClass> {
     if (this._eAllSuperTypesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllSuperTypesCache = (() => {
-        const superTypes = new Set<EClass>();
-        const visited = new Set<EClass>();
-        const visit = (eClass: EClass): void => {
-          if (visited.has(eClass)) return;
-          visited.add(eClass);
-          for (const sup of eClass.getESuperTypes()) {
-            visit(sup);
-            superTypes.add(sup);
-          }
-          for (const generic of eClass.getEGenericSuperTypes()) {
-            const raw = generic.getEClassifier();
-            if (raw !== undefined && isEClass(raw)) {
-              visit(raw);
-              superTypes.add(raw);
+      this._eAllSuperTypesCache = new UnmodifiableEList(
+        (() => {
+          const superTypes = new Set<EClass>();
+          const visited = new Set<EClass>();
+          const visit = (eClass: EClass): void => {
+            if (visited.has(eClass)) return;
+            visited.add(eClass);
+            for (const sup of eClass.getESuperTypes()) {
+              visit(sup);
+              superTypes.add(sup);
             }
-          }
-        };
-        visit(this);
-        return new BasicEList<EClass>(undefined, undefined, superTypes);
-      })();
+            for (const generic of eClass.getEGenericSuperTypes()) {
+              const raw = generic.getEClassifier();
+              if (raw !== undefined && isEClass(raw)) {
+                visit(raw);
+                superTypes.add(raw);
+              }
+            }
+          };
+          visit(this);
+          return new BasicEList<EClass>(undefined, undefined, superTypes);
+        })()
+      );
       this._eAllSuperTypesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllSuperTypesCache!;
@@ -257,31 +283,34 @@ export class EClassImpl extends EClassifierImpl implements EClass {
   getEGenericSuperTypes(): EList<EGenericType> {
     return this._eGenericSuperTypes;
   }
+
   getEAllGenericSuperTypes(): EList<EGenericType> {
     if (this._eAllGenericSuperTypesCacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._eAllGenericSuperTypesCache = (() => {
-        const genericSuperTypes = new Set<EGenericType>();
-        const visited = new Set<EClass>();
-        const visit = (eClass: EClass): void => {
-          if (visited.has(eClass)) return;
-          visited.add(eClass);
-          for (const sup of eClass.getESuperTypes()) {
-            visit(sup);
-            const implicit = new EGenericTypeImpl();
-            implicit.setEClassifier(sup);
-            genericSuperTypes.add(implicit);
-          }
-          for (const generic of eClass.getEGenericSuperTypes()) {
-            const raw = generic.getEClassifier();
-            if (raw !== undefined && isEClass(raw)) {
-              visit(raw);
-              genericSuperTypes.add(generic);
+      this._eAllGenericSuperTypesCache = new UnmodifiableEList(
+        (() => {
+          const genericSuperTypes = new Set<EGenericType>();
+          const visited = new Set<EClass>();
+          const visit = (eClass: EClass): void => {
+            if (visited.has(eClass)) return;
+            visited.add(eClass);
+            for (const sup of eClass.getESuperTypes()) {
+              visit(sup);
+              const implicit = new EGenericTypeImpl();
+              implicit.setEClassifier(sup);
+              genericSuperTypes.add(implicit);
             }
-          }
-        };
-        visit(this);
-        return new BasicEList<EGenericType>(undefined, undefined, genericSuperTypes);
-      })();
+            for (const generic of eClass.getEGenericSuperTypes()) {
+              const raw = generic.getEClassifier();
+              if (raw !== undefined && isEClass(raw)) {
+                visit(raw);
+                genericSuperTypes.add(generic);
+              }
+            }
+          };
+          visit(this);
+          return new BasicEList<EGenericType>(undefined, undefined, genericSuperTypes);
+        })()
+      );
       this._eAllGenericSuperTypesCacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._eAllGenericSuperTypesCache!;
@@ -484,6 +513,8 @@ export class EClassImpl extends EClassifierImpl implements EClass {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 10:

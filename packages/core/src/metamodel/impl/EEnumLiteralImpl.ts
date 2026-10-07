@@ -7,6 +7,7 @@ import { EEnumLiteral } from '../types/EEnumLiteral.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EEnumerator } from '../types/EEnumerator';
 
+/** One value of an enumeration. */
 export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral {
   private _value: number = 0;
 
@@ -137,6 +138,8 @@ export class EEnumLiteralImpl extends ENamedElementImpl implements EEnumLiteral 
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

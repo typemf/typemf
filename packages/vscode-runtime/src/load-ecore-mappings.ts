@@ -46,12 +46,13 @@ export async function loadConfiguredEcoreMappings(
     runtime.packageRegistry.register(EcorePackageImpl.eINSTANCE);
   }
 
-  // A file:// converter is needed to actually read .ecore files from disk. The extension host
-  // (unlike a webview) is always Node-capable, so registering this into the SHARED
-  // uriConverterRegistry - not a separate, throwaway one just for this loading step - is safe,
-  // and lets every other extension sharing this runtime benefit from file:// support too, not
-  // just this one loading pass.
-  if (!runtime.uriConverterRegistry.getConverters().some((converter) => converter instanceof NodeFileUriConverter)) {
+  // A file:// converter is needed to actually read .ecore files from disk - normally already
+  // registered by activateRuntime (the workspace file system one); this is the fallback when
+  // nothing handles file:// yet. The extension host (unlike a webview) is always Node-capable, so
+  // registering it into the SHARED uriConverterRegistry - not a separate, throwaway one just for
+  // this loading step - is safe, and lets every other extension sharing this runtime benefit from
+  // file:// support too, not just this one loading pass.
+  if (!runtime.uriConverterRegistry.getConverter(URI.createFileURI('/'))) {
     runtime.uriConverterRegistry.register(new NodeFileUriConverter());
   }
 

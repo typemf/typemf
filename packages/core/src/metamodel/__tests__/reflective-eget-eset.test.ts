@@ -236,10 +236,8 @@ describe('reflective eGet - derived features', () => {
 });
 
 describe('reflective eGet/eSet - a feature from an unrelated class with the same raw id', () => {
-  // Real-world repro: two classes with no relation to each other, each with one attribute at
-  // feature id 0 (A.name, B.title) - eGet/eSet/eIsSet/eUnset used to dispatch on
-  // feature.getFeatureID() alone, so passing A's feature to a B instance silently read/wrote B's
-  // OWN id-0 field instead of rejecting a feature that isn't B's.
+  // Two unrelated classes, each with one attribute at feature ID 0 (A.name, B.title): passing
+  // A's feature to a B instance must be rejected, not access B's own feature 0.
   function buildUnrelatedClasses() {
     const ecore = EcorePackageImpl.eINSTANCE;
     const factory = ecore.getEFactoryInstance()!;

@@ -43,7 +43,7 @@ export interface {{ eClass.getName() }} extends {{ superClass.getName() if super
 {% else %}
 {% set _ = useImport("EObjectImpl", "impl", {foundational: true}) %}
 {% endif %}
-{% set _ = useImport("BasicEList", "impl", {foundational: true}) %}
+{% if options['generate-ecore'] or hasStoredManyValuedFeature(ownFeatures) %}{% set _ = useImport("BasicEList", "impl", {foundational: true}) %}{% endif %}
 {% for feature in ownFeatures %}
 {% if feature.isMany() %}
 {% set _ = useImport("EList", "types", {foundational: true}) %}
@@ -115,72 +115,54 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% endif %}
 {% endfor %}
 
-{% if eClass.getName() == "EClassifier" %}
-  {#- classifierID is real, internal dispatch bookkeeping (matching
-      @typemf/core's own hand-written EClassifierImpl), not a modeled
-      Ecore feature - so it's declared here, once, on EClassifier itself
-      (inherited by every descendant: EClass, EDataType, EEnum, ...)
-      rather than emitted by the ordinary feature-driven generation
-      above, which has no feature to generate it from. Confirmed
-      necessary by actually running self-hosted bootstrap code (which
-      constructs real EClassifier-derived metaclass shells and needs to
-      set their classifierID), not assumed - see NOTES.md. #}
+{% if options['generate-ecore'] and eClass.getName() == "EClassifier" %}
+  {#- Ecore only: the classifier ID is bookkeeping, not a modeled feature, inherited by every
+      classifier. #}
   private classifierId = -1;
 
   getClassifierID(): number {
     return this.classifierId;
   }
 
+  /** Sets the classifier's ID; called by generated packages. */
   setClassifierID(id: number): void {
     this.classifierId = id;
   }
 {% endif %}
-{% if eClass.getName() == "EStructuralFeature" %}
-  {#- featureID: the exact same real gap as classifierID above, one level
-      down the hierarchy - internal dispatch bookkeeping (matching
-      @typemf/core's own hand-written EStructuralFeatureImpl), not a
-      modeled Ecore feature, declared once here on EStructuralFeature
-      itself (inherited by EAttribute, EReference, ...). Found the same
-      way: running self-hosted bootstrap code, which constructs real
-      EStructuralFeature-derived metaclass shells (EAttributeImpl,
-      EReferenceImpl) and needs to set their featureID - see NOTES.md. #}
+{% if options['generate-ecore'] and eClass.getName() == "EStructuralFeature" %}
+  {#- Ecore only: the feature ID (bookkeeping) and the container class (getter modeled as an
+      operation, setter only on the implementation, used during bootstrap). #}
   private featureId = -1;
 
   getFeatureID(): number {
     return this.featureId;
   }
 
+  /** Sets the feature's ID; called by generated packages. */
   setFeatureID(id: number): void {
     this.featureId = id;
   }
-  {#- containerClass: real EMF's own asymmetric design (see EStructuralFeature.getContainerClass()'s
-      doc comment in @typemf/core) - PUBLIC getter (a real, modeled, reflectively-callable operation),
-      IMPL-ONLY setter (never on the interface, set once during bootstrap - see epackage.njk). Not
-      internal bookkeeping like featureID (it IS a real declared operation), but shares the same
-      "special-cased field the normal per-operation loop must skip" shape, so isBookkeepingOperation
-      treats it the same way (see typescript-filters.ts). #}
+
   private containerClass: {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined;
 
   getContainerClass(): {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined {
     return this.containerClass;
   }
 
+  /** Sets the implementation class of the declaring class; called by generated packages. */
   setContainerClass(cls: {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined): void {
     this.containerClass = cls;
   }
 {% endif %}
-{% if eClass.getName() == "EOperation" %}
-  {#- operationID: the exact same real gap as classifierID/featureID above - internal dispatch
-      bookkeeping (matching @typemf/core's own hand-written EOperationImpl), not a modeled Ecore
-      feature, declared once here on EOperation itself. Same discovery path: self-hosted bootstrap
-      code constructs real EOperationImpl instances and needs to set their operationID - see NOTES.md
-      (point 4). #}
+{% if options['generate-ecore'] and eClass.getName() == "EOperation" %}
+  {#- Ecore only: the operation ID is bookkeeping, not a modeled feature. #}
   private operationId = -1;
 
   getOperationID(): number {
     return this.operationId;
   }
 
+  /** Sets the operation's ID; called by generated packages. */
   setOperationID(id: number): void {
     this.operationId = id;
   }
@@ -196,11 +178,12 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% if feature.isMany() %}
 {% if getter %}
 {% set _featureImports = registerBodyImports(feature) %}
+  {#- Computed: the cached list is read-only, since changing it would never reach the model. #}
   get{{ ucfirst(feature.getName()) }}(): EList<{{ tsScalarType(feature) }}> {
     if (this._{{ feature.getName() }}CacheGeneration !== EObjectImpl.getModelGeneration()) {
-      this._{{ feature.getName() }}Cache = (() => {
+      this._{{ feature.getName() }}Cache = new {{ useImport("UnmodifiableEList", "impl", {foundational: true}) }}((() => {
         {{ getter | indent(8) }}
-      })();
+      })());
       this._{{ feature.getName() }}CacheGeneration = EObjectImpl.getModelGeneration();
     }
     return this._{{ feature.getName() }}Cache!;
@@ -447,18 +430,9 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     }
   }
 
-  {#- The many-valued analog of eBasicSetValue, for the identical reason:
-      bootstrap code needs to add to a list (eStructuralFeatures,
-      eAnnotations, eSuperTypes, ...) before the feature's own metaclass
-      exists to back the ordinary getter's lazy construction. Constructs
-      the cache with no feature reference when called this way - a real,
-      narrow, deliberate limitation: containment/opposite maintenance on
-      a list built this way is unavailable, since there's no feature to
-      derive it from. Acceptable specifically because only the metamodel's
-      own self-describing bootstrap instances (EClassImpl, EAttributeImpl,
-      etc., as constructed by {Pkg}PackageImpl) ever take this path -
-      ordinary domain instances always go through the normal, fully-
-      wired getter instead, never this one. #}
+{% if options['generate-ecore'] %}
+  {#- Ecore only: the bootstrap adds to lists before the metaclasses their getters need exist. #}
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
 {% for feature in ownFeatures %}
@@ -476,6 +450,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% endif %}
     }
   }
+{% endif %}
 
   eIsSet(feature: EStructuralFeature): boolean {
     this.requireOwnFeature(feature);

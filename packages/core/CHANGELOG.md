@@ -4,17 +4,17 @@
 
 ### Minor Changes
 
-- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Add `EObject.eResource()` (CORE-08) - the Resource an object is part of, if any: its own if it's a root, otherwise its nearest containing root's. Matches real EMF's own public API, which this project previously worked around with a free function (`getResourceOf`, still exported, now a thin wrapper) kept outside the metamodel specifically to avoid this.
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Add `EObject.eResource()` - the Resource an object is part of, if any: its own if it's a root, otherwise its nearest containing root's. Matches real EMF's own public API, which this project previously worked around with a free function (`getResourceOf`, still exported, now a thin wrapper) kept outside the metamodel specifically to avoid this.
 
   `@typemf/xmi` and `@typemf/json` now call `target.eResource()` directly instead of importing `getResourceOf`.
 
-- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix every generated package (including `@typemf/core`'s own self-hosted Ecore metamodel) requiring `{Pkg}PackageImpl.eINSTANCE`/`.init()` to be touched before anything else could be used (CORE-01) - `new EClassImpl().setName('Book')`, or any other direct construction of a generated class, previously threw `getEcorePackageRef() called before the EcorePackage singleton finished constructing itself.`
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix every generated package (including `@typemf/core`'s own self-hosted Ecore metamodel) requiring `{Pkg}PackageImpl.eINSTANCE`/`.init()` to be touched before anything else could be used - `new EClassImpl().setName('Book')`, or any other direct construction of a generated class, previously threw `getEcorePackageRef() called before the EcorePackage singleton finished constructing itself.`
 
   The package singleton is now constructed lazily, on first use, through an initializer each `{Pkg}PackageImpl.ts` registers as a side effect of its own module being loaded - no code anywhere needs to explicitly reference `eINSTANCE` first just to make the metamodel exist. `@typemf/core`'s `package.json` is now marked `"sideEffects": true` so a bundler doesn't tree-shake that registration away.
 
   Also adds `{Factory}Impl.eINSTANCE` (e.g. `EcoreFactoryImpl.eINSTANCE`), matching EMF's own factory singleton accessor alongside the package's.
 
-- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix missing notifications (CORE-09, CORE-12): several EObjectImpl mutations updated storage silently, with no `onDidChange` notification, even though a real change happened.
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix missing notifications: several EObjectImpl mutations updated storage silently, with no `onDidChange` notification, even though a real change happened.
 
   - `eInverseAdd` (an opposite reference gaining a value) now fires `ADD`/`SET`.
   - Clearing an opposite or an old container's reference during a move or detach now fires `REMOVE`/`SET` (one shared internal method, covering `eInverseRemove`, `eBasicMoveInto` and `eBasicDetachFromContainer` alike).
@@ -51,9 +51,9 @@
   - Adding an object that is currently contained in some other object's containment feature left it there too; it is now detached from that container first.
   - Adding the same root a second time duplicated it in the list; it is now a no-op.
 
-- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix `URI.createFileURI(path)` on a Windows-style path or a path with characters that need escaping (CORE-06): `createFileURI('C:\\Users\\a b\\m.xmi')` previously produced `file:///C:\Users\a b\m.xmi` - a mix of forward and backslashes with an un-encoded space, which `resolve()`/`deresolve()` (both split on `/`) and any consumer serializing the URI into text (e.g. an `href`) handled incorrectly or not at all.
+- [#8](https://github.com/typemf/typemf/pull/8) [`b75a60a`](https://github.com/typemf/typemf/commit/b75a60aee5cbf52fdba713d451b56c753f89e177) Thanks [@bergerbd](https://github.com/bergerbd)! - Fix `URI.createFileURI(path)` on a Windows-style path or a path with characters that need escaping: `createFileURI('C:\\Users\\a b\\m.xmi')` previously produced `file:///C:\Users\a b\m.xmi` - a mix of forward and backslashes with an un-encoded space, which `resolve()`/`deresolve()` (both split on `/`) and any consumer serializing the URI into text (e.g. an `href`) handled incorrectly or not at all.
 
-  `createFileURI` now converts backslashes to forward slashes first (so a Windows `fsPath` becomes an ordinary absolute URI path, the same shape a POSIX path already had) and percent-encodes each path segment, leaving `:` unescaped so a drive letter still reads as `C:` rather than `C%3A` (matching Eclipse's own Windows file URIs). Decoding back to a native path at the filesystem boundary is unchanged - `@typemf/node`'s `fileURLToPath`-based conversion (NODE-01) already handles it.
+  `createFileURI` now converts backslashes to forward slashes first (so a Windows `fsPath` becomes an ordinary absolute URI path, the same shape a POSIX path already had) and percent-encodes each path segment, leaving `:` unescaped so a drive letter still reads as `C:` rather than `C%3A` (matching Eclipse's own Windows file URIs). Decoding back to a native path at the filesystem boundary is unchanged - `@typemf/node`'s `fileURLToPath`-based conversion already handles it.
 
 ## 0.6.0
 

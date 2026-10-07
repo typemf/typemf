@@ -8,6 +8,7 @@ import { EList } from '../types/EList.js';
 import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A namespace of classifiers, identified by its namespace URI. */
 export class EPackageImpl extends ENamedElementImpl implements EPackage {
   private _nsURI: string | undefined;
 
@@ -190,6 +191,8 @@ export class EPackageImpl extends ENamedElementImpl implements EPackage {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 5:

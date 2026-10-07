@@ -1,43 +1,14 @@
 import type { EcorePackage } from '../EcorePackage.js';
 
 /**
- * A late-bound reference to the EcorePackage singleton,
- * set once by EcorePackageImpl's own constructor after
- * it finishes constructing itself.
- *
- * Every generated class needs a reference to the package singleton (for
- * eClass(), for feature-ID lookups in field initializers/lazy getters,
- * etc.) - and EcorePackageImpl itself constructs
- * (nearly) every one of those classes to build the runtime metamodel. For
- * an ordinary generated package that mutual reference is harmless: the
- * package singleton already exists in full by the time anything else is
- * ever constructed. But self-hosting a metamodel that describes itself
- * (as with real Ecore.ecore) makes this a genuine, confirmed hazard: a
- * real class along the package's own superclass chain, or a class that is
- * ALSO the superclass of something the package constructs directly (the
- * "EFactory unification" / "EPackage unification" cases), can end up
- * needing this reference while EcorePackageImpl is
- * still in the middle of constructing itself - a genuine circular
- * dependency, not merely an ordering preference, confirmed directly
- * against a real failing bundle ("Class extends value undefined is not a
- * constructor or null") while building this generator, not assumed.
- *
- * This module has only a type-only import (erased at compile time, zero
- * runtime footprint) - so importing FROM this module can never itself
- * participate in a circular dependency, unlike importing
- * EcorePackageImpl (or anything re-exporting it)
- * directly.
+ * A reference to the EcorePackage singleton that every generated class of the package
+ * reads instead of importing EcorePackageImpl, which would be a circular import: the
+ * package constructs those classes while it constructs itself. This module only has a type
+ * import, so it can be imported from anywhere.
  */
 let ref: EcorePackage | undefined;
 
-/**
- * Set once, as a module-scope side effect of EcorePackageImpl.ts's own module
- * being evaluated (see the call at the bottom of that file) - never a direct import of
- * EcorePackageImpl here, for the exact same circularity reason the class doc
- * comment above explains. Lets getEcorePackageRef() (CORE-01) construct the
- * singleton itself, on first use, instead of only ever throwing when nothing has touched
- * EcorePackageImpl.eINSTANCE/.init() yet.
- */
+/** Constructs the package on first use; registered when EcorePackageImpl.ts is evaluated. */
 let initializer: (() => void) | undefined;
 let initializing = false;
 
@@ -50,10 +21,7 @@ export function registerEcorePackageInitializer(init: () => void): void {
 }
 
 export function getEcorePackageRef(): EcorePackage {
-  // The `!initializing` guard turns a reentrant call before the constructor reaches its own
-  // setEcorePackageRef(this) - which should never genuinely happen; the
-  // constructor calls that first, before anything else that could call back in here - into the
-  // ordinary "not ready yet" error below instead of unbounded recursion.
+  // `initializing` turns a reentrant call during construction into the error below.
   if (!ref && initializer && !initializing) {
     initializing = true;
     try {

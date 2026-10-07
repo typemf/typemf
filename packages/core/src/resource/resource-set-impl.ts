@@ -88,17 +88,8 @@ export class ResourceSetImpl implements ResourceSet {
     }
     const proxyLabel = `${proxy.eClass().getName()} (${proxyURI.toString()})`;
 
-    // A registered package's own nsURI as a "resource" to resolve into, exactly the way real
-    // EMF's own EPackage.Registry doubles as a virtual resource for its own metamodel: a real,
-    // confirmed gap found parsing an externally-authored file whose eType referenced Ecore's own
-    // EString by its real, absolute nsURI (http://www.eclipse.org/emf/2002/Ecore#//EString) - the
-    // mirror-image, read-side case of the write-side "treat an unattached, no-Resource object as
-    // automatically local" bug fixed earlier in @typemf/xmi's own encodeReferenceValue, except
-    // here the symptom is the opposite: trying to getResource()/createResource() a real URI that
-    // was never meant to be loaded as a document at all, since a registered EPackage already *is*
-    // the complete answer. Checked before the normal resource-loading path, not as a fallback
-    // after it fails, since a registered package should never be re-fetched as if it were a
-    // separate, unloaded document.
+    // A registered package answers for its own nsURI instead of a document, as EMF's package
+    // registry does; it is never loaded as a resource.
     const registeredPackage = this.packageRegistry.getPackage(proxyURI.trimFragment().toString());
     if (registeredPackage) {
       const fragment = proxyURI.getFragment();
@@ -120,14 +111,7 @@ export class ResourceSetImpl implements ResourceSet {
     const fragment = proxyURI.getFragment();
     const roots = targetResource.getContents().toArray();
     const serializer = targetResource.getSerializer();
-    // Defer to the target resource's OWN serializer's fragment grammar
-    // when it provides one (e.g. @typemf/xmi's EMF grammar); fall back to
-    // core's own default otherwise (e.g. for a plain @typemf/json target,
-    // which never overrides this because its grammar already IS the
-    // default). This is what makes cross-format references resolve
-    // correctly - a json document's proxy into an xmi document, or vice
-    // versa - since the target's format, not the referencing one, decides
-    // how ITS fragments are read.
+    // The fragment grammar of the target's format applies, whatever format refers to it.
     const resolver = serializer.resolveFragment?.bind(serializer) ?? resolveFragment;
     const found = fragment ? resolver(fragment, roots) : undefined;
     if (!found) {
@@ -175,13 +159,8 @@ function isUnresolvedProxy(value: unknown): value is EObject {
 }
 
 /**
- * The real EMF-style name-based path within a registered package directly - "//Name" for a
- * top-level classifier, "//Name/Name2" for a feature or operation one level inside a class -
- * mirroring @typemf/xmi's own ecoreOwnFragmentPath (the write side of this same case), but here
- * general enough for any registered package's own nsURI, not just Ecore's own. A package has no
- * Resource, no containment tree, nothing eContainer()-walkable at all to defer to a serializer's
- * own fragment grammar for, so this is deliberately simple, name-segment resolution - exactly
- * what every real .ecore file's own attribute-form cross-references actually use.
+ * The element of `pkg` that an EMF name path addresses: `//Class` for a classifier, `//Class/name`
+ * for a feature of a class.
  */
 export function resolveAgainstPackage(
   pkg: { getEClassifier(name: string): EClassifier | undefined },

@@ -1,5 +1,6 @@
 import { EClass, EPackageRegistryImpl, isEPackage, ResourceSetImpl, URI } from '@typemf/core';
 import type { TypeMfRuntimeApi } from '@typemf/vscode-runtime';
+import { basename } from 'node:path/posix';
 import * as vscode from 'vscode';
 import { handleAncestorChainRequest } from './handle-ancestor-chain-request.js';
 import { handleApplyEditRequest } from './handle-apply-edit-request.js';
@@ -21,9 +22,22 @@ import {
   isReferenceCandidatesRequest,
   SettingsMessage,
 } from './host-message-protocol.js';
+import { EditHistory } from './edit-history.js';
 import { InstanceDocument } from './instance-document.js';
 import { resolveNewInstanceSpec } from './new-instance-spec-uri.js';
+import { registerIfNew } from './register-if-new.js';
+import { resolveDocumentIdentity } from './resolve-document-identity.js';
 import { resolveMissingPackages } from './resolve-missing-packages.js';
+import { UndoableEdit } from './undoable-edit.js';
+
+/** A file's modification time, or undefined if it cannot be read (e.g. it does not exist). */
+async function mtimeOf(uri: vscode.Uri): Promise<number | undefined> {
+  try {
+    return (await vscode.workspace.fs.stat(uri)).mtime;
+  } catch {
+    return undefined;
+  }
+}
 
 /** The standard VS Code webview nonce pattern (a random string, gating which <script> tags the
  *  CSP allows to run) - not cryptographic, just needs to be unpredictable per render. */
@@ -55,7 +69,8 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
    */
   static readonly ecoreDefaultViewType = 'typemf.instanceEditor.ecoreDefault';
 
-  private readonly changeEmitter = new vscode.EventEmitter<vscode.CustomDocumentContentChangeEvent<InstanceDocument>>();
+  private readonly changeEmitter = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<InstanceDocument>>();
+  private readonly panels = new Map<InstanceDocument, Set<vscode.WebviewPanel>>();
   readonly onDidChangeCustomDocument = this.changeEmitter.event;
 
   constructor(
@@ -65,10 +80,17 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
 
   async openCustomDocument(
     uri: vscode.Uri,
-    _openContext: vscode.CustomDocumentOpenContext,
+    openContext: vscode.CustomDocumentOpenContext,
     _token: vscode.CancellationToken
   ): Promise<InstanceDocument> {
-    return uri.scheme === 'untitled' ? this.openNewInstance(uri) : this.openExistingInstance(uri);
+    // Hot exit / crash recovery: openContext.backupId names a real file on disk holding
+    // whatever backupCustomDocument last wrote for this exact document - possibly-unsaved edits
+    // that would otherwise be silently lost, including for an untitled document, which still
+    // reaches this same uri.scheme === 'untitled' branch on restore and, without this check, used
+    // to always rebuild a brand new, empty instance from the uri's own new-instance spec instead
+    // (openNewInstance) - discarding the backup outright rather than ignoring it for lack of one.
+    if (openContext.backupId) return this.openFromContent(uri, vscode.Uri.parse(openContext.backupId));
+    return uri.scheme === 'untitled' ? this.openNewInstance(uri) : this.openFromContent(uri, uri);
   }
 
   /**
@@ -98,13 +120,16 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     // shared registry at all) triggers this editor's own "reopen with the right editor after
     // save" fix (saveCustomDocumentAs's own vscode.openWith call) - which goes through
     // openCustomDocument again, and since the file is real now (not untitled:), through
-    // openExistingInstance, not back through here. That flow resolves referenced metamodels
+    // openFromContent, not back through here. That flow resolves referenced metamodels
     // against this SAME shared registry, found this package missing (never having been told about
     // it), and fell back to the missing-package QuickPick - which, triggered from inside an
     // automatic, programmatic reopen rather than a direct user action, had nothing to resolve it
-    // and reported cancelled. A statically-registered package is already here, so this is a no-op
-    // for that case; only the dynamic one actually needed it.
-    this.runtime.packageRegistry.register(pkg);
+    // and reported cancelled.
+    //
+    // Only when nothing is registered under this nsURI yet (see registerIfNew). A
+    // statically registered package is already here, so this is a no-op for that case; only the
+    // dynamic one actually needed registering at all, and only the first time.
+    registerIfNew(this.runtime.packageRegistry, pkg);
     // Uniform regardless of static/dynamic (the whole point of that framing): every EPackage,
     // generated or dynamically loaded, already has a real, working EFactoryInstance.
     const root = factory.create(eClass);
@@ -130,9 +155,19 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     return new InstanceDocument(uri, resourceSet, resource);
   }
 
-  private async openExistingInstance(uri: vscode.Uri): Promise<InstanceDocument> {
-    const fileUri = URI.createFileURI(uri.fsPath);
-    const bytes = await vscode.workspace.fs.readFile(uri);
+  /**
+   * Loads a serialized resource from contentUri - either `uri` itself, for a normal open, or a
+   * hot-exit backup's own real file (named by openContext.backupId) instead, for either an
+   * existing document whose last save predates its own crash or an untitled one that never had a
+   * real file at all (see openCustomDocument's own reasoning) - and gives the result the
+   * SAME identity `uri` would always have gotten (resolveDocumentIdentity), regardless of which
+   * one content actually came from, so every save/revert after this one behaves exactly as if
+   * nothing had happened.
+   */
+  private async openFromContent(uri: vscode.Uri, contentUri: vscode.Uri): Promise<InstanceDocument> {
+    const identityUri = resolveDocumentIdentity(uri.scheme, uri.fsPath, uri.with({ fragment: '' }).toString());
+    const bytes = await vscode.workspace.fs.readFile(contentUri);
+    const restoringFromBackup = contentUri.toString() !== uri.toString();
 
     const documentRegistry = new EPackageRegistryImpl();
     const resourceSet = new ResourceSetImpl(
@@ -142,7 +177,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     );
     // A tracked-but-unloaded Resource - used first just to reach its own serializer for the peek
     // below, then loaded for real once documentRegistry is fully resolved. One Resource, not two.
-    const resource = resourceSet.createResource(fileUri);
+    const resource = resourceSet.createResource(identityUri);
+    // Temporarily pointed at the backup's own real file for the load itself - exactly the same
+    // swap-then-restore pattern backupCustomDocument itself already uses - then restored to
+    // identityUri below, once loaded, so nothing downstream ever sees the backup's path at all.
+    if (restoringFromBackup) resource.setURI(URI.createFileURI(contentUri.fsPath));
 
     const needed = await resource.getSerializer().peekReferencedNsURIs(bytes);
     const missing: string[] = [];
@@ -161,6 +200,7 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     }
 
     await resource.load();
+    if (restoringFromBackup) resource.setURI(identityUri);
 
     // When the loaded root is itself an EPackage (a .ecore file, e.g. Ecore.ecore itself) whose
     // own nsURI matches an already-registered, real package, give the root that same real
@@ -184,7 +224,10 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
       }
     }
 
-    return new InstanceDocument(uri, resourceSet, resource);
+    const document = new InstanceDocument(uri, resourceSet, resource);
+    // A restored backup already differs from the file on disk.
+    if (restoringFromBackup) document.history = new EditHistory(true);
+    return document;
   }
 
   async resolveCustomEditor(
@@ -208,13 +251,11 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
         return;
       }
       if (isApplyEditRequest(message)) {
-        const response = handleApplyEditRequest(message, document);
+        // Each successful edit is announced as a CustomDocumentEditEvent (marks the document
+        // dirty and puts one step on VS Code's undo stack) - onEdit is only called on a genuine
+        // success, an ApplyEditError means nothing on the real object actually changed.
+        const response = handleApplyEditRequest(message, document, (edit) => this.announceEdit(document, edit));
         void webviewPanel.webview.postMessage(response);
-        // Marks the document dirty (enables save) via CustomDocumentContentChangeEvent, not
-        // CustomDocumentEditEvent - no undo/redo, per this session's own earlier design decision;
-        // revertCustomDocument stays the only way to discard unsaved changes. Only fired on a
-        // genuine success - an ApplyEditError means nothing on the real object actually changed.
-        if (response.type === 'typemf/applyEditResult') this.changeEmitter.fire({ document });
         return;
       }
       if (isConcreteSubtypesRequest(message)) {
@@ -226,11 +267,8 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
         return;
       }
       if (isCreateChildRequest(message)) {
-        const response = handleCreateChildRequest(message, document);
+        const response = handleCreateChildRequest(message, document, (edit) => this.announceEdit(document, edit));
         void webviewPanel.webview.postMessage(response);
-        // Same dirty-marking as ApplyEditRequest's own handling just above - a genuine, successful
-        // mutation to the real document, same as any other.
-        if (response.type === 'typemf/createChildResult') this.changeEmitter.fire({ document });
         return;
       }
       if (isReferenceCandidatesRequest(message)) {
@@ -287,13 +325,67 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
       };
       void webviewPanel.webview.postMessage(settingsMessage);
     });
-    webviewPanel.onDidDispose(() => configListener.dispose());
+    if (document.uri.scheme !== 'untitled' && document.lastKnownMtime === undefined) {
+      document.lastKnownMtime = await mtimeOf(document.uri);
+      this.watchForExternalChanges(document);
+    }
+
+    const documentPanels = this.panels.get(document) ?? new Set<vscode.WebviewPanel>();
+    documentPanels.add(webviewPanel);
+    this.panels.set(document, documentPanels);
+    webviewPanel.onDidDispose(() => {
+      configListener.dispose();
+      documentPanels.delete(webviewPanel);
+      if (documentPanels.size === 0) this.panels.delete(document);
+    });
 
     webviewPanel.webview.options = {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'dist-webview')],
     };
     webviewPanel.webview.html = this.renderWebviewHtml(webviewPanel.webview);
+  }
+
+  /**
+   * Puts `edit` on VS Code's undo stack. Undo and redo change the real objects, then reload every
+   * webview of the document: a webview only ever holds its own, lazily built copy of the objects
+   * and cannot be patched reliably, so it rebuilds from the host's (unchanged) object ids and
+   * restores its own selection and expansion state (see App.tsx).
+   */
+  private announceEdit(document: InstanceDocument, edit: UndoableEdit): void {
+    document.history.recordEdit();
+    const generation = document.generation;
+    // An edit recorded before the document was reloaded from its file (revert, external change)
+    // refers to objects that no longer exist, so undoing or redoing it can only be skipped.
+    const stale = (): boolean => {
+      if (document.generation === generation) return false;
+      void vscode.window.showWarningMessage(
+        'TypeMF: this change predates the last reload of the document from disk and can no longer be undone or redone.'
+      );
+      return true;
+    };
+    this.changeEmitter.fire({
+      document,
+      label: edit.label,
+      undo: () => {
+        if (stale()) return;
+        edit.undo();
+        document.history.undone();
+        this.reloadWebviews(document);
+      },
+      redo: () => {
+        if (stale()) return;
+        edit.redo();
+        document.history.redone();
+        this.reloadWebviews(document);
+      },
+    });
+  }
+
+  private reloadWebviews(document: InstanceDocument): void {
+    for (const panel of this.panels.get(document) ?? []) {
+      panel.webview.html = this.renderWebviewHtml(panel.webview);
+    }
   }
 
   /** The real webview HTML - the confirmed, standard VS Code pattern (nonce-gated script,
@@ -321,7 +413,20 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
   }
 
   async saveCustomDocument(document: InstanceDocument, _token: vscode.CancellationToken): Promise<void> {
-    await document.resource.save();
+    await this.saveAndRecord(document);
+  }
+
+  /** Saves, then records the new clean state and file time so the document's own write is not
+   *  mistaken for an external change (see watchForExternalChanges). */
+  private async saveAndRecord(document: InstanceDocument): Promise<void> {
+    document.saving = true;
+    try {
+      await document.resource.save();
+      document.history.markSaved();
+      document.lastKnownMtime = await mtimeOf(document.uri);
+    } finally {
+      document.saving = false;
+    }
   }
 
   async saveCustomDocumentAs(
@@ -339,9 +444,10 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     // the old URI meant every save after the first one silently targeted the original (often
     // untitled:) URI instead, never reaching the real file on disk again. document.uri is updated
     // too, for the same reason (see its own, now-mutable declaration in instance-document.ts).
-    document.resource.setURI(URI.createFileURI(destination.fsPath));
+    document.resource.setURI(resolveDocumentIdentity(destination.scheme, destination.fsPath, destination.toString()));
     document.uri = destination;
-    await document.resource.save();
+    await this.saveAndRecord(document);
+    this.watchForExternalChanges(document);
 
     // Re-opens explicitly with this editor, deliberately deferred (not awaited, not run
     // synchronously here) - a real, reported problem: this extension's own customEditors
@@ -360,12 +466,60 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
   }
 
   async revertCustomDocument(document: InstanceDocument, _token: vscode.CancellationToken): Promise<void> {
-    // Resource.load() already does a clean discard-and-replace (clears getContents(), then
-    // repopulates from a fresh deserialize) - exactly what "discard unsaved changes" needs. Reuses
-    // documentRegistry as already resolved when the document was first opened; does not re-run
-    // missing-package resolution (an accepted limitation - the set of referenced metamodels
-    // changing between open and revert is an edge case this first scaffold doesn't handle).
+    await this.reloadFromDisk(document);
+  }
+
+  /**
+   * Discards the in-memory document and loads the file again. Resource.load() already does a clean
+   * discard-and-replace (clears getContents(), then repopulates from a fresh deserialize), reusing
+   * the documentRegistry resolved when the document was first opened - it does not re-run
+   * missing-package resolution (an accepted limitation: the set of referenced metamodels changing
+   * between open and reload is an edge case). Every object is new afterwards, so the issued object
+   * ids are dropped and the webviews built on them are reloaded.
+   */
+  private async reloadFromDisk(document: InstanceDocument): Promise<void> {
     await document.resource.load();
+    document.objectIds.clear();
+    document.generation++;
+    document.history.reset();
+    document.lastKnownMtime = await mtimeOf(document.uri);
+    this.reloadWebviews(document);
+  }
+
+  /**
+   * Reloads a document that was changed outside the editor (git checkout, another editor, a
+   * build step) - unless it has unsaved changes, which are kept: VS Code reports the conflict
+   * itself when saving over a newer file.
+   */
+  private watchForExternalChanges(document: InstanceDocument): void {
+    if (document.uri.scheme === 'untitled') return;
+    const watcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(vscode.Uri.joinPath(document.uri, '..'), basename(document.uri.path))
+    );
+    const onChange = (): void => {
+      if (document.saving || document.reloading || document.history.isDirty()) return;
+      void (async () => {
+        document.reloading = true;
+        try {
+          const mtime = await mtimeOf(document.uri);
+          if (mtime === undefined || mtime === document.lastKnownMtime) return;
+          await this.reloadFromDisk(document);
+          vscode.window.setStatusBarMessage(
+            `TypeMF: reloaded ${basename(document.uri.path)} after an external change`,
+            4000
+          );
+        } catch (err) {
+          void vscode.window.showWarningMessage(
+            `TypeMF: could not reload ${basename(document.uri.path)} after an external change: ${(err as Error).message}`
+          );
+        } finally {
+          document.reloading = false;
+        }
+      })();
+    };
+    watcher.onDidChange(onChange);
+    watcher.onDidCreate(onChange);
+    document.setFileWatcher(watcher);
   }
 
   async backupCustomDocument(

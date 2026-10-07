@@ -53,7 +53,7 @@ describe('BasicEList', () => {
     expect(() => list.get(5)).toThrow(RangeError);
   });
 
-  describe('move() - CORE-12', () => {
+  describe('move()', () => {
     it('reorders elements, returns the moved one, and leaves the rest shifted correctly', () => {
       const list = new BasicEList<string>();
       list.addAll(['a', 'b', 'c', 'd']);

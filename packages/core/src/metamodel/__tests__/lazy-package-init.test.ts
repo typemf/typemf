@@ -4,10 +4,9 @@ import { EcoreFactoryImpl } from '../impl/EcoreFactoryImpl.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
 
 /**
- * CORE-01: unlike every other test in this package, this file deliberately does NOT start with
- * `void EcorePackageImpl.eINSTANCE;` - the whole point is to exercise construction before
- * anything has touched the singleton. Vitest gives each test file its own, fresh module
- * registry, so this genuinely starts cold.
+ * Unlike the other tests, this file does not start with `void EcorePackageImpl.eINSTANCE;`: it
+ * tests construction before anything touched the package. Vitest gives each test file its own
+ * module registry, so the package is not constructed yet.
  */
 describe('using core without first touching EcorePackageImpl.eINSTANCE', () => {
   it('new EClassImpl().setName(...) works directly', () => {

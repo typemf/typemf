@@ -53,3 +53,17 @@ describe('ObjectIdMap', () => {
     expect(idsA.objectFor(idsA.idFor(objA1))).toBe(objA1);
   });
 });
+
+describe('ObjectIdMap.clear', () => {
+  it('forgets every id, and never reissues one that was handed out before', () => {
+    const map = new ObjectIdMap();
+    const first = new EClassImpl();
+    const oldId = map.idFor(first);
+
+    map.clear();
+
+    expect(map.objectFor(oldId)).toBeUndefined();
+    const second = new EClassImpl();
+    expect(map.idFor(second)).not.toBe(oldId);
+  });
+});

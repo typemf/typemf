@@ -7,6 +7,7 @@ import { EGenericType } from '../types/EGenericType.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypedElement } from '../types/ETypedElement.js';
 
+/** An element with a type and a multiplicity: a feature, an operation or a parameter. */
 export class ETypedElementImpl extends ENamedElementImpl implements ETypedElement {
   private _ordered: boolean = true;
 
@@ -244,6 +245,8 @@ export class ETypedElementImpl extends ENamedElementImpl implements ETypedElemen
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

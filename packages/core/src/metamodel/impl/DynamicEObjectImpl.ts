@@ -4,17 +4,9 @@ import { BasicEList } from './BasicEList.js';
 import { EObjectImpl } from './EObjectImpl.js';
 
 /**
- * Generic, map-backed EObject that works for any EClass with no generated
- * code at all - the "dynamic instantiation" path discussed for models
- * parsed straight from a .ecore file. Values are keyed by the feature's
- * position in dynamicEClass.getEAllStructuralFeatures() (EClass.getFeatureID(),
- * not the feature's own, per-declaring-class getFeatureID() - see CORE-05: two
- * features inherited from different supertypes can otherwise collide), rather
- * than by named fields, unlike a generated *Gen class.
- *
- * Containment and opposite maintenance (eDidAdd/eDidRemove, eInverseAdd/
- * eInverseRemove) come for free from EObjectImpl, since those are generic
- * there and only call back into eGet/eBasicSetValue.
+ * A model object for any class, needing no generated code. Values are stored by the feature's ID
+ * in this object's class (`EClass.getFeatureID()`), which, unlike a feature's own ID, is unique
+ * even across multiple supertypes.
  */
 export class DynamicEObjectImpl extends EObjectImpl {
   private readonly values = new Map<number, unknown>();

@@ -6,90 +6,95 @@ import { EStructuralFeature } from './EStructuralFeature.js';
 import { Notification } from './Notification.js';
 
 /**
- * The universal reflective base type. Every model instance - whether it was
- * produced by generated code or by DynamicEObjectImpl against a parsed-only
- * .ecore file - implements this interface, and it is the interface all
- * generic (reflection-driven) tooling, such as an instance editor, is
- * written against.
+ * The reflective interface of every model object, generated or dynamic. Generic tooling such as
+ * serializers and editors works against this interface alone.
  */
 export interface EObject {
-  /** The metaclass describing this object's structure. */
+  /** The class describing this object's structure. */
   eClass(): EClass;
 
-  /** The object containing this one, if this object is someone's child. */
+  /** The object containing this one through a containment reference, if any. */
   eContainer(): EObject | undefined;
 
-  /** The containment feature this object was set/added into, if any. */
+  /** The containment reference of {@link eContainer} that holds this object, if any. */
   eContainingFeature(): EStructuralFeature | undefined;
 
   /**
-   * The Resource this object is part of, if any - its own, if it's a root, otherwise its nearest
-   * containing root's. `undefined` for an object that was never added to any Resource's
-   * getContents() (directly, or by containment under a root that was). Real EMF's own public API
-   * (`InternalEObject.eResource()`, called through the public `EObject` supertype); unlike EMF,
-   * this is declared directly on the public interface rather than split across an internal one,
-   * since this project has no equivalent internal/public SPI split to preserve.
+   * The resource this object belongs to: the resource whose contents include it or its topmost
+   * container, or `undefined` if there is none.
    */
   eResource(): Resource | undefined;
 
-  /** Direct containment children, across every containment feature. */
+  /**
+   * The direct children, across all containment references in feature order.
+   *
+   * @returns a read-only snapshot; it does not follow later changes.
+   */
   eContents(): EList<EObject>;
 
-  /** Every containment descendant, depth-first. */
+  /** Every object contained directly or indirectly, in depth-first pre-order. */
   eAllContents(): EObject[];
 
-  /** Generic getter, dispatched by feature. */
+  /**
+   * The current value of `feature`. A many-valued feature returns its live list; changes to that
+   * list change the model.
+   *
+   * @throws Error if `feature` is not one of `eClass().getEAllStructuralFeatures()`.
+   */
   eGet(feature: EStructuralFeature): unknown;
 
-  /** Generic setter, dispatched by feature. */
+  /**
+   * Sets `feature` to `value`. For a many-valued feature, `value` is an iterable that replaces the
+   * list's contents (`undefined` or `null` clears it). Containers and opposite references are
+   * updated, and listeners are notified.
+   *
+   * @throws Error if `feature` is not one of `eClass().getEAllStructuralFeatures()`.
+   */
   eSet(feature: EStructuralFeature, value: unknown): void;
 
-  /** Whether the feature currently holds a non-default value. */
+  /**
+   * Whether `feature` differs from its unset state: a single-valued feature holds a value other
+   * than its default, a many-valued feature's list is not empty.
+   *
+   * @throws Error if `feature` is not one of `eClass().getEAllStructuralFeatures()`.
+   */
   eIsSet(feature: EStructuralFeature): boolean;
 
-  /** Reset the feature to its default/unset state. */
+  /**
+   * Unsets `feature`: a single-valued feature returns to its default value, a many-valued feature
+   * is cleared.
+   *
+   * @throws Error if `feature` is not one of `eClass().getEAllStructuralFeatures()`.
+   */
   eUnset(feature: EStructuralFeature): void;
 
   /**
-   * Whether this object is an unresolved placeholder for an object that
-   * lives in another document (see docs/dynamic-instantiation-notes.md for
-   * the current, deliberately minimal, proxy story).
+   * Whether this object is an unresolved proxy: a placeholder for an object in a document that
+   * has not been loaded yet. Resolve it with `ResourceSet.resolve()`.
    */
   eIsProxy(): boolean;
 
   /**
-   * A stable, human-readable identity string (className_idValue when an ID
-   * attribute is set, otherwise a generated fallback), used as the default
-   * cross-reference key during serialization.
+   * An identity string `<class name>_<value>` built from the object's ID attribute. Without a set
+   * ID attribute, every call returns a new generated value.
    */
   fullId(): string;
 
   /**
-   * Real EMF's Notifier/Adapter mechanism, adapted: a plain callback, not a ported Adapter
-   * interface (getTarget/setTarget/isAdapterForType/notifyChanged) - Adapter's four-method shape
-   * exists largely because Java, when EMF was designed, had no first-class closures; this project
-   * already uses the callback-based alternative throughout (vscode.EventEmitter<T>/Event<T> in
-   * @typemf/vscode-runtime and instance-editor).
+   * Registers `listener` for changes to this object, or only to `feature` if given. Listeners
+   * are called synchronously, in registration order, after each change. An exception thrown by a
+   * listener propagates to the code that made the change, and later listeners are not called.
    *
-   * `feature` omitted subscribes to every change on this object; a specific feature scopes the
-   * subscription to only that one. Filtering happens once, inside the dispatcher, not duplicated
-   * inside every listener's own body - real EMF's isAdapterForType exists for a related but
-   * distinct purpose (finding an already-attached adapter of a given kind, not filtering
-   * notification delivery), which this deliberately does not port; there is no equivalent need
-   * here since callback-based subscription has no "kind of adapter" to look up in the first
-   * place.
+   * @returns a handle whose `dispose()` removes the listener.
    */
   onDidChange(listener: (notification: Notification) => void, feature?: EStructuralFeature): Disposable;
 
-  /** Whether notifications are currently being delivered to listeners. Defaults to true. */
+  /** Whether listeners are notified of changes; `true` by default. */
   eDeliver(): boolean;
 
   /**
-   * Suppresses (false) or resumes (true) notification delivery - genuinely useful, not a
-   * Java-ism: bulk operations (e.g. the loader constructing a fresh object graph from a file)
-   * want to suppress a flood of individual notifications during construction. Does not affect
-   * eDidAdd/eDidRemove's own containment/opposite/cache-invalidation bookkeeping, which always
-   * runs regardless - only whether onDidChange listeners are actually called.
+   * Turns notification of listeners off or on, e.g. while building a large object graph.
+   * Containers and opposite references are maintained either way.
    */
   eSetDeliver(deliver: boolean): void;
 }

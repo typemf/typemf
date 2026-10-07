@@ -10,6 +10,7 @@ import { EParameter } from '../types/EParameter.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
+/** An operation of a class, with parameters, a return type and exceptions. */
 export class EOperationImpl extends ETypedElementImpl implements EOperation {
   private _eContainingClass: EClass | undefined;
 
@@ -53,6 +54,7 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
     return this.operationId;
   }
 
+  /** Sets the operation's ID; called by generated packages. */
   setOperationID(id: number): void {
     this.operationId = id;
   }
@@ -167,6 +169,8 @@ export class EOperationImpl extends ETypedElementImpl implements EOperation {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 11:

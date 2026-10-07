@@ -7,56 +7,56 @@ import { URI } from './uri.js';
 import { UriConverterRegistry } from './uri-converter-registry.js';
 
 /**
- * Owns a group of Resources, resolves cross-resource proxies by URI, and
- * carries its own EPackageRegistry (falling back to nothing global - see
- * NOTES.md - rather than a core-level ambient singleton). Maps to EMF's
- * org.eclipse.emf.ecore.resource.ResourceSet.
+ * A group of resources that can reference each other, with the registries used to load them, as
+ * EMF's `ResourceSet`. There is no global package registry; each set has its own.
  */
 export interface ResourceSet {
+  /** The packages used to interpret loaded documents. */
   getPackageRegistry(): EPackageRegistry;
 
+  /** The factories that create a resource for a URI. */
   getResourceFactoryRegistry(): ResourceFactoryRegistry;
 
-  /**
-   * Which transport(s) this set can read/write through. A registry, not a
-   * single slot, deliberately: a ResourceSet routinely needs more than one
-   * transport at once (e.g. a local file:// document that cross-references
-   * an object served over https://) - see the UriConverterRegistry doc
-   * comment for the fuller rationale.
-   */
+  /** The converters that read and write the bytes behind a URI. */
   getUriConverterRegistry(): UriConverterRegistry;
 
+  /** A copy of the list of resources in this set. */
   getResources(): Resource[];
 
-  /** Looks up a ResourceFactory by `uri` and constructs a Resource, unloaded. */
+  /**
+   * Creates an unloaded resource for `uri` with the matching factory and adds it to this set.
+   *
+   * @throws Error if no factory is registered for `uri`.
+   */
   createResource(uri: URI): Resource;
 
   /**
-   * Finds an already-tracked Resource matching `uri` (ignoring its
-   * fragment); if none exists and `loadOnDemand` is true, creates and loads
-   * one via createResource()/load(). If a matching Resource exists but
-   * isn't loaded yet and `loadOnDemand` is true, loads it first.
+   * The resource in this set whose URI equals `uri` without its fragment. With `loadOnDemand`,
+   * a missing resource is created, and an unloaded one is loaded.
+   *
+   * @returns `undefined` if there is no such resource and `loadOnDemand` is false.
    */
   getResource(uri: URI, loadOnDemand: boolean): Promise<Resource | undefined>;
 
+  /** Removes `resource` from this set; its contents are left as they are. */
   removeResource(resource: Resource): void;
 
   /**
-   * If `proxy` is not actually a proxy, returns it unchanged. Otherwise
-   * loads (if necessary) the resource the proxy points at and looks up the
-   * referenced object by its fullId() within that resource's contents.
-   * The EMF-EcoreUtil.resolve() equivalent.
+   * The object a proxy stands for, loading its document if necessary. A proxy URI naming a
+   * registered package resolves against that package without loading anything. Returns `proxy`
+   * itself if it is not a proxy. Does not replace the proxy where it is referenced; see
+   * {@link resolveFeature}.
+   *
+   * @throws Error if the document cannot be loaded or contains no object at the URI's fragment.
    */
   resolve(proxy: EObject): Promise<EObject>;
 
   /**
-   * Resolves `container`'s current value for `feature` if it is an unresolved proxy, and writes
-   * the resolved object back into that same feature - the piece plain resolve() deliberately
-   * leaves undone (see its own doc comment: it only locates and returns the target). Fires a
-   * RESOLVE notification (distinct from SET - this is a load completing, not an edit) when the
-   * value actually changes. A no-op, returning the current value unchanged, for an already-
-   * resolved value or a many-valued feature (whose own items are resolved individually via
-   * plain resolve(), not through this method).
+   * Resolves the proxy held by a single-valued `feature` of `container`, stores the result in
+   * the feature and notifies `RESOLVE`. Returns the current value unchanged if it is not a proxy;
+   * many-valued features are not handled.
+   *
+   * @throws Error as {@link resolve}.
    */
   resolveFeature(container: EObject, feature: EStructuralFeature): Promise<unknown>;
 }

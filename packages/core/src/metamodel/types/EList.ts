@@ -1,9 +1,7 @@
 /**
- * An ordered collection, used for every many-valued feature in the metamodel
- * (EPackage.eClassifiers, EClass.eStructuralFeatures, an EReference whose
- * upperBound is > 1, etc). Implementations may be "live" - i.e. wired to an
- * owning EObject and EStructuralFeature so that add/remove maintain
- * containment and opposite bookkeeping as a side effect.
+ * An ordered list, the value type of every many-valued feature. The list returned by
+ * `EObject.eGet()` for a feature belongs to that object: adding and removing elements updates
+ * their containers and opposite references and notifies the owner's listeners.
  */
 export interface EList<T> extends Iterable<T> {
   /** Number of elements. */
@@ -25,7 +23,10 @@ export interface EList<T> extends Iterable<T> {
    */
   add(item: T): void;
 
-  /** Inserts `item` at `index`, shifting later elements. Same uniqueness rule as add(). */
+  /**
+   * Inserts `item` at `index`, shifting later elements. Same uniqueness rule as add(). An index
+   * past the end appends.
+   */
   addAt(index: number, item: T): void;
 
   /** Appends every element of `items`, in order, as if by add(). */
@@ -34,17 +35,17 @@ export interface EList<T> extends Iterable<T> {
   /** Removes the first occurrence of `item`. Returns whether it was present. */
   remove(item: T): boolean;
 
-  /** Removes and returns the element at `index`. */
+  /** Removes and returns the element at `index`, or returns `undefined` if there is none. */
   removeAt(index: number): T;
 
   /** Removes every element, with the same side effects as removing each one. */
   clear(): void;
 
   /**
-   * Moves the element at `fromIndex` to `toIndex`, shifting the elements between them. Returns
-   * the moved element. A live list fires a single MOVE notification, not a REMOVE followed by an
-   * ADD - the element never actually left the list, just changed position (CORE-12).
+   * Moves the element at `fromIndex` to `toIndex`, shifting the elements between them, and
+   * notifies a single `MOVE`.
    *
+   * @returns the moved element.
    * @throws RangeError if `fromIndex` is out of bounds.
    */
   move(fromIndex: number, toIndex: number): T;

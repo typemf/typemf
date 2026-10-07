@@ -14,7 +14,7 @@ import { wellKnownEcoreId, wellKnownEcoreObject } from './well-known-ecore-id.js
  * webview-side bookkeeping.
  */
 export class ObjectIdMap {
-  private readonly idsByObject = new WeakMap<EObject, string>();
+  private idsByObject = new WeakMap<EObject, string>();
   private readonly objectsById = new Map<string, EObject>();
   private nextId = 1;
 
@@ -34,6 +34,16 @@ export class ObjectIdMap {
     this.idsByObject.set(obj, id);
     this.objectsById.set(id, obj);
     return id;
+  }
+
+  /**
+   * Forgets every issued id, for when the document's objects are all replaced (a reload from
+   * disk). Numbering continues rather than restarting, so an id a webview remembers from before
+   * can never silently name a different object afterwards - it simply resolves to nothing.
+   */
+  clear(): void {
+    this.idsByObject = new WeakMap();
+    this.objectsById.clear();
   }
 
   /**

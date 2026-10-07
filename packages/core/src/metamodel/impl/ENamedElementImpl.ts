@@ -5,6 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { ENamedElement } from '../types/ENamedElement.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A model element with a name. */
 export class ENamedElementImpl extends EModelElementImpl implements ENamedElement {
   private _name: string | undefined;
 
@@ -66,6 +67,8 @@ export class ENamedElementImpl extends EModelElementImpl implements ENamedElemen
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

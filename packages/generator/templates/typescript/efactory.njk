@@ -26,10 +26,10 @@ export interface {{ factoryClassName(package) }} extends {{ useImport("EFactory"
   double-import the old, pre-refactor version of this template had to
   guard against explicitly. #}
 export class {{ factoryClassName(package) }}Impl extends {{ useImport("EFactoryImpl", "impl", {foundational: true}) }} implements {{ useImport(factoryClassName(package), "root", {foundational: false}) }} {
-  /** The one canonical factory instance - real EMF's own `{{ factoryClassName(package) }}.eINSTANCE`, which this project
-   *  ports onto the Impl class rather than the interface (TypeScript interfaces have no statics).
-   *  Reading this also constructs the package singleton on first use (CORE-01), via the same
-   *  lazy initializer {{ pkgClass }}Impl.eINSTANCE itself goes through. */
+  /**
+   * The factory instance, as EMF's `{{ factoryClassName(package) }}.eINSTANCE` (on the class, since
+   * TypeScript interfaces have no statics). Reading it constructs the package if necessary.
+   */
   static get eINSTANCE(): {{ factoryClassName(package) }} {
     return {{ useImport("get" + pkgClass + "Ref", "impl", {file: pkgClass + "Ref", foundational: false}) }}().getEFactoryInstance() as {{ factoryClassName(package) }};
   }

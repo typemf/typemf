@@ -7,6 +7,7 @@ import { EList } from '../types/EList.js';
 import { EReference } from '../types/EReference.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A feature whose values are model objects. */
 export class EReferenceImpl extends EStructuralFeatureImpl implements EReference {
   private _containment: boolean = false;
 
@@ -172,6 +173,8 @@ export class EReferenceImpl extends EStructuralFeatureImpl implements EReference
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 23:

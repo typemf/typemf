@@ -1,5 +1,7 @@
 import {
   computeFragment,
+  convertToString,
+  createFromString,
   createInstanceOf,
   EClass,
   EObject,
@@ -8,6 +10,7 @@ import {
   EStructuralFeature,
   createProxy,
   getProxyURI,
+  isEDataType,
   resolveFragment,
   Resource,
   type EObjectSerializer,
@@ -30,9 +33,8 @@ interface RefJson {
  * The wire format, in brief (see the design discussion for the full
  * rationale): a document-level $namespaces prefix table; $eClass on every
  * object as {namespace, name} rather than a repeated full nsURI; EEnum
- * attribute values as their literal name (see the note on
- * decodeAttributeValue below for what that implies about the in-memory
- * representation); containment features nest inline; non-containment
+ * attribute values as their literal, which is also their in-memory value;
+ * containment features nest inline; non-containment
  * references become { $ref, $eClass? }, where $ref is:
  *   - "#fullId"           same-resource, by ID attribute
  *   - "#/0/books/2"        same-resource, positional (JSON Pointer-shaped)
@@ -67,7 +69,7 @@ export class JsonSerializer implements EObjectSerializer {
     try {
       doc = JSON.parse(text) as TypemfJsonDocument;
     } catch (e) {
-      // JSON-04: a structurally wrong document is reported as an error instead of throwing a raw
+      // A structurally wrong document is reported as an error instead of throwing a raw
       // TypeError/SyntaxError that aborts the whole load with no context.
       resource.getErrors().push({
         message: `'${resource.getURI().toString()}' is not valid JSON: ${(e as Error).message}`,
@@ -217,29 +219,15 @@ function isReferenceFeature(feature: EStructuralFeature): feature is EReference 
 }
 
 /**
- * EDate becomes an ISO string (JSON has no native date type, matching how
- * EFactoryImpl already converts EDate elsewhere in @typemf/core). Every
- * other primitive (EString/EInt/ELong/EDouble/EFloat/EBoolean) is written
- * as-is - JSON's own string/number/boolean already match their in-memory
- * representation, no conversion needed.
- *
- * EEnum-typed attributes: this package establishes (there was no prior
- * convention anywhere in @typemf/core - no EEnum-typed attribute exists in
- * any test fixture yet) that an EEnum attribute's in-memory value IS its
- * literal's name as a plain string, the same way an EString attribute's
- * value is a plain string. That makes serialization here a no-op
- * passthrough, matching the "literal name over ordinal" choice already
- * made for the wire format - the wire and in-memory representations are
- * literally the same value, not just serialized the same way. Worth
- * carrying this convention back into @typemf/core's own docs once an
- * EEnum-typed feature actually exists there.
+ * The JSON form of an attribute value: strings, booleans and finite numbers as they are, every
+ * other value (a `bigint`, a `Date`, a byte array, ...) as the string the data type's factory
+ * converts it to.
  */
 export function encodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
+  if (typeof value === 'string' || typeof value === 'boolean') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
   const eType = feature.getEType();
-  if (eType?.getName() === 'EDate' && value instanceof Date) {
-    return value.toISOString();
-  }
-  return value;
+  return eType && isEDataType(eType) ? convertToString(eType, value) : value;
 }
 
 // ---------------------------------------------------------------------
@@ -251,7 +239,7 @@ interface DeserializeContext {
   packageRegistry: EPackageRegistry;
   /** Reference-wiring deferred until every object in the document has been constructed. */
   pendingRefs: Array<() => void>;
-  /** Where to record a problem instead of throwing and aborting the whole load (JSON-04): an
+  /** Where to record a problem instead of throwing and aborting the whole load: an
    *  unknown key is a warning (data loss on the next save); an unresolved reference is an error
    *  (the feature is left unset, the rest of the document still loads). */
   resource: Resource;
@@ -282,11 +270,17 @@ function constructObject(json: Record<string, unknown>, roots: EObject[], ctx: D
     const raw = json[name];
 
     if (!isReferenceFeature(feature)) {
-      if (feature.isMany()) {
-        const list = obj.eGet(feature) as { add(v: unknown): void };
-        for (const v of raw as unknown[]) list.add(decodeAttributeValue(v, feature));
-      } else {
-        obj.eSet(feature, decodeAttributeValue(raw, feature));
+      try {
+        if (feature.isMany()) {
+          const list = obj.eGet(feature) as { add(v: unknown): void };
+          for (const v of raw as unknown[]) list.add(decodeAttributeValue(v, feature));
+        } else {
+          obj.eSet(feature, decodeAttributeValue(raw, feature));
+        }
+      } catch (err) {
+        ctx.resource.getErrors().push({
+          message: `Invalid value for '${name}' on an instance of '${eClass.getName()}': ${(err as Error).message}`,
+        });
       }
       continue;
     }
@@ -352,8 +346,8 @@ function resolveRef(
     const fragment = refString.slice(1);
     const found = resolveFragment(fragment, roots);
     if (!found) {
-      // JSON-04: recorded as an error rather than thrown, so the rest of the document still
-      // loads (matching @typemf/xmi's own XMI-04 fix) - the feature is left unset for this value.
+      // Recorded as an error rather than thrown, so the rest of the document still
+      // loads (as @typemf/xmi does) - the feature is left unset for this value.
       ctx.resource.getErrors().push({
         message: `Unresolved reference '${refString}' on feature '${feature.getName()}': no object matches this fragment in this document.`,
       });
@@ -368,10 +362,15 @@ function resolveRef(
   return createProxy(overrideEClass ?? declaredEClass, uri);
 }
 
+/**
+ * The attribute value a JSON string, number or boolean stands for, converted with the factory of
+ * the attribute's data type.
+ *
+ * @throws Error if the value is not a valid value of the data type.
+ */
 export function decodeAttributeValue(value: unknown, feature: EStructuralFeature): unknown {
   const eType = feature.getEType();
-  if (eType?.getName() === 'EDate' && typeof value === 'string') {
-    return new Date(value);
-  }
-  return value;
+  if (!eType || !isEDataType(eType)) return value;
+  if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') return value;
+  return createFromString(eType, String(value));
 }

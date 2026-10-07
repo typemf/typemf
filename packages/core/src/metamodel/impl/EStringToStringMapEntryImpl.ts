@@ -5,6 +5,7 @@ import { EClass } from '../types/EClass.js';
 import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A key-value pair of strings, the type of an annotation's details. */
 export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringToStringMapEntry {
   private _key: string | undefined;
 
@@ -95,6 +96,8 @@ export class EStringToStringMapEntryImpl extends EObjectImpl implements EStringT
         throw new Error(`Feature ${String(featureId)} on EStringToStringMapEntry is many-valued or unknown.`);
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

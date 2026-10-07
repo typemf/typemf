@@ -7,6 +7,7 @@ import { EReference } from '../types/EReference.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { Notification } from '../types/Notification.js';
 import { BasicEList } from './BasicEList.js';
+import { UnmodifiableEList } from './UnmodifiableEList.js';
 
 interface Listener {
   readonly callback: (notification: Notification) => void;
@@ -15,8 +16,7 @@ interface Listener {
 
 let fallbackIdCounter = 0;
 
-/** Walks eContainer() up to the containment root - used by eResource() below, where only a root
- *  ever carries its own _eDirectResource. */
+/** The topmost container of `obj`, or `obj` itself. */
 function findRoot(obj: EObject): EObject {
   let current = obj;
   let container = current.eContainer();
@@ -28,40 +28,21 @@ function findRoot(obj: EObject): EObject {
 }
 
 /**
- * Abstract base for every model instance. eContainer/eContents/eAllContents
- * are fully generic here - they are derived entirely from eGet(), which is
- * why subclasses only need to implement eGet/eSet/eIsSet/eUnset/eClass to
- * get correct containment behaviour for free. This is the same shape used
- * by generated *Gen classes and by DynamicEObjectImpl.
+ * Base class of every model object, generated or dynamic. Subclasses implement storage
+ * (eGet/eSet/eIsSet/eUnset/eBasicSetValue); containment, opposite references, notification and
+ * the containment tree accessors are implemented here on top of it.
  */
 export abstract class EObjectImpl implements EObject {
   private _eContainer: EObject | undefined;
   private _eContainingFeature: EStructuralFeature | undefined;
   private _eProxy = false;
   private frozen = false;
-  /** Only ever set on a root (see eSetDirectResource) - a non-root's eResource() is found by
-   *  walking up to its root via eContainer() instead, exactly like real EMF's own
-   *  eDirectResource field. */
+  /** Set only on a root of a resource's contents; other objects find their resource via their root. */
   private _eDirectResource: Resource | undefined;
 
   /**
-   * Marks this object (and, recursively, everything it contains) as no longer intended to be
-   * mutated. Matches real EMF's own design precisely: a queryable flag, not enforced in every
-   * setter. Real EMF's own enforcement is a single `assert !isFrozen()` in one place
-   * (eSetDirectResource) - a mechanism that is itself frequently inactive in production Java
-   * (assertions are off by default unless -ea is passed). Given that, invasively guarding every
-   * setter here would be enforcing something more strictly than the system being ported actually
-   * does.
-   *
-   * Lives here, on EObjectImpl - the one foundational file the self-hosted swap never overwrites
-   * - rather than as per-class overrides on EClassImpl/EEnumImpl/EPackageImpl the way hand-written
-   * core originally had it (those files are generated now). The cascade itself is generic and
-   * reflective (every containment reference this object's own metaclass declares, via
-   * getEAllContainments()), not a hardcoded list of "this class's own children" per subclass -
-   * genuinely more complete than the old per-class version (which only ever froze the specific
-   * containment features each override happened to name, missing e.g. eAnnotations), and cascades
-   * transitively for free (a contained child's own freeze() call reaches its own children in
-   * turn), needing no override anywhere.
+   * Marks this object and everything it contains as not to be changed. Like EMF, this is only a
+   * flag that can be queried; setters do not check it.
    */
   freeze(): void {
     for (const feature of this.eClass().getEAllContainments()) {
@@ -79,7 +60,6 @@ export abstract class EObjectImpl implements EObject {
     return this.frozen;
   }
 
-  /** Freezes `child` if it is itself an EObjectImpl - real EMF's own conditional cascade helper. */
   private freezeChild(child: unknown): void {
     if (child instanceof EObjectImpl) child.freeze();
   }
@@ -91,13 +71,9 @@ export abstract class EObjectImpl implements EObject {
   abstract eUnset(feature: EStructuralFeature): void;
 
   /**
-   * EMF rejects a feature that doesn't belong to this object's own class outright, rather than
-   * dispatching on `feature.getFeatureID()` alone - two unrelated classes' features can share the
-   * same id (each is only unique within its own declaring class, or - for a dynamic class with
-   * multiple supertypes, see CORE-05 - within `getEAllStructuralFeatures()`'s own position-based
-   * scheme), so reading or writing by id alone silently hits the wrong field when a caller passes
-   * a feature from some other EClass entirely. Every generated eGet/eSet/eIsSet/eUnset
-   * (eclass.njk) and DynamicEObjectImpl call this first, before dispatching on the id.
+   * Throws unless `feature` belongs to this object's class. Feature IDs are only unique within a
+   * class, so dispatching on the ID alone would silently access another feature for a feature of an
+   * unrelated class.
    */
   protected requireOwnFeature(feature: EStructuralFeature): void {
     if (!this.eClass().getEAllStructuralFeatures().contains(feature)) {
@@ -128,20 +104,13 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal - fires `notification` to every listener whose own `feature` (if any) matches this
-   * one, unless eSetDeliver(false) is currently suppressing delivery. Called directly from the
-   * actual mutation call sites (the eSet default dance, BasicEList.onAdded/onRemoved, eUnset,
-   * and any feature's own custom setter body) - deliberately NOT derived from eDidAdd/eDidRemove,
-   * since a single logical change (one eSet call) fires those twice (a remove of the old value,
-   * an add of the new one), which would produce two notifications instead of the one real EMF (and
-   * this project's own settled design) expects for a SET. eDidAdd/eDidRemove keep their existing,
-   * unchanged responsibility (the counter bump and containment/opposite wiring); this is a
-   * separate, additional call alongside them, not a replacement for them.
+   * Passes `notification` to the listeners registered for its feature or for all
+   * features, unless delivery is turned off. Called by generated code once per change, not by
+   * eDidAdd/eDidRemove: a single SET calls both of those.
    */
   eNotify(notification: Notification): void {
     if (!this.deliverFlag || this.listeners.length === 0) return;
-    // A snapshot, not the live array - a listener disposing itself (or another listener) mid-
-    // dispatch must not skip or duplicate entries for the notification currently being delivered.
+    // Iterates a copy, so a listener may dispose itself or others during delivery.
     for (const entry of [...this.listeners]) {
       if (entry.feature && entry.feature !== notification.feature) continue;
       entry.callback(notification);
@@ -160,85 +129,45 @@ export abstract class EObjectImpl implements EObject {
     return (findRoot(this) as EObjectImpl)._eDirectResource;
   }
 
-  /**
-   * Internal - not part of the public EObject API, same as eBasicSetContainer/eSetProxy. Called
-   * by Resource's own contents list (resource/resource-impl.ts) as an object enters/leaves
-   * getContents() - the only time an object's OWN eResource() is ever set directly; every other
-   * object's eResource() is found by walking up to its root instead (see eResource() above).
-   * Resetting a former root's own direct resource when it becomes contained elsewhere, or leaves
-   * a resource's contents, is resource-impl.ts's responsibility, not this method's.
-   */
+  /** @internal Records the resource of a root; called by a resource's contents list. */
   eSetDirectResource(resource: Resource | undefined): void {
     this._eDirectResource = resource;
   }
 
-  /**
-   * Internal - called by BasicEList (for many-valued containment features)
-   * and by single-valued containment setters to update the backpointer.
-   * Not part of the public EObject API.
-   */
+  /** @internal Sets the container back-pointer, without touching the container's feature. */
   eBasicSetContainer(container: EObject | undefined, feature: EStructuralFeature | undefined): void {
     this._eContainer = container;
     this._eContainingFeature = feature;
   }
 
   /**
-   * Internal - raw store for a single-valued feature, with no containment
-   * or opposite side effects. `undefined` means unset. This is the only
-   * storage primitive the generic bookkeeping below needs from a subclass;
-   * many-valued features are reached through eGet() and BasicEList.basicAdd/
-   * basicRemove instead.
+   * Stores the value of a single-valued feature without containment, opposite or notification side
+   * effects; `undefined` means unset. Implemented by generated code.
    */
   abstract eBasicSetValue(feature: EStructuralFeature, value: unknown): void;
 
   /**
-   * Internal - side effects of `value` having just been stored into
-   * `this.feature` (the store itself has already happened): take ownership
-   * if `feature` is a containment, and update the opposite end if it has
-   * one. Called by BasicEList and by single-valued setters.
-   */
-  /**
-   * A single, global counter bumped on every eDidAdd/eDidRemove ANYWHERE in
-   * the loaded model - i.e. every feature mutation, of any kind (reference
-   * or attribute, many- or single-valued), on any object, not only the
-   * metamodel-structural features (eStructuralFeatures/eOperations/
-   * eSuperTypes/eGenericSuperTypes) a first version of this scoped the
-   * bump to. That narrower scope was WRONG, found by a real, failing test:
-   * a custom `get` body is free to read ANY feature (a feature computed
-   * from another ordinary attribute, say - not only structural
-   * relationships), so a change to that OTHER feature must ALSO invalidate
-   * the cache, and a name-based allowlist can never anticipate every such
-   * dependency a body might have. Bumping on every mutation is the only
-   * scope that's correct for an arbitrary `get` body, not just the
-   * specific eAll*-style ones that motivated this - see eclass.njk's
-   * getter-caching shape, which stores the generation a cache was computed
-   * at and recomputes once the current one has moved past it.
-   *
-   * Deliberately GLOBAL, not scoped to the specific object that changed:
-   * pinpointing exactly which caches an edit could affect would need
-   * either tracking each cache's real dependencies (not attempted) or a
-   * reverse (subtypes) graph for the structural case specifically (this
-   * project has neither). Bumping globally invalidates more than strictly
-   * necessary on every edit, but never leaves anything stale - correct,
-   * simple, and still a good fit for the motivating usage pattern: model
-   * edits cluster at construction/load time, reads cluster at
-   * serialization time, and the two rarely interleave, so in practice
-   * caches stay warm for exactly the read-heavy phase this exists for.
+   * Incremented on every change to any feature of any object. A computed feature caches its value
+   * together with the generation it was computed at, and recomputes once the generation moved on:
+   * its getter may read any feature, so every change invalidates every cache. Changes and reads
+   * mostly happen in separate phases (loading, then saving or displaying), so caches stay valid
+   * where it matters.
    */
   private static modelGeneration = 0;
 
+  /** The current model generation (see `modelGeneration`); read by generated caching code. */
   static getModelGeneration(): number {
     return EObjectImpl.modelGeneration;
   }
 
+  /**
+   * Side effects of `value` having been stored into `feature` (the store has already happened):
+   * takes ownership for a containment and updates the opposite reference. Called by generated
+   * code.
+   */
   eDidAdd(feature: EStructuralFeature | undefined, value: unknown): void {
     EObjectImpl.modelGeneration++;
-    // `feature` can genuinely be undefined here - eBootstrapList()'s lists (see EClassImpl.ts etc.)
-    // are deliberately constructed with an owner but no feature, since a real feature object isn't
-    // always safely resolvable this early in self-hosted bootstrap. The generation-counter bump above
-    // must still happen regardless (found the hard way: a cache primed empty before eBootstrapList's
-    // eSuperTypes.add() ran was never invalidated, since that add() used to never reach this method at
-    // all) - only the containment/opposite logic below genuinely needs a real feature to do anything.
+    // Lists built during bootstrap have no feature yet; the counter above still has to move.
     if (!feature || !isReference(feature) || !(value instanceof EObjectImpl)) return;
     if (feature.isContainment()) value.eBasicMoveInto(this, feature);
     const opposite = feature.getEOpposite();
@@ -246,9 +175,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal - side effects of `value` having just been removed from
-   * `this.feature` (the store itself has already happened): release
-   * containment and update the opposite end.
+   * Side effects of `value` having been removed from `feature` (the removal has already happened):
+   * releases containment and updates the opposite reference. Called by generated code.
    */
   eDidRemove(feature: EStructuralFeature | undefined, value: unknown): void {
     EObjectImpl.modelGeneration++;
@@ -259,24 +187,18 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal - `otherEnd` just started referencing `this` through
-   * `feature.getEOpposite()`; make `this.feature` point back at `otherEnd`.
-   * For a single-valued `feature` this displaces the previous value, whose
-   * own opposite (still pointing at `this`) is cleared in turn.
+   * @internal `otherEnd` now references this object through the opposite of `feature`; makes
+   * `feature` reference `otherEnd` too. A single-valued `feature` drops its previous value, whose
+   * own opposite is cleared in turn.
    */
   eInverseAdd(otherEnd: EObjectImpl, feature: EReference): void {
-    // this may still be an unresolved proxy here - that's fine: it is a real instance with real
-    // (currently default) storage, so eGet/eBasicSetValue work normally. Setting its opposite
-    // feature even while unresolved is correct, not just harmless: that information (e.g. "which
-    // package contains this not-yet-loaded classifier") is already fully known from context,
-    // independent of whatever the proxy's own document eventually turns out to say.
+    // This object may be an unresolved proxy; its storage works normally, and the opposite is
+    // known from the referencing side anyway.
     if (feature.isMany()) {
       const list = this.eBasicList(feature);
       const sizeBefore = list.size();
       list.basicAdd(otherEnd);
-      // A no-op if otherEnd was already present (reference lists are unique) - no real change,
-      // so no notification (CORE-09: the opposite end otherwise got no ADD at all, even when a
-      // change genuinely happened).
+      // Unchanged if otherEnd was already in the list.
       if (list.size() > sizeBefore) {
         this.eNotify({
           eventType: 'ADD',
@@ -308,8 +230,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal - `otherEnd` just stopped referencing `this` through
-   * `feature.getEOpposite()`; remove `otherEnd` from `this.feature`.
+   * @internal `otherEnd` no longer references this object through the opposite of `feature`;
+   * removes `otherEnd` from `feature`.
    */
   eInverseRemove(otherEnd: EObjectImpl, feature: EReference): void {
     this.eBasicRemoveValue(feature, otherEnd);
@@ -317,10 +239,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Makes `container.feature` the sole owner of `this`. If `this` was
-   * contained elsewhere, it is removed from the old containing feature
-   * (and that feature's opposite on `this` is cleared) first, so an object
-   * is never a member of two containment lists at once.
+   * Makes `feature` of `container` the only owner of this object, first removing it from its
+   * previous container, so an object is never in two containment features at once.
    */
   private eBasicMoveInto(container: EObjectImpl, feature: EReference): void {
     const oldContainer = this._eContainer;
@@ -341,12 +261,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * Internal - detaches `this` from whatever containment feature currently holds it (clearing the
-   * old container's own feature value and opposite, same cleanup eBasicMoveInto does for a move
-   * into a new container), without moving it anywhere new. Not part of the public EObject API;
-   * used by Resource's own contents list (resource/resource-impl.ts) when an already-contained
-   * object becomes a document root instead - EMF semantics: adding moves the object, it never
-   * belongs to a container and a resource's roots at the same time.
+   * @internal Removes this object from its container without adding it anywhere; used when it
+   * becomes a root of a resource.
    */
   eBasicDetachFromContainer(): void {
     const oldContainer = this._eContainer;
@@ -360,13 +276,8 @@ export abstract class EObjectImpl implements EObject {
   }
 
   /**
-   * CORE-09: every caller of this (eInverseRemove's own "opposite stopped referencing me", and
-   * eBasicMoveInto/eBasicDetachFromContainer clearing an old container or its opposite) silently
-   * mutated storage with no notification - the affected object's own listeners (and the instance
-   * editor's webview relay) never found out, even though a real change happened. Fires the same
-   * REMOVE/SET a plain eSet()/BasicEList.remove() would have, for whichever of those the normal
-   * path this bypasses (deliberately, to avoid re-triggering containment/opposite bookkeeping
-   * recursively) would otherwise have fired.
+   * Removes `value` from `feature` and notifies listeners, without containment or opposite side
+   * effects: used for the other end of a change whose side effects are already being handled.
    */
   private eBasicRemoveValue(feature: EStructuralFeature, value: EObjectImpl): void {
     if (feature.isMany()) {
@@ -407,19 +318,17 @@ export abstract class EObjectImpl implements EObject {
   }
 
   eContents(): EList<EObject> {
-    const result = new BasicEList<EObject>();
+    const result: EObject[] = [];
     for (const feature of this.eClass().getEAllStructuralFeatures()) {
       if (!isContainmentReference(feature)) continue;
       const value = this.eGet(feature);
       if (feature.isMany()) {
-        if (isEListOfEObject(value)) {
-          for (const child of value) result.add(child);
-        }
+        if (isEListOfEObject(value)) result.push(...value);
       } else if (isEObject(value)) {
-        result.add(value);
+        result.push(value);
       }
     }
-    return result;
+    return new UnmodifiableEList(result);
   }
 
   eAllContents(): EObject[] {
@@ -435,13 +344,7 @@ export abstract class EObjectImpl implements EObject {
     return this._eProxy;
   }
 
-  /**
-   * Internal - flips the proxy flag. Not part of the public EObject interface, same as
-   * eBasicSetContainer/eBasicSetValue; only `resource/proxy.ts`'s createProxy() calls this, right
-   * after constructing a real instance of the target EClass through its own factory - a proxy is
-   * not a separate class, just an ordinary, freshly-constructed instance flagged as a stand-in
-   * until something resolves it.
-   */
+  /** @internal Marks this object as a proxy; called by `createProxy()`. */
   eSetProxy(flag: boolean): void {
     this._eProxy = flag;
   }

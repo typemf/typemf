@@ -21,7 +21,7 @@ export function generate(
 ): GeneratedFile[] {
   assignFreshIds(pkg);
 
-  const problems = templateSet.validate?.(pkg) ?? [];
+  const problems = templateSet.validate?.(pkg, options) ?? [];
   if (problems.length > 0) {
     throw new Error(
       `Cannot generate from this package - ${templateSet.name} found ${problems.length} unresolved problem(s):\n` +

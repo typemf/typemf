@@ -7,16 +7,19 @@ import { EList } from '../types/EList.js';
 import { EPackage } from '../types/EPackage.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
+import { EEnum } from '../types/EEnum';
 import { EObject } from '../types/EObject';
 import { TypeScriptClass } from '../types/TypeScriptClass';
 import { EObjectImpl } from './EObjectImpl';
 
+/** A type that typed elements refer to: a class or a data type. */
 export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   private _instanceClassName: string | undefined;
 
   private _instanceClass: TypeScriptClass<unknown> | undefined;
 
-  private _defaultValue: unknown;
+  private _defaultValueCache: unknown | undefined;
+  private _defaultValueCacheGeneration = -1;
 
   private _instanceTypeName: string | undefined;
 
@@ -38,6 +41,7 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     return this.classifierId;
   }
 
+  /** Sets the classifier's ID; called by generated packages. */
   setClassifierID(id: number): void {
     this.classifierId = id;
   }
@@ -59,12 +63,38 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
   setInstanceClass(value: TypeScriptClass<unknown> | undefined): void {
     this._instanceClass = value;
   }
-  getDefaultValue(): unknown {
-    return this._defaultValue;
-  }
 
-  setDefaultValue(value: unknown): void {
-    this._defaultValue = value;
+  getDefaultValue(): unknown {
+    if (this._defaultValueCacheGeneration !== EObjectImpl.getModelGeneration()) {
+      this._defaultValueCache = (() => {
+        switch (this.eClass().getName()) {
+          case 'EEnum': {
+            const first = (this as unknown as EEnum).getELiterals().toArray().at(0);
+            return first?.getLiteral();
+          }
+          case 'EDataType':
+            break;
+          default:
+            return undefined;
+        }
+        switch (this.getName()) {
+          case 'EBoolean':
+            return false;
+          case 'EInt':
+          case 'EFloat':
+          case 'EDouble':
+          case 'EShort':
+          case 'EByte':
+            return 0;
+          case 'ELong':
+            return 0n;
+          default:
+            return undefined;
+        }
+      })();
+      this._defaultValueCacheGeneration = EObjectImpl.getModelGeneration();
+    }
+    return this._defaultValueCache!;
   }
   getInstanceTypeName(): string | undefined {
     return this._instanceTypeName;
@@ -86,16 +116,17 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
     switch (this.eClass().getName()) {
       case 'EClass':
         return object instanceof EObjectImpl && (this as unknown as EClass).isSuperTypeOf((object as EObject).eClass());
+      case 'EEnum':
+        return typeof object === 'string' && (this as unknown as EEnum).getEEnumLiteralByLiteral(object) !== undefined;
       default:
         switch (this.getName()) {
           case 'EString':
           case 'EChar':
           case 'ECharacterObject':
+          case 'EBigDecimal':
             return typeof object === 'string';
           case 'EInt':
           case 'EIntegerObject':
-          case 'ELong':
-          case 'ELongObject':
           case 'EDouble':
           case 'EDoubleObject':
           case 'EFloat':
@@ -105,6 +136,8 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
           case 'EByte':
           case 'EByteObject':
             return typeof object === 'number';
+          case 'ELong':
+          case 'ELongObject':
           case 'EBigInteger':
             return typeof object === 'bigint';
           case 'EBoolean':
@@ -112,6 +145,8 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
             return typeof object === 'boolean';
           case 'EDate':
             return object instanceof Date;
+          case 'EByteArray':
+            return object instanceof Uint8Array;
           default:
             return object !== undefined && object !== null;
         }
@@ -125,8 +160,9 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         return this._instanceClassName;
       case 3:
         return this._instanceClass;
+
       case 4:
-        return this._defaultValue;
+        return this.getDefaultValue();
       case 5:
         return this._instanceTypeName;
       case 6:
@@ -199,9 +235,6 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
       case 3:
         this._instanceClass = value as TypeScriptClass<unknown> | undefined;
         return;
-      case 4:
-        this._defaultValue = value as unknown;
-        return;
       case 5:
         this._instanceTypeName = value as string | undefined;
         return;
@@ -213,6 +246,8 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       case 7:
@@ -230,8 +265,9 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         return this._instanceClassName !== undefined;
       case 3:
         return this._instanceClass !== undefined;
+
       case 4:
-        return this._defaultValue !== undefined;
+        return this.getDefaultValue() !== undefined;
       case 5:
         return this._instanceTypeName !== undefined;
       case 6:
@@ -267,23 +303,6 @@ export class EClassifierImpl extends ENamedElementImpl implements EClassifier {
         const wasSet = this.eIsSet(feature);
         const oldValue = this._instanceClass;
         this._instanceClass = undefined;
-        this.eDidRemove(feature, oldValue);
-        this.eNotify({
-          eventType: 'UNSET',
-          notifier: this,
-          feature,
-          oldValue,
-          newValue: undefined,
-          position: undefined,
-          wasSet,
-        });
-        return;
-      }
-
-      case 4: {
-        const wasSet = this.eIsSet(feature);
-        const oldValue = this._defaultValue;
-        this._defaultValue = undefined;
         this.eDidRemove(feature, oldValue);
         this.eNotify({
           eventType: 'UNSET',

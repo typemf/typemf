@@ -3,7 +3,7 @@ import { createInstanceOf } from '../impl/metamodel-helpers.js';
 import { EcorePackageImpl } from '../impl/EcorePackageImpl.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
 
-describe('EClassifier.isInstance - CORE-04', () => {
+describe('EClassifier.isInstance', () => {
   it('EClass.isInstance recognizes instances of itself and its subtypes, and rejects everything else', () => {
     const { bookClass, audioBookClass, libraryClass } = buildSampleMetamodel();
     const book = createInstanceOf(bookClass);

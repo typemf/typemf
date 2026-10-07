@@ -6,6 +6,7 @@ import { EClass } from '../types/EClass.js';
 import { EDataType } from '../types/EDataType.js';
 import { EStructuralFeature } from '../types/EStructuralFeature.js';
 
+/** A feature whose values are data values, instances of an `EDataType`. */
 export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute {
   private _iD: boolean = false;
 
@@ -78,6 +79,8 @@ export class EAttributeImpl extends EStructuralFeatureImpl implements EAttribute
         return;
     }
   }
+
+  /** @internal The list of the many-valued feature `featureId`, for bootstrapping the package. */
   eBootstrapList(featureId: number): BasicEList<unknown> {
     switch (featureId) {
       default:

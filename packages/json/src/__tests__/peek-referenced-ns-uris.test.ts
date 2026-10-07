@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { JsonSerializer } from '../json-serializer.js';
 import { buildSampleMetamodel } from './sample-metamodel.js';
-import { createInstanceOf, ResourceImpl, ResourceSetImpl, URI } from '@typemf/core';
+import { createInstanceOf, ResourceSetImpl, URI } from '@typemf/core';
+import { registerJsonFormat } from '../json-resource-factory.js';
 
 const serializer = new JsonSerializer();
 
@@ -29,8 +30,8 @@ describe('JsonSerializer.peekReferencedNsURIs', () => {
     const library = createInstanceOf(libraryClass);
     const rs = new ResourceSetImpl();
     rs.getPackageRegistry().register(libraryPackage);
-    const resource = new ResourceImpl(URI.parse('mem:lib.json'), serializer);
-    resource.eSetResourceSet(rs);
+    registerJsonFormat(rs.getResourceFactoryRegistry());
+    const resource = rs.createResource(URI.parse('mem:lib.json'));
     resource.getContents().add(library);
     const bytes = await serializer.serialize([library], resource);
 

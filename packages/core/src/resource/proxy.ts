@@ -4,22 +4,14 @@ import { DynamicEObjectImpl } from '../metamodel/impl/DynamicEObjectImpl.js';
 import { EObjectImpl } from '../metamodel/impl/EObjectImpl.js';
 import { URI } from './uri.js';
 
-/** Which URI each currently-unresolved proxy stands in for. Not a field on EObjectImpl itself -
- *  unlike eResource()'s Resource (CORE-08, a type-only reference with no runtime footprint in
- *  metamodel/), a URI is a real value a proxy needs to carry around, and metamodel/ has no
- *  business constructing or storing one of those itself. */
+/** The URI each unresolved proxy stands for. */
 const proxyURIs = new WeakMap<EObject, URI>();
 
 /**
- * Creates a stand-in for "I know this is an instance of `eClass`, identified by `uri`, but
- * haven't loaded the document it actually lives in yet." A real instance of `eClass` - created
- * through its own package's factory, the same way any other instance of it would be - flagged as
- * a proxy (see EObjectImpl.eSetProxy) rather than represented by a separate class. Every ordinary
- * feature read returns that class's own, normal default until resolved, instead of throwing.
- *
- * Resolved via ResourceSet.resolve()/resolveFeature(), which locate the real object and swap it
- * into whichever feature referenced this proxy - this object itself is never mutated into "the
- * real one"; once resolved, nothing references it anymore and it is simply discarded.
+ * A placeholder for the object at `uri`, whose document has not been loaded: an ordinary instance
+ * of `eClass` marked as a proxy (see `EObject.eIsProxy()`), whose features hold their defaults.
+ * `ResourceSet.resolve()` finds the real object, and `resolveFeature()` replaces the proxy with
+ * it; the proxy itself never turns into the real object.
  */
 export function createProxy(eClass: EClass, uri: URI): EObject {
   const factory = eClass.getEPackage()?.getEFactoryInstance();

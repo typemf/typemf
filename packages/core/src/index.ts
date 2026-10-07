@@ -29,6 +29,7 @@ export * from './metamodel/types/ETypedElement.js';
 
 // impl
 export * from './metamodel/impl/BasicEList.js';
+export * from './metamodel/impl/UnmodifiableEList.js';
 export * from './metamodel/impl/DynamicEObjectImpl.js';
 export * from './metamodel/impl/DynamicEFactoryImpl.js';
 export * from './metamodel/impl/EAnnotationImpl.js';
