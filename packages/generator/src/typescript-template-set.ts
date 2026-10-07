@@ -25,9 +25,11 @@ import {
   isBookkeepingOperation,
   findUnnamedElements,
   findUnresolvedCollisions,
+  findOtherPackageSuperTypes,
   metaclassAccessorCollision,
   metaclassAccessorCollisionTypeNames,
   optionalParamList,
+  otherPackageClassifierExpr,
   isPrimitiveValueType,
   jsString,
   mergedParamList,
@@ -87,6 +89,7 @@ export const typescriptTemplateSet: TemplateSet = {
       ...findUnresolvedCollisions(pkg).map(
         (c) => `${c.classifierName}.${c.memberName}: name collision between ${c.sources.join(' and ')}`
       ),
+      ...findOtherPackageSuperTypes(pkg),
     ];
   },
   configureEnvironment(env: nunjucks.Environment, { pkg, options }): void {
@@ -144,6 +147,7 @@ export const typescriptTemplateSet: TemplateSet = {
     env.addGlobal('metaclassAccessorCollision', metaclassAccessorCollision);
     env.addGlobal('metaclassAccessorCollisionTypeNames', metaclassAccessorCollisionTypeNames);
     env.addGlobal('optionalParamList', optionalParamList);
+    env.addGlobal('otherPackageClassifierExpr', otherPackageClassifierExpr);
     env.addGlobal('typeGuardsClassName', typeGuardsClassName);
     env.addGlobal('useImport', useImport);
   },

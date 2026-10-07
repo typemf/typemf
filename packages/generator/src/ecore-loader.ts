@@ -1,4 +1,15 @@
-import { EcorePackageImpl, EPackage, ResourceSetImpl, URI } from '@typemf/core';
+import {
+  EClassifier,
+  EcorePackageImpl,
+  EObject,
+  EPackage,
+  getProxyURI,
+  isEReference,
+  Resource,
+  ResourceSet,
+  ResourceSetImpl,
+  URI,
+} from '@typemf/core';
 import { NodeFileUriConverter } from '@typemf/node';
 import { registerXmiFormat } from '@typemf/xmi';
 import { convertDynamicEcoreToTyped } from './ecore-dynamic-to-typed.js';
@@ -41,12 +52,73 @@ export async function loadEcorePackage(ecoreFilePath: string): Promise<EPackage>
   if (!resource) {
     throw new Error(`Could not load '${ecoreFilePath}'.`);
   }
+  return convertResource(resource, resourceSet, new Map(), []);
+}
 
-  const roots = resource.getContents().toArray();
-  const dynamicPkg = roots[0];
-  if (!dynamicPkg) {
-    throw new Error(`'${ecoreFilePath}' has no root element - expected a single EPackage.`);
+/**
+ * Converts the package at the root of `resource`. Every other .ecore file it references is loaded
+ * and converted first, so references into it become that package's typed classifiers. Cyclic
+ * references between files are not supported.
+ */
+async function convertResource(
+  resource: Resource,
+  resourceSet: ResourceSet,
+  converted: Map<Resource, EPackage>,
+  inProgress: Resource[]
+): Promise<EPackage> {
+  const done = converted.get(resource);
+  if (done) return done;
+  const location = resource.getURI().toString();
+  if (inProgress.includes(resource)) {
+    const cycle = [...inProgress, resource].map((r) => r.getURI().toString()).join(' -> ');
+    throw new Error(`Cyclic references between .ecore files are not supported: ${cycle}`);
   }
 
-  return convertDynamicEcoreToTyped(dynamicPkg);
+  const dynamicPkg = resource.getContents().toArray()[0];
+  if (!dynamicPkg) {
+    throw new Error(`'${location}' has no root element - expected a single EPackage.`);
+  }
+
+  const foreign = new Map<EObject, EClassifier>();
+  for (const proxy of foreignProxies(dynamicPkg)) {
+    const target = await resourceSet.resolve(proxy).catch((err: unknown) => {
+      throw new Error(
+        `Cannot resolve the classifier reference '${getProxyURI(proxy)?.toString()}': ${(err as Error).message}`,
+        { cause: err }
+      );
+    });
+    const targetResource = target.eResource();
+    const targetPkg = targetResource
+      ? await convertResource(targetResource, resourceSet, converted, [...inProgress, resource])
+      : undefined;
+    const name = target.eClass().getEStructuralFeature('name');
+    const classifier = name && targetPkg?.getEClassifier(target.eGet(name) as string);
+    if (!classifier) {
+      throw new Error(
+        `Cannot resolve the classifier reference '${getProxyURI(proxy)?.toString()}': only classifiers of a referenced package's root are supported.`
+      );
+    }
+    foreign.set(proxy, classifier);
+  }
+
+  const pkg = convertDynamicEcoreToTyped(dynamicPkg, (proxy) => foreign.get(proxy));
+  converted.set(resource, pkg);
+  return pkg;
+}
+
+/** The unresolved references of `root` and its contents that point into another file, not into Ecore. */
+function foreignProxies(root: EObject): Set<EObject> {
+  const ecoreNsURI = EcorePackageImpl.eINSTANCE.getNsURI();
+  const proxies = new Set<EObject>();
+  for (const obj of [root, ...root.eAllContents()]) {
+    for (const feature of obj.eClass().getEAllStructuralFeatures()) {
+      if (!isEReference(feature) || feature.isContainment()) continue;
+      const value = obj.eGet(feature);
+      const values = feature.isMany() ? [...(value as Iterable<EObject>)] : value ? [value as EObject] : [];
+      for (const v of values) {
+        if (v.eIsProxy() && getProxyURI(v)?.trimFragment().toString() !== ecoreNsURI) proxies.add(v);
+      }
+    }
+  }
+  return proxies;
 }

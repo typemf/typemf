@@ -28,6 +28,24 @@ The config file defaults to `./typemf-generator.config.json`:
 
 Paths are resolved relative to the config file. `typescript` is currently the only template set.
 
+## Other packages
+
+A `.ecore` file can use classifiers of another `.ecore` file (`href="other.ecore#//Shape"`). The
+generator loads that file too, but doesn't generate it; generate it with its own config. The
+option `package-imports` says where its generated code is, by nsURI:
+
+```json
+"options": {
+  "package-imports": {
+    "https://example.com/shapes": "../shapes"
+  }
+}
+```
+
+A value starting with `./` or `../` is the folder of the other package's generated code, relative
+to `outputDir`. Any other value is a module name that exports its types and its `PackageImpl`.
+Classifiers of Ecore need no entry. Supertypes from another package are not supported yet.
+
 ## Generated code
 
 For a package `library` with the classes `Library`, `Writer` and `Book`:

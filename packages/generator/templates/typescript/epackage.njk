@@ -122,9 +122,9 @@ export interface {{ pkgClass }} extends {{ useImport("EPackage", "types", {found
  call is correct and necessary there, and the bypass is correct and
  necessary here - never both from the same call site.
 #}
-{#- The expression for classifier `c`: its field for a classifier of this package, Ecore's own accessor otherwise. #}
+{#- The expression for classifier `c`: its field for a classifier of this package, its package's accessor otherwise. #}
 {% macro classifierExpr(c) -%}
-{%- if c.getEPackage() == package -%}this._{{ c.getName() }}{%- else -%}{{ useImport("EcorePackageImpl", "impl", {foundational: true}) }}.eINSTANCE.get{{ c.getName() }}(){%- endif -%}
+{%- if c.getEPackage() == package -%}this._{{ c.getName() }}{%- else -%}{{ otherPackageClassifierExpr(c) }}{%- endif -%}
 {%- endmacro %}
 {% macro bootstrapSet(targetExpr, beanSetterName, idsExpr, valueExpr) %}
 {% if options['generate-ecore'] %}
