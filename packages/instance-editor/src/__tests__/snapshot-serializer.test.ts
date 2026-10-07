@@ -19,7 +19,7 @@ import { describe, expect, it } from 'vitest';
 import { ObjectIdMap } from '../object-id-map.js';
 import { WebviewObjectRegistry } from '../webview-object-registry.js';
 import { snapshotObject } from '../snapshot-object.js';
-import { HOST_SCHEME, registerHostProtocol, uriForId } from '../snapshot-serializer.js';
+import { HOST_SCHEME, registerHostProtocol, resolveHostObject, uriForId } from '../snapshot-serializer.js';
 
 void EcorePackageImpl.eINSTANCE;
 
@@ -324,5 +324,21 @@ describe('SnapshotSerializer', () => {
     const classifiers = reconstructedPkg.eGet(reconstructedClassifiersFeature) as Iterable<{ eIsProxy(): boolean }>;
 
     expect([...classifiers]).toHaveLength(2);
+  });
+
+  it("returns Ecore's own classifiers without asking the host", async () => {
+    const ecore = EcorePackageImpl.eINSTANCE;
+    const hostIds = new ObjectIdMap();
+    const webviewResourceSet = new ResourceSetImpl();
+    registerHostProtocol(webviewResourceSet.getResourceFactoryRegistry(), new WebviewObjectRegistry());
+    webviewResourceSet.getUriConverterRegistry().register(new FakeHostUriConverter());
+
+    const resolved = await resolveHostObject(
+      webviewResourceSet,
+      ecore.getEClassifier(),
+      hostIds.idFor(ecore.getEModelElement())
+    );
+
+    expect(resolved).toBe(ecore.getEModelElement());
   });
 });

@@ -5,7 +5,6 @@ import {
   EObject,
   EReference,
   EStructuralFeature,
-  createProxy,
   isEClass,
   isEDataType,
   isEEnum,
@@ -13,7 +12,8 @@ import {
 } from '@typemf/core';
 import React, { useState } from 'react';
 import { displayLabel } from '../src/display-label.js';
-import { uriForId } from '../src/snapshot-serializer.js';
+import { linkTargetType } from '../src/link-target-type.js';
+import { resolveHostObject, uriForId } from '../src/snapshot-serializer.js';
 import { useObjectVersion, useResolved, useResolvedList } from './hooks.js';
 import { WebviewEnvironment } from './webview-environment.js';
 
@@ -440,7 +440,7 @@ function AddChildButton({
     }
     const candidates: EClass[] = [];
     for (const id of classIds) {
-      const resolved = await resourceSet.resolve(createProxy(declaredType, uriForId(id)));
+      const resolved = await resolveHostObject(resourceSet, declaredType, id);
       if (isEClass(resolved)) candidates.push(resolved);
     }
     setState({ kind: 'picking', candidates });
@@ -532,6 +532,7 @@ function LinkReferenceButton({
 
   const declaredType = feature.getEType();
   if (!isEClass(declaredType)) return <></>; // a reference's own eType is always an EClass per Ecore's own rules - defensive, not assumed
+  const targetType = linkTargetType(obj, feature, declaredType);
 
   // Resolves each of the host's own candidateIds into a real, usable EObject for the picker -
   // the one piece genuinely shared between the in-document and external flows below, which differ
@@ -539,7 +540,7 @@ function LinkReferenceButton({
   const resolveCandidates = async (candidateIds: string[]): Promise<EObject[]> => {
     const candidates: EObject[] = [];
     for (const id of candidateIds) {
-      const resolved = await resourceSet.resolve(createProxy(declaredType, uriForId(id)));
+      const resolved = await resolveHostObject(resourceSet, targetType, id);
       if (resolved) candidates.push(resolved);
     }
     return candidates;
@@ -547,14 +548,14 @@ function LinkReferenceButton({
 
   const startLink = async (): Promise<void> => {
     setState({ kind: 'loading' });
-    const declaredTypeId = objectRegistry.hostIdFor(declaredType);
-    if (!declaredTypeId) {
+    const targetTypeId = objectRegistry.hostIdFor(targetType);
+    if (!targetTypeId) {
       setState({ kind: 'error', message: "Could not identify this feature's own declared type." });
       return;
     }
     let candidateIds: string[];
     try {
-      candidateIds = await referenceCandidatesQuery.query(declaredTypeId);
+      candidateIds = await referenceCandidatesQuery.query(targetTypeId);
     } catch (err) {
       setState({ kind: 'error', message: (err as Error).message });
       return;
@@ -573,14 +574,14 @@ function LinkReferenceButton({
   // nothing compatible in that file" gets the same error treatment as the in-document case.
   const startLinkExternal = async (): Promise<void> => {
     setState({ kind: 'loading' });
-    const declaredTypeId = objectRegistry.hostIdFor(declaredType);
-    if (!declaredTypeId) {
+    const targetTypeId = objectRegistry.hostIdFor(targetType);
+    if (!targetTypeId) {
       setState({ kind: 'error', message: "Could not identify this feature's own declared type." });
       return;
     }
     let result: { candidateIds: string[]; cancelled: boolean };
     try {
-      result = await browseExternalReferenceQuery.query(declaredTypeId);
+      result = await browseExternalReferenceQuery.query(targetTypeId);
     } catch (err) {
       setState({ kind: 'error', message: (err as Error).message });
       return;
