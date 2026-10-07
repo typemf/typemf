@@ -1,5 +1,18 @@
 # @typemf/xmi
 
+## 0.9.1
+
+### Patch Changes
+
+- [#16](https://github.com/typemf/typemf/pull/16) [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c) Thanks [@bergerbd](https://github.com/bergerbd)! - Name paths follow EMF's convention for repeated names: `//Problem/solve.1` is the second element named `solve`, such as an overloaded operation, and is written that way instead of by position. References to operations, parameters and enum literals of a `.ecore` file, also from JSON documents, are written as name paths and keep resolving after the elements are reordered.
+
+- [#16](https://github.com/typemf/typemf/pull/16) [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c) Thanks [@bergerbd](https://github.com/bergerbd)! - EMF name paths now reach into subpackages at any depth, as in `#//api/Solution` or `other.ecore#//api/inner/Detail`, and can address any named element, such as an enum literal (`//Kind/OPEN`). Name and position segments can be mixed. When saving, a named Ecore element is written by name, as EMF does; it falls back to its position when a sibling has the same name.
+
+  Same-document references are now written as EMF writes them: `eType="#//api/Solution"`, with a leading `#` and without a type, instead of `eType="ecore:EClass //api/Solution"`. Files in the old form still load.
+
+- Updated dependencies [[`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c), [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c)]:
+  - @typemf/core@0.9.1
+
 ## 0.9.0
 
 ### Patch Changes

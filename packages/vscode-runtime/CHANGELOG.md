@@ -1,5 +1,15 @@
 # @typemf/vscode-runtime
 
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies [[`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c), [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c), [`f02ac31`](https://github.com/typemf/typemf/commit/f02ac31cf1aa5177c178d1e5a98fbe256d00ec7c)]:
+  - @typemf/json@0.9.1
+  - @typemf/core@0.9.1
+  - @typemf/xmi@0.9.1
+  - @typemf/node@0.9.1
+
 ## 0.9.0
 
 ### Patch Changes
