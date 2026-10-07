@@ -5,14 +5,9 @@ import { EStructuralFeature } from '../types/EStructuralFeature.js';
 import { EObjectImpl } from './EObjectImpl.js';
 
 /**
- * Array-backed EList. When constructed with an owner + feature, add/remove
- * additionally maintain containment bookkeeping (eContainer /
- * eContainingFeature, including removal from a previous container's list)
- * and the feature's EOpposite as a side effect - this is what lets a plain
- * `someObject.getChildren().add(child)` call be enough to make
- * `child.eContainer() === someObject` true, without the caller having to
- * know anything about containment. The bookkeeping itself lives in
- * EObjectImpl.eDidAdd/eDidRemove.
+ * An array-backed {@link EList}. Constructed with an owner and a feature, it is that feature's
+ * value: adding and removing elements updates containers and opposite references (see
+ * `EObjectImpl.eDidAdd`/`eDidRemove`) and notifies the owner's listeners.
  */
 export class BasicEList<T> implements EList<T> {
   private readonly items: T[] = [];
@@ -128,17 +123,13 @@ export class BasicEList<T> implements EList<T> {
     return this.items[Symbol.iterator]();
   }
 
-  /**
-   * Internal - adds without containment/opposite side effects. Used by
-   * EObjectImpl when this list is the *other* end of a change whose
-   * bookkeeping is already being handled.
-   */
+  /** Internal. Adds without containment, opposite or notification side effects. */
   basicAdd(item: T): void {
     if (this.rejectsDuplicate(item)) return;
     this.items.push(item);
   }
 
-  /** Internal - removes without containment/opposite side effects. */
+  /** Internal. Removes without containment, opposite or notification side effects. */
   basicRemove(item: T): boolean {
     const index = this.items.indexOf(item);
     if (index === -1) return false;
@@ -146,11 +137,7 @@ export class BasicEList<T> implements EList<T> {
     return true;
   }
 
-  /**
-   * Reference lists are always unique (as in EMF): re-adding a member is a
-   * no-op rather than a duplicate entry, which is also what keeps
-   * inverse-add from double-inserting.
-   */
+  /** Reference lists are unique, as in EMF: adding an element already present does nothing. */
   private rejectsDuplicate(item: T): boolean {
     return !!this.feature && isReference(this.feature) && this.items.includes(item);
   }
@@ -188,10 +175,7 @@ export class BasicEList<T> implements EList<T> {
   }
 
   /**
-   * The element stays in the list throughout - no containment/opposite change, so
-   * unlike onAdded/onRemoved there's no eDidAdd/eDidRemove to call, only the notification
-   * (real EMF's own MOVE: oldValue is the OLD position, newValue is the moved element, position
-   * is the NEW position).
+   * Notifies a `MOVE`; the element stays in the list, so containers and opposites are unchanged.
    */
   private onMoved(item: T, fromIndex: number, toIndex: number): void {
     if (!this.owner || !this.feature) return;

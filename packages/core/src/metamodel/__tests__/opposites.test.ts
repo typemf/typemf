@@ -248,9 +248,8 @@ describe('opposite (inverse) reference maintenance - notifications', () => {
     alice.onDidChange((n) => aliceNotifications.push(`${n.eventType} ${n.feature?.getName()}`));
     bob.onDidChange((n) => bobNotifications.push(`${n.eventType} ${n.feature?.getName()}`));
 
-    // Carol takes alice as mentor: alice's own mentee changes (bob -> carol) as a side effect -
-    // used to fire nothing on alice at all. Bob is displaced (loses his mentor) - used to fire
-    // nothing on bob either.
+    // Carol takes alice as mentor: alice's mentee changes from bob to carol as a side effect,
+    // and bob loses his mentor; both notify.
     carol.eSet(m.mentorRef, alice);
 
     expect(aliceNotifications).toEqual(['SET mentee']);
@@ -268,7 +267,7 @@ describe('opposite (inverse) reference maintenance - notifications', () => {
 
     list(research, m.employeesRef).add(alice);
 
-    // sales.employees loses alice as a side effect of the move - used to fire nothing at all.
+    // sales.employees loses alice as a side effect of the move, and notifies.
     expect(salesNotifications).toEqual(['REMOVE employees 0']);
   });
 

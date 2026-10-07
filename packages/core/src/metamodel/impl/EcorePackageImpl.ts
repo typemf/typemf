@@ -231,14 +231,9 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   private static _instance: EcorePackageImpl | undefined;
 
   /**
-   * The one explicit entry point that constructs the singleton - call it
-   * yourself, with your own factory, before anything else in your program
-   * touches EcorePackageImpl.eINSTANCE, to use a custom factory (e.g. one
-   * overriding createX() to return your own derived classes). Whichever
-   * caller gets here FIRST wins; a later call with a *different* factory
-   * is logged and otherwise ignored, rather than silently replacing an
-   * already-in-use singleton or throwing on a caller who didn't cause the
-   * conflict.
+   * Constructs the package, if that hasn't happened yet, and returns it. To use your own factory
+   * (e.g. one returning subclasses), call this with it before anything reads `eINSTANCE`; a
+   * factory passed after construction is ignored with a warning.
    */
   static init(factory?: EcoreFactory): EcorePackageImpl {
     if (!EcorePackageImpl._instance) {
@@ -259,10 +254,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
   private constructor() {
     super();
-    // Set immediately, before Pass 1 constructs any classifier (each of
-    // which may need this reference - see EcorePackageRef.ts's own doc
-    // comment for why this is a late-bound reference rather than a
-    // direct import of EcorePackageImpl.
+    // Set first: constructing the classifiers below already needs the package reference.
     setEcorePackageRef(this);
 
     // Pass 1: create every classifier (empty shell - no features/supertypes
@@ -4077,11 +4069,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
 
     this._ETypeParameter.eBootstrapList(Ids.EClass.eStructuralFeatures).add(this._ETypeParameter_eBounds);
 
-    // Pass 2.5: operations and their parameters - real EOperation/EParameter objects, not just the
-    // generated METHODS (which already existed) - eOperations used to be permanently empty at runtime;
-    // this is what actually populates it, the same way pass 2 populates eStructuralFeatures. Kept as
-    // its own pass, after every classifier and feature exists (an operation's return type or a
-    // parameter's type can reference either), rather than folded into the loop above.
+    // Pass 2.5: operations and their parameters, after every classifier and feature exists, since
+    // their types can refer to any of them.
     this._EClass_op0 = new EOperationImpl();
     this._EClass_op0.eBasicSetValue(Ids.ENamedElement.name, 'isSuperTypeOf');
 
@@ -4742,21 +4731,8 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
       this._EClass_eStructuralFeatures
     );
 
-    // Pass 5 (recompute EAll* caches, ordinary mode only) removed - stale post-swap.
-    // @typemf/core's own EClassImpl is now itself generated code (see NOTES.md's point 6/7
-    // write-ups), using the same automatic, get-bodied caching (EObjectImpl.getModelGeneration(),
-    // point 1) as self-hosted output always did - there is no recomputeAllLists() method to call
-    // anymore, in either mode, and none is needed.
-
-    // Pass 6: set the package's own name/nsURI/nsPrefix/annotations last,
-    // deliberately - these go through the ordinary reflective setters
-    // (this.setName(), etc.), which need the "name"/etc. feature's own
-    // metaclass object to already exist (it's built above, in the passes
-    // this follows). Calling them earlier - before those metaclasses
-    // exist - is a genuine bootstrap-ordering bug, confirmed directly by
-    // reproducing it: this line order isn't a style choice, the metaclass
-    // shells and feature wiring above are a real, load-bearing
-    // precondition for the reflective setter calls below to work at all.
+    // Pass 5: the package's own name, nsURI, nsPrefix and annotations, last: the setters used here
+    // need the features built above.
     this.setName('ecore');
     this.setNsURI('http://www.eclipse.org/emf/2002/Ecore');
     this.setNsPrefix('ecore');
@@ -5169,10 +5145,7 @@ export class EcorePackageImpl extends EPackageImpl implements EcorePackage {
   }
 }
 
-// Lets getXxxRef() construct the singleton itself, on first use, instead of only ever
-// throwing when nothing has touched EcorePackageImpl.eINSTANCE/.init() yet. A side effect of
-// this module being evaluated at all - see registerEcorePackageInitializer's own doc comment
-// in EcorePackageRef.ts.
+// Lets getEcorePackageRef() construct the package on first use.
 registerEcorePackageInitializer(() => {
   void EcorePackageImpl.eINSTANCE;
 });

@@ -11,9 +11,10 @@ export class URI {
     private readonly fragment: string | undefined
   ) {}
 
-  /** Parses an absolute URI ("scheme:path" / "scheme://path") or a relative reference (anything
-   *  else - a bare path, with no scheme). Never throws: a string with no recognizable scheme is
-   *  relative, not invalid - resolve() against a base URI before using it as a document location. */
+  /**
+   * Parses `scheme:path`, `scheme://path` or, without a scheme, a relative reference. Never throws;
+   * resolve a relative reference against a base before using it as a document location.
+   */
   static parse(uriString: string): URI {
     const absolute = /^([a-zA-Z][a-zA-Z0-9+.-]*):(\/\/)?([^#]*)(?:#(.*))?$/.exec(uriString);
     if (absolute) {
@@ -25,18 +26,9 @@ export class URI {
   }
 
   /**
-   * Convenience for the common case of wrapping a filesystem path. Backslashes become
-   * forward slashes first - a Windows `fsPath` ("C:\Users\a b\m.xmi") has none of its own, so this
-   * is purely "native path -> URI path" translation, matching real EMF's own `URI.createFileURI`;
-   * it naturally also makes a drive-letter path absolute, the same way a POSIX path already was,
-   * with no separate case needed (`C:/...` doesn't start with "/" yet, so it gets one prepended,
-   * same as any other non-absolute input). Each path segment is then percent-encoded (a reserved
-   * character - most commonly a space in a real file path - would otherwise corrupt `resolve`/
-   * `deresolve`'s own segment splitting, or the URI text once serialized into an `href`); `:` is
-   * deliberately left unescaped (valid unencoded in a URI path segment, and this is exactly what
-   * keeps a drive letter readable as "C:" rather than "C%3A", matching Eclipse's own Windows file
-   * URIs). `getPath()`/`toString()` return this encoded form - decoding back to a native path is
-   * `@typemf/node`'s job (via `fileURLToPath`), not this class's.
+   * A `file:` URI for a file system path, as EMF's `URI.createFileURI`. Backslashes become slashes,
+   * a drive letter path (`C:\models\a.xmi`) becomes absolute, and each segment is percent-encoded
+   * except for `:`. Converting back to a path is the job of a `UriConverter`.
    */
   static createFileURI(path: string): URI {
     const normalized = path.replace(/\\/g, '/');
@@ -80,9 +72,8 @@ export class URI {
   }
 
   /**
-   * This URI, made absolute against `base` if it is relative; returned unchanged otherwise.
-   * `base`'s own fragment is irrelevant and ignored - only its scheme/authority/path (i.e. "which
-   * document") anchor the result; this URI's own fragment (if any) is kept as-is.
+   * This URI made absolute against `base` if it is relative, unchanged otherwise. Keeps this URI's
+   * fragment and ignores `base`'s.
    */
   resolve(base: URI): URI {
     if (!this.isRelative()) return this;
@@ -92,11 +83,8 @@ export class URI {
   }
 
   /**
-   * The shortest relative reference from `base` to this URI, when both share a scheme and
-   * authority (the common, same-workspace case this is actually for) - this URI unchanged
-   * otherwise, since there is then nothing meaningful to make relative against. Already-relative
-   * stays unchanged either way. The inverse of resolve(): `uri.deresolve(base).resolve(base)`
-   * reconstructs the original absolute path.
+   * The shortest relative reference from `base` to this URI if both have the same scheme and
+   * authority, unchanged otherwise. The inverse of {@link resolve}.
    */
   deresolve(base: URI): URI {
     if (this.isRelative() || this.scheme !== base.scheme || this.hasAuthority !== base.hasAuthority) return this;

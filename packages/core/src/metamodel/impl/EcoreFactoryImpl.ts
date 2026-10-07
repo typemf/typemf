@@ -32,10 +32,10 @@ import { EStringToStringMapEntry } from '../types/EStringToStringMapEntry.js';
 import { ETypeParameter } from '../types/ETypeParameter.js';
 
 export class EcoreFactoryImpl extends EFactoryImpl implements EcoreFactory {
-  /** The one canonical factory instance - real EMF's own `EcoreFactory.eINSTANCE`, which this project
-   *  ports onto the Impl class rather than the interface (TypeScript interfaces have no statics).
-   *  Reading this also constructs the package singleton on first use, via the same
-   *  lazy initializer EcorePackageImpl.eINSTANCE itself goes through. */
+  /**
+   * The factory instance, as EMF's `EcoreFactory.eINSTANCE` (on the class, since
+   * TypeScript interfaces have no statics). Reading it constructs the package if necessary.
+   */
   static get eINSTANCE(): EcoreFactory {
     return getEcorePackageRef().getEFactoryInstance() as EcoreFactory;
   }

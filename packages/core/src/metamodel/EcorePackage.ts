@@ -6,13 +6,7 @@ import { EDataType } from './types/EDataType.js';
 import { EPackage } from './types/EPackage.js';
 import { EReference } from './types/EReference.js';
 
-/**
- * Classifier/feature IDs, as pure numeric literals - safe to import from
- * anywhere (Factory, Switch) with zero risk of the circular-import hazard
- * that made a lazy, explicit init() necessary for the singleton itself
- * (see EcorePackageImpl.ts) - these are just numbers, never require
- * constructing anything.
- */
+/** The classifier, feature and operation IDs; plain numbers, safe to import from anywhere. */
 export const Ids = {
   EAttribute: { self: 0, iD: 18, eAttributeType: 19 },
   EAnnotation: { self: 1, source: 1, details: 2, eModelElement: 3, contents: 4, references: 5 },

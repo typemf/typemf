@@ -1,22 +1,8 @@
 {% file "util/" + typeGuardsClassName(package) + ".ts" %}
 /**
- * Runtime type guards, one per classifier declared in types/ - the
- * reflective counterpart to a hand-written structural guard like
- *
- *   function isReference(feature: EStructuralFeature): feature is EReference {
- *     return "isContainment" in feature;
- *   }
- *
- * Structural (duck-typing) checks like that one work when a single
- * classifier has some genuinely distinguishing own member - but nothing
- * guarantees an arbitrary generated classifier has one (a subclass might
- * add no own features at all, inheriting everything). These guards check
- * the object's REAL runtime EClass against the metamodel's own
- * eAllSuperTypes reflectively instead (via isSuperTypeOf()), which is
- * correct for every classifier unconditionally, including abstract ones
- * (correctly true for any instance of a concrete subclass) and dynamic
- * instances (no dependency on the object's actual JS class/prototype at
- * all, unlike `instanceof`).
+ * Type guards for the classifiers of the package. They check an object's class with
+ * `isSuperTypeOf()`, so they also work for abstract classes, interfaces and dynamic objects,
+ * unlike `instanceof`.
  */
 function hasEClass(obj: unknown): obj is {{ useImport("EObject", "types", {foundational: true}) }} {
   return obj !== null && typeof obj === 'object' && typeof (obj as { eClass?: unknown }).eClass === 'function';
