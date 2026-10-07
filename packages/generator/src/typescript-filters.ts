@@ -914,40 +914,29 @@ export function superTypeChain(eClass: EClass): EClass[] {
 }
 
 /**
- * Whether this class descends from (or is) "EClassifier" - needed
- * specifically for self-hosting Ecore.ecore: classifierID is internal
- * dispatch bookkeeping, not a real modeled Ecore feature, so it's never
- * emitted by the ordinary feature-driven getter/setter generation - but
- * bootstrap code constructing the metamodel's own classifier shells
- * (which ARE real EClassifier-derived instances, e.g. EClassImpl,
- * EDataTypeImpl) genuinely needs to set it. Confirmed as a real,
- * necessary gap by actually running self-hosted bootstrap code, not
- * assumed - see NOTES.md.
+ * Whether `eClass` is EClassifier or a subclass of it, when generating Ecore itself: such a class
+ * gets a stored classifier ID (`getClassifierID`/`setClassifierID`), which is bookkeeping, not a
+ * modeled feature. Always false for any other package, so a user class that happens to be named
+ * EClassifier is generated like any other class.
  */
 export function isClassifierDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === 'EClassifier');
+  return generationContext.generateEcore && superTypeChain(eClass).some((c) => c.getName() === 'EClassifier');
 }
 
-/** The featureID analog of isClassifierDerived() - same reasoning, same real gap found the same way (see NOTES.md). */
+/** Like {@link isClassifierDerived}, for EStructuralFeature (feature ID and container class). */
 export function isStructuralFeatureDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === 'EStructuralFeature');
+  return generationContext.generateEcore && superTypeChain(eClass).some((c) => c.getName() === 'EStructuralFeature');
 }
 
-/** The operationID analog of isClassifierDerived()/isStructuralFeatureDerived() - added for point 4. */
+/** Like {@link isClassifierDerived}, for EOperation (operation ID). */
 export function isOperationDerived(eClass: EClass): boolean {
-  return superTypeChain(eClass).some((c) => c.getName() === 'EOperation');
+  return generationContext.generateEcore && superTypeChain(eClass).some((c) => c.getName() === 'EOperation');
 }
 
 /**
- * Whether a real EOperation's name collides with a hand-added bookkeeping
- * method (classifierID/featureID - see isClassifierDerived/
- * isStructuralFeatureDerived's own doc comments). Real Ecore.ecore
- * genuinely declares both "EClassifier.getClassifierID(): EInt" and
- * "EStructuralFeature.getFeatureID(): EInt" as real, zero-arg operations
- * - colliding, by name, with exactly the bookkeeping getters added for
- * the self-hosting bootstrap fix. Confirmed directly against the real
- * file before excluding these operations from the generic,
- * throwing-stub-generating operation loop, not assumed - see NOTES.md.
+ * Whether `op` is one of Ecore's own operations that the bookkeeping methods implement
+ * (`getClassifierID`, `getFeatureID`, `getOperationID`, `getContainerClass`; see
+ * {@link isClassifierDerived}), so the operation loop must not generate it again.
  */
 export function isBookkeepingOperation(op: EOperation, eClass: EClass): boolean {
   if (op.getName() === 'getClassifierID' && op.getEParameters().isEmpty() && isClassifierDerived(eClass)) return true;

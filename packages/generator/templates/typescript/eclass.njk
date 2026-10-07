@@ -115,16 +115,9 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
 {% endif %}
 {% endfor %}
 
-{% if eClass.getName() == "EClassifier" %}
-  {#- classifierID is real, internal dispatch bookkeeping (matching
-      @typemf/core's own hand-written EClassifierImpl), not a modeled
-      Ecore feature - so it's declared here, once, on EClassifier itself
-      (inherited by every descendant: EClass, EDataType, EEnum, ...)
-      rather than emitted by the ordinary feature-driven generation
-      above, which has no feature to generate it from. Confirmed
-      necessary by actually running self-hosted bootstrap code (which
-      constructs real EClassifier-derived metaclass shells and needs to
-      set their classifierID), not assumed - see NOTES.md. #}
+{% if options['generate-ecore'] and eClass.getName() == "EClassifier" %}
+  {#- Ecore only: the classifier ID is bookkeeping, not a modeled feature, inherited by every
+      classifier. #}
   private classifierId = -1;
 
   getClassifierID(): number {
@@ -135,15 +128,9 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     this.classifierId = id;
   }
 {% endif %}
-{% if eClass.getName() == "EStructuralFeature" %}
-  {#- featureID: the exact same real gap as classifierID above, one level
-      down the hierarchy - internal dispatch bookkeeping (matching
-      @typemf/core's own hand-written EStructuralFeatureImpl), not a
-      modeled Ecore feature, declared once here on EStructuralFeature
-      itself (inherited by EAttribute, EReference, ...). Found the same
-      way: running self-hosted bootstrap code, which constructs real
-      EStructuralFeature-derived metaclass shells (EAttributeImpl,
-      EReferenceImpl) and needs to set their featureID - see NOTES.md. #}
+{% if options['generate-ecore'] and eClass.getName() == "EStructuralFeature" %}
+  {#- Ecore only: the feature ID (bookkeeping) and the container class (getter modeled as an
+      operation, setter only on the implementation, used during bootstrap). #}
   private featureId = -1;
 
   getFeatureID(): number {
@@ -153,12 +140,7 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
   setFeatureID(id: number): void {
     this.featureId = id;
   }
-  {#- containerClass: real EMF's own asymmetric design (see EStructuralFeature.getContainerClass()'s
-      doc comment in @typemf/core) - PUBLIC getter (a real, modeled, reflectively-callable operation),
-      IMPL-ONLY setter (never on the interface, set once during bootstrap - see epackage.njk). Not
-      internal bookkeeping like featureID (it IS a real declared operation), but shares the same
-      "special-cased field the normal per-operation loop must skip" shape, so isBookkeepingOperation
-      treats it the same way (see typescript-filters.ts). #}
+
   private containerClass: {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined;
 
   getContainerClass(): {{ useImport("TypeScriptClass", "types", {foundational: true}) }}<unknown> | undefined {
@@ -169,12 +151,8 @@ export class {{ eClass.getName() }}Impl extends {{ (superClass.getName() + "Impl
     this.containerClass = cls;
   }
 {% endif %}
-{% if eClass.getName() == "EOperation" %}
-  {#- operationID: the exact same real gap as classifierID/featureID above - internal dispatch
-      bookkeeping (matching @typemf/core's own hand-written EOperationImpl), not a modeled Ecore
-      feature, declared once here on EOperation itself. Same discovery path: self-hosted bootstrap
-      code constructs real EOperationImpl instances and needs to set their operationID - see NOTES.md
-      (point 4). #}
+{% if options['generate-ecore'] and eClass.getName() == "EOperation" %}
+  {#- Ecore only: the operation ID is bookkeeping, not a modeled feature. #}
   private operationId = -1;
 
   getOperationID(): number {

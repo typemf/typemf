@@ -79,7 +79,8 @@ function useImport(name: string, location: ImportLocation, opts: { file?: string
 export const typescriptTemplateSet: TemplateSet = {
   name: 'typescript',
   baseFolder: join(packageRoot, 'templates', 'typescript'),
-  validate(pkg): string[] {
+  validate(pkg, options): string[] {
+    beginGeneration(pkg, options);
     return [
       ...findUnnamedElements(pkg),
       ...findUnresolvedCollisions(pkg).map(

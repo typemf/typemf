@@ -27,7 +27,7 @@ export interface TemplateSet {
    * colliding in a way it doesn't know how to resolve automatically.
    * Runs once, after ID assignment, before configureEnvironment/main.njk.
    */
-  validate?(pkg: EPackage): string[];
+  validate?(pkg: EPackage, options: Record<string, unknown>): string[];
 
   /**
    * Optional hook to register set-specific filters/globals (e.g. a

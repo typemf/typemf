@@ -12,9 +12,18 @@ import { TypeImportEntries, TypeImportMapping } from './type-import-mapping.js';
 export interface GenerationContext {
   pkg: EPackage | undefined;
   typeImports: TypeImportMapping;
+  /** The `generate-ecore` option: the package is Ecore itself, generating @typemf/core. */
+  generateEcore: boolean;
 }
 
-export const generationContext: GenerationContext = { pkg: undefined, typeImports: new TypeImportMapping() };
+export const generationContext: GenerationContext = {
+  pkg: undefined,
+  typeImports: new TypeImportMapping(),
+  generateEcore: false,
+};
+
+/** The generation option for generating Ecore itself (@typemf/core's metamodel). */
+export const GENERATE_ECORE_OPTION = 'generate-ecore';
 
 /** The generation option that pre-populates the mapping - see TypeImportMapping. */
 export const TYPE_IMPORTS_OPTION = 'type-imports';
@@ -24,12 +33,14 @@ export function beginGeneration(pkg: EPackage, options: Record<string, unknown>)
   const entries = options[TYPE_IMPORTS_OPTION];
   const valid = typeof entries === 'object' && entries !== null && !Array.isArray(entries);
   generationContext.typeImports = new TypeImportMapping(valid ? (entries as TypeImportEntries) : {});
+  generationContext.generateEcore = options[GENERATE_ECORE_OPTION] === true;
 }
 
 /** Back to "no generation in progress": nothing is external, the mapping is empty. */
 export function resetGenerationContext(): void {
   generationContext.pkg = undefined;
   generationContext.typeImports = new TypeImportMapping();
+  generationContext.generateEcore = false;
 }
 
 /**

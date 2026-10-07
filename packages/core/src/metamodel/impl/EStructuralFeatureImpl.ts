@@ -35,6 +35,7 @@ export class EStructuralFeatureImpl extends ETypedElementImpl implements EStruct
   setFeatureID(id: number): void {
     this.featureId = id;
   }
+
   private containerClass: TypeScriptClass<unknown> | undefined;
 
   getContainerClass(): TypeScriptClass<unknown> | undefined {
