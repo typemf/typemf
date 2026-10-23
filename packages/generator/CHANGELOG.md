@@ -1,5 +1,22 @@
 # @typemf/generator
 
+## 0.10.0
+
+### Minor Changes
+
+- [#18](https://github.com/typemf/typemf/pull/18) [`a3a130d`](https://github.com/typemf/typemf/commit/a3a130dd3570ffd852b0c7f920b90d9cb1537dd5) Thanks [@bergerbd](https://github.com/bergerbd)! - Template sets can come from npm packages. A package declares them under `typemf.templateSets` in its `package.json`; the CLI finds the ones the project depends on, and `--template-set <package folder>` adds others (`--no-discover` turns discovery off). `registerTemplateSet` and `registerTemplateSets` do the same for programs.
+
+  A template set can describe its options with a JSON Schema, which is checked before generating; the `typescript` set now rejects options it doesn't know. `generatorConfigSchema` builds the JSON Schema of a config file.
+
+  Config files are now named `*.typemf-generator.json`, and the CLI reads `./typemf-generator.json` by default (was `./typemf-generator.config.json`).
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @typemf/core@0.10.0
+  - @typemf/node@0.10.0
+  - @typemf/xmi@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

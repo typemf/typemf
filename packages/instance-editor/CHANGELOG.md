@@ -1,5 +1,11 @@
 # instance-editor
 
+## 0.10.0
+
+### Minor Changes
+
+- [#18](https://github.com/typemf/typemf/pull/18) [`a3a130d`](https://github.com/typemf/typemf/commit/a3a130dd3570ffd852b0c7f920b90d9cb1537dd5) Thanks [@bergerbd](https://github.com/bergerbd)! - A form editor for generator configs (`*.typemf-generator.json`). It picks the Ecore file and output folder, chooses a template set from the built-in one and those of the project's dependencies, edits the options of the template set as a form, and has a Generate button that asks before overwriting files. Editing the file as text gets completion and validation from a JSON Schema.
+
 ## 0.9.1
 
 No changes in this release.
