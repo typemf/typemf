@@ -1,13 +1,8 @@
 {
   "name": "instance-editor",
   "displayName": "TypeMF Instance Editor",
-<<<<<<< Updated upstream
-  "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore), for generated as well as dynamically loaded metamodels.",
-  "version": "0.9.1",
-=======
   "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore) and for generator configs (*.typemf-generator.json), for generated as well as dynamically loaded metamodels.",
-  "version": "0.9.0",
->>>>>>> Stashed changes
+  "version": "0.9.1",
   "publisher": "typemf",
   "preview": true,
   "license": "Apache-2.0",
