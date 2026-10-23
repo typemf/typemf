@@ -29,7 +29,7 @@
     }
   },
   "scripts": {
-    "generate": "typemf-generate typemf-generator.config.json",
+    "generate": "typemf-generate typemf-generator.json",
     "build": "pnpm generate && tsc -p tsconfig.json && node esbuild.mjs",
     "typecheck": "pnpm generate && tsc -p tsconfig.json"
   },

@@ -2,9 +2,9 @@ import * as esbuild from 'esbuild';
 import { copyFileSync, mkdirSync } from 'node:fs';
 
 await esbuild.build({
-  entryPoints: ['src-webview/main.tsx'],
+  entryPoints: { main: 'src-webview/main.tsx', generator: 'src-webview/generator/main.tsx' },
   bundle: true,
-  outfile: 'dist-webview/main.js',
+  outdir: 'dist-webview',
   platform: 'browser',
   format: 'iife', // a single <script> tag with no module system - matches how resolveCustomEditor loads it
   target: 'es2020',
@@ -20,3 +20,5 @@ await esbuild.build({
 mkdirSync('dist-webview', { recursive: true });
 copyFileSync('src-webview/styles.css', 'dist-webview/styles.css');
 console.log('copied src-webview/styles.css -> dist-webview/styles.css');
+copyFileSync('src-webview/generator/generator.css', 'dist-webview/generator.css');
+console.log('copied src-webview/generator/generator.css -> dist-webview/generator.css');

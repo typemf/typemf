@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import type nunjucks from 'nunjucks';
 import { TemplateSet } from './template-set.js';
+import { typescriptOptionsSchema } from './typescript-options-schema.js';
 import { beginGeneration } from './generation-context.js';
 import { importCollector, ImportLocation, locationOfPath } from './import-collector.js';
 import {
@@ -81,6 +82,8 @@ function useImport(name: string, location: ImportLocation, opts: { file?: string
 
 export const typescriptTemplateSet: TemplateSet = {
   name: 'typescript',
+  description: 'TypeScript code for @typemf/core',
+  optionsSchema: typescriptOptionsSchema,
   baseFolder: join(packageRoot, 'templates', 'typescript'),
   validate(pkg, options): string[] {
     beginGeneration(pkg, options);

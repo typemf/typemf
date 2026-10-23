@@ -1,5 +1,6 @@
 import { getTypeMfRuntime } from '@typemf/vscode-runtime';
 import * as vscode from 'vscode';
+import { GeneratorEditorProvider } from './generator-editor/generator-editor-provider.js';
 import { InstanceEditorProvider } from './instance-editor-provider.js';
 import { registerNewInstanceCommand } from './new-instance-command.js';
 
@@ -15,6 +16,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.window.registerCustomEditorProvider(InstanceEditorProvider.ecoreDefaultViewType, provider, {
       supportsMultipleEditorsPerDocument: false,
     }),
+    vscode.window.registerCustomEditorProvider(
+      GeneratorEditorProvider.viewType,
+      new GeneratorEditorProvider(context.extensionUri)
+    ),
     registerNewInstanceCommand(runtime)
   );
 }

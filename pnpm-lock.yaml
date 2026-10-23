@@ -271,6 +271,9 @@ importers:
       '@typemf/xmi':
         specifier: workspace:*
         version: link:../xmi
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
       nunjucks:
         specifier: ^3.2.4
         version: 3.2.4
@@ -290,6 +293,9 @@ importers:
       '@typemf/core':
         specifier: workspace:*
         version: link:../core
+      '@typemf/generator':
+        specifier: workspace:*
+        version: link:../generator
       '@typemf/json':
         specifier: workspace:*
         version: link:../json

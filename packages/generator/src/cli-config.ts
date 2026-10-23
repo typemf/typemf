@@ -1,11 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
 /**
- * One config, one template set, one .ecore file, one outputDir - per the
- * design discussion. Multi-language generation is achieved by running the
- * CLI multiple times with different config files (e.g.
- * typescript.typemf-generator.json, java.typemf-generator.json), not by
- * one config handling multiple sets.
+ * One config, one template set, one .ecore file, one outputDir. Generating
+ * for several languages means running the CLI with several config files
+ * (e.g. typescript.typemf-generator.json, java.typemf-generator.json).
  */
 export interface GeneratorConfig {
   ecoreFile: string;
@@ -22,6 +20,11 @@ export async function loadConfig(configPath: string): Promise<GeneratorConfig> {
     throw new Error(`Could not read config file '${configPath}': ${(err as Error).message}`, { cause: err });
   }
 
+  return parseConfig(raw, configPath);
+}
+
+/** Parses and checks the text of a config file; `configPath` names it in error messages. */
+export function parseConfig(raw: string, configPath: string): GeneratorConfig {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);

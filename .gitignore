@@ -9,3 +9,5 @@ examples/library-model/src/generated
 REVIEW.md
 TODO.md
 *.vsix
+packages/instance-editor/templates/
+packages/instance-editor/schemas/

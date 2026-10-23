@@ -8,6 +8,6 @@ root="$(dirname "$here")"
 # Build the generator and the packages it depends on.
 pnpm --dir "$root" exec turbo run build --filter=@typemf/generator --output-logs=errors-only
 
-node "$root/packages/generator/dist/cli.js" "$here/typemf-ecore-generator.config.json"
+node "$root/packages/generator/dist/cli.js" "$here/typemf-ecore-generator.typemf-generator.json"
 
 pnpm --dir "$root" exec prettier --write packages/core/src/metamodel --log-level warn

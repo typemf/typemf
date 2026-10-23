@@ -1,8 +1,13 @@
 {
   "name": "instance-editor",
   "displayName": "TypeMF Instance Editor",
+<<<<<<< Updated upstream
   "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore), for generated as well as dynamically loaded metamodels.",
   "version": "0.9.1",
+=======
+  "description": "A reflective editor for TypeMF model instances (.xmi, .json, .ecore) and for generator configs (*.typemf-generator.json), for generated as well as dynamically loaded metamodels.",
+  "version": "0.9.0",
+>>>>>>> Stashed changes
   "publisher": "typemf",
   "preview": true,
   "license": "Apache-2.0",
@@ -45,6 +50,19 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "typemf.generatorEditor",
+        "displayName": "TypeMF Generator Config",
+        "selector": [
+          {
+            "filenamePattern": "*.typemf-generator.json"
+          },
+          {
+            "filenamePattern": "typemf-generator.json"
+          }
+        ],
+        "priority": "default"
       }
     ],
     "commands": [
@@ -60,9 +78,27 @@
           "type": "boolean",
           "default": false,
           "description": "Show derived EStructuralFeatures (computed, not independently stored) in the properties panel. Off by default, since a derived feature is read-only and usually just clutter."
+        },
+        "typemf.generator.templateSetPackages": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Folders of npm packages whose template sets (`typemf.templateSets` in their `package.json`) the generator config editor offers, in addition to those of the project's dependencies. Relative paths are resolved against the workspace folder."
         }
       }
-    }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": [
+          "*.typemf-generator.json",
+          "typemf-generator.json"
+        ],
+        "url": "./schemas/typemf-generator.schema.json"
+      }
+    ]
   },
   "repository": {
     "type": "git",
@@ -76,15 +112,16 @@
   },
   "devDependencies": {
     "@typemf/core": "workspace:*",
+    "@typemf/generator": "workspace:*",
     "@typemf/json": "workspace:*",
     "@typemf/node": "workspace:*",
-    "@typemf/xmi": "workspace:*",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "@typemf/vscode-runtime": "workspace:*",
+    "@typemf/xmi": "workspace:*",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/vscode": "^1.100.0",
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.24.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
