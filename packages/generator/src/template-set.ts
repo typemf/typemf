@@ -1,6 +1,9 @@
 import type nunjucks from 'nunjucks';
 import type { EPackage } from '@typemf/core';
 
+/** A JSON Schema document. */
+export type JsonSchema = Record<string, unknown>;
+
 /**
  * An isolated, self-contained template contribution - the generator's
  * extension point. `baseFolder` contains a `main.njk` entry point and is
@@ -19,6 +22,15 @@ import type { EPackage } from '@typemf/core';
 export interface TemplateSet {
   name: string;
   baseFolder: string;
+
+  /** One line for a list of template sets, e.g. the editor's dropdown. */
+  description?: string;
+
+  /**
+   * JSON Schema of the config's `options` for this set. Checked before generating, and used by
+   * the editor to build its form. Without it, any options object is accepted.
+   */
+  optionsSchema?: JsonSchema;
 
   /**
    * Optional hook to reject a package before any template renders, by

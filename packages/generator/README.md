@@ -12,10 +12,11 @@ npm install --save-dev @typemf/generator
 ## Command line
 
 ```bash
-npx typemf-generate [config file]
+npx typemf-generate [config file] [--template-set <package folder>]... [--no-discover]
 ```
 
-The config file defaults to `./typemf-generator.config.json`:
+The config file defaults to `./typemf-generator.json`; the `*.typemf-generator.json` ending opens it in
+the TypeMF editor in VS Code:
 
 ```json
 {
@@ -26,7 +27,39 @@ The config file defaults to `./typemf-generator.config.json`:
 }
 ```
 
-Paths are resolved relative to the config file. `typescript` is currently the only template set.
+Paths are resolved relative to the config file. The options are checked against the options schema of
+the template set before generating; an unknown option is an error.
+
+## Template sets
+
+`typescript` is built in. Other template sets come in npm packages that declare them in their
+`package.json`:
+
+```json
+"typemf": {
+  "templateSets": [
+    {
+      "name": "java",
+      "description": "Java code",
+      "templates": "./templates",
+      "optionsSchema": "./options.schema.json",
+      "module": "./dist/hooks.js"
+    }
+  ]
+}
+```
+
+`templates` is the folder with `main.njk`, `optionsSchema` a JSON Schema of the options and `module` a
+module that exports the hooks `validate`, `configureEnvironment` and `postProcessFile` (see
+`TemplateSet`). Only `name` and `templates` are required.
+
+The CLI finds the template sets of the dependencies, devDependencies and optionalDependencies of the
+closest `package.json` above the config file; `--no-discover` switches that off. `--template-set` takes
+the folder of a package and registers its template sets; it wins over a discovered set of the same
+name. Two discovered packages declaring the same name are an error.
+
+Programs register template sets with `registerTemplateSet`, or with `registerTemplateSets`, which does
+what the CLI does. `listTemplateSets` lists them.
 
 ## Other packages
 

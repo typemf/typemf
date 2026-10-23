@@ -7,3 +7,7 @@
 !dist/extension.cjs
 !dist-webview/main.js
 !dist-webview/styles.css
+!dist-webview/generator.js
+!dist-webview/generator.css
+!templates/**
+!schemas/**

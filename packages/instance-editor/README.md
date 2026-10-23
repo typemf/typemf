@@ -42,11 +42,30 @@ extension, which is installed with it. A metamodel gets there in one of two ways
   ]
   ```
 
+## Generator configs
+
+Files named `*.typemf-generator.json` (or `typemf-generator.json`) are configs of `typemf-generate`, the
+[code generator](https://www.npmjs.com/package/@typemf/generator), and open in a form instead of the
+text editor:
+
+- **Ecore file** and **Output folder** are chosen with a file or folder picker and stored relative to
+  the config file.
+- **Template set** lists the built-in `typescript` set and the sets of the project's dependencies.
+  **Add package…** adds the folder of another package that declares template sets.
+- **Options** are shown as a form built from the options schema of the template set. For the
+  `typescript` set, the keys of `package-imports` and `type-imports` are suggested from the packages
+  and data types the model refers to.
+- **Generate** runs the generator and asks before it overwrites files whose content would change.
+
+A template set with a hooks module runs code from the workspace, so it needs a trusted workspace.
+**Edit as text** opens the file in the text editor, with completion and validation of the fields.
+
 ## Settings
 
-| Setting                      | Default | Description                                  |
-| ---------------------------- | ------- | -------------------------------------------- |
-| `typemf.showDerivedFeatures` | `false` | Show derived (computed) features, read-only. |
+| Setting                                | Default | Description                                                                 |
+| -------------------------------------- | ------- | --------------------------------------------------------------------------- |
+| `typemf.showDerivedFeatures`           | `false` | Show derived (computed) features, read-only.                                |
+| `typemf.generator.templateSetPackages` | `[]`    | Folders of packages whose template sets the generator config editor offers. |
 
 ## Limitations
 

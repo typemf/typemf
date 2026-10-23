@@ -38,11 +38,12 @@
     "@typemf/core": "workspace:*",
     "@typemf/node": "workspace:*",
     "@typemf/xmi": "workspace:*",
+    "ajv": "^8.20.0",
     "nunjucks": "^3.2.4",
     "prettier": "^3.9.8"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "@types/nunjucks": "^3.2.6"
+    "@types/nunjucks": "^3.2.6",
+    "typescript": "^5.8.3"
   }
 }
