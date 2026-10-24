@@ -17,6 +17,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # The Entra ID credential for the Marketplace login is bound to this environment.
+    environment: marketplace-publish
     steps:
       - uses: actions/checkout@v5
 
@@ -30,15 +32,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # The registry version of one representative package, read before publishing, so the step
-      # below can tell whether a release actually happened. changesets/action@v1's own `published`
-      # output can't be trusted for this: it detects a publish by scanning stdout for the text
-      # "New tag: ...", which @changesets/cli's current, spinner-based publish output never prints
-      # - the fix for that (reading a structured output file instead) only landed in the action's
-      # still-unreleased v2. @typemf/core is published whenever any package is (all 8 share one
-      # version via the `fixed` setting in .changeset/config.json).
       - id: before
-        run: echo "core-version=$(npm view @typemf/core version 2>/dev/null || echo none)" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(node -p "require('./packages/core/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "@typemf/core@$version" version > /dev/null 2>&1; then
+            echo "on-npm=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on-npm=false" >> "$GITHUB_OUTPUT"
+          fi
 
       # With pending changesets: opens or updates the "Version Packages" PR.
       # Without: publishes every package whose version is not on npm yet.
@@ -53,19 +55,23 @@ jobs:
           # Only needed until trusted publishing is configured for every package on npmjs.com.
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - id: after
-        run: echo "core-version=$(npm view @typemf/core version 2>/dev/null || echo none)" >> "$GITHUB_OUTPUT"
-
       - id: release-check
+        env:
+          VERSION: ${{ steps.before.outputs.version }}
+          ON_NPM: ${{ steps.before.outputs.on-npm }}
         run: |
-          if [ "${{ steps.before.outputs.core-version }}" != "${{ steps.after.outputs.core-version }}" ]; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
+          published=false
+          if [ "$ON_NPM" = "false" ]; then
+            for attempt in $(seq 1 12); do
+              if npm view "@typemf/core@$VERSION" version > /dev/null 2>&1; then
+                published=true
+                break
+              fi
+              sleep 5
+            done
           fi
+          echo "published=$published" >> "$GITHUB_OUTPUT"
 
-      # vsce authenticates with Microsoft Entra ID: the login below gives it the credentials, so no
-      # Marketplace token is stored. The identity must be a member of the publisher.
       - name: Log in to Azure
         if: steps.release-check.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
         uses: azure/login@v2
@@ -74,10 +80,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true # the identity needs no Azure subscription
 
-      # The extensions are private packages: changesets versions them but doesn't publish them.
-      # The runtime goes first because the instance editor depends on it. Also runs on a manual
-      # workflow_dispatch, as a retry path when a previous run published npm but not the extensions.
-      # Open VSX has no Entra ID login, so it keeps its token.
       - name: Publish extensions
         if: steps.release-check.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
         env:
