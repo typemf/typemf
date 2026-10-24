@@ -12,7 +12,7 @@ concurrency:
 permissions:
   contents: write # tags and GitHub releases
   pull-requests: write # "Version Packages" PR
-  id-token: write # npm trusted publishing
+  id-token: write # npm trusted publishing and the Azure login for the VS Code Marketplace
 
 jobs:
   release:
@@ -64,19 +64,29 @@ jobs:
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # vsce authenticates with Microsoft Entra ID: the login below gives it the credentials, so no
+      # Marketplace token is stored. The identity must be a member of the publisher.
+      - name: Log in to Azure
+        if: steps.release-check.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true # the identity needs no Azure subscription
+
       # The extensions are private packages: changesets versions them but doesn't publish them.
       # The runtime goes first because the instance editor depends on it. Also runs on a manual
       # workflow_dispatch, as a retry path when a previous run published npm but not the extensions.
+      # Open VSX has no Entra ID login, so it keeps its token.
       - name: Publish extensions
         if: steps.release-check.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
           for extension in vscode-runtime-extension instance-editor; do
             vsix="$PWD/$extension.vsix"
             (cd "packages/$extension" && pnpm exec vsce package --no-dependencies --out "$vsix")
-            pnpm exec vsce publish --packagePath "$vsix" --skip-duplicate
+            pnpm exec vsce publish --azure-credential --packagePath "$vsix" --skip-duplicate
             pnpm exec ovsx publish "$vsix" --skip-duplicate
           done
 
