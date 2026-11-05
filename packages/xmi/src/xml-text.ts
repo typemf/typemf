@@ -24,3 +24,8 @@ export function escapeAttributeValue(value: string): string {
 export function escapeText(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+/** Whether `text` is empty or only whitespace (a byte order mark counts as whitespace). */
+export function isBlank(text: string): boolean {
+  return text.trim() === '';
+}

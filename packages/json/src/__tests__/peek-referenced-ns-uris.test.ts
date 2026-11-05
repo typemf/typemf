@@ -38,3 +38,11 @@ describe('JsonSerializer.peekReferencedNsURIs', () => {
     expect(await serializer.peekReferencedNsURIs(bytes)).toEqual(['https://typemf.dev/samples/library']);
   });
 });
+
+describe('JsonSerializer.peekReferencedNsURIs on blank content', () => {
+  it('returns an empty list for an empty or whitespace-only document', async () => {
+    const peek = new JsonSerializer();
+    expect(await peek.peekReferencedNsURIs(new Uint8Array())).toEqual([]);
+    expect(await peek.peekReferencedNsURIs(new TextEncoder().encode('  \n'))).toEqual([]);
+  });
+});

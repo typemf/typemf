@@ -20,6 +20,7 @@ import { allStructuralFeaturesOf, computeEmfFragment, nameSegmentAmong, resolveE
 import { NamespaceCollector } from './namespace-collector.js';
 import { escapeAttributeValue, escapeText } from './xml-text.js';
 import { parseXmlDocument } from './xml-dom.js';
+import { isBlank } from './xml-text.js';
 
 const XMI_NS = 'http://www.omg.org/XMI';
 const XSI_NS = 'http://www.w3.org/2001/XMLSchema-instance';
@@ -123,6 +124,7 @@ export class XmiSerializer implements EObjectSerializer {
    */
   async peekReferencedNsURIs(content: Uint8Array): Promise<string[]> {
     const text = new TextDecoder().decode(content);
+    if (isBlank(text)) return [];
     const doc = await parseXmlDocument(text);
     const root = doc.documentElement;
     if (!root) return [];
@@ -138,6 +140,8 @@ export class XmiSerializer implements EObjectSerializer {
 
   async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
     const text = new TextDecoder().decode(content);
+    // An empty file, as VS Code's "New File" creates it, is a document without roots.
+    if (isBlank(text)) return [];
     const doc = await parseXmlDocument(text);
     const root = doc.documentElement;
     if (!root) {

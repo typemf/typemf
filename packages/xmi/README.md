@@ -28,6 +28,7 @@ const resource = await resourceSet.getResource(URI.createFileURI('/path/to/libra
 ```
 
 The `EPackage` of every namespace used in the file must be in the package registry before loading.
+An empty or whitespace-only file loads as a document without roots.
 
 ## Format
 

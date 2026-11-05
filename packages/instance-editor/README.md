@@ -18,6 +18,10 @@ This extension is a preview. File formats and behavior may still change before 1
 - **New model instance.** The command **TypeMF: New Model Instance** creates a new file with a
   root object of a class you pick, either from a registered metamodel or from a `.ecore` file. The
   new file can be saved as XMI, JSON or Ecore.
+- **Empty files.** An empty `.ecore`, `.xmi` or `.json` file, as **New File** creates it, opens in
+  the editor. For `.ecore` the editor creates a root `EPackage` named after the file; for `.xmi`
+  and `.json` it asks for the class of the root element. The file is marked as changed and written
+  when you save.
 - **Missing metamodels.** When a file uses a metamodel that isn't registered, the editor asks you
   to select the `.ecore` file(s) for it.
 

@@ -44,3 +44,11 @@ describe('XmiSerializer.peekReferencedNsURIs', () => {
     expect(await serializer.peekReferencedNsURIs(bytes)).toEqual(['https://typemf.dev/samples/library']);
   });
 });
+
+describe('XmiSerializer.peekReferencedNsURIs on blank content', () => {
+  it('returns an empty list for an empty or whitespace-only document', async () => {
+    const peek = new XmiSerializer();
+    expect(await peek.peekReferencedNsURIs(new Uint8Array())).toEqual([]);
+    expect(await peek.peekReferencedNsURIs(new TextEncoder().encode('  \n'))).toEqual([]);
+  });
+});

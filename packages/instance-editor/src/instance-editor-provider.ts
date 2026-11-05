@@ -1,4 +1,12 @@
-import { EClass, EPackageRegistryImpl, isEPackage, ResourceSetImpl, URI } from '@typemf/core';
+import {
+  EClass,
+  EcorePackageImpl,
+  EObject,
+  EPackageRegistryImpl,
+  isEPackage,
+  ResourceSetImpl,
+  URI,
+} from '@typemf/core';
 import type { TypeMfRuntimeApi } from '@typemf/vscode-runtime';
 import { basename } from 'node:path/posix';
 import * as vscode from 'vscode';
@@ -15,6 +23,7 @@ import {
   isApplyEditRequest,
   isConcreteSubtypesRequest,
   isCreateChildRequest,
+  isCreateRootRequest,
   isEditRelayFailedMessage,
   isGetObjectRequest,
   isBrowseExternalReferenceRequest,
@@ -25,9 +34,11 @@ import {
 import { EditHistory } from './edit-history.js';
 import { InstanceDocument } from './instance-document.js';
 import { resolveNewInstanceSpec } from './new-instance-spec-uri.js';
+import { pickRootEClass } from './pick-root-eclass.js';
 import { registerIfNew } from './register-if-new.js';
 import { resolveDocumentIdentity } from './resolve-document-identity.js';
 import { resolveMissingPackages } from './resolve-missing-packages.js';
+import { addRootAsUndoableEdit, isBlankContent, newEcoreRootPackage } from './root-creation.js';
 import { UndoableEdit } from './undoable-edit.js';
 
 /** A file's modification time, or undefined if it cannot be read (e.g. it does not exist). */
@@ -227,6 +238,8 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
     const document = new InstanceDocument(uri, resourceSet, resource);
     // A restored backup already differs from the file on disk.
     if (restoringFromBackup) document.history = new EditHistory(true);
+    // An empty file, e.g. just created with "New File": the editor creates its root element.
+    document.offerRootCreation = !restoringFromBackup && isBlankContent(bytes) && resource.getContents().isEmpty();
     return document;
   }
 
@@ -264,6 +277,10 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
       }
       if (isAncestorChainRequest(message)) {
         void webviewPanel.webview.postMessage(handleAncestorChainRequest(message, document));
+        return;
+      }
+      if (isCreateRootRequest(message)) {
+        void this.createRoot(document);
         return;
       }
       if (isCreateChildRequest(message)) {
@@ -344,6 +361,53 @@ export class InstanceEditorProvider implements vscode.CustomEditorProvider<Insta
       localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'dist-webview')],
     };
     webviewPanel.webview.html = this.renderWebviewHtml(webviewPanel.webview);
+
+    if (document.offerRootCreation) {
+      document.offerRootCreation = false;
+      void this.createRoot(document);
+    }
+  }
+
+  /**
+   * Creates the root element of a document that has none: an EPackage for a `.ecore` file, an
+   * instance of a class the user picks otherwise. The creation is an ordinary edit - it marks the
+   * document dirty and can be undone - so nothing is written until the user saves.
+   */
+  private async createRoot(document: InstanceDocument): Promise<void> {
+    if (document.creatingRoot || !document.resource.getContents().isEmpty()) return;
+    document.creatingRoot = true;
+    try {
+      const root = await this.newRootFor(document);
+      if (!root || !document.resource.getContents().isEmpty()) return;
+      this.announceEdit(document, addRootAsUndoableEdit(document.resource, root));
+      this.reloadWebviews(document);
+    } catch (err) {
+      void vscode.window.showErrorMessage(`TypeMF: could not create the root element: ${(err as Error).message}`);
+    } finally {
+      document.creatingRoot = false;
+    }
+  }
+
+  /** The new root object for `document`, with its package registered for the document; undefined
+   *  if the user cancels picking a class. */
+  private async newRootFor(document: InstanceDocument): Promise<EObject | undefined> {
+    const documentRegistry = document.resourceSet.getPackageRegistry();
+    if (document.resource.getURI().getFileExtension() === 'ecore') {
+      registerIfNew(documentRegistry, EcorePackageImpl.eINSTANCE);
+      return newEcoreRootPackage(basename(document.uri.path));
+    }
+
+    const picked = await pickRootEClass(this.runtime);
+    if (!picked) return undefined;
+    const factory = picked.pkg.getEFactoryInstance();
+    if (!factory) {
+      throw new Error(`the package of '${picked.eClass.getName()}' has no factory.`);
+    }
+    // Also in the shared registry, for the same reason as in openNewInstance: a dynamic package is
+    // then found again when the saved file is reopened in this window.
+    registerIfNew(this.runtime.packageRegistry, picked.pkg);
+    registerIfNew(documentRegistry, picked.pkg);
+    return factory.create(picked.eClass);
   }
 
   /**
