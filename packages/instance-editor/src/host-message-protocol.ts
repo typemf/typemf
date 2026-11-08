@@ -381,6 +381,17 @@ export function isSettingsMessage(message: unknown): message is SettingsMessage 
   return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/settings';
 }
 
+/** Sent by the webview when the user asks to create the root element of a document that has none. */
+export interface CreateRootRequest {
+  type: 'typemf/createRoot';
+}
+
+export function isCreateRootRequest(message: unknown): message is CreateRootRequest {
+  return (
+    typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/createRoot'
+  );
+}
+
 export function isReadyMessage(message: unknown): message is ReadyMessage {
   return typeof message === 'object' && message !== null && (message as { type?: unknown }).type === 'typemf/ready';
 }

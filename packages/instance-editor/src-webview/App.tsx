@@ -82,6 +82,9 @@ export function App({ environment, rootId, showDerivedFeatures }: AppProps): Rea
     return (
       <div className="app app-empty">
         <p>This document has no root element yet.</p>
+        <button className="app-create-root" onClick={() => vscodeApi.postMessage({ type: 'typemf/createRoot' })}>
+          Create Root Element…
+        </button>
       </div>
     );
   }

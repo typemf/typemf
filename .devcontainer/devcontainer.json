@@ -8,7 +8,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  "postCreateCommand": "npm install -g corepack@latest && corepack enable && (corepack use pnpm@latest || npm install -g pnpm@latest) && pnpm install",
+  "postCreateCommand": "npm install -g corepack@latest && corepack enable && corepack install && pnpm install",
 
   "customizations": {
     "vscode": {

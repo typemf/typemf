@@ -59,12 +59,15 @@ export class JsonSerializer implements EObjectSerializer {
    */
   async peekReferencedNsURIs(content: Uint8Array): Promise<string[]> {
     const text = new TextDecoder().decode(content);
+    if (text.trim() === '') return [];
     const doc = JSON.parse(text) as TypemfJsonDocument;
     return Object.values(doc.$namespaces ?? {});
   }
 
   async deserialize(content: Uint8Array, resource: Resource): Promise<EObject[]> {
     const text = new TextDecoder().decode(content);
+    // An empty file, as VS Code's "New File" creates it, is a document without roots.
+    if (text.trim() === '') return [];
     let doc: TypemfJsonDocument;
     try {
       doc = JSON.parse(text) as TypemfJsonDocument;

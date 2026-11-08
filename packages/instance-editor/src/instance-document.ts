@@ -36,6 +36,11 @@ export class InstanceDocument implements vscode.CustomDocument {
   /** True while our own save is writing, so its file events are not mistaken for external ones. */
   saving = false;
   reloading = false;
+  /** True when the file was empty when opened: the first editor for it then offers to create a
+   *  root element (see InstanceEditorProvider.createRoot). Cleared once offered. */
+  offerRootCreation = false;
+  /** True while a root element is being created, so a second request does not start another. */
+  creatingRoot = false;
   private fileWatcher: { dispose(): void } | undefined;
 
   constructor(

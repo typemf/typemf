@@ -458,3 +458,20 @@ describe('data values', () => {
     expect(resource.getErrors()[0]!.message).toContain("'twelve' is not a valid value of the datatype 'ELong'");
   });
 });
+
+describe('blank documents', () => {
+  it.each([
+    ['an empty file', ''],
+    ['whitespace only', ' \n\t\r\n'],
+    ['a byte order mark only', '\uFEFF'],
+  ])('loads %s as a document without roots and without errors', async (_name, text) => {
+    const converter = new InMemoryUriConverter();
+    const uri = URI.parse('mem:blank.json');
+    await converter.writeBinary(uri, new TextEncoder().encode(text));
+    const resource = await newResourceSet(converter).getResource(uri, true);
+
+    expect(resource!.isLoaded()).toBe(true);
+    expect(resource!.getContents().isEmpty()).toBe(true);
+    expect(resource!.getErrors()).toEqual([]);
+  });
+});

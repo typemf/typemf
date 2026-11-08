@@ -26,11 +26,25 @@ body {
 .app-loading,
 .app-empty {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
   align-items: center;
   justify-content: center;
   height: 100vh;
   width: 100vw;
   color: var(--vscode-descriptionForeground);
+}
+
+.app-create-root {
+  padding: 4px 12px;
+  border: none;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  cursor: pointer;
+}
+
+.app-create-root:hover {
+  background: var(--vscode-button-hoverBackground);
 }
 
 .app-tree-pane {
