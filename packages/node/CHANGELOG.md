@@ -1,5 +1,12 @@
 # @typemf/node
 
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @typemf/core@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes
