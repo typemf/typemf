@@ -1,5 +1,14 @@
 # @typemf/generator
 
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [[`ac6418d`](https://github.com/typemf/typemf/commit/ac6418d7342687fb4b11a11736998b95d65a3827)]:
+  - @typemf/xmi@0.11.0
+  - @typemf/node@0.11.0
+  - @typemf/core@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes

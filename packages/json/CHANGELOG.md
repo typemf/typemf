@@ -1,5 +1,16 @@
 # @typemf/json
 
+## 0.11.0
+
+### Minor Changes
+
+- [#22](https://github.com/typemf/typemf/pull/22) [`ac6418d`](https://github.com/typemf/typemf/commit/ac6418d7342687fb4b11a11736998b95d65a3827) Thanks [@bergerbd](https://github.com/bergerbd)! - Empty model files can be opened and edited, as VS Code's **New File** creates them. `@typemf/xmi` and `@typemf/json` load an empty or whitespace-only file as a document without roots instead of failing. The Instance Editor creates the root element when it opens such a file: an `EPackage` named after the file for `.ecore`, and an instance of a class you pick for `.xmi` and `.json`. The new root is an ordinary edit: the file is marked dirty, Undo removes the root again, and nothing is written until you save. A document without a root shows a **Create Root Element…** button.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @typemf/core@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes
